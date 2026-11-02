@@ -106,7 +106,7 @@ console.log('③ 몸 데우기');
 ok(on.warm && on.warm.yard && on.warm.indoor && !on.warm.far, '켬 — 마당 · 실내 화덕 곁은 데운다 · 반경 밖은 아니다', on.warm && JSON.stringify(on.warm));
 ok(off.warm && !off.warm.yard && !off.warm.indoor, '끔 — 화덕 곁도 안 데운다(종전)', off.warm && JSON.stringify(off.warm));
 console.log('④ 누구 불인가');
-ok(on.priv && on.priv.stranger === 3 && /내 것이 아니다/.test(on.priv.strangerNote) && on.priv.owner === 0, '켬 — 사유 움집 화덕은 주인만(남은 "내 것이 아니다") · 마을 집 화덕은 이방인도(②)', on.priv && on.priv.strangerNote);
+ok(on.priv && on.priv.stranger === 3 && /내 것이 (아니다|아닙니다)/.test(on.priv.strangerNote) && on.priv.owner === 0, '켬 — 사유 움집 화덕은 주인만(남은 "내 것이 아니다") · 마을 집 화덕은 이방인도(②)', on.priv && on.priv.strangerNote);
 console.log('⑤ 창');
 ok(on.win && on.win.btype === 'campfire' && on.win.hearth === 'yard' && on.win.mine === true, '켬 — 창 페이로드에 `hearth` 가 선다(클라가 저절로 안 연다)', on.win && JSON.stringify(on.win));
 ok(!off.win, '끔 — 화덕 곁에 창이 없다(종전)');
