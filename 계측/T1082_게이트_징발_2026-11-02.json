@@ -1,0 +1,100 @@
+{
+ "card": "T1082",
+ "made": "2026-11-02",
+ "main": "54d20ebf",
+ "cmd": "node scripts/gate-draft.js --keep <뿌리>  (판 = t577-server-run.js 800 1020,7,42 + -r t815-observe.js -r diverge-ctl.js · DCTL_SKIP=raid:n · T577_TAG=base · T577_PAR=3)",
+ "gate": {
+  "result": "PASS",
+  "sec": {
+   "on": 1869,
+   "on~raid1": 1997,
+   "on~raid2": 2201,
+   "on~raid3": 2169,
+   "total": 8237
+  },
+  "runs": {
+   "on": {
+    "pins": 0,
+    "pinDays": 0,
+    "phantom": 0,
+    "wipes": 0,
+    "emptyEnd": 0,
+    "popEnd": 14770,
+    "days": [
+     800,
+     800,
+     800
+    ],
+    "list": []
+   },
+   "on~raid1": {
+    "pins": 0,
+    "pinDays": 0,
+    "phantom": 0,
+    "wipes": 0,
+    "emptyEnd": 2,
+    "popEnd": 14738,
+    "days": [
+     800,
+     800,
+     800
+    ],
+    "list": []
+   },
+   "on~raid2": {
+    "pins": 0,
+    "pinDays": 0,
+    "phantom": 0,
+    "wipes": 0,
+    "emptyEnd": 2,
+    "popEnd": 14606,
+    "days": [
+     800,
+     800,
+     800
+    ],
+    "list": []
+   },
+   "on~raid3": {
+    "pins": 0,
+    "pinDays": 0,
+    "phantom": 0,
+    "wipes": 0,
+    "emptyEnd": 2,
+    "popEnd": 15842,
+    "days": [
+     800,
+     800,
+     800
+    ],
+    "list": []
+   }
+  }
+ },
+ "oldDefaultRaid3": {
+  "env": "T844_RET_QUOTA=0 T423_RATION_ACT=0",
+  "result": "PASS",
+  "sec": 2095,
+  "runs": {
+   "on~raid3": {
+    "pins": 0,
+    "pinDays": 0,
+    "phantom": 0,
+    "wipes": 0,
+    "emptyEnd": 1,
+    "popEnd": 14320,
+    "days": [
+     800,
+     800,
+     800
+    ],
+    "list": []
+   }
+  }
+ },
+ "short": {
+  "cmd": "node scripts/gate-draft.js --runs on,raid1 --days 30",
+  "result": "PASS",
+  "sec": 221
+ }
+}
