@@ -1,0 +1,65 @@
+# T1078 하네스 — 최종 코드(가지 작업 트리) · 2026-11-02 · 마지막 요약 줄(PASS/FAIL 줄을 grep)
+test-bandit-all rc=0 2s :: 결과: PASS (31 통과 · 0 실패)
+test-bandit-body rc=0 3s :: 결과: PASS (65 통과 · 0 실패)
+test-body rc=0 7s :: === 324건 중 PASS 324 · FAIL 0 ===
+test-body-chunks rc=0 0s :: === 결과: 27 PASS / 0 FAIL ===
+test-body-fields rc=0 0s :: === 8 통과 / 0 실패 ===
+test-body-seed-other rc=0 0s :: === 결과: 11 PASS / 0 FAIL ===
+test-body-seed-restart rc=0 1s :: === 16 통과 / 0 실패 ===
+test-body-exit rc=0 0s :: === 28건 중 PASS 28 · FAIL 0 ===
+test-t986-bandit-day rc=0 178s :: === PASS 5 / FAIL 0 ===
+test-t766-dissolve rc=0 1s :: === 17건 중 PASS 17 · FAIL 0 ===
+test-loot-body rc=0 1s :: === 결과: 13 PASS / 0 FAIL ===
+test-arms-body rc=0 0s :: === 결과: 28 PASS / 0 FAIL ===
+test-handoff-body rc=0 325s :: === 94 통과 / 0 실패 ===
+test-membership rc=0 4s :: === PASS 85 / FAIL 0 ===
+test-village-found rc=0 1s :: === 마을 건립 하네스: 51 통과 / 0 실패 ✅ ===
+test-cand-walk rc=0 1s :: === 39건 중 PASS 39 · FAIL 0 ===
+test-harness-lint rc=0 7s :: === 68건 중 PASS 68 · FAIL 0 ===
+test-moment-lot rc=0 49s :: === 107건 중 PASS 107 · FAIL 0 ===
+test-events rc=0 173s :: === 305건 중 PASS 305 · FAIL 0 ===
+test-local-midnight-window rc=0 109s :: === 12건 중 PASS 12 · FAIL 0 ===
+test-move-soa rc=0 85s :: === 결과: 286 PASS / 0 FAIL ===
+test-t742-zone rc=0 0s :: === 11건 중 PASS 11 · FAIL 0 ===
+test-war-world rc=0 186s :: 결과: 201 통과 / 0 실패
+
+## test-bandit-all 전문
+
+=== T1078 — 도적 단원 전원이 몸(손잡이 `T1078_BANDIT_ALL`) ===
+  ✓ 정적 · 존 `damagePlayer` NPC 갈래 — 되살림(`setTimeout`) 앞에서 도적 단원 몸이면 `t1078Died` 가 쥔다(`_bdtGid` 가 선 몸만)
+  ✓ 정적 · 존 `decideNpcBehavior` — 마을 일과 문 바로 뒤 도적 일과 문(늑대 도주 뒤 · 배회 앞)
+  ✓ 정적 · 손잡이 하나(`'1'` 만 켬) · 켬 = T1039 walk 갈래를 같이 켠다(spawn 은 꺼진다)
+  ✓ 정적 · T1078 몸 문 덩이에 새 수 0(0 · 1 말고 수 글자 없음)
+  ✓ [전제] 다섯 판이 다 돌았다
+  ✓ ① 켬 · 해체 단 5명(상한 3 넘음) — 은거지 몸 5 = 단 5(걸어온 몸 그대로)  {"day":406,"n":5,"bodies":5,"walkers":0,"food":25}
+  ✓ ⓐ 끔 — 같은 자로 단 5명에 몸 3(상한 3 · 나머지는 숫자) ⇒ 켬의 ①이 문 자리가 실제로 다르다  {"day":406,"n":5,"bodies":3,"walkers":0,"food":17.5}
+  ✓ ① 절망 이탈 — 단 6 · 은거지 몸 5 + 그 단으로 걷는 몸 1(이웃 마을 명부 몸 · 까닭 `desert` · 단 번호 표식)  [{"day":406,"n":6,"bodies":5,"walkers":1,"food":22},[{"pid":"n38","k":"desert","gid":1,"len":4629}]]
+  ✓ ① 그 몸이 은거지에 걸어 닿는 날 단의 몸(몸 6 = 단 6 · 받은 몸 1) — 닿기 전 날들은 걷는 몸으로 셌다  D409
+  ✓ ① 몸 + 그 단으로 걷는 몸 ≤ 단 사람 — 틱마다(한 사람 몸 하나)  넘침 최대 0
+  ✓ ① 새 몸 0 — 해체 단 · 이탈 · 해산 판에 새로 선 몸이 없다(걸어온 몸이 단의 몸)  0 · 0
+  ✓ ① 순간이동 0(한 틱 걸음 ≤ 걸음 한도)  최대 6.40px
+  ✓ ① 해산(단 2명 < 3) — 남은 몸 2가 가장 가까운 산 마을(이웃)로 걸어 나간다(T590 `move` 걸음 · 지움 0)  [{"pid":"n12","alive":true,"k":"move","cat":"walk","to":2},{"pid":"n11","alive":true,"k":"move","cat":"walk","to":2}]
+  ✓ ① 소멸 0 — 지워진 몸은 다 누운 몸 거둠(`rot`) · 걸어 닿음 거둠(`arrive`)뿐(해산 몸 2는 닿아 거둠 — 주민 되기는 T1079 ④)  [{"pid":"n13","how":"rot","day":417},{"pid":"n9","how":"rot","day":419},{"pid":"n10","how":"rot","day":419},{"pid":"n11","how":"arrive","day":419},{"pid":"n12","how":"arrive","day":419},{"pid":"n38","how":"rot","day":419}]
+  ✓ ① 저장 줄 — 켬에서만 `stats.t1078` 칸 · 끔 = 칸 0(종전 바이트)
+  ✓ ⓐ 손잡이 그 밖 값(`'0'`) = 손잡이 없음 — 판 결과 JSON 바이트 같음(몸 · 저장 줄 · 로그)  2585B
+  ✓ ② 짐승(`mob:wolf`) — `t1078Died` 가 쥔다 · 단 n −1 · 은거지 몸 −1  [{"day":414,"n":6,"bodies":6,"walkers":0,"food":1},{"day":414,"n":5,"bodies":5,"walkers":0,"food":1}]
+  ✓ ② 그 자리에 쓰러진다(누운 몸 · AI 끔 · 자리 그대로) · 짐 절반이 그 자리에 떨어진다(T590 ⓐ 낙하 문 `deathDrop`)  {"pid":"n13","x":11248,"y":7696,"meat":2}
+  ✓ ⓐ 끔 — `t1078Died` 가 false(존 종전 줄 = 30초 뒤 되살림) ⇒ ②가 문 자리가 실제로 다르다
+  ✓ ② 사람(`player`) 셋 · 짐승 하나 — 까닭마다 셈 · 누운 몸 넷 다 `corpseMs` 뒤 거둠(소멸 0)  {"mob":1,"player":3}
+  ✓ ② 토벌 — 사살 수만큼 은거지 몸이 그 자리에 쓰러진다(누운 몸 = 사살 · 남은 몸 = 남은 단)  사살 5 · 누운 몸 5 · D406 토벌⚔: 이웃 원정대(8명) vs 도적단#1 → 5명 사살(0명 잔존)
+  ✓ ⓐ 끔 — 토벌 사살에 누운 몸 0(몸은 min(3, n) 으로 지워진다) ⇒ 같은 자가 다르게 잰다  0
+  ✓ ② 굶어 죽음(비축 0 · 10날 — 머리글 “아사”) — 은거지 몸 하나가 그 자리에 쓰러진다  [{"day":403,"n":5,"bodies":5,"walkers":0,"food":0},{"day":403,"n":4,"bodies":4,"walkers":0,"food":0}]
+  ✓ ② econ 약탈 실전투가 둘을 죽였다(4 → 2) — 다음 도적 하루 머리에 은거지 몸 둘이 쓰러지고(해산 판정 앞) · 해산한 남은 둘만 걸어 나간다(죽은 사람 몸이 걷지 않는다)  ["walk:move","walk:move","died:bandit_other","died:bandit_other"]
+  ✓ ① 소굴 재결성 — 황야에서 난 사람(4~6)만큼 몸이 소굴에 선다(새 몸 = 그 사람 수 · 상한 3 걷기)  {"day":401,"n":5,"bodies":5,"walkers":0,"food":147.5} · 새 몸 5
+  ✓ ③ 밤 — 은거지로 걸어가(`귀가`) 닿으면 `취침`(마을 일과 `_lifeGoHome` 그 문)  {"r":true,"act":"귀가","tx":11248,"ty":7696,"home":[11248,7696],"actHome":"취침"}
+  ✓ ③ 아침 창 · 오늘 끼니를 단 비축이 댔다 — 은거지에서 `식사`  {"r":true,"act":"귀가","tx":11248,"ty":7696,"home":[11248,7696],"actHome":"식사"}
+  ✓ ③ 아침 창이라도 비축이 끼니를 못 댔으면 · 그리고 낮 — 종전 배회(일터 = 은거지 둘레)  [{"r":false,"tx":11248,"ty":7696,"home":[11248,7696]},{"r":false,"tx":11248,"ty":7696,"home":[11248,7696]}]
+  ✓ ③ 끼니 표식 = 도적 하루 유지비 줄(단 비축 > 0 이면 1 · 비축 0 이면 0) — 몸은 그 사실만 보인다(econ 사본 0)  [[1,1,1,1,1],[0,0,0,0]]
+  ✓ ⓑ 미끼 `nodie`(쓰러짐 문을 뗀다) — ②의 “그 자리에 쓰러진다 · 소멸 0”이 빨개진다  소멸 4 · 누운 몸 false
+  ✓ ⓑ 미끼 `noout`(걸어 나감 문을 뗀다) — ①의 “해산 몸이 걸어 나간다 · 소멸 0”이 빨개진다  소멸 2 · [{"pid":"n12","alive":false,"k":null,"cat":null,"to":null},{"pid":"n11","alive":false,"k":null,"cat":null,"to":null}]
+
+결과: PASS (31 통과 · 0 실패)
+[check] 회귀검증 16 일치 / 0 불일치 ✅
+[inline] 마을실험실.html: 최신 ✅
+[inline] 전쟁실험실.html: 최신 ✅
+=== 배선 검사: 실패 0 · 경고 1 ===

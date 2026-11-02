@@ -16720,8 +16720,12 @@ function raidKills(c, escort, wReady, aReady, srand) {
 // ★[de-abstract] 약탈 = per-entity 실전투(주사위 제거). 호위 전사 + 상인 vs 도적 갱 — hp100·atk=10+무기×0.2·Lanchester.
 //   조우 여부는 호스트 banditGang(기하: 길목 실재 갱)이 정하고, 결과는 이 엔티티 대결이 정한다. 랜덤은 표적선정뿐(승패 아님).
 function _escAtk(v) { return 10 + Math.round((((v && v._weapQ) || 0.42)) * 20); }   // 마을 무기품질 → 호위 근접 atk
-function _raidScrum(escN, escAtk, gangN) {
+// ★★[T1079 ⑤ · 문 4-b = PM ㄱ "약탈 전투가 무기를 읽는다"] `gangArmed` = 단이 손에 든 무기 수(호스트 `world.banditArmed` — 단의 무기 짐 · 한 사람 한 자루 · 없으면 null).
+//   null(호스트가 안 주는 판 — 랩 · 서버 손잡이 끔) = 종전 글자(도적 atk 19 고정). 주면 도적 per-entity atk = 호위와 같은 식(`atk = 10 + 무기 × 0.2` = `_escAtk`):
+//   든 사람(앞에서부터 무기 수만큼 — 정수 자루) = `_escAtk` · 맨손 = 무기 0 → 10(상인 맨손 그 수). 단 무기의 품질 기록이 없어 `_escAtk` 의 품질 0.42 를 탄다(회부). 새 수 0 · 주사위 차례 같음.
+function _raidScrum(escN, escAtk, gangN, gangArmed) {
   const FLEE = 0.35, bA = 19, A = [], B = [];   // ★FLEE=이탈 문턱: 시작 인원 35% 밑으로 떨어진 측은 전멸 전 도주(궤주 효과 — battle-core 없이 per-entity). bA=도적 스킬3 atk
+  const bArmed = gangArmed == null ? -1 : Math.floor(gangArmed), bAw = gangArmed == null ? bA : _escAtk(null);   // ★[T1079] null = 종전(아래 줄이 bA 그대로)
   for (let i = 0; i < Math.max(0, escN | 0); i++) A.push({ h: 100, w: true });   // 호위 전사
   A.push({ h: 100, w: false });   // 상인 1(마지막 원소)
   for (let i = 0; i < Math.max(1, gangN | 0); i++) B.push(100);   // 갱원
@@ -16735,7 +16739,7 @@ function _raidScrum(escN, escAtk, gangN) {
     if (bL.length <= startB * FLEE) { banBroke = true; break; }   // 도적 붕괴 → 도주
     const dA = A.map(() => 0), dB = B.map(() => 0);
     for (const i of aL) dB[bL[(v1.srand() * bL.length) | 0]] += (A[i].w ? escAtk : 10);
-    for (const i of bL) dA[aL[(v1.srand() * aL.length) | 0]] += bA;
+    for (const i of bL) dA[aL[(v1.srand() * aL.length) | 0]] += (bArmed < 0 ? bA : (i < bArmed ? bAw : 10));   // ★[T1079] 종전 = bA · 켬 = 든 사람 `_escAtk` · 맨손 10
     for (let i = 0; i < A.length; i++) if (A[i].h > 0) A[i].h -= dA[i];
     for (let i = 0; i < B.length; i++) if (B[i] > 0) B[i] -= dB[i];
   }
@@ -16781,7 +16785,7 @@ function _caravanArrive(world, c, day) {
     const gangO = world.banditGang ? world.banditGang(c.from, c.to) : null;
     let outboundLoss = 0;
     if (gangO && gangO.n > 0) {
-      const R = _raidScrum(c.escort, _escAtk(c.from), gangO.n);
+      const R = _raidScrum(c.escort, _escAtk(c.from), gangO.n, world.banditArmed ? world.banditArmed(gangO) : null);   // ★[T1079] 단 무기 짐(호스트가 줄 때만)
       gangO.n = Math.max(0, gangO.n - R.banditsKilled);   // 도적 사상 반영(엔티티 대결 결과)
       if (R.escKilled > 0) _xzKillW(c, c.from, R.escKilled);   // 죽은 호위만 마을 전사 감소(도주 생존 제외)
       if (!R.repel) {   // 호위 붕괴
@@ -17102,7 +17106,7 @@ function tickCaravansV2(world, day) {
       const gangI = world.banditGang ? world.banditGang(c.from, c.to) : null;
       let inboundLoss = 0;
       if (gangI && gangI.n > 0) {
-        const R = _raidScrum(c.escort, _escAtk(c.from), gangI.n);
+        const R = _raidScrum(c.escort, _escAtk(c.from), gangI.n, world.banditArmed ? world.banditArmed(gangI) : null);   // ★[T1079] 단 무기 짐(호스트가 줄 때만)
         gangI.n = Math.max(0, gangI.n - R.banditsKilled);
         if (R.escKilled > 0) _killWarriors(c.from, R.escKilled);   // 죽은 호위만 감소
         if (!R.repel) {   // 호위 붕괴
@@ -17896,6 +17900,7 @@ module.exports = {
   xzoneBounce: _xzBounce, xzoneLeg: _xzLeg,   // ★[T533] 서버 호스트가 부르는 둘 — 이웃 존이 안 받은 넘김을 경계에서 되돌림 · 제 존 몫 일수(몸이 되짚을 때) — 사본 0
   _xzProbe: { handOff: _xzHandOff, arrive: _xzArrive, arriveLoop: _xzArriveLoop, handBack: _xzHandBack, ret: _xzReturn },   // ★[T748] 존 경계 짐 레코드 — 하네스가 **이 함수들**을 그대로 부른다(사본 0 · 값 무변)
   setLotHook,   // ★[T732] 곳간 로트 장부 훅(서버 켬일 때만 꽂는다 · 랩·CLI 는 안 꽂는다 = 무동작)
+  _t1079Probe: { raidScrum: _raidScrum, escAtk: _escAtk },   // ★[T1079 ⑤] 약탈 실전투 — 하네스 `test-bandit-camp` 가 이 함수를 그대로 부른다(사본 0)
   T784_CARGO_AGE, _t784Probe: { F: _t784F, arrive: _t784Arrive },
   T1049_FLOOR_STONE,   // ★[T1049] 돌 바닥 마을은 제 돌을 안 판다(하네스 `test-floor-stone` 가 읽는다)
   T812_CARGO_TEMP, _t812Probe: { exp: _t812Exp },

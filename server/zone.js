@@ -4087,6 +4087,7 @@ function decideNpcBehavior(npc, now) {
   // ★[생활 층 이관 ②③④] 마을 시뮬 NPC 일과 — villages.js 소유(개간 크루·신축 시공·농부 농지 순회).
   //   늑대 도주가 우선(위), 야간 귀가 게이트는 npcStep이 이 뒤에서 덮음(§19 계약 유지). false=레거시 일과 폴스루.
   if (npc.simVillageId && SimVillages.npcLifeTick && SimVillages.npcLifeTick(npc, now)) return;
+  if (npc._bdtGid != null && SimVillages.t1078Life && SimVillages.t1078Life(npc, now)) return;   // ★[T1078] 도적 단원 몸 — 은거지 곁 일과(잠 · 식사 · 그 밖 = 아래 배회) · 끔 = `_bdtGid` 가 안 서서 이 줄 무동작
   // ② 자기 농지 익었으면 수확 — 근처(qtBuildings)만 (집 ON이면 전 건물 3만+채 순회 방지)
   const _nearBld = qtBuildings ? qtBuildings.queryCircle(npc.x, npc.y, 700) : [];
   for (const b of _nearBld) {
@@ -13806,6 +13807,7 @@ function damagePlayer(p, dmg, source) {
   if (p.hp <= 0) {
     // ★[T109] `p.hp = 0` 은 지웠다 — `setHp` 가 이미 하한 0 으로 눌렀다(사본 0).
     if (p.isNpc) {
+      if (p._bdtGid != null && Bandits.t1078Died && Bandits.t1078Died(p, source)) return;   // ★[T1078] 도적 단원 몸 — 그 자리에 쓰러진다 · 단 n −1(되살림 0 · 끔 = `_bdtGid` 가 안 서서 이 줄 무동작)
       // NPC: 30초 후 자기 사유지 중심에 부활 (기존 로직 유지)
       console.log(`[${ZONE_ID}] 🤖 NPC ${p.name} 사망 (by ${source}) — ${NPC_RESPAWN_MS/1000}초 후 부활`);
       let respawnX = ZONE.zoneWidth/2, respawnY = ZONE.zoneHeight/2;
