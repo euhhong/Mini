@@ -10,7 +10,8 @@
 //        귀환 뒤 몸에 남은 원정 무기 0 · 군량도 몸 짐 → 곳간(먹은 몫만 빠진다)
 //     ⓒ 싸운 원정(공격 패 · 궤주) — 하루 경계마다 장부 = 산 몸 짐 합 · 결판 자리: 쓰러진 몸 짐 = 땅 더미 = 이긴 쪽이 주운 몫 + 땅에 남은 몫(T857 그 문) ·
 //        항등 — 반출 = 남김 + 반납 + 땅에 간 몫 · 공격 곳간 끝 = 동원 전 − 반출 + 남김 + 반납 · 방어 곳간 + 주운 몫
-//     ⓓ 되돌림 — `T403_ARMS_LEDGER=0` = 장부 0 · 원정 동안 곳간 무기 그대로(종전 — 읽기만) · `T1094_CARRY_CAP=0` = 장부는 서지만 몸 짐 0(증인 — 장부에만 있고 몸에 없는 짐)
+//     ⓓ 되돌림 — `T403_ARMS_LEDGER=0` = 장부 0 · 원정 동안 곳간 무기 그대로(종전 — 읽기만) · `T1094_CARRY_CAP=0` = 장부는 서지만 몸 짐 0(증인 — 장부에만 있고 몸에 없는 짐) ·
+//        `T1094_CARRY_CAP=0` 궤주(증인 — 문 5 만이면 진 원정 짐 무기 일부가 사라진다: 결판 흐름 `warWeaponFlow` 회수 0.7 · 0.5(종전 econ 규칙)가 짐에서 뺀다) ↔ ⓒ 켬 = 두 곳간 합 무변(땅에 남은 몫만)
 //     ⓔ 결정론 — 같은 판 두 번 = 바이트 같다
 // ⚠존을 부팅하지 않는다 — 정본(battle-core · war-live · war-core · villages `__p3Bind`)을 그대로 부른다(규칙 사본 0). 손잡이는 모듈을 싣는 순간 읽는다 ⇒ 판마다 아이 프로세스.
 // 실행: node scripts/test-t1094-arms-trip.js
@@ -151,6 +152,12 @@ console.log('\n[ⓓ] 되돌림');
     "ⓓ `T403_ARMS_LEDGER=0` — 장부 0 · 원정 동안 곳간 무기 그대로(종전 — 읽기만)", JSON.stringify({ W: [L0.W0, L0.W1, L0.W2] }));
   ok(C0.arms0 && C0.loaded && C0.loaded.onB === null && near(C0.loaded.ledger, C0.arms0.out) && near(C0.W2, C0.W0),
     "ⓓ `T1094_CARRY_CAP=0` — 장부는 서지만 몸 짐 0(증인 — 장부에만 있고 몸에 없는 짐) · 귀환에 곳간 = 동원 전", JSON.stringify({ loaded: C0.loaded, W: [C0.W0, C0.W2] }));
+  const CA = sub({ T1094_CARRY_CAP: '0' }, { scen: 'assault' });
+  const lostA = CA.arms0 ? CA.arms0.out - ((CA.arms && CA.arms.back) || 0) : 0, gainB = (CA.WB2 || 0) - (CA.WB0 || 0), gone = lostA - gainB;
+  const sumBody = (AS.W0 + AS.WB0) - (AS.W2 + AS.WB2), sumLedger = (CA.W0 + CA.WB0) - (CA.W2 + CA.WB2);
+  ok(CA.end && CA.end.why === 'rout' && CA.end.winner === 'B' && lostA > 0 && gainB > 0 && gone > 1e-6 && near(sumLedger, gone, 1e-6) && near(sumBody, (AS.t811 && AS.t811.ground) || 0, 1e-6),
+    "ⓓ `T1094_CARRY_CAP=0` 궤주(문 5 만 · 장부) — 진 원정 짐 무기 일부가 사라진다(결판 흐름 회수 0.7 · 0.5 — 종전 econ 규칙 · 증인) ↔ ⓒ 켬(몸 짐) = 두 곳간 합 무변(땅에 남은 몫만)",
+    JSON.stringify({ out: CA.arms0 && CA.arms0.out, back: CA.arms && CA.arms.back, gainB: r3(gainB), gone: r3(gone), sum: { body: r3(sumBody), ledger: r3(sumLedger) } }));
 }
 
 console.log('\n[ⓔ] 결정론');
