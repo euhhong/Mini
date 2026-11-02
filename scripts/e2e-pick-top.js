@@ -255,7 +255,7 @@ const HALF = 18;   // 제품 `PICK_PLAYER_HALF`(46-h-verbs) — 상자 전제를
     await sleep(800);
     const h1 = { [xPid]: ((await bodyOf(X)) || {}).hunger, [yPid]: ((await bodyOf(Y)) || {}).hunger };
     const up = (pid) => (h0[pid] != null && h1[pid] != null) ? h1[pid] - h0[pid] : 0;
-    const fed = (await notices(R)).some((t) => /먹였다/.test(t));
+    const fed = (await notices(R)).some((t) => /먹였(다|습니다)/.test(t));
     console.log(`  · [상황] ${tag} 누름 — 메뉴 ${JSON.stringify(labels)} · 하위 ${JSON.stringify(sub)} · 먹였다 ${fed} · 허기 ${xPid} +${up(xPid).toFixed(1)} · ${yPid} +${up(yPid).toFixed(1)}`);
     return { labels, sub, fed, up };
   };

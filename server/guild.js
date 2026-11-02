@@ -109,7 +109,7 @@ function handleChat(player, text) {
   }
 
   //   ★[T787] 명령 이름 `/길드` → `/마을`(길드 = 마을) · 옛 이름은 한 줄 안내만.
-  if (t.startsWith('/길드')) { say('길드는 이제 마을이다 — `/마을 초대제` · `/마을 공개`'); return true; }
+  if (t.startsWith('/길드')) { say('길드는 이제 마을입니다. `/마을 초대제`나 `/마을 공개`를 적어 보십시오.'); return true; }
   if (t.startsWith('/마을')) {
     const arg = t.slice('/마을'.length).trim();
     if (arg !== '초대제' && arg !== '공개') { say('마을의 문 — `/마을 초대제` 또는 `/마을 공개`'); return true; }

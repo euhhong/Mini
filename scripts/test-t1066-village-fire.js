@@ -101,7 +101,7 @@ ok(on.on === true && off.on === false, '아이 판 손잡이 — env 없음 = �
 console.log('② 마을 집 마당 화덕 곁 요리');
 ok(on.cook && on.cook.berry === 0 && on.cook.q === 1 && on.cook.fc && on.cook.fc.hearth === 'yard', '★켬 — 요리가 얹힌다(재료가 나가고 대기열이 캐리어 바닥 행 data 에 선다 · 시설 = 마당 화덕)', on.cook && `${on.cook.note}`);
 ok(on.collect && on.collect.q === 0 && on.collect.byId, '켬 — 다 되면 그 화덕 id 로 받는다(대기열이 빈다)', on.collect && on.collect.note);
-ok(off.cook && off.cook.berry === 3 && off.cook.fc === null && /모닥불·화덕 앞에서만/.test(off.cook.note), '★끔(`=0`) — 같은 자리 같은 사람이 거절된다(재료 그대로 · 종전 — 결함이 보인다)', off.cook && off.cook.note);
+ok(off.cook && off.cook.berry === 3 && off.cook.fc === null && /모닥불·화덕 앞에서만|모닥불이나 화덕 앞에서만/.test(off.cook.note), '★끔(`=0`) — 같은 자리 같은 사람이 거절된다(재료 그대로 · 종전 — 결함이 보인다)', off.cook && off.cook.note);
 console.log('③ 몸 데우기');
 ok(on.warm && on.warm.yard && on.warm.indoor && !on.warm.far, '켬 — 마당 · 실내 화덕 곁은 데운다 · 반경 밖은 아니다', on.warm && JSON.stringify(on.warm));
 ok(off.warm && !off.warm.yard && !off.warm.indoor, '끔 — 화덕 곁도 안 데운다(종전)', off.warm && JSON.stringify(off.warm));

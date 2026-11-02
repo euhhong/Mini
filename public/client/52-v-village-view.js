@@ -24,7 +24,33 @@ function vvKnobOn() { try { return new URLSearchParams(location.search).get('T10
 
 // ★서버 자료 → 화면이 읽는 모양. 지금은 임시 자료(`test/fixtures/village-view.ui-draft.json`) 모양 그대로다.
 //   T1072 `villageView` 의 필드 표가 오면 **이 함수 한 곳만** 맞춘다(화면 함수들은 이 모양만 안다).
-function vvAdapt(raw) { return raw && typeof raw === 'object' ? raw : null; }
+// ★[PM land1038] 서버 `villageView`(T1072 · `test/fixtures/village-view.json` 꼴 — `head` 칸이 있다) → 이 화면이 읽는 꼴(임시 자료 꼴). 임시 자료 꼴이 오면 그대로.
+//   T1070 × T1072 를 한 판에 합치니 서버가 진짜 자료를 보내 `D.requests.map` 이 던졌다(e2e-village-view 페이지 오류) — 맞추는 자리는 이 함수 하나(T1070 약속).
+function vvAdapt(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  if (!raw.head) return raw;
+  const H = raw.head || {}, Me = raw.me || {}, Da = raw.dash || {}, rows = (x) => (x && Array.isArray(x.rows)) ? x.rows : (Array.isArray(x) ? x : []);
+  const name = H.name || '';
+  const pr = {}; for (const r of rows(raw.prices)) pr[r.res] = r;
+  const pj = raw.projects || {}, mem = raw.members || {}, st = raw.store || {}, prc = raw.prices || {};
+  return {
+    vid: H.vid, name, region: '', chief: (H.chief && H.chief.name) || '', day: H.day,
+    member: !!Me.member, contrib: { n: Me.contrib | 0, need: Me.need | 0 },
+    join: { remainText: (Me.left | 0) > 0 ? `${Me.left}만 더 모으면 ${name} 사람이 될 수 있습니다.` : '', perks: [], oneRequest: true },
+    stats: { pop: Da.pop | 0, popDelta: 0, season: (H.cal && H.cal.seasonKo) || '', toWinter: Da.toWinter, winter: [], workN: Da.projectsN | 0, workNext: '' },
+    requests: rows(raw.requests).map((r) => ({ item: r.ko || r.item, res: r.item || r.res, qty: r.qty, filled: r.filled | 0, unit: '', why: r.line || '', contrib: r.rewQty | 0 })),
+    news: rows(raw.news).map((n) => ({ when: (n.ago | 0) === 0 ? '오늘' : `${n.ago}일 전${n.from ? ' · 들려온 소문' : ''}`, text: n.line || '' })),
+    projects: { hint: '모자란 재료를 가져오면 더 빨리 끝납니다. 가져온 만큼 기여도 쌓입니다.',
+      active: (pj.now || []).map((q) => ({ name: q.name, status: q.stageLabel || (q.toDays != null ? `${q.toDays}일 뒤 도착` : ''), frac: q.stages ? (q.stage | 0) / q.stages : 0,
+        needs: (q.need || []).map((x) => ({ item: x.ko || x.res, have: x.have | 0, need: x.need | 0 })), after: '' })),
+      done: (pj.done || []).map((d) => ({ when: (d.ago | 0) === 0 ? '오늘' : `${d.ago}일 전`, text: d.line || '' })) },
+    members: { total: mem.n | 0, delta: 0, jobs: (mem.byJob || []).map((j) => ({ job: j.ko || j.job, n: j.n | 0 })),
+      people: (mem.people || []).map((p) => ({ name: p.name, job: p.jobKo || p.job, chief: !!p.chief, act: p.act || '' })) },
+    store: { near: !!(raw.gate && raw.gate.near), base: prc.numeraireKo || '', baseOptions: prc.numeraireKo ? [prc.numeraireKo] : [],
+      note: ['시세는 이 마을이 지금 매기는 값입니다.', '많이 팔리면 내려가고, 귀해지면 오릅니다.', '이웃 마을 값은 직접 가 봐야 알 수 있습니다.'], noteWhen: '',
+      rows: rows(st).map((r) => ({ item: r.ko || r.res, qty: r.qty, unit: '', plenty: Math.max(0, Math.min(1, (r.daysOf || 0) / 30)), price: pr[r.res] ? pr[r.res].num : null, trend: r.short ? 1 : (r.glut ? -1 : 0) })) },
+  };
+}
 
 // 서버 응답(제안: `{ type: 'village_view', view }` — 이름은 T1072 가 정한다 · 30-n-net.js 의 case 한 줄이 이리로 넘긴다)
 function villageViewOnMessage(view) {
@@ -217,7 +243,7 @@ function vvOnClick(e) {
   else if (a === 'more') { vvMemAll = true; vvRender(); }
   else if (a === 'req') { vvTab = 'dash'; vvRender(); const r = document.getElementById('vvReq'); if (r) r.scrollIntoView({ block: 'start' }); }
   else if (a === 'claim') send({ type: 'claim', kind: 'personal' });   // 개인 사유지 — C 키와 같은 문(T45)
-  else if (a === 'give' && D) { const r = (D.requests || [])[+b.dataset.i]; if (r) send({ type: 'village_deliver', vid: vvVid, item: r.item }); }   // 게시판 줄 버튼과 같은 문
+  else if (a === 'give' && D) { const r = (D.requests || [])[+b.dataset.i]; if (r) send({ type: 'village_deliver', vid: vvVid, item: r.res || r.item }); }   // 게시판 줄 버튼과 같은 문
   else if (a === 'bring' && D) {   // 기부 — 회관 기부 단추와 같은 문(T769) · 든 것 중 이 일에 필요한 것만 · 모자란 만큼까지(서버가 최종 판정)
     const p = ((D.projects || {}).active || [])[+b.dataset.i];
     const inv = (typeof inventory !== 'undefined' && inventory) ? inventory : {};

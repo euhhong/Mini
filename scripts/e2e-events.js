@@ -421,7 +421,7 @@ async function waitHttp(url, tries = 900) {
       notes.filter((t) => /갚을 것이 없습니다/.test(t)).join(' | ') || '(거절 없음)');
     ok((invAfter[giveItem] || 0) < (invBefore[giveItem] || 0), '납품한 만큼 인벤에서 빠졌다',
       `${giveItem} ${invBefore[giveItem] || 0} → ${invAfter[giveItem] || 0}`);
-    ok(notes.some((t) => /납품/.test(t)), '납품 결과가 화면 알림으로 돌아왔다');
+    ok(notes.some((t) => /납품|바쳤습니다/.test(t)), '납품 결과가 화면 알림으로 돌아왔다');
     ok(!!rewItem && (invAfter[rewItem] || 0) > (invBefore[rewItem] || 0), '보상(물물)이 인벤에 들어왔다',
       `${rewItem} ${invBefore[rewItem] || 0} → ${invAfter[rewItem] || 0}`);
     const board2 = await page.evaluate(() => window.__evLastBoard || null);
@@ -620,7 +620,7 @@ async function waitHttp(url, tries = 900) {
   await page.evaluate((vid) => window.__sendPrimary({ type: 'village_board', vid }), V.id);
   await sleep(1200);
   const farNote = await page.evaluate(() => (window.__notices || []).slice(-2).join(' | '));
-  ok(/너무 멀/.test(farNote), '멀리서 게시판을 요청하면 서버가 거절한다(거리 게이트는 서버가 판정)', JSON.stringify(farNote));
+  ok(/너무 (멀|멉)/.test(farNote), '멀리서 게시판을 요청하면 서버가 거절한다(거리 게이트는 서버가 판정)', JSON.stringify(farNote));
   await snap('ev-06-far');
 
   const fatal = errs.filter((e) => !/Failed to load resource/.test(e));

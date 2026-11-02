@@ -334,7 +334,7 @@ async function waitHttp(url, tries = 900) {
     await page.evaluate((vid) => window.__sendPrimary({ type: 'village_chronicle', vid }), B.id);
     await sleep(1200);
     const note = await page.evaluate(() => (window.__notices || []).slice(-2).join(' | '));
-    ok(/너무 멀/.test(note), '⑧ 멀리서 연표를 청하면 서버가 거절한다(260px 게이트 — 게시판과 같은 술어)', JSON.stringify(note));
+    ok(/너무 (멀|멉)/.test(note), '⑧ 멀리서 연표를 청하면 서버가 거절한다(260px 게이트 — 게시판과 같은 술어)', JSON.stringify(note));
   }
 
   // ── ⑨ 재접속 뒤에도 같은 연표 — 화면을 새로 그려도 역사는 그대로다

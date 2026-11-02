@@ -274,7 +274,7 @@ async function waitHttp(url, tries = 900) {
   });
   const nt2 = await page.evaluate(() => (window.__notices || []).slice());
   ok(!!hall, `★회관이 **완공**됐다(village_hall)${hall ? '' : ` — 알림: ${nt2.slice(-4).join(' / ')}`}`);
-  ok(nt2.some((t) => /섰다|인구 0/.test(t)), `★"마을이 섰다 · 인구 0" 알림이 왔다 — ${(nt2.filter((t) => /마을/.test(t)).slice(-1)[0] || '(없음)')}`);
+  ok(nt2.some((t) => /섰다|섰습니다|인구 0/.test(t)), `★"마을이 섰다 · 인구 0" 알림이 왔다 — ${(nt2.filter((t) => /마을/.test(t)).slice(-1)[0] || '(없음)')}`);
   await snap('05-hall');
   if (!hall) { console.log('\n회관 완공 실패 — 이후 검사 불가'); }
 

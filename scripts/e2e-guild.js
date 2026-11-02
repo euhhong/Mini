@@ -257,7 +257,7 @@ const last = (C) => JSON.stringify(C.notices.slice(-1));
     const inv2 = await jpost(`${CEN}/tribe/invites`, { player_id: I2.playerId });
     ok(!!inv2 && inv2.invites.length === 2, '④d 전제: 두 길드가 같은 사람을 불렀다', JSON.stringify(inv2 && inv2.invites.map((x) => x.name)));
     I2.notices.length = 0; say(I2, '/수락 열린뜰'); await sleep(2000);
-    ok(I2.notices.some((t) => /\[열린뜰\] 에 들었다/.test(t)), '★★④d `/수락 <이름>` 이 **부른 곳 중 하나를 고른다**', last(I2));
+    ok(I2.notices.some((t) => /열린뜰에 들었습니다|\[열린뜰\] 에 들었다/.test(t)), '★★④d `/수락 <이름>` 이 **부른 곳 중 하나를 고른다**', last(I2));
     const who = await jget(`${CEN}/player/${encodeURIComponent(I2.playerId)}`);
     ok(!!who && who.player.tribe_id === OPEN_TID, '④d2 고른 쪽으로 실제로 들었다(가장 최근이 아니다)', who && who.player.tribe_id);
     //   ★자명 통과 금지 — 안 부른 이름은 못 고른다
@@ -400,7 +400,7 @@ const last = (C) => JSON.stringify(C.notices.slice(-1));
     //   ★"어느 마을 앞인가"는 근접 브리핑이 적어 둔다(`_memberNearVid` — 실클라는 다가가면 스스로 보낸다 · 이 손님은 한 번 청한다)
     O.ws.send(JSON.stringify({ type: 'village_brief', vid: V0.vid | 0 })); await sleep(800);
     O.notices.length = 0; say(O, '/곳간'); await sleep(1500);
-    const line0 = O.notices.find((t) => /곳간 —/.test(t)) || '';
+    const line0 = O.notices.find((t) => /곳간 —|곳간에 먹을 것이/.test(t)) || '';
     ok(!!line0 && /꺼내는 것은 촌장만/.test(line0) && !/남은 몫|누적 기여/.test(line0), '★⑦c 마을 사람이 아니어도 **곳간이 형편을 말한다**(누구나 본다 · 꺼내기 촌장만 · 한도 말 없음)', JSON.stringify(line0));
     const stock0 = parseFloat((/먹을 것이 ([\d.]+) 있습니다/.exec(line0) || [])[1]);
     ok(Number.isFinite(stock0) && stock0 > 0, '⑦c2 전제: 곳간에 식량이 실제로 있다(아래 거절이 빈 곳간 때문이 아니다)', stock0);
@@ -413,7 +413,7 @@ const last = (C) => JSON.stringify(C.notices.slice(-1));
       member: { zone: 'hanbando', vid: V0.vid | 0, name: V0.name, since: 0 } }));
     await sleep(800);
     O.notices.length = 0; say(O, '/소속'); await sleep(1200);
-    ok(O.notices.some((t) => /사람 — .*일째/.test(t)), '⑦d 전제: 소속이 실제로 앉았다(`/소속` 이 상태를 되읊는다)', last(O));
+    ok(O.notices.some((t) => /사람 — .*일째|사람이 된 지 .*일째/.test(t)), '⑦d 전제: 소속이 실제로 앉았다(`/소속` 이 상태를 되읊는다)', last(O));
 
     // ⓒ 마을 사람이 되어도 꺼내기는 촌장만 — 우리말 품목은 풀리고(거절 까닭이 이름이 아니다) · 짐은 그대로
     const pack1 = packOf(O);

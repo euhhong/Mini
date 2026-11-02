@@ -455,7 +455,7 @@ async function waitHttp(url, tries = 900) {
       if (row.take && (invA[row.take] || 0) > (invB[row.take] || 0)) mealSeen = mealSeen || /cooked|food|fish|meat|berry|dried|smoked|pickled/.test(String(row.take));
       contrib = (st.s && st.s.contrib) || contrib;
       if (round === 0) {
-        ok(st.notes.some((t) => /납품/.test(t)), `[${label}] 납품이 화면 알림으로 돌아온다`);
+        ok(st.notes.some((t) => /납품|바쳤습니다/.test(t)), `[${label}] 납품이 화면 알림으로 돌아온다`);
         ok(fxSeen, `[${label}] ★"곳간에 쌓였다" — 내 행동에 세계가 반응한다(반응 ②)`);
       }
       // 다음 의뢰가 서도록 날을 잠깐 흘린다(냉각 기간 · 재게시) — ★다 채웠으면 **얼린 채로 끝낸다**
@@ -870,7 +870,7 @@ async function waitHttp(url, tries = 900) {
           A.notices.length = 0;
           snd(A, { type: 'village_deliver', vid: V.vid | 0, item: give, want: n });
           await sleep(1200);
-          if (A.notices.some((t) => /납품/.test(t))) done++;
+          if (A.notices.some((t) => /납품|바쳤습니다/.test(t))) done++;
         }
         A.msgs.length = 0; snd(A, { type: 'onboarding_state' }); await sleep(900);
         const st1 = A.msgs.slice().reverse().find((m) => m.type === 'onboarding_state' && m.state);
