@@ -402,13 +402,15 @@ function _capComplete(fromVil, toVil, npc) {
 //   ★잃는 몫은 새로 안 짓는다 — 결판의 `warWeaponFlow`(드랍·투기) 가 **짐에서** 뺀다(공격이 졌을 때만 흐름이 있다 —
 //     종전에도 승자는 제 무기를 잃지 않았다). 그래서 **귀환 뒤 곳간은 끔과 같다** — 다른 것은 원정 **동안**뿐이다.
 //   ★방어 소집은 안 건다 — 마을 안에서 들고 마을 안에서 내려놓는다(같은 날 · 장부 무변).
-//   손잡이: `T403_ARMS_LEDGER=1` 일 때만. 끔이면 `w._arms` 가 안 생기고 아래 두 함수는 0 을 낸다 = 비트 동일.
+//   손잡이: `T403_ARMS_LEDGER` — ★[T1094] 켬 기본(`=0` 이면 끔). 끔이면 `w._arms` 가 안 생기고 아래 두 함수는 0 을 낸다 = 비트 동일.
 // ★[T423] 짐이 먹는다(군량 = 행위 ⓐ) — 손잡이 `T423_RATION_ACT`. 끔이면 아래 문들이 한 글자도 안 돈다.
 //   ★★[T861 2026-10-22] **켬 기본**(★PM 10-22 · T845 — 징발 묶임 · 몰사 0 · 재민 09-26 캐논 ⓐ 군량은 짐이 먹는다) — `!== '0'` · 되돌림 `T423_RATION_ACT=0`(= T861 전 바이트).
 function _rationActOn() { return typeof process !== 'undefined' && !!process.env && process.env.T423_RATION_ACT !== '0'; }
 // ★★[T466] 약탈 = 행위(군량 행위 ⓒ · PM #68 · 재민 "즉시 판정이 아니라 물리 노획 → 운반 → 귀가 저장") — 손잡이 끔.
 function _lootActOn() { return typeof process !== 'undefined' && !!process.env && process.env.T466_LOOT_ACT === '1'; }
-function _armsLedgerOn() { return typeof process !== 'undefined' && !!process.env && process.env.T403_ARMS_LEDGER === '1'; }
+//   ★★[T1094 2026-11-03 · ★PM 11-02 캐논 문 5 = ㄱ(재민 보고됨)] **켬 기본** — 원정이 집 곳간 무기를 실어 간다(돌아오면 다시 곳간 · 소멸 0) · `!== '0'` · 되돌림 `T403_ARMS_LEDGER=0`(= T1094 전 바이트).
+//     문 6(몸이 질 수 있는 만큼만 · 못 지는 몫은 집 곳간에)은 호스트(`server/villages.js` `T1094_CARRY_CAP`)가 몸에 실을 때 건다 — 장부에서 그 몫을 빼고 곳간에 되돌린다(아래 `rationLeave` · 호스트 무기 줄).
+function _armsLedgerOn() { return typeof process !== 'undefined' && !!process.env && process.env.T403_ARMS_LEDGER !== '0'; }
 // ★★[T826 2026-10-20 · T811 회부 2] 노획을 몸이 옮긴다 — 손잡이 `T826_LOOT_BODY`('1' 만 켬 · T811 몸 짐 위에서만 돈다 · 끔 = main 바이트).
 //   공격이 이기면 결판 흐름(`warWeaponFlow` — 사망 드랍 × 회수 · 투기 × 회수)의 회수 몫이 결판 순간 공격 마을 곳간에 섰다.
 //   켬 ∧ 그 원정 무기가 몸 짐에 실렸으면(`w._armsOnBodies` — 호스트 T811) 그 몫을 곳간이 아니라 **원정 장부**(`w._arms.weapon`)에 얹는다 —
@@ -887,6 +889,16 @@ function createWar(opts) {
     log(world.day, w.atk.name + ' 짐을 곳간에 내려놓는다 — ' + fe.toFixed(1));
     return fe;
   }
+  // ★★[T1094 문 6] 못 진 군량은 집 곳간에 남긴다 — 몸에 실을 때 호스트(`T1094_CARRY_CAP`)가 그 몸의 짐 상한(`carry.js CAP_KG`)을 넘는 팩 몫을 덜어 여기로 준다.
+  //   내려놓기와 같은 문(`_warFoodGive` · 품목 그대로 · 세금 0 · 레코드째) · 장부 셈은 내려놓음(`back`)에 들고 그중 남긴 몫을 따로 적는다(`left`) — 항등 무변 · 새 수 0.
+  function rationLeave(w, items, lots) {
+    const A = w && w.atk && w.atk.econ; if (!A || !items) return 0;
+    const fe = bagFE(items, { _world: A._world });
+    _warFoodGive(A, items, 1, lots || null);
+    if (w._rationBook) { w._rationBook.back += fe; w._rationBook.left = (w._rationBook.left || 0) + fe; }
+    log(world.day, w.atk.name + ' 못 진 군량을 곳간에 남긴다 — ' + fe.toFixed(1));
+    return fe;
+  }
   // war-core 귀환 도착 — 아직 몸에 남은 짐을 호스트가 모아 주면 내려놓고 팩을 닫는다(두 번 안 준다).
   function _rationLayDownAll(w) {
     let back = 0;
@@ -1276,6 +1288,7 @@ function createWar(opts) {
     warDraftBind, warDraftFill, warDraftReleasePid, warDraftReleaseWar, warDraftCount, warRationRefund,
     warDraftKillPid,   // ★[T906] 굶어 죽은 원정 몸 — 묶인 징발자 한 사람의 econ 사망(호스트가 손잡이 켤 때만 부른다)
     packSplit, bodyEat, bagFE, rationLayDown, rationActOn: _rationActOn,
+    rationLeave,   // ★[T1094 문 6] 못 진 군량을 집 곳간에 남긴다(호스트가 몸에 실을 때 · 내려놓기 그 문)
     lootGive, lootActOn: _lootActOn, warLog: (day, m) => log(day, m),   // ★[T466] 약탈 = 행위(손잡이 끔 · 끔이면 호스트 훅을 안 부른다)   // ★[T423] 짐이 먹는다(손잡이 끔이면 packSplit 이 null)
     syncArmsMirror: (vil) => _syncArmsToEcon(vil),   // ★[T857] 호스트가 결판 자리에서 장부를 움직인 뒤 거울을 다시 센다(같은 함수 · 사본 0)
     weaponGive,   // ★[T857] 이긴 방어 몸이 결판 자리 더미를 주워 곳간에(결판 흐름의 그 문 · 사본 0)
