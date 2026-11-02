@@ -3058,6 +3058,20 @@ const outgoingHandoffs = new Map(); // token -> { pid, timeoutHandle } (송신�
 const T564_HOLD = process.env.T564_HOLD_AT_SEAM !== '0';   // ★[T564] 넘기 실패 2초 창 동안 선(겹침 띠 끝)에 세워 둔다 · 되돌림 =0
 const HANDOFF_PROTO = (process.env.E2E_GIVE === '1' && process.env.E2E_HANDOFF_PROTO) ? (+process.env.E2E_HANDOFF_PROTO || 1) : 1;
 const _t564Warned = new Set();   // 존별 "판 모름" 로그는 한 번만
+// ★★[T1092 2026-11-03 · ★재민 11-02 실기 "한반도 → 닛폰 경계에서 끊김 · 멈춤"] 손잡이 `T1092_HANDOFF_BACK`(켬 기본 후보 · 되돌림 `=0` = 종전 — ACK 시한이 사람을 지우고 소켓을 닫는다).
+//   서버끼리 인계(`/handoff_prepare`)는 됐는데 **브라우저가 받는 존 소켓을 못 열면**(주소 · 포트 · 방화벽 · 시한 — 까닭 무관) ACK 가 안 온다. 종전엔 3초 시한이
+//   사람을 지우고 소켓을 닫아 화면이 "연결 끊김"으로 멈췄다(사람은 왜인지 모른다 · 다시 들어가면 행의 `last_zone` = 받는 존이라 또 못 붙는다).
+//   켬 = 그 시한에 받는 존에게 그 토큰을 **놓으라** 한다(같은 문 `/handoff_prepare` · `kind: 'drop'` — 새 라우트 0 · 받는 존도 켬일 때만 받는다 · 아니면 400).
+//     놓았다(토큰이 안 쓰였고 그 사람이 받는 존에 따로 서 있지 않다) → 몸은 이 존 것 그대로: 넘기 전 자리(T564 `_t564Pre`)로 돌려놓고 얼음을 푼다(`_t564Hold` —
+//       T564 준비 실패와 한 자리) · 저장 한 번(행이 넘기기 전 저장의 `last_zone: 받는 존` 에 머물지 않게) · 그 소켓에 `handoff_back` + welcome(`back` —
+//       승격 welcome 과 한 꼴 `_promoteWelcome`) + 까닭 한 줄(하십시오체 · T564 알림의 10초 창 그대로).
+//     못 놓았다(이미 쓰였다 = 몸은 받는 존 것 · 그 사람이 받는 존에 따로 섰다 · 못 물었다 · 받는 존 끔 · 옛 판) → 종전 정리 그대로(`_ackGone`).
+//   몸 · 짐 정합(T823 · T843 술어와 겹치지 않게): "놓았다"는 받는 존에서 그 토큰으로 몸이 설 두 길(토큰 접속 · 승격)이 다 닫혔다는 답이다 — 몸은 늘 한 곳.
+//     답을 기다리는 동안 이 몸은 ACK 기다림 표에 그대로 있다(껍데기 저장은 종전대로 안 나간다) · 그 사이 ACK 가 오면 ACK 길이 정리한다(돌려놓기 0).
+//   클라: `handoff` 에 `back`(= 받는 존 토큰 수명 ms)을 싣는다 — 그 안에서 이 존 소켓이 열려 있으면 클라는 받는 존에 이름 · 열쇠로 따로 붙지 않고 답을 기다린다
+//     (그 재시도가 받는 존에 행 몸을 세우면 몸이 둘이다 — 게스트는 존 사이 중복 차단이 없다 · `33-m-conn.js` `_t1092Wait`).
+const T1092_HANDOFF_BACK = process.env.T1092_HANDOFF_BACK !== '0';
+const HANDOFF_TOKEN_MS = 5000;   // 받는 존 토큰 수명(`/handoff_prepare` 의 그 5초 — 종전 글자에 이름만 붙였다) · ★[T1092] `handoff.back` 으로도 싣는다
 let nextPid = 1;
 let nextRid = 1;
 // nextBid 제거: 건물 id는 dbId 기반 결정값('b'+dbId)로 통일 (lazy-load materialize와 dedupe·재활성 안정).
@@ -6210,6 +6224,7 @@ const server = http.createServer((req, res) => {
           let st = 200, out;
           if (data.kind === 'caravan' || data.kind === 'snap') out = SimVillages.xzoneReceive ? SimVillages.xzoneReceive(data) : null;
           else if (data.kind === 'army') out = { ok: false, why: 'army — 칸만 예약(셋째 카드)' };
+          else if (data.kind === 'drop' && T1092_HANDOFF_BACK) out = _t1092Drop(data);   // ★[T1092] 보낸 존 ACK 시한 — 그 토큰을 놓는다(`_t1092Drop`)
           else { st = 400; out = { ok: false, why: 'unknown kind' }; }
           res.writeHead(st, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify(out || { ok: false, why: 'no-host' }));
@@ -6248,7 +6263,7 @@ const server = http.createServer((req, res) => {
         // ★[T732] 몸(로트 포함)을 들고 있는다 — 승격(observer→primary) 길이 로트를 통째로 잃고 쓸개가 '오늘'로 다시 적던 구멍. 끄면 이 줄 무동작.
         if (T732_MOMENT && data.body && typeof data.body === 'object') pendingHandoffs.get(data.token).body = data.body;
         // 5초 안에 클라가 접속 안 하면 만료
-        setTimeout(() => pendingHandoffs.delete(data.token), 5000);
+        setTimeout(() => pendingHandoffs.delete(data.token), HANDOFF_TOKEN_MS);
         console.log(`[${ZONE_ID}] ⇐ handoff_prepare token=${data.token.slice(0,8)} for ${data.name}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: true, proto: HANDOFF_PROTO }));   // ★[T564] 이 존 규약 판
@@ -8512,37 +8527,7 @@ function handleObserverMessage(ws, raw) {
       postJSON(src.host, src.port, '/handoff_ack', { token: msg.token })
         .catch(e => console.warn(`[${ZONE_ID}] promote ACK 실패:`, e.message));
     }
-    send(ws, {
-      type: 'welcome',
-      // promote는 observer ws 재사용 — resources/claims/buildings는 이미 보유·실시간 갱신 중이라 생략.
-      promoted: true,
-      pid,
-      zone: zonePublicMeta(),
-      hardcodedTerrain: getHardcodedTerrainForZone(),
-      // Phase 5-K4: mobs도 생략 — observer가 tick(visibleMobs)으로 이미 받고 갱신 중.
-      inventory: invPayload(player.inventory),
-      toolItems: player.toolItems || [], hotkey1: player.hotkey1 || null, equipped: player.equipped || null,
-      equipment: player.equipment || [], craftSkill: player.craftSkill || {}, // 플레이어 아이템 인스턴스·숙련
-      tools: player.tools,
-      recipes: RECIPES,
-      itemRecipes: ITEM_RECIPES,
-      equipmentRecipes: EQUIPMENT_RECIPES, // 플레이어 장비 제작 레시피
-      equipmentMeta: EQUIPMENT_META,       // 미리보기 계산용
-      buildingRecipes: BUILDING_RECIPES,
-      cookRecipes: COOK_RECIPES,
-      foodEffects: FOOD_EFFECTS,
-      self: { x: player.x, y: player.y, hp: player.hp, maxHp: player.maxHp,
-              hunger: Math.round(player.hunger), thirst: Math.round(player.thirst),
-              vp: Math.round(player.vp ?? 0),
-              tribeId: player.tribeId || null, tribeName: _t787Label(player),   // ★[T787] 켬 = 내 마을 이름
-              floor: player.floor || 0,
-              homeZone: player._homeZone || null,
-              homeX: player._homeX, homeY: player._homeY },
-      worldClock: Object.assign({
-        epoch: WORLD.worldEpoch, dayLengthMs: WORLD.dayLengthMs,
-        dayPhaseRatio: WORLD.dayPhaseRatio, serverNow: Date.now(),
-      }, T720_LON_DAY ? { lonDay: 1, worldWidth: WORLD.worldWidth, sunrise: SUNRISE_FRAC } : null),   // ★[T720]
-    });
+    send(ws, _promoteWelcome(player, pid, { promoted: true }));   // ★[T1092] 몸 한 벌(`_promoteWelcome`) — 칸 · 차례 종전 그대로
     sendCorpsesInit(ws);
     attachPlayerHandlers(ws, player);
     console.log(`[${ZONE_ID}] ✨ promote observer→primary ${player.name} token=${msg.token.slice(0,8)} v=(${player.vx},${player.vy})${_t868hb ? ` — 몸 출처 ${_t868hb.src} · 도구 ${(player.toolItems || []).length}` : ''}`);
@@ -8552,6 +8537,38 @@ function handleObserverMessage(ws, raw) {
     if (typeof _t868b.then === 'function') _t868b.then(_t868Go).catch((e) => console.error(`[${ZONE_ID}] ✗ [T868] 승격 몸 잇기 실패:`, e && e.message));
     else _t868Go(_t868b);
   }
+}
+// ★[T1092] 관측 소켓 승격 welcome 한 벌 — 승격(`promoted`)과 넘기 실패 되돌림(`back` · `_t1092Back`)이 같은 꼴을 보낸다(칸 · 차례 종전 그대로 · 사본 0).
+//   promote는 observer ws 재사용 — resources/claims/buildings는 이미 보유·실시간 갱신 중이라 생략. 되돌림도 같다 — 넘기는 동안에도 방송(`broadcast`)은 그 소켓에 갔다.
+function _promoteWelcome(player, pid, flag) {
+  return Object.assign({ type: 'welcome' }, flag, {
+    pid,
+    zone: zonePublicMeta(),
+    hardcodedTerrain: getHardcodedTerrainForZone(),
+    // Phase 5-K4: mobs도 생략 — observer가 tick(visibleMobs)으로 이미 받고 갱신 중.
+    inventory: invPayload(player.inventory),
+    toolItems: player.toolItems || [], hotkey1: player.hotkey1 || null, equipped: player.equipped || null,
+    equipment: player.equipment || [], craftSkill: player.craftSkill || {}, // 플레이어 아이템 인스턴스·숙련
+    tools: player.tools,
+    recipes: RECIPES,
+    itemRecipes: ITEM_RECIPES,
+    equipmentRecipes: EQUIPMENT_RECIPES, // 플레이어 장비 제작 레시피
+    equipmentMeta: EQUIPMENT_META,       // 미리보기 계산용
+    buildingRecipes: BUILDING_RECIPES,
+    cookRecipes: COOK_RECIPES,
+    foodEffects: FOOD_EFFECTS,
+    self: { x: player.x, y: player.y, hp: player.hp, maxHp: player.maxHp,
+            hunger: Math.round(player.hunger), thirst: Math.round(player.thirst),
+            vp: Math.round(player.vp ?? 0),
+            tribeId: player.tribeId || null, tribeName: _t787Label(player),   // ★[T787] 켬 = 내 마을 이름
+            floor: player.floor || 0,
+            homeZone: player._homeZone || null,
+            homeX: player._homeX, homeY: player._homeY },
+    worldClock: Object.assign({
+      epoch: WORLD.worldEpoch, dayLengthMs: WORLD.dayLengthMs,
+      dayPhaseRatio: WORLD.dayPhaseRatio, serverNow: Date.now(),
+    }, T720_LON_DAY ? { lonDay: 1, worldWidth: WORLD.worldWidth, sunrise: SUNRISE_FRAC } : null),   // ★[T720]
+  });
 }
 function attachObserverHandlers(ws) {
   ws.removeAllListeners('message');
@@ -16421,12 +16438,12 @@ async function fireHandoff(player, targetZoneId, newX, newY) {
   //   ★[T564] 받는 존의 규약 판 — 다르면 넘기지 않는다(토큰은 받는 쪽이 이미 409 로 버렸다 · 여기는 받는 쪽이 T564 판인데 판만 다른 드문 창)
   if (_prep && _prep.proto != null && +_prep.proto !== HANDOFF_PROTO) return _t564HandoffFail(player, targetZoneId, target, Object.assign(new Error('proto'), { status: 409, body: _prep }));
   if (_prep && _prep.proto == null && !_t564Warned.has('out:' + targetZoneId)) { _t564Warned.add('out:' + targetZoneId); console.warn(`[${ZONE_ID}] · handoff_prepare → ${targetZoneId} 규약 판 모름(상대가 T564 전 판) · 넘기는 종전대로`); }
-  send(player.ws, { type: 'handoff', targetZone: targetZoneId, token });
+  send(player.ws, Object.assign({ type: 'handoff', targetZone: targetZoneId, token }, T1092_HANDOFF_BACK ? { back: HANDOFF_TOKEN_MS } : null));   // ★[T1092] 켬 = 못 붙으면 돌려놓는다는 약속(클라 기다림 시한)
   console.log(`[${ZONE_ID}] ⇒ handoff ${player.name} (${player.pid}) → ${targetZoneId} token=${token.slice(0,8)}`);
 
   // ACK 대기 — 도착하면 즉시 정리. 못 받으면 3초 후 fallback 정리.
   const pid = player.pid;
-  const timeoutHandle = setTimeout(() => {
+  const _ackGone = () => {   // ★[T1092] 종전 시한 몸통 그대로(이름만 붙였다) — 끔 · 돌려놓지 못한 판(받는 존이 토큰을 안 놓았다 · 못 물었다)이 이 길
     if (outgoingHandoffs.has(token)) {
       outgoingHandoffs.delete(token);
       metrics.handoff_timeouts++;
@@ -16445,6 +16462,10 @@ async function fireHandoff(player, targetZoneId, newX, newY) {
       if (_t498Held && !_t843Skip(player)) { _saveSend(_t498Held.playerId, _t498Held.patch); console.warn(`[${ZONE_ID}] ⚠ [T498] ACK 없음 — 떠나는 순간의 행 저장`); }
       else if (_t498Held) console.warn(`[${ZONE_ID}] · [T498 · T867] ACK 없음 — 받는 존이 몸을 받은 판이라 쥔 행은 안 보낸다(몸은 도착 존 것 · T843 술어)`);
     }
+  };
+  const timeoutHandle = setTimeout(() => {
+    if (T1092_HANDOFF_BACK && outgoingHandoffs.has(token)) return _t1092Back(pid, token, targetZoneId, target, _ackGone);   // ★[T1092] 받는 존에 토큰을 놓으라 하고 돌려놓는다
+    _ackGone();
   }, 3000);
   outgoingHandoffs.set(token, { pid, timeoutHandle });
   metrics.handoffs_out++;
@@ -16466,16 +16487,57 @@ function _t564HandoffWhy(e) {
 function _t564HandoffFail(player, targetZoneId, target, e) {
   const w = _t564HandoffWhy(e);
   console.error(`[${ZONE_ID}] ✗ 넘기 실패 → ${targetZoneId} (${target && target.host}:${target && target.port}) 까닭=${w.k} · ${(e && (e.code || e.message)) || ''}${e && e.status ? ' · 응답 ' + e.status : ''} · 이 존 규약 판 ${HANDOFF_PROTO}`);
-  player.handingOff = false;
-  player.lastHandoffFailAt = Date.now();
-  //   ★[T564] 되끌지 않는다 — 떠나기 직전 자리(겹침 띠 끝까지)로 돌려놓는다. 종전엔 위 clamp 가 선으로 256px 되끌었다(= 튕김).
-  if (T564_HOLD && player._t564Pre) { player.x = clamp(player._t564Pre.x, -HANDOFF_COMMIT, ZONE.zoneWidth + HANDOFF_COMMIT); player.y = clamp(player._t564Pre.y, -HANDOFF_COMMIT, ZONE.zoneHeight + HANDOFF_COMMIT); }
-  player._t564Pre = null;
+  _t564Hold(player);
   if (!player._t564SaidAt || Date.now() - player._t564SaidAt > 10000) {
     player._t564SaidAt = Date.now();
     const nm = (ZONES[targetZoneId] && ZONES[targetZoneId].displayName) || targetZoneId;
     send(player.ws, { type: 'notice', text: `${nm}(으)로 못 넘어간다 — ${w.say}` });
   }
+}
+
+// ★[T564 → T1092] 넘기 실패의 몸 되돌림 한 자리 — 준비 실패(`_t564HandoffFail`)와 브라우저가 못 붙은 판(`_t1092Back`)이 같이 부른다(T564 줄 그대로 옮겼다 · 사본 0).
+function _t564Hold(player) {
+  player.handingOff = false;
+  player.lastHandoffFailAt = Date.now();
+  //   ★[T564] 되끌지 않는다 — 떠나기 직전 자리(겹침 띠 끝까지)로 돌려놓는다. 종전엔 위 clamp 가 선으로 256px 되끌었다(= 튕김).
+  if (T564_HOLD && player._t564Pre) { player.x = clamp(player._t564Pre.x, -HANDOFF_COMMIT, ZONE.zoneWidth + HANDOFF_COMMIT); player.y = clamp(player._t564Pre.y, -HANDOFF_COMMIT, ZONE.zoneHeight + HANDOFF_COMMIT); }
+  player._t564Pre = null;
+}
+// ★★[T1092] 보낸 존 — ACK 시한. 받는 존에게 그 토큰을 놓으라 하고, 놓았으면 이 존에 돌려놓는다(손잡이 주석 `T1092_HANDOFF_BACK`). 아니면 종전 정리(`ackGone`).
+async function _t1092Back(pid, token, targetZoneId, target, ackGone) {
+  const p = players.get(pid);
+  if (!p || !p.handingOff || !p.ws || p.ws.readyState !== 1) return ackGone();   // 돌려놓을 사람(열린 소켓)이 없다 — 종전 정리
+  let r = null;
+  try { r = await postJSON(target.host, target.port, '/handoff_prepare', { kind: 'drop', token, player_id: p.playerId, proto: HANDOFF_PROTO }); }
+  catch (e) { r = { err: (e && (e.status || e.code || e.message)) || '?' }; }
+  if (!outgoingHandoffs.has(token)) return;   // 그 사이 ACK 가 왔다 — 받는 존에 붙었다(ACK 길이 이미 정리했다 · 돌려놓기 0)
+  const live = players.get(pid) === p && p.handingOff && p.ws && p.ws.readyState === 1;
+  if (!r || r.dropped !== true || !live) {
+    console.warn(`[${ZONE_ID}] · [T1092] ACK 없음 · 돌려놓지 않는다 — ${!live ? '그 사이 사람이 나갔다' : r.err ? `받는 존에 못 물었다(${r.err})` : !r.had ? '받는 존이 토큰을 이미 썼다 · 몰랐다' : '받는 존에 그 사람이 따로 섰다'} → 종전 정리`);
+    return ackGone();
+  }
+  outgoingHandoffs.delete(token);
+  metrics.handoff_timeouts++;   // ACK 시한은 시한이다(종전 셈과 같은 칸)
+  _t564Hold(p);
+  savePlayer(p, { last_zone: ZONE_ID, last_x: p.x, last_y: p.y });   // 행이 넘기기 전 저장(`last_zone: 받는 존` · 입구)에 머물지 않게 — 몸은 여기 있다
+  send(p.ws, { type: 'handoff_back', zone: ZONE_ID, from: targetZoneId });
+  send(p.ws, _promoteWelcome(p, pid, { back: true }));
+  if (!p._t564SaidAt || Date.now() - p._t564SaidAt > 10000) {   // T564 알림과 같은 창(10초에 한 번)
+    p._t564SaidAt = Date.now();
+    const nm = (ZONES[targetZoneId] && ZONES[targetZoneId].displayName) || targetZoneId;
+    send(p.ws, { type: 'notice', text: `${nm} 쪽으로 넘어가지 못했습니다. 저쪽 서버에 닿지 않습니다.` });
+  }
+  console.warn(`[${ZONE_ID}] ↩ [T1092] 넘기 실패(ACK 없음 — 브라우저가 받는 존에 못 붙었다) → ${targetZoneId} · 받는 존이 토큰을 놓았다 · ${p.name} (${pid}) 넘기 전 자리 (${Math.round(p.x)},${Math.round(p.y)})`);
+}
+// ★★[T1092] 받는 존 — 보낸 존의 ACK 시한에 그 토큰을 놓는다. `dropped` = 토큰이 아직 안 쓰였고 그 사람이 이 존에 따로 서 있지 않다(보낸 존이 돌려놓아도 몸이 하나).
+function _t1092Drop(data) {
+  const tok = (data && typeof data.token === 'string') ? data.token : '';
+  const had = !!tok && pendingHandoffs.has(tok);
+  if (had) pendingHandoffs.delete(tok);   // 이제 이 토큰으로는 아무 몸도 안 선다 — 늦은 토큰 접속 · 승격 둘 다 "토큰 모름"
+  let here = false;
+  if (data && data.player_id) for (const q of players.values()) { if (!q.isNpc && q.playerId === data.player_id) { here = true; break; } }
+  console.log(`[${ZONE_ID}] ⇐ [T1092] handoff drop token=${tok.slice(0, 8)} — ${had ? '안 쓴 토큰을 놓았다' : '토큰 없음(이미 썼다 · 시한이 지웠다)'}${here ? ' · 그 사람이 이 존에 있다' : ''}`);
+  return { ok: true, dropped: had && !here, had, here };
 }
 
 const https = require('https');

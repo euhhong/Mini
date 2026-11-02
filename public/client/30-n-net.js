@@ -908,7 +908,7 @@
       } else if (msg.hardcodedTerrain) {
         console.warn('[terrain] hardcoded received but skipped — zid=' + _zid + ' Terrain=' + !!window.Terrain + ' setHardcoded=' + !!(window.Terrain && window.Terrain.setHardcoded));
       }
-      if (msg.promoted) {
+      if (msg.promoted || msg.back) {   // ★[T1092] `back` = 넘기 실패 되돌림 welcome(넘긴 존 소켓 그대로 — 승격과 같은 꼴 · 게스트 열쇠는 안 건드린다)
         // Phase 5-K4: observer ws 재사용 promote — resources/claims/buildings/mobs 전부
         // observer로 이미 받아 실시간 갱신(tick) 중이므로 그대로 유지. clear/rebuild 안 함 → 끊김 0.
       } else {
@@ -1643,8 +1643,18 @@
       }
       // 옛 primary observer로 demote — broadcast 갭 줄임
       const oldConn = conns.get(oldPrimary);
-      if (oldConn) oldConn.role = 'observer';
+      if (oldConn) { oldConn.role = 'observer'; oldConn._t1092Until = (+msg.back > 0) ? performance.now() + (+msg.back) : 0; }   // ★[T1092] 넘긴 존의 약속(못 붙으면 돌려놓는다) — 그 시한까지 받는 존에 따로 안 붙는다(33-m-conn `_t1092Wait`)
       showNotice(zonesMeta[target].displayName);
+    } else if (msg.type === 'handoff_back') {
+      // ★★[T1092] 넘기 실패 — 넘긴 존(이 소켓)이 몸을 넘기 전 자리로 돌려놓았다(서버 손잡이 `T1092_HANDOFF_BACK`). 이 소켓을 다시 주 소켓으로 쓰고
+      //   받을 존 시도(못 열린 · 열리는 중인 소켓)는 접는다. 뒤따르는 welcome(`back`)이 내 pid · 자리 · 접속 상태를 다시 세운다 · 까닭 한 줄은 서버 알림.
+      const was = primaryZoneId;
+      if (was && was !== zoneId && conns.has(was)) closeConnection(was);
+      primaryZoneId = zoneId;
+      c.role = 'primary';
+      c._t1092Until = 0;
+      c.lastPongAt = 0; c.firstPingAt = 0;   // 승격과 같은 상태로(T439 — 넘기 전 pong 기록이 좀비 판정을 하지 않게)
+      console.warn('[handoff] 넘기 실패 — 넘긴 존으로 돌아간다', was, '→', zoneId);
     } else if (msg.type === 'kicked') {
       // 다른 곳에서 로그인되어 강제 종료
       kicked = true;
