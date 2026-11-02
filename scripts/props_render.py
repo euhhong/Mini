@@ -354,6 +354,48 @@ M['h_wool'] = bumped_mat("p_h_wool", (0.95, 0.92, 0.82), (0.88, 0.84, 0.72), 50,
 M['h_lobster'] = bumped_mat("p_h_lobster", (0.14, 0.22, 0.28), (0.08, 0.14, 0.18), 20, 0.4, 0.4) # 바닷가재 — 검푸른 껍데기
 M['h_lobsterj'] = simple_mat("p_h_lobsterj", (0.86, 0.36, 0.12), 0.4)                              # 바닷가재 마디 · 집게 끝(주황)
 M['h_murex'] = bumped_mat("p_h_murex", (0.84, 0.76, 0.62), (0.62, 0.52, 0.40), 18, 0.5, 0.6)      # 자색고둥 껍데기
+# ── [T1099] 셋째 묶음 — 막대 낚싯대 · 같은 꼴로 빌리던 스물여덟(곡물 둘 · 통나무 일곱 · 잎 향초 일곱 · 광석 일곱 · 돌 다섯) ──
+M['j_oat'] = simple_mat("p_j_oat", (0.86, 0.80, 0.54), 0.7)                                       # 귀리 이삭 — 연한 볏짚빛
+M['j_rye'] = simple_mat("p_j_rye", (0.66, 0.64, 0.50), 0.6)                                       # 호밀 이삭 — 회록빛 도는 볏짚
+M['j_pinebark'] = bumped_mat("p_j_pinebark", (0.78, 0.42, 0.15), (0.18, 0.08, 0.03), 6, 1.0, 0.9, (0.20, 0.36))   # 소나무 껍질 — 붉은 거북등 판(금이 검다)
+M['j_pinewood'] = striped_mat("p_j_pinewood", (0.90, 0.70, 0.38), (0.80, 0.58, 0.28), 18, 0.7, 0.2)      # 소나무 속 — 노란 나이테
+M['j_oakbark'] = bumped_mat("p_j_oakbark", (0.66, 0.65, 0.62), (0.20, 0.19, 0.18), 14, 0.8, 0.95, (0.20, 0.34))   # 참나무 껍질 — 밝은 회색에 깊은 골
+M['j_oakwood'] = striped_mat("p_j_oakwood", (0.40, 0.28, 0.16), (0.32, 0.22, 0.12), 22, 0.7, 0.2)      # 참나무 속 — 짙은 갈색
+M['j_birchwood'] = striped_mat("p_j_birchwood", (0.93, 0.86, 0.68), (0.84, 0.76, 0.58), 20, 0.7, 0.2)   # 자작 속 — 흰 미색
+M['j_cedarbark'] = bumped_mat("p_j_cedarbark", (0.30, 0.06, 0.04), (0.14, 0.03, 0.02), 22, 0.8, 0.9)        # 삼나무 껍질 — 짙은 붉은 섬유
+M['j_cedarwood'] = striped_mat("p_j_cedarwood", (0.66, 0.20, 0.13), (0.56, 0.14, 0.10), 18, 0.7, 0.2)      # 삼나무 속 — 붉은빛
+M['j_ebonywood'] = simple_mat("p_j_ebonywood", (0.05, 0.045, 0.045), 0.35)                            # 흑단 속 — 새까만
+M['j_mahowood'] = striped_mat("p_j_mahowood", (0.40, 0.12, 0.07), (0.30, 0.08, 0.05), 18, 0.5, 0.2)       # 마호가니 속 — 짙은 적갈
+M['j_teakwood'] = striped_mat("p_j_teakwood", (0.80, 0.52, 0.16), (0.66, 0.40, 0.10), 18, 0.5, 0.2)    # 티크 속 — 금갈색
+M['j_sapwood'] = simple_mat("p_j_sapwood", (0.84, 0.76, 0.58), 0.7)                                    # 변재(흑단 둘레 흰 테)
+M['j_basil'] = simple_mat("p_j_basil", (0.18, 0.48, 0.12), 0.30)                                      # 바질 — 윤 나는 진초록
+M['j_mint'] = simple_mat("p_j_mint", (0.34, 0.62, 0.28), 0.6)                                         # 박하 — 밝은 풀빛
+M['j_mintstem'] = simple_mat("p_j_mintstem", (0.42, 0.24, 0.32), 0.6)                                 # 박하 줄기 — 자줏빛
+M['j_corian'] = simple_mat("p_j_corian", (0.44, 0.68, 0.24), 0.6)                                     # 고수 — 연두
+M['j_thyme'] = simple_mat("p_j_thyme", (0.38, 0.46, 0.30), 0.8)                                       # 타임 — 회록
+M['j_woody'] = simple_mat("p_j_woody", (0.40, 0.30, 0.20), 0.8)                                       # 나무질 줄기
+M['j_rosemary'] = simple_mat("p_j_rosemary", (0.16, 0.30, 0.20), 0.6)                                 # 로즈마리 — 짙은 바늘잎
+M['j_rosebloom'] = simple_mat("p_j_rosebloom", (0.56, 0.66, 0.90), 0.5)                               # 로즈마리 꽃 — 연하늘
+M['j_sage'] = bumped_mat("p_j_sage", (0.56, 0.62, 0.50), (0.48, 0.54, 0.42), 40, 0.4, 0.9)           # 세이지 향초 — 은빛 회록 털잎
+M['j_lavender'] = bumped_mat("p_j_lavender", (0.54, 0.42, 0.78), (0.40, 0.30, 0.62), 40, 0.5, 0.7)   # 라벤더 꽃이삭
+M['j_bauxite'] = bumped_mat("p_j_bauxite", (0.66, 0.34, 0.20), (0.50, 0.24, 0.14), 10, 0.6, 0.9)      # 보크사이트 — 붉은 갈흙돌
+M['j_pisolith'] = simple_mat("p_j_pisolith", (0.76, 0.48, 0.24), 0.7)                                 # 보크사이트 알갱이(콩알)
+M['j_chromite'] = bumped_mat("p_j_chromite", (0.12, 0.11, 0.10), (0.20, 0.19, 0.18), 30, 0.5, 0.35)   # 크롬철석 — 윤 도는 검은 알갱이
+M['j_cobaltite'] = simple_mat("p_j_cobaltite", (0.62, 0.62, 0.68), 0.30, metal=0.8)                   # 휘코발트석 — 은회색 쇠빛
+M['j_erythrite'] = bumped_mat("p_j_erythrite", (0.82, 0.36, 0.58), (0.66, 0.24, 0.44), 30, 0.4, 0.7)   # 코발트 꽃(적색 피막)
+M['j_magnesite'] = bumped_mat("p_j_magnesite", (0.95, 0.94, 0.91), (0.86, 0.85, 0.80), 18, 0.5, 0.6)  # 마그네사이트 — 사기 같은 흰 덩이
+M['j_pyrolusite'] = bumped_mat("p_j_pyrolusite", (0.08, 0.075, 0.075), (0.16, 0.16, 0.18), 22, 0.6, 0.8)   # 연망간석 — 그을음 같은 검정
+M['j_wolfram'] = simple_mat("p_j_wolfram", (0.22, 0.17, 0.13), 0.20)                                  # 철망간중석 — 윤 나는 흑갈 판 결정
+M['j_quartz'] = simple_mat("p_j_quartz", (0.90, 0.89, 0.86), 0.3)                                     # 석영 바탕(흰)
+M['j_smithson'] = bumped_mat("p_j_smithson", (0.50, 0.74, 0.68), (0.38, 0.62, 0.58), 24, 0.4, 0.4)   # 능아연석 — 푸른 물빛 포도송이 피막
+M['j_matrix'] = bumped_mat("p_j_matrix", (0.46, 0.38, 0.30), (0.34, 0.27, 0.21), 12, 0.7, 0.9)        # 갈색 바탕돌
+M['j_flint'] = simple_mat("p_j_flint", (0.17, 0.16, 0.16), 0.15)                                      # 부싯돌 속 — 유리 같은 검회색
+M['j_cortex'] = bumped_mat("p_j_cortex", (0.88, 0.86, 0.80), (0.76, 0.74, 0.68), 14, 0.5, 0.95)       # 부싯돌 겉(흰 분필 껍질)
+M['j_granite'] = bumped_mat("p_j_granite", (0.82, 0.56, 0.52), (0.48, 0.48, 0.50), 60, 0.3, 0.7)      # 화강암 — 분홍 · 회색 알갱이
+M['j_limestone'] = bumped_mat("p_j_limestone", (0.87, 0.85, 0.77), (0.78, 0.76, 0.68), 8, 0.3, 0.9)    # 석회암 — 연한 미색
+M['j_marble'] = simple_mat("p_j_marble", (0.95, 0.95, 0.93), 0.12)                                     # 대리석 — 윤 낸 흰 판
+M['j_vein'] = simple_mat("p_j_vein", (0.42, 0.44, 0.46), 0.3)                                          # 대리석 결(회색 줄)
+M['j_phosphate'] = bumped_mat("p_j_phosphate", (0.56, 0.48, 0.38), (0.42, 0.36, 0.28), 26, 0.6, 0.9)   # 인광석 — 숭숭한 회갈 덩이
 # ── [T95] 옷 여섯 · 시설 셋 ─────────────────────────────────────────────────
 # ★★옷 색의 정본은 **`render_common.CLOTH_MATS`** 하나다(T81 이 fiber·ramie 를 밀어낸 값 그대로).
 #   짐 창의 갖옷과 몸에 걸친 갖옷이 **같은 물건**으로 읽혀야 한다 — 색이 갈리면 그 순간 두 물건이 된다.
@@ -3507,6 +3549,392 @@ def m_iron_tool():
     box(0.20, 0.08, 0.06, (0.02, 0.0, 0.14), rot=(0, 0, 0.2), mat=M['h_ironmet'])                              # 슴베
 
 
+def m_crude_rod():
+    """막대 낚싯대(`crude_rod` — T1065 급조 사다리 · 잔가지 1 + 풀 2 · 제작창 도구 칸 · 첫 1시간 모두) — 조잡한 돌도끼에서 돌 날을 뺀 몫 그대로:
+    껍질 그대로인 **긴 잔가지 장대**(끝으로 가늘고 살짝 휜다) · 밑동을 풀로 감은 손잡이 · 풀 꼰 **낚싯줄**(장대에 감고 끝에서 늘어뜨렸다).
+    재질은 조잡한 연장 셋과 같다(`bark2` 자루 · `fiber` 끈) — 같은 재료는 같은 그림."""
+    random.seed(1950)
+    pts = []
+    for j in range(9):                                                                                     # 장대(마디 아홉 · 끝이 들린다)
+        t = j / 8.0
+        pts.append((-1.00 + t * 2.10, -0.02 * t, 0.10 + 0.34 * t * t))
+    for j in range(8):
+        (x0, y0, z0), (x1, y1, z1) = pts[j], pts[j + 1]
+        L = math.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2 + (z1 - z0) ** 2)
+        ry = math.atan2(x1 - x0, z1 - z0)
+        cyl(0.062 - j * 0.0055, L * 1.06, ((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2), rot=(0, ry, 0), mat=M['bark2'], verts=8)
+    _lash(-0.78, 0.0, 0.12, (0, math.radians(86), 0), r=0.07, ln=0.05, n=5, gap=0.06)                       # 손잡이(풀 감기)
+    for k in range(4):                                                                                     # 장대에 감아 둔 줄
+        _ring(0.07, 0.016, (-0.30 + k * 0.05, 0.0, 0.135 + k * 0.004), M['fiber'], rot=(0, math.radians(84), 0), maj=14, mnr=4)
+    tx, ty, tz = pts[-1]
+    line = []
+    for j in range(13):                                                                                    # 끝에서 늘어뜨린 줄(처진 곡선)
+        t = j / 12.0
+        line.append((tx - 0.02 - t * 0.55, ty - 0.10 - t * 0.55, tz - 0.42 * math.sin(t * math.pi * 0.62) - t * 0.06))
+    for j in range(12):
+        (x0, y0, z0), (x1, y1, z1) = line[j], line[j + 1]
+        dx, dy, dz = x1 - x0, y1 - y0, z1 - z0
+        L = math.sqrt(dx * dx + dy * dy + dz * dz)
+        o = cyl(0.016, L * 1.1, ((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2), mat=M['fiber'], verts=5)
+        from mathutils import Vector
+        o.rotation_euler = Vector((dx, dy, dz)).to_track_quat('Z', 'Y').to_euler()
+    lx, ly, lz = line[-1]
+    ico(0.05, (lx, ly, lz), subdiv=1, mat=M['fiber'], jitter=0.2)                                         # 줄 끝 매듭
+
+
+def _stalks(n, L, mat, seed, spread=0.05):
+    """누운 줄기 다발(x 축) — 밑동을 한데 모았다."""
+    random.seed(seed)
+    for i in range(n):
+        dy = (i - (n - 1) / 2) * spread
+        cyl(0.02, L, (0.0, dy, 0.06 + (i % 2) * 0.03), rot=(0, math.radians(90), dy * 0.5), mat=mat, verts=5)
+
+
+def m_oats():
+    """귀리(`oats` — 농산물 갈래 · 곡식) — 벤 귀리 한 줌: 줄기 끝에 **가지 친 이삭**(성긴 원뿔꼴 · 낱알이 가는 꼭지에 매달려 늘어진다) · 밑동을 볏짚으로 묶었다.
+    밀 · 보리 · 쌀(한 줄기에 뭉친 이삭 · 제 그림)과 이삭 꼴로 갈린다."""
+    random.seed(1951)
+    _stalks(5, 1.60, M['straw'], 19511)
+    cyl(0.16, 0.06, (-0.50, 0.0, 0.08), rot=(0, math.radians(90), 0), mat=M['straw'], verts=12)
+    o = OBJS[-1]; o.scale = (0.6, 1.0, 1.0)
+    for i in range(5):
+        dy = (i - 2) * 0.05
+        x0 = 0.80
+        for k in range(9):                                                                                 # 가지 친 이삭(층마다 둘)
+            t = k / 8.0
+            for sgn in (-1, 1):
+                a = sgn * (0.5 + 0.5 * (1 - t))
+                bx, by = x0 + t * 0.50, dy + sgn * (0.05 + 0.20 * (1 - t))
+                cyl(0.008, 0.22 * (1 - t) + 0.06, ((x0 + t * 0.50 + bx) / 2, (dy + by) / 2, 0.09 + (i % 2) * 0.03), rot=(0, math.radians(90), a), mat=M['j_oat'], verts=4)
+                o = ico(0.045, (bx, by, 0.06 + (i % 2) * 0.03), subdiv=1, mat=M['j_oat'], scale=(1.5, 0.8, 0.8), smooth=True)
+                o.rotation_euler = (0, 0, a)
+
+
+def m_rye():
+    """호밀(`rye` — 농산물 갈래 · 곡식) — 벤 호밀 한 줌: 줄기 끝에 **가늘고 긴 이삭**(회록빛 · 긴 까끄라기)이 곧게 뻗었다 · 밑동을 볏짚으로 묶었다."""
+    random.seed(1952)
+    _stalks(5, 1.50, M['straw'], 19521)
+    cyl(0.16, 0.06, (-0.50, 0.0, 0.08), rot=(0, math.radians(90), 0), mat=M['straw'], verts=12)
+    o = OBJS[-1]; o.scale = (0.6, 1.0, 1.0)
+    for i in range(5):
+        dy = (i - 2) * 0.06 * 1.6
+        for k in range(10):                                                                                # 긴 이삭(낱알 열 쌍)
+            t = k / 9.0
+            for sgn in (-1, 1):
+                o = ico(0.034, (0.78 + t * 0.62, dy * (1 + t * 0.3) + sgn * 0.022, 0.08 + (i % 2) * 0.03), subdiv=1, mat=M['j_rye'], scale=(1.6, 0.8, 0.8), smooth=True)
+                o.rotation_euler = (0, 0, sgn * 0.25)
+                cyl(0.004, 0.26, (0.86 + t * 0.62, dy * (1 + t * 0.3) + sgn * 0.07, 0.09 + (i % 2) * 0.03), rot=(0, math.radians(90), sgn * 0.35), mat=M['j_rye'], verts=3)   # 까끄라기
+
+
+def _logstack(bark, wood, seed, ring=None, n=3):
+    """통나무 무더기 — 아래 둘 · 위 하나(같은 길이) · **벤 면이 보는 쪽**(나이테 결 · 변재 테)으로 돌려 놓았다.
+    종은 껍질 · 속 빛으로만 갈린다(같은 함수 일곱)."""
+    random.seed(seed)
+    n0 = len(OBJS)
+    for (y, z, r) in ((-0.26, 0.26, 0.26), (0.26, 0.26, 0.26), (0.0, 0.70, 0.25))[:n]:
+        L = 0.62
+        cyl(r, L, (0.0, y, z), rot=(0, math.radians(90), 0), mat=bark, verts=18)
+        cyl(r * 0.92, 0.02, (L / 2 + 0.006, y, z), rot=(0, math.radians(90), 0), mat=(ring or wood), verts=18)    # 변재 테
+        cyl(r * (0.80 if ring else 0.90), 0.025, (L / 2 + 0.012, y, z), rot=(0, math.radians(90), 0), mat=wood, verts=18)   # 심재
+        for k in range(2):                                                                                         # 나이테
+            _ring(r * (0.30 + k * 0.25), 0.006, (L / 2 + 0.026, y, z), M['scorch'] if wood is not M['j_ebonywood'] else M['j_sapwood'],
+                  rot=(0, math.radians(90), 0), maj=20, mnr=3)
+    _spin(n0, math.radians(-38))
+
+
+def m_pine_log():
+    """소나무 통나무(`pine_log` — 숲 갈래 · 벤 것) — 붉은 **거북등 껍질**의 통나무 셋 · 벤 면은 연노랑 나이테."""
+    _logstack(M['j_pinebark'], M['j_pinewood'], 1953)
+
+
+def m_oak_log():
+    """참나무 통나무(`oak_log`) — 깊이 갈라진 **검회갈 껍질**의 통나무 셋 · 벤 면은 연갈색."""
+    _logstack(M['j_oakbark'], M['j_oakwood'], 1954)
+
+
+def m_birch_log():
+    """자작나무(`birch_log`) — **흰 껍질에 검은 껍질눈**의 통나무 셋 · 벤 면은 흰 미색(자작나무 수액 그릇과 같은 껍질 재질)."""
+    _logstack(M['h_birchbark'], M['j_birchwood'], 1955)
+
+
+def m_cedar_log():
+    """삼나무(`cedar_log`) — 붉은 **섬유질 껍질**의 통나무 셋 · 벤 면은 분홍 붉은빛."""
+    _logstack(M['j_cedarbark'], M['j_cedarwood'], 1956)
+
+
+def m_ebony_log():
+    """흑단(`ebony_log` — 숲 갈래 · 벤 것) — 네모로 다듬은 **새까만 각재** 셋 · 모서리에 흰 변재가 남았다."""
+    _beams(M['j_ebonywood'], 1957, edge=M['j_sapwood'])
+
+
+def m_mahogany_log():
+    """마호가니(`mahogany_log`) — 네모로 다듬은 **짙은 적갈 각재** 셋(곧은 결)."""
+    _beams(M['j_mahowood'], 1958)
+
+
+def m_teak_log():
+    """티크(`teak_log`) — 네모로 다듬은 **금갈색 각재** 셋(기름 먹은 윤)."""
+    _beams(M['j_teakwood'], 1959)
+
+
+def _sprig(x, y, ang, L, stem, leaf, pairs, lw, ll, seed, lift=0.10, tilt=0.15):
+    """잎줄기 하나(누운 것) — 줄기를 따라 잎이 마주난다. `ang` 은 끝 방향."""
+    random.seed(seed)
+    ca, sa = math.cos(ang), math.sin(ang)
+    cyl(0.022, L, (x + ca * L / 2, y + sa * L / 2, lift), rot=(0, math.radians(90), ang), mat=stem, verts=6)
+    for k in range(pairs):
+        t = 0.25 + 0.75 * k / max(1, pairs - 1)
+        px, py = x + ca * L * t, y + sa * L * t
+        for sgn in (-1, 1):
+            a = ang + sgn * 0.9
+            o = ico(ll * 0.5, (px + math.cos(a) * ll * 0.45, py + math.sin(a) * ll * 0.45, lift + 0.02), subdiv=2, mat=leaf,
+                    scale=(1.0, lw / ll, 0.12), smooth=True)
+            o.rotation_euler = (sgn * tilt, 0, a)
+    o = ico(ll * 0.42, (x + ca * (L + ll * 0.3), y + sa * (L + ll * 0.3), lift + 0.03), subdiv=2, mat=leaf, scale=(1.0, lw / ll, 0.14), smooth=True)
+    o.rotation_euler = (0, 0, ang)
+
+
+def _bunch(stems, tie=(-0.40, 0.0)):
+    """잎줄기 다발 — 밑동을 끈으로 묶었다(약초 그림과 같은 묶음 문법)."""
+    cyl(0.12, 0.10, (tie[0], tie[1], 0.11), rot=(0, math.radians(90), 0), mat=M['cord'], verts=12)
+
+
+def m_basil():
+    """바질(`basil` — 향신료 갈래 · 잎) — **윤 나는 넓은 달걀꼴 잎**이 마주난 줄기 셋을 묶었다."""
+    for i, (dy, a) in enumerate(((-0.18, -0.25), (0.0, 0.0), (0.20, 0.28))):
+        _sprig(-0.60, dy, a, 1.10, M['h_stem'], M['j_basil'], 4, 0.26, 0.40, 1960 + i)
+    _bunch(None)
+
+
+def m_mint():
+    """박하(`mint` — 향신료 갈래 · 잎) — 자줏빛 네모 줄기에 **톱니 진 작은 잎**이 촘촘히 마주난 줄기 넷."""
+    for i, (dy, a) in enumerate(((-0.24, -0.30), (-0.08, -0.08), (0.08, 0.10), (0.24, 0.32))):
+        _sprig(-0.60, dy, a, 1.10, M['j_mintstem'], M['j_mint'], 6, 0.17, 0.26, 1961 + i)
+    _bunch(None)
+
+
+def m_coriander():
+    """고수(`coriander` — 향신료 갈래 · 잎) — 가는 줄기 끝에 **잘게 갈라진 둥근 잎**(연두)이 부채처럼 퍼진 한 줌."""
+    random.seed(1962)
+    for i in range(7):
+        a = -0.6 + i * 0.2
+        cyl(0.015, 1.00, (-0.40 + math.cos(a) * 0.50, math.sin(a) * 0.50, 0.10), rot=(0, math.radians(90), a), mat=M['h_stem'], verts=5)
+        cx, cy = -0.40 + math.cos(a) * 1.05, math.sin(a) * 1.05
+        for k in range(5):                                                                                # 갈라진 잎 조각
+            b = a + (k - 2) * 0.55
+            o = ico(0.10, (cx + math.cos(b) * 0.12, cy + math.sin(b) * 0.12, 0.12), subdiv=2, mat=M['j_corian'], scale=(1.0, 0.8, 0.12), smooth=True)
+            o.rotation_euler = (0, 0, b)
+    _bunch(None, tie=(-0.30, 0.0))
+
+
+def m_thyme():
+    """타임(`thyme` — 향신료 갈래 · 잎) — 나무질 잔가지에 **좁쌀만 한 회록 잎**이 촘촘한 작은 다발."""
+    random.seed(1963)
+    for i in range(9):
+        a = -0.45 + i * 0.11
+        cyl(0.018, 1.10, (-0.40 + math.cos(a) * 0.55, math.sin(a) * 0.55, 0.10 + (i % 2) * 0.03), rot=(0, math.radians(90), a), mat=M['j_woody'], verts=5)
+        for k in range(12):
+            t = 0.35 + 0.65 * k / 11.0
+            ico(0.035, (-0.40 + math.cos(a) * 1.10 * t + random.uniform(-0.03, 0.03), math.sin(a) * 1.10 * t + random.uniform(-0.03, 0.03), 0.13 + (i % 2) * 0.03),
+                subdiv=1, mat=M['j_thyme'], scale=(1.3, 1.0, 0.6))
+    _bunch(None, tie=(-0.30, 0.0))
+
+
+def m_rosemary():
+    """로즈마리(`rosemary` — 향신료 갈래 · 잎) — 나무질 가지에 **바늘꼴 짙은 잎**이 빽빽하고 연하늘 꽃이 몇 점."""
+    random.seed(1964)
+    for i in range(5):
+        a = -0.30 + i * 0.15
+        cyl(0.025, 1.20, (-0.40 + math.cos(a) * 0.60, math.sin(a) * 0.60, 0.10 + (i % 2) * 0.04), rot=(0, math.radians(90), a), mat=M['j_woody'], verts=6)
+        for k in range(16):
+            t = 0.25 + 0.75 * k / 15.0
+            for sgn in (-1, 1):
+                b = a + sgn * 1.1
+                px, py = -0.40 + math.cos(a) * 1.20 * t, math.sin(a) * 1.20 * t
+                cyl(0.014, 0.14, (px + math.cos(b) * 0.06, py + math.sin(b) * 0.06, 0.12 + (i % 2) * 0.04), rot=(0, math.radians(90), b), mat=M['j_rosemary'], verts=4)
+        for k in range(2):
+            t = 0.5 + k * 0.3
+            ico(0.035, (-0.40 + math.cos(a) * 1.20 * t, math.sin(a) * 1.20 * t + 0.05, 0.17), subdiv=1, mat=M['j_rosebloom'])
+    _bunch(None, tie=(-0.30, 0.0))
+
+
+def m_sage_herb():
+    """세이지 향초(`sage_herb` — 향신료 갈래 · 잎) — **은빛 회록 털잎**(길쭉한 타원 · 잎맥이 오돌토돌)이 달린 줄기 셋."""
+    for i, (dy, a) in enumerate(((-0.18, -0.22), (0.0, 0.0), (0.20, 0.25))):
+        _sprig(-0.60, dy, a, 1.05, M['h_stem'], M['j_sage'], 3, 0.20, 0.46, 1965 + i)
+    _bunch(None)
+
+
+def m_lavender():
+    """라벤더(`lavender` — 향신료 갈래 · 꽃) — 긴 줄기 끝의 **보랏빛 꽃이삭** 한 다발(밑동을 끈으로 묶었다)."""
+    random.seed(1966)
+    for i in range(9):
+        a = -0.40 + i * 0.10
+        cyl(0.016, 1.30, (-0.50 + math.cos(a) * 0.65, math.sin(a) * 0.65, 0.10 + (i % 2) * 0.03), rot=(0, math.radians(90), a), mat=M['h_stem'], verts=5)
+        for k in range(7):                                                                                # 꽃이삭(층층)
+            t = k / 6.0
+            o = ico(0.045, (-0.50 + math.cos(a) * (1.30 + t * 0.36), math.sin(a) * (1.30 + t * 0.36), 0.11 + (i % 2) * 0.03), subdiv=1, mat=M['j_lavender'],
+                    scale=(1.0, 1.0, 1.0), jitter=0.15)
+    _bunch(None, tie=(-0.20, 0.0))
+
+
+def _rock(x, y, z, r, mat, sc=(1.2, 1.0, 0.8), jit=0.22, seed=None):
+    """바탕돌 덩이(광석 · 돌 공통) — 모난 이코스피어."""
+    return ico(r, (x, y, z), subdiv=2, mat=mat, scale=sc, jitter=jit, seed=seed, smooth=False)
+
+
+def m_bauxite():
+    """보크사이트(`bauxite` — 광물 갈래 · 광석) — **붉은 갈흙돌**에 콩알만 한 알갱이(피솔라이트)가 박힌 덩이 둘."""
+    random.seed(1967)
+    _rock(0.0, 0.0, 0.34, 0.52, M['j_bauxite'])
+    _rock(0.62, -0.36, 0.16, 0.26, M['j_bauxite'])
+    for k in range(22):
+        a = random.uniform(0, math.tau); u = random.uniform(-0.2, 1.0)
+        r = math.sqrt(max(0, 1 - u * u))
+        ico(0.06, (math.cos(a) * r * 0.58, math.sin(a) * r * 0.50, 0.34 + u * 0.40), subdiv=2, mat=M['j_pisolith'], smooth=True)
+
+
+def m_chromium():
+    """크롬(`chromium` — 광물 갈래 · 크롬철석) — **윤 도는 검은 알갱이 광석** 덩이와 깨진 조각(쇠빛 결정면)."""
+    random.seed(1968)
+    _rock(0.0, 0.0, 0.36, 0.54, M['j_chromite'], sc=(1.15, 1.0, 0.85), jit=0.18)
+    for k in range(6):
+        a = random.uniform(0, math.tau)
+        o = box(0.18, 0.16, 0.04, (math.cos(a) * 0.40, math.sin(a) * 0.34, 0.50), rot=(random.uniform(-0.5, 0.5), random.uniform(-0.5, 0.5), a), mat=M['j_cobaltite'])   # 쇠빛 면
+    _rock(0.66, -0.40, 0.14, 0.22, M['j_chromite'], jit=0.3)
+
+
+def m_cobalt():
+    """코발트(`cobalt` — 광물 갈래 · 휘코발트석) — 갈색 바탕돌의 은회색 쇠빛 결정 사이로 **분홍 보라 코발트 꽃**(풍화 피막)이 두껍게 앉았다."""
+    random.seed(1969)
+    _rock(0.0, 0.0, 0.30, 0.50, M['j_matrix'], sc=(1.25, 1.0, 0.75))
+    for k in range(6):                                                                                    # 쇠빛 결정
+        a = random.uniform(0, math.tau); d = random.uniform(0.0, 0.40)
+        box(0.16, 0.16, 0.16, (math.cos(a) * d, math.sin(a) * d * 0.8, 0.54), rot=(0.6, 0.5, a), mat=M['j_cobaltite'])
+    for k in range(22):                                                                                   # 코발트 꽃
+        a = random.uniform(0, math.tau); d = math.sqrt(random.uniform(0, 1)) * 0.58
+        ico(random.uniform(0.09, 0.14), (math.cos(a) * d, math.sin(a) * d * 0.8, 0.44 + (0.58 - d) * 0.18), subdiv=2, mat=M['j_erythrite'], scale=(1.3, 1.0, 0.5), jitter=0.2, smooth=True)
+
+
+def m_magnesite():
+    """마그네사이트(`magnesite` — 광물 갈래) — **사기 같은 흰 덩이**(꽃양배추처럼 울퉁불퉁) 셋."""
+    random.seed(1970)
+    for (x, y, r) in ((0.0, 0.0, 0.42), (0.56, -0.30, 0.28), (-0.50, -0.30, 0.24)):
+        ico(r, (x, y, r * 0.8), subdiv=3, mat=M['j_magnesite'], scale=(1.15, 1.0, 0.85), jitter=0.08, smooth=True)
+        for k in range(6):
+            a = k * 1.05 + x
+            ico(r * 0.35, (x + math.cos(a) * r * 0.75, y + math.sin(a) * r * 0.65, r * 1.15), subdiv=2, mat=M['j_magnesite'], smooth=True)
+
+
+def m_manganese():
+    """망간(`manganese` — 광물 갈래 · 연망간석) — 그을음 같은 **검은 포도송이꼴 덩이**와, 흰 돌을 깨면 드러나는 **검은 고사리 무늬**(수지상 망간) 판."""
+    random.seed(1971)
+    for k in range(20):                                                                                   # 포도송이 덩이
+        a = random.uniform(0, math.tau); d = math.sqrt(random.uniform(0, 1)) * 0.36
+        ico(random.uniform(0.10, 0.16), (-0.30 + math.cos(a) * d, 0.24 + math.sin(a) * d * 0.8, 0.22 + (0.36 - d) * 0.50), subdiv=2, mat=M['j_pyrolusite'], smooth=True)
+    box(0.90, 0.70, 0.08, (0.36, -0.30, 0.04), rot=(0, 0, 0.3), mat=M['j_limestone'])                     # 흰 판돌
+    for b in range(4):                                                                                    # 고사리 무늬(가지 친 검은 결)
+        a0 = 0.3 + b * 0.5; x0, y0 = 0.10 + b * 0.12, -0.52 + b * 0.10
+        for k in range(6):
+            t = k / 5.0
+            px, py = x0 + math.cos(a0 + 1.2) * t * 0.36, y0 + math.sin(a0 + 1.2) * t * 0.36
+            box(0.10, 0.018, 0.01, (px, py, 0.085), rot=(0, 0, a0 + 1.2), mat=M['j_pyrolusite'])
+            for sgn in (-1, 1):
+                box(0.08 * (1 - t * 0.5), 0.012, 0.01, (px + math.cos(a0 + 1.2 + sgn * 0.8) * 0.04, py + math.sin(a0 + 1.2 + sgn * 0.8) * 0.04, 0.086), rot=(0, 0, a0 + 1.2 + sgn * 0.8), mat=M['j_pyrolusite'])
+
+
+def m_tungsten():
+    """텅스텐(`tungsten` — 광물 갈래 · 철망간중석) — 흰 석영 바탕에 박힌 **윤 나는 흑갈색 판 결정** 다발."""
+    random.seed(1972)
+    _rock(0.0, 0.0, 0.26, 0.52, M['j_quartz'], sc=(1.3, 1.0, 0.6), jit=0.18)
+    for k in range(8):
+        a = random.uniform(-0.6, 0.6); d = random.uniform(-0.25, 0.25)
+        box(0.46, 0.06, 0.36, (d * 0.6, d, 0.52), rot=(random.uniform(-0.3, 0.3), random.uniform(-0.2, 0.2), a + math.pi / 4), mat=M['j_wolfram'])
+
+
+def m_zinc():
+    """아연(`zinc` — 광물 갈래 · 능아연석) — 갈색 바탕돌을 덮은 **푸른 물빛 포도송이 피막**(아연 광석)."""
+    random.seed(1973)
+    _rock(0.0, 0.0, 0.28, 0.52, M['j_matrix'], sc=(1.3, 1.0, 0.65))
+    for k in range(30):
+        a = random.uniform(0, math.tau); d = math.sqrt(random.uniform(0, 1)) * 0.56
+        ico(random.uniform(0.07, 0.12), (math.cos(a) * d, math.sin(a) * d * 0.8, 0.44 + (0.56 - d) * 0.22), subdiv=2, mat=M['j_smithson'], smooth=True)
+
+
+def m_flint():
+    """부싯돌(`flint` — 광물 갈래) — **흰 분필 껍질**을 쓴 덩이를 깨뜨려 유리 같은 검회색 속이 드러났다 · 날카로운 격지 둘."""
+    random.seed(1974)
+    o = ico(0.52, (-0.10, 0.10, 0.36), subdiv=2, mat=M['j_cortex'], scale=(1.2, 1.0, 0.78), jitter=0.12, smooth=True)
+    o = ico(0.40, (0.24, -0.20, 0.34), subdiv=1, mat=M['j_flint'], scale=(1.0, 1.0, 0.85), jitter=0.20, smooth=False)    # 깨진 면
+    for (x, y, rz) in ((0.70, -0.46, 0.4), (0.44, -0.70, -0.8)):                                              # 격지
+        o = ico(0.16, (x, y, 0.04), subdiv=1, mat=M['j_flint'], scale=(1.6, 1.0, 0.2), jitter=0.25)
+        o.rotation_euler = (0, 0, rz)
+
+
+def m_granite():
+    """화강암(`granite` — 광물 갈래 · 돌) — 다듬은 **분홍 · 회색 알갱이 돌 덩이**(검은 운모 점)."""
+    random.seed(1975)
+    o = box(1.10, 0.80, 0.56, (0, 0, 0.28), rot=(0, 0, 0.15), mat=M['j_granite'])
+    for v in o.data.vertices:
+        v.co.x *= 1 + random.uniform(-0.04, 0.04); v.co.y *= 1 + random.uniform(-0.04, 0.04)
+    for k in range(40):
+        face = random.choice((0, 1, 2))
+        if face == 0:
+            p = (random.uniform(-0.5, 0.5), random.uniform(-0.36, 0.36), 0.565)
+        elif face == 1:
+            p = (random.uniform(-0.5, 0.5), -0.405, random.uniform(0.05, 0.52))
+        else:
+            p = (0.555, random.uniform(-0.36, 0.36), random.uniform(0.05, 0.52))
+        ico(0.022, p, subdiv=1, mat=M['h_coal'])
+
+
+def m_limestone():
+    """석회암(`limestone` — 광물 갈래 · 돌) — 깨낸 연한 미색 **돌 조각** 셋(모난 면) · 큰 조각에 조개 화석 자국."""
+    random.seed(1976)
+    _rock(0.0, 0.0, 0.30, 0.50, M['j_limestone'], sc=(1.3, 1.0, 0.70), jit=0.14)
+    _rock(0.64, -0.34, 0.14, 0.22, M['j_limestone'], jit=0.2)
+    _rock(-0.62, -0.36, 0.12, 0.18, M['j_limestone'], jit=0.2)
+    for (x, y, r) in ((-0.16, -0.04, 0.13), (0.20, 0.10, 0.09)):
+        for k in range(3):
+            _ring(r * (0.35 + k * 0.33), 0.012, (x, y, 0.62), M['j_matrix'], maj=20, mnr=4)
+
+
+def m_marble():
+    """대리석(`marble` — 광물 갈래 · 돌) — 윤 낸 **흰 판돌**에 흐르는 회색 결 · 뒤에 덩이 하나."""
+    random.seed(1977)
+    _rock(-0.40, 0.42, 0.30, 0.40, M['j_marble'], sc=(1.2, 1.0, 0.8), jit=0.18)
+    box(1.20, 0.80, 0.18, (0.10, -0.10, 0.09), rot=(0, 0, 0.2), mat=M['j_marble'])
+    for k in range(5):                                                                                      # 결
+        a = 0.2 + random.uniform(-0.5, 0.5)
+        box(random.uniform(0.40, 0.80), 0.018, 0.01, (0.10 + random.uniform(-0.3, 0.3), -0.10 + random.uniform(-0.25, 0.25), 0.185), rot=(0, 0, a), mat=M['j_vein'])
+
+
+def m_phosphate():
+    """인광석(`phosphate` — 광물 갈래) — **숭숭한 회갈 덩이** 무더기(뼈 · 껍데기 조각이 굳은 돌 · 하나는 깨져 흰 조각이 보인다)."""
+    random.seed(1978)
+    for i in range(9):
+        a = i * 2.399; d = math.sqrt(i / 9.0) * 0.56
+        _rock(math.cos(a) * d, math.sin(a) * d, 0.18 + (0.56 - d) * 0.42, random.uniform(0.18, 0.26), M['j_phosphate'], sc=(1.15, 1.0, 0.85), jit=0.25)
+    for k in range(6):
+        a = random.uniform(0, math.tau)
+        ico(0.04, (math.cos(a) * 0.30, math.sin(a) * 0.26, 0.50), subdiv=1, mat=M['g_bone'], jitter=0.3)
+
+
+def _beams(wood, seed, edge=None):
+    """각재 더미 — 껍질을 벗겨 **네모로 다듬은** 단단한 열대 나무(흑단 · 마호가니 · 티크 — 그 나무가 오가는 꼴): 아래 둘 · 위 하나 ·
+    벤 면이 보는 쪽으로. 종은 속 빛으로만 갈린다(같은 함수 셋 · `edge` = 흑단의 흰 변재 모서리)."""
+    random.seed(seed)
+    n0 = len(OBJS)
+    for (y, z) in ((-0.23, 0.19), (0.23, 0.19), (0.0, 0.57)):
+        box(0.85, 0.42, 0.38, (0.0, y, z), mat=wood)
+        box(0.014, 0.40, 0.36, (0.428, y, z), mat=wood)                                                   # 벤 면
+        for k in range(3):                                                                                 # 벤 면의 나이테 결
+            box(0.004, 0.36 - k * 0.10, 0.012, (0.436, y, z - 0.10 + k * 0.10), mat=M['scorch'] if edge is None else edge)
+        if edge is not None:
+            box(0.86, 0.06, 0.06, (0.0, y + 0.19, z + 0.17), mat=edge)                                     # 흰 변재 모서리
+    _spin(n0, math.radians(-38))
+
+
 # ★표 — 아이콘 키 = 서버 품목 키. 세계 렌더는 아직 없다(`world` 빈 칸) — 붙일 때 같은 모델을 쓴다.
 ITEMS = [
     ('crude_axe', m_crude_axe), ('crude_pick', m_crude_pick), ('crude_blade', m_crude_blade),
@@ -3575,6 +4003,20 @@ ITEMS_T1088 = [
     ('grain_sheaf', m_grain_sheaf), ('bronze_tool', m_bronze_tool), ('iron_tool', m_iron_tool),
 ]
 ITEMS += ITEMS_T1088
+# ★[T1099] 셋째 묶음 — 차례 = 제작창 도구 칸의 새 품목(T1065 막대 낚싯대 · 첫 1시간 모두) → 같은 꼴로 빌리던 스물여덟(곡물 둘 · 통나무 일곱 · 잎 향초 일곱 · 광석 일곱 · 돌 다섯).
+#   빌림 셋(`herbs` · `sage` · `meteorite`)과 `jade` 는 같은 물건 판정이라 안 굽는다(보고/T1099 §4) — `test-icons ⑭` 가 이 표를 잰다.
+ITEMS_T1099 = [
+    ('crude_rod', m_crude_rod),
+    ('oats', m_oats), ('rye', m_rye),
+    ('pine_log', m_pine_log), ('oak_log', m_oak_log), ('birch_log', m_birch_log), ('cedar_log', m_cedar_log),
+    ('ebony_log', m_ebony_log), ('mahogany_log', m_mahogany_log), ('teak_log', m_teak_log),
+    ('basil', m_basil), ('mint', m_mint), ('coriander', m_coriander), ('thyme', m_thyme), ('rosemary', m_rosemary),
+    ('sage_herb', m_sage_herb), ('lavender', m_lavender),
+    ('bauxite', m_bauxite), ('chromium', m_chromium), ('cobalt', m_cobalt), ('magnesite', m_magnesite),
+    ('manganese', m_manganese), ('tungsten', m_tungsten), ('zinc', m_zinc),
+    ('flint', m_flint), ('granite', m_granite), ('limestone', m_limestone), ('marble', m_marble), ('phosphate', m_phosphate),
+]
+ITEMS += ITEMS_T1099
 # ★원물 → 보존식 계보(하네스가 실루엣 상관으로 검사한다). `spoil.PRESERVE` 가 정본이고 여기는 **이 파일이 가진 짝**만 적는다.
 # ★[T95] 옷 여섯 — 재질마다 다른 물건이다(갖옷과 삼베옷은 같은 그림일 수 없다).
 #   키는 `clothes_<mat>` · 순서는 `server/clothes.js` 표 순서(계약).

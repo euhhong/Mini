@@ -110,6 +110,11 @@
     'dye_purple', 'glass', 'perfume', 'pottery', 'silk_cloth', 'beef_tallow', 'cheese', 'duck_meat', 'goat_milk', 'milk',
     'ivory', 'linen', 'meat_beef', 'meat_mutton', 'meat_pork', 'silk_raw', 'silkworm', 'wool', 'lobster', 'murex_shell',
     'grain_sheaf', 'bronze_tool', 'iron_tool',
+    // ★[T1099] 셋째 묶음 스물아홉 — 제작창 도구 칸의 새 품목(T1065 막대 낚싯대 · 첫 1시간 모두) → 같은 꼴로 빌리던 것(곡물 둘 · 통나무 일곱 · 잎 향초 일곱 · 광석 일곱 · 돌 다섯).
+    //   굽는 곳 `props_render.py` `ITEMS_T1099` · `test-icons ⑭` 가 이 목록과 대조한다.
+    'crude_rod', 'oats', 'rye', 'pine_log', 'oak_log', 'birch_log', 'cedar_log', 'ebony_log', 'mahogany_log', 'teak_log',
+    'basil', 'mint', 'coriander', 'thyme', 'rosemary', 'sage_herb', 'lavender', 'bauxite', 'chromium', 'cobalt',
+    'magnesite', 'manganese', 'tungsten', 'zinc', 'flint', 'granite', 'limestone', 'marble', 'phosphate',
   ]);
   // ★★[T66 2차 · 재민 확정 2026-09-03] 옛 **거부 목록** `ICON_NO_RENDER` 은 **없앴다** — 뒤집혔다.
   //   종전: "여기 있으면 렌더가 없다"(빠뜨리면 404). 지금: `ICON_RENDERED` 에 **있으면 그림, 없으면 점선 칸**.
