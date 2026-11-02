@@ -6042,7 +6042,7 @@ function _warWorld(fight) {
     advance(ctx, u) {   // 적 본대(무게중심) → 없으면 목표(방어 마을 중심 · m). 지키는 쪽(holder)은 사거리 밖 적을 쫓지 않는다(추격 없음).
       if (fight.holder === u.side) return (T1044_SCRAM_WALK && u.gu && u.gu._t1044) ? _t1044Way(fight, u, dirTo) : null;   // ★[T1044 ③] 켬 — 아직 제 자리에 못 온 긴급 소집 몸만 제 자리로 걷는다(적은 쫓지 않는다 · 그 밖 = 종전 null)
       const c = ctx._cen[u.side === 'A' ? 'B' : 'A'];
-      const T = (c && c.n) ? { x: c.x, y: c.y } : fight.objective; if (!T) return null;
+      const T = (c && c.n) ? (_t1060Aim(fight, u) || { x: c.x, y: c.y }) : fight.objective; if (!T) return null;   // ★[T1060 ②] 판 자 갈래 `T1060_ATK_AIM='1'` 만 — 긴급 소집 수비면 포진점(끔 = 적 본대 무게중심 · 종전)
       const r = dirTo(u.x, u.y, T.x, T.y); if (!r || r.d <= 1) return null;
       // 곧은 길이 막혔으면 행군로(존 A* 경로 — 캐러밴과 같은 길)를 따라간다. 판정은 0.5초에 한 번(병사별 메모).
       const memo = u._cpT == null || fight.t - u._cpT >= 0.5;
@@ -6199,6 +6199,28 @@ function _t1044Way(fight, u, dirTo) {   // ★[T1044 ③] 풀린 긴급 소집 �
   const w = _t804Way(gu, u.x / MPC, u.y / MPC, t[0], t[1], g._t790Walk || 0, body);   // 걷는 몸의 길(대형 걸음과 같은 기억 — `gu._t804p` · `_t821s`) · 제 자리 = 찾는 중(선다) · null = 곧게
   return w ? dirTo(u.x, u.y, w.x * MPC, w.y * MPC) : r;
 }
+// ★★[T1060 2026-11-01 · T1044 회부 2 · ★PM 판정 "결함"] **긴급 소집 대형의 대치 재편 원점 = 포진점(`holdPt`)** — 손잡이 `T1060_SCRAM_HOLD`(켬 기본 후보 · 되돌림 `=0` = 종전 글자).
+//   대치 전이(`_warToStandoff`)의 재편(war-live `regroup` — 첫 생존자 자리 = 원점)이 걸어 오던 긴급 소집 대형의 길 중간을 원점으로 삼았다 —
+//     이어지는 주둔 걸음(접촉 전 = `_muDefHold` — 원점이 포진점에서 마중 상한 `DEF_ADVANCE_MAX` 밖이면 원점을 안 끈다)이 그 원점을 포진점으로 안 돌려
+//     그 대형이 길 중간에 섰다(보고 T1044 §6 회부 2 · T1019 정보 1(재편 원점)과 같은 뿌리). 접촉 뒤 대치는 종전에도 `_warWalkGroupTo` 가 포진점으로 걸어 돌아간다.
+//   켬: 걷는 긴급 소집 대형(`_scram` · 몸 걸음 칸 `_t790Walk` — T1044 켬)이면 재편 뒤 원점을 포진점으로 — 몸은 그 원점까지 걷는다(지휘 몸도 · war-live `_muStepFollow` 몸 걸음 · 순간이동 0).
+//     걷지 않는 대형(몸 걸음 칸 없음 — 지휘 몸을 원점에 놓는다)은 종전 그대로(원점을 옮기면 놓기가 순간이동이 된다) · 응전 포진 · 출격 · 공격 대형 무변 · war-live 무변. 새 수 0.
+const T1060_SCRAM_HOLD = process.env.T1060_SCRAM_HOLD !== '0';
+function _t1060Hold(g) {   // ★[T1060 ①] 재편 뒤 — 걷는 긴급 소집 대형만 원점 = 포진점(슬롯은 재편이 원점 기준으로 이미 다시 배정 · 상태 무변)
+  if (g && g._scram && g._t790Walk > 0 && g.holdPt && g.units && g.units.length) g.cmd = { cx: g.holdPt.cx, cy: g.holdPt.cy };
+}
+// ★★[T1060 ② · T1044 회부 1 — 판 자 갈래(재민 질문 근거 · 판정 0)] **공격이 걸어 오는 긴급 소집 몸 대신 포진점을 겨눈다** — 손잡이 `T1060_ATK_AIM`(끔 기본 · 켜는 값 `'1'` 하나 · 판 자 아이 env 전용 · 제품 기본 무변).
+//   종전(ⓑ): 공격 몸의 전진 목표 = 적 본대 무게중심(`ctx._cen`) — 긴급 소집 몸이 포진점으로 걸어 오는 동안 공격은 그 걸어 오는 몸을 쫓는다(곧은 줄이 막히면 행군로) ⇒
+//     두 본대 간격이 대치 시계만큼 안 줄면 접촉 없이 대치 → 이튿날 철수(보고 T1044 §6 회부 1).
+//   켬(ⓐ): 지키는 쪽 대형이 긴급 소집(`_scram` · `holdPt`)이면 공격 몸의 목표 = 그 포진점(회관 앞) — 그 밖(응전 포진 · 출격 · 수비 없음 = 목표 마을)은 종전 그대로. 걸음 · 길 · 교전 규칙 무변.
+const T1060_ATK_AIM = process.env.T1060_ATK_AIM === '1';
+function _t1060Aim(fight, u) {   // ★[T1060 ②] 켬 · 공격 몸 · 수비가 긴급 소집 대형이면 포진점(m) · 그 밖 null(= 종전 목표)
+  if (!T1060_ATK_AIM || u.side !== 'A') return null;
+  const body = state.warBodies ? state.warBodies.get(fight.w.id) : null, g = body ? body.defGroup : null;
+  if (!g || !g._scram || !g.holdPt) return null;
+  const MPC = state.warLive.M_PER_CELL;
+  return { x: g.holdPt.cx * MPC, y: g.holdPt.cy * MPC };
+}
 function _warEnsureDefense(body, sortie) {   // sortie=true — 출격 결단: 거리 문턱 없이 소집(나가 싸우려면 먼저 모여야 한다)
   if (body.defBuilt) return;
   const w = body.w, WL = state.warLive, dc = { cx: w.def.ccx, cy: w.def.ccy };
@@ -6319,6 +6341,7 @@ function _warToStandoff(body) {
   const w = body.w, WL = state.warLive, f = body.fight;
   if (body.atkGroup) { WL.regroup(body.atkGroup); const cp = caravanPointAt(body, body.campProg != null ? body.campProg : body.prog); body.campPt = { cx: cp.x / SZ, cy: cp.y / SZ }; body.atkGroup.heading = body.heading; }
   if (body.defGroup) { WL.regroup(body.defGroup); if (!body.defGroup.holdPt) body.defGroup.holdPt = { cx: body.defGroup.cmd.cx, cy: body.defGroup.cmd.cy }; }
+  if (T1060_SCRAM_HOLD) _t1060Hold(body.defGroup);   // ★[T1060] 켬 — 걷는 긴급 소집 대형의 재편 원점 = 포진점(위 줄 글자 그대로 · 몸은 걸어 온다)
   body.mode = 'camp';
   if (T771_SORTIE_MISS && body._t771C0 != null) { if (!f || (f.contacts | 0) === body._t771C0) w._sortieMiss = state.world.day; body._t771C0 = null; }   // ★[T771] 출격이 접촉 없이 끝났다 — 그날을 전쟁에 남긴다
   if (T1019_ASSAULT_HP && T956_ASSAULT_MISS && body._t956C0 != null && _t1019NoHurt(f, body._t1019H0)) w._assaultMiss = state.world.day;   // ★[T1019 ⓓ] 켬 — 방어 병사 hp 합을 못 줄인 돌격도 같은 칸(아래 T956 줄은 글자 그대로)
@@ -8315,6 +8338,7 @@ function __p3Bind(mock) {
     _warEngage, _warAfterDaily, _warEndFight, _warBuildRectIndex, _warBlockedCell, _warWorld, warPerf, _warOrderFallback, _warToStandoff,
     T1019_UNTRAP, T1019_ASSAULT_HP, _t1019HpRef, _t1019NoHurt,   // ★[T1019] 하네스(`test-t1019-untrap`)가 운영과 같은 문을 부른다(내보내기만)
     T1044_SCRAM_WALK,   // ★[T1044] 하네스(`test-t1044-scram-walk`)가 손잡이 값을 읽는다(내보내기만 · 걸음은 운영 문 `tickWarBodies` 그대로)
+    T1060_SCRAM_HOLD, T1060_ATK_AIM,   // ★[T1060] 하네스(`test-t1060-scram-hold`)가 손잡이 값을 읽는다(내보내기만)
     banditHost, _t841Sh,   // ★[T841] 도적 몸 신원 문(호스트 `bodySh`) — 하네스(`test-body-seed-other`)가 운영과 같은 호스트를 도적 층에 꽂는다(내보내기만)
     T811_ARMS_BODY, _warArmsLoad, _warArmsCollect, _warArmsUnload, _t811Fall, _t857Pick, _t811Sync, _t811Stat,   // ★[T811] 무기 몸 짐 — 하네스(`test-arms-body`)가 운영과 같은 문을 부른다(내보내기만)
     T790_NO_SNAP, _t790Stat, _t790Mark, _t790Lag, _warSetupReturn, _warPaceReturn,   // ★[T790] 하네스(`test-war-nosnap`)가 운영과 같은 문을 부른다(내보내기만)
