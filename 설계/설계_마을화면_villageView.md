@@ -4,6 +4,7 @@
 > 고정 자료 `test/fixtures/village-view.json` — 이 표와 **같은 모양**이다(값은 예시 · 클라 배치용).
 > 칸 전수표(시안 칸 하나하나 → 서버 정본 파일:줄 · 있음/파생/없음)는 `보고/T1072_2026-11-02.md`.
 > T1084(2026-11-02): 없던 29칸 중 지금 세계에서 셀 수 있는 둘을 더했다 — `projects.now[]` 집터 줄 `bedsGain` · 새 줄 `kind:'clear'`(`fields` · `crew`). **새 칸만** — 옛 이름 · 뜻 무변. 29칸 표 `보고/T1084_2026-11-02.md`.
+> T1105(2026-11-03): PM 임시 `vvAdapt` 가 비워 둔 칸 중 서버에 이미 있는 값 셋을 더했다 — `head.region`(지역 이름 = 그 존의 `displayName`) · `dash.foodDays`(먹을 것 며칠치) · `dash.fuelCov` · `dash.fuelShort`(땔감 충당 몫 · 모자람). **새 칸만** — 옛 이름 · 뜻 무변. 겨울 준비 %(분모) · 인구 증감 · 다음 일 한 줄은 여전히 키가 없다. 화면 칸 ← 서버 칸 표 `보고/T1105_2026-11-03.md`.
 
 ## 0. 규약
 * **있는 칸만 싣는다.** 서버에 없는 칸은 키 자체가 없다(빈 문자열 · 0 으로 채우지 않는다) — 회부 `인계/회부.md` `T1072`.
@@ -32,6 +33,7 @@
 | | `cal` `{ label, season, seasonKo, dayOfSeason, seasonDays, year }` | obj | `events.calendarOf(day)` | 대시 "지금은 가을" |
 | | `age` | int | `day − econ.foundedDay` (파생) | 머리줄 "412일째" |
 | | `chief` `{ name, npc }` \| `null` | obj | `village-kin.chiefOf(vil)` | 머리줄 "촌장 도미" |
+| | `region` (T1105) | str | 이 마을이 선 존의 이름 `zone-config.js ZONES[zoneId].displayName`(손잡이 `villageViewSrc().zoneId` · 한반도 존 = "새벌") — 게임이 "지역"이라 부르는 그 이름 · 존을 모르는 판이면 키 없음 | 머리줄 부제 자리("남해 바닷가 마을" — 그 문장은 회부 T1072 2) |
 | `me` | `member` · `memberVid` | bool · int\|null | `membership.publicState().vid` (=== vid 이면 이 마을 사람) | 가입 안내 "아직 이 마을 사람이 아닙니다" |
 | | `contrib` · `need` | int · int | `onboarding.contrib`(`membership.contribOf`) · `membership.CFG.N_MEMBER` | 머리줄 "마을 사람이 되기까지 n / m" |
 | | `left` | int | `need − contrib`(0 아래로 안 간다 · 파생) | 가입 안내 "n 더 모으면" |
@@ -39,6 +41,8 @@
 | `dash` | `pop` | int | `econ.npcs.length` | "사는 사람 48명" |
 | | `toWinter` | int \| null | 달력 정본으로 다음 겨울 첫날까지(파생 · 겨울이면 0) | "겨울까지 34일 남았습니다" |
 | | `projectsN` | int | `projects.now.length`(T1084 부터 밭 일구기 줄도 든다) | "하고 있는 일 5가지" |
+| | `foodDays` (T1105) | num | 곳간 스냅숏 정본 `playerVillageInventory().foodDays`(= econ `totalFoodEquivalent ÷ 인구` · 한 사람 하루 1 → "며칠치" · 소수 한 자리) — 새로 오는 사람 문의 "자립 n일"과 같은 함수 · ⚠겨울 준비 %가 아니다(분모 없음 · 회부) | 겨울 준비 "먹을 것" 자리(%는 회부 — 며칠치만) |
+| | `fuelCov` · `fuelShort` (T1105) | num · bool | econ 이 그날 연료 단계에서 남긴 땔감 충당 몫 `_fuelCov`(`sim/economy-sim.js` · (짚 + 잔가지·껍질 + 땔나무) ÷ 그날 땔감 수요 · 0..1 · 겨울엔 추위만큼 수요가 커진다 · econ 이 이 값으로 건강을 깎는다) · 소수 둘째 자리 · `fuelShort` = 그 값 < 1 · 첫 econ 날 전엔 둘 다 키 없음 · ⚠**오늘** 몫이지 겨울 목표 대비가 아니다 | 겨울 준비 "땔감" 막대 · "땔감이 모자랍니다" |
 | `requests` | `rows[]` `{ res, ko, item, qty, filled, remain, rewRes?, rewKo?, rewQty?, line? }` | arr | `villageBoard().rows`(게시판 정본) | "마을의 부탁" · "12 / 30 모임" |
 | | `withheld` | int | 구하는 품목이 뭉뚱그린 것이라 뺀 줄 수 | — |
 | | `rewardWithheld` | int | 갚는 품목만 뭉뚱그린 것(거의 곡식)이라 **갚는 칸 · 문장(`line` = "나무 18 → 곡식 4")을 뺀** 줄 수 — 그 줄은 `rewRes`·`rewKo`·`rewQty`·`line` 키가 없다 | — |

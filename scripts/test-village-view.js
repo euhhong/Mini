@@ -16,6 +16,8 @@
 //  ⑦ [T1103] 마을 화면 말투 — 소식 · 끝낸 일 줄 = 하십시오체(`Events.newsLine`) · 화면 줄 표의 사건 종류 = 촌장 말 표(`LINES`)
 //  ②-T1084 없던 칸 중 셀 수 있는 둘 — 집터 `bedsGain` = econ `hutCapPerHut()`(= 침상 명부가 집 한 채에 더하는 수) ·
 //     공사 줄 `kind:'clear'` = 개간 술어 정본(`villageViewSrc().needClear`) ∧ 농부 몸 · 밭 칸 수 · 개간 몸 수 · 술어가 거짓이면 줄 없음 · 고정 자료 같은 모양
+//  ②-T1105 임시 vvAdapt 가 비워 둔 칸 중 셀 수 있는 셋 — 지역 이름 `head.region` = 그 존 `displayName` · 먹을 것 며칠치 `dash.foodDays` = 곳간 스냅숏 정본 ·
+//     땔감 충당 몫 `dash.fuelCov`/`fuelShort` = econ `_fuelCov` · 값이 없으면 키 없음 · 회부 칸(인구 증감 · 겨울 % · 다음 일)은 키 없음 · 고정 자료 같은 모양
 //
 // 실행: node scripts/test-village-view.js   (존 한 벌을 이 프로세스 안에서 띄운다 · 마을 2곳)
 'use strict';
@@ -227,6 +229,41 @@ const ITEM_KEYS = (view) => {   // 품목이 서는 자리 전부(④)
     }
     const fn = FIX.view.projects.now, fh = fn.find((x) => x.kind === 'house'), fc = fn.find((x) => x.kind === 'clear');
     ok(!!(fh && Number.isInteger(fh.bedsGain) && fc && Object.keys(fc).sort().join() === 'crew,fields,kind' && FIX.view.dash.projectsN === fn.length), '고정 자료에도 같은 새 칸(집터 `bedsGain` · `kind:\'clear\'` 줄) — 세션12 가 같은 모양을 본다');
+  }
+  // ── ②-T1105 임시 vvAdapt 가 비워 둔 칸 중 셀 수 있는 것 — 지역 이름 · 먹을 것 며칠치 · 땔감 충당 몫 ──
+  say('\n②-T1105 비어 있던 칸 중 셀 수 있는 것(새 칸만)');
+  {
+    const ZC = require(path.join(ROOT, 'server', 'zone-config.js'));
+    const zid = V.villageViewSrc(VID).zoneId;
+    ok(zid === process.env.ZONE_ID, '손잡이가 이 마을의 존을 준다(`villageViewSrc().zoneId` = 존 초기화 값)', String(zid));
+    ok(typeof view.head.region === 'string' && view.head.region.length > 0 && view.head.region === ZC.ZONES[zid].displayName,
+      '[자명 통과 금지] 지역 이름 = 그 존의 이름(`zone-config` `displayName`) — 빈 글자가 아니다', view.head.region);
+    // 존을 모르는 판(헤드리스)이면 키가 없다 — 손잡이를 잠시 감싸 존 칸만 비운다(끝에 그대로 되돌린다)
+    const src0 = V.villageViewSrc;
+    V.villageViewSrc = (id) => { const s2 = src0(id); return s2 ? Object.assign({}, s2, { zoneId: null }) : s2; };
+    let vz = null; try { vz = VV.build(p, VID).view; } finally { V.villageViewSrc = src0; }
+    ok(!!vz && !('region' in vz.head), '존을 모르면 지역 이름 키가 없다(빈 글자로 채우지 않는다)');
+    const inv = V.playerVillageInventory(vil);
+    ok(Number.isFinite(view.dash.foodDays) && view.dash.foodDays === inv.foodDays, '먹을 것 며칠치 = 곳간 스냅숏 정본(`playerVillageInventory().foodDays`) 그대로', `${view.dash.foodDays}일치`);
+    const fc = vil.econ._fuelCov;
+    ok(Number.isFinite(fc), '[자명 통과 금지] econ 이 그날 땔감 충당 몫(`_fuelCov`)을 실제로 남긴 세계에서 잰다', String(fc));
+    ok(view.dash.fuelCov === +fc.toFixed(2) && view.dash.fuelCov >= 0 && view.dash.fuelCov <= 1, '땔감 충당 몫 = econ `_fuelCov`(소수 둘째 자리 · 0..1)', String(view.dash.fuelCov));
+    ok(view.dash.fuelShort === (view.dash.fuelCov < 1), '땔감 모자람 = 그 몫이 1 아래', String(view.dash.fuelShort));
+    // [자명 통과 금지] 모자란 갈래 · 키 없음 갈래를 실제로 지난다 — econ 이 남긴 칸만 잠시 바꾸고 그대로 되돌린다
+    vil.econ._fuelCov = 0.5;
+    const vs = VV.build(p, VID).view.dash;
+    delete vil.econ._fuelCov;
+    const vn = VV.build(p, VID).view.dash;
+    vil.econ._fuelCov = fc;
+    ok(vs.fuelCov === 0.5 && vs.fuelShort === true, '땔감을 반만 땐 날이면 몫 0.5 · 모자람', JSON.stringify({ fuelCov: vs.fuelCov, fuelShort: vs.fuelShort }));
+    ok(!('fuelCov' in vn) && !('fuelShort' in vn), 'econ 이 아직 몫을 안 남겼으면(첫 날 전) 두 키가 없다');
+    const DASH_KEYS = ['foodDays', 'fuelCov', 'fuelShort', 'pop', 'projectsN', 'toWinter'];
+    ok(Object.keys(view.dash).every((k) => DASH_KEYS.includes(k)) && !('popDelta' in view.dash) && !('winter' in view.dash) && !('workNext' in view.dash),
+      '회부 칸(인구 증감 · 겨울 준비 % · 다음 일 한 줄)은 여전히 키가 없다 — 지어내지 않는다', Object.keys(view.dash).join(','));
+    ok(view.dash.projectsN === view.projects.now.length, '지금 일 수 = 공사 줄 수 그대로(T1084 밭 일구기 줄 포함 · 이름 무변)', String(view.dash.projectsN));
+    const FD = FIX.view.dash, FH = FIX.view.head;
+    ok(typeof FH.region === 'string' && Number.isFinite(FD.foodDays) && Number.isFinite(FD.fuelCov) && typeof FD.fuelShort === 'boolean' && FD.fuelShort === (FD.fuelCov < 1)
+      && Object.keys(FD).every((k) => DASH_KEYS.includes(k)), '고정 자료에도 같은 새 칸(`head.region` · `dash.foodDays` · `fuelCov` · `fuelShort`) — 세션12 가 같은 모양을 본다');
   }
   {
     const tb = V.villageTradeBoard(VID, p.x, p.y, p.inventory, 'wood');

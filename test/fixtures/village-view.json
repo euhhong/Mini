@@ -1,5 +1,5 @@
 {
-  "_doc": "T1072 villageView 고정 자료(T1084 — 집터 줄 bedsGain · 공사 줄 kind:'clear' 더함 · T1103 — 소식 · 끝낸 일 줄 = 하십시오체 `Events.newsLine`) — 모양은 설계/설계_마을화면_villageView.md 표 그대로 · 값은 예시(클라 배치용 · 서버 값 아님). 서버 메시지 { type:'village_view', vid, seq, full:true, view } 의 view 칸이다.",
+  "_doc": "T1072 villageView 고정 자료(T1084 — 집터 줄 bedsGain · 공사 줄 kind:'clear' 더함 · T1105 — head.region · dash.foodDays · fuelCov · fuelShort 더함) — 모양은 설계/설계_마을화면_villageView.md 표 그대로 · 값은 예시(클라 배치용 · 서버 값 아님). 서버 메시지 { type:'village_view', vid, seq, full:true, view } 의 view 칸이다.",
   "type": "village_view",
   "vid": 3,
   "seq": 1,
@@ -10,11 +10,12 @@
       "name": "어촌3",
       "day": 612,
       "cal": { "label": "2년 9월 12일 (가을)", "season": "autumn", "seasonKo": "가을", "dayOfSeason": 12, "seasonDays": 91, "year": 2 },
+      "region": "새벌",
       "age": 412,
       "chief": { "name": "도미", "npc": true }
     },
     "me": { "member": false, "memberVid": null, "contrib": 4, "need": 12, "left": 8, "chief": false, "offer": null },
-    "dash": { "pop": 48, "toWinter": 34, "projectsN": 4 },
+    "dash": { "pop": 48, "toWinter": 34, "projectsN": 4, "foodDays": 23.4, "fuelCov": 0.61, "fuelShort": true },
     "requests": {
       "rows": [
         { "res": "wood", "ko": "나무", "item": "wood", "qty": 30, "filled": 12, "remain": 18, "rewRes": "salt", "rewKo": "소금", "rewQty": 4, "line": "나무 18 → 소금 4" },
@@ -33,7 +34,7 @@
     },
     "projects": {
       "now": [
-        { "kind": "house", "name": "움집 짓기", "stage": 2, "stages": 4, "stageLabel": "③ 도리·서까래 골조(서까래 8·풀 6)", "need": [ { "res": "wood", "ko": "나무", "need": 4, "have": 2, "give": ["wood"] } ], "bedsGain": 6 },
+        { "kind": "house", "name": "움집 짓기", "stage": 2, "stages": 4, "stageLabel": "③ 도리·서까래 골조(서까래 8·풀 6)", "need": [ { "res": "wood", "ko": "나무", "need": 4, "have": 2 } ], "bedsGain": 6 },
         { "kind": "phouse", "name": "갈매 움집", "ownerName": "갈매", "stage": 1, "stages": 4, "stageLabel": "② 굴립주 기둥 세우기(기둥 6)" },
         { "kind": "clear", "fields": 58, "crew": 2 },
         { "kind": "caravan", "name": "임업2로 가는 행상", "to": "임업2", "state": "outbound", "toDays": 2, "cargo": [ { "res": "salt", "ko": "소금", "n": 40 } ] }
