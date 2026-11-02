@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // === scripts/t1083-village-oseok-shots.js — 마을 화면 오석 판 · 사진 · 프레임 값 자 (T1083) ======================================
 //
-// ⚠계측기다(러너 밖 · `@regress` 없음). 제품 무변 — 레포 서버 · 클라를 그대로 띄운다(e2e-village-view 와 같은 기동 · 같은 임시 자료).
+// ⚠계측기다(러너 밖 · `@regress` 없음). 제품 무변 — 레포 서버 · 클라를 그대로 띄운다(e2e-village-view 와 같은 기동 · ★[T1103] 서버 자료).
 // 화면 크기 둘(1440×900 · 1280×720 — T1083 카드) × 탭 넷 사진 + 값:
-//   · 판 열 때 — Shift+G 부터 자료를 넣고 판 글자까지 다 그린 때까지(ms · 그리기 + 입히기) · 입히기만(`vvSkinMs`)
+//   · 판 열 때 — Shift+G 부터 서버 자료가 와 판 글자까지 다 그린 때까지(ms · 왕복 + 그리기 + 입히기) · 입히기만(`vvSkinMs`) — ★[T1103] 서버 자료
 //   · 탭 바꿀 때 — 탭 누름부터 그린 뒤 첫 프레임까지(ms) · 입히기만
 //   · 열린 동안 — 3초 동안 rAF 간격 p50 · p95 · max(판 열림) ↔ 같은 자리 판 닫힘
 // 실행: node scripts/t1083-village-oseok-shots.js [--browser chromium|webkit] [--out <dir>]
@@ -19,7 +19,6 @@ const BR = arg('--browser', 'chromium'), OUT = arg('--out', '/tmp/t1083');
 fs.mkdirSync(OUT, { recursive: true });
 const CPORT = 3010, ZPORT = 3020;
 const CDB = `/tmp/t1083-c-${process.pid}.db`, ZDB = `/tmp/t1083-z-${process.pid}.db`;
-const FIX = JSON.parse(fs.readFileSync(path.join(ROOT, 'test', 'fixtures', 'village-view.ui-draft.json'), 'utf8'));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const procs = [];
 function boot(file, env) { const p = spawn(process.execPath, [path.join(ROOT, 'server', file)], { cwd: ROOT, env: Object.assign({}, process.env, env), stdio: ['ignore', 'pipe', 'pipe'] }); p.stdout.on('data', () => {}); p.stderr.on('data', () => {}); procs.push(p); return p; }
@@ -51,15 +50,16 @@ const q = (a, f) => { const s = a.slice().sort((x, y) => x - y); return s.length
     await page.evaluate(() => (typeof Oseok !== 'undefined' ? Oseok.ready() : null));   // 글꼴을 먼저 받아 둔다(첫 열기 값에 글꼴 받기가 안 섞이게)
     const rafStats = () => page.evaluate(() => new Promise((res) => { const d = []; let last = performance.now(); const t0 = last; const f = (t) => { d.push(t - last); last = t; if (t - t0 < 3000) requestAnimationFrame(f); else res(d); }; requestAnimationFrame(f); }));
     const closed = await rafStats();
-    // 판 열 때: Shift+G → 자료 → 다 그린 뒤 첫 프레임
-    const F = Object.assign({}, FIX, { vid: V.id });
-    const openMs = await page.evaluate(async (v) => {
+    // 판 열 때: Shift+G → 서버 자료(★[T1103] 임시 자료 아님 · 왕복 포함) → 다 그린 뒤 첫 프레임
+    await page.evaluate(() => window.__sendPrimary({ type: '__e2e_give', items: { wood: 6, stone: 4 } }));
+    const openMs = await page.evaluate(async () => {
+      vvNum = 'wood';   // 시세 기준 = 나무(열 때 그 기준으로 요청 — 창고 사진에 시세가 서게)
       const t0 = performance.now();
       openVillageView(window.__evNearVid);   // Shift+G 가 부르는 그 함수(키 들이기는 e2e-village-view 가 진짜 키로 본다)
-      window.__vvInject(v);
+      for (let i = 0; i < 500 && !window.__vvState().data; i++) await new Promise((r) => setTimeout(r, 5));
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
       return { total: +(performance.now() - t0).toFixed(1), skin: +vvSkinMs.toFixed(1), open: window.__vvState().open };
-    }, F);
+    });
     const tabs = [];
     for (const k of ['dash', 'proj', 'mem', 'store']) {
       const r = await page.evaluate(async (kk) => {
