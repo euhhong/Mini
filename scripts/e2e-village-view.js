@@ -89,13 +89,14 @@ async function enterAndGo(page, V) {
   let st = await page.evaluate(() => window.__vvState());
   ok(st.knob === true && st.open === true && st.vid === V.id, '① 마을 앞에서 Shift+G 로 마을 화면이 열린다(손잡이 켬)', JSON.stringify(st));
   ok(sent.some((m) => m.type === 'village_view' && m.vid === V.id), '① 열 때 자료를 요청한다(`village_view` · 서버가 모르면 버린다 — T1072 전)');
-  ok(await page.evaluate(() => /받는 중/.test(document.getElementById('vvBody').textContent)), '① 자료 전에는 지어낸 값 없이 "받는 중"(보이는 것 = 일어난 것)');
+  ok(await page.evaluate(() => /받는 중/.test([...document.querySelectorAll('#vvBody .vv-t')].map((e) => e.getAttribute('aria-label') || e.textContent).join(' '))), '① 자료 전에는 지어낸 값 없이 "받는 중"(보이는 것 = 일어난 것)');
 
   // ② 자료 넣기(T1072 전 임시 자료) → 대시보드
   const F = Object.assign({}, FIX, { vid: V.id });
   await page.evaluate((v) => window.__vvInject(v), F);
   await sleep(300);
-  const txt = (sel) => page.evaluate((s) => { const e = document.querySelector(s); return e ? e.textContent.trim() : null; }, sel);
+  // ★[T1083] 판 글자(캔버스 길)는 글자를 `aria-label` 에 둔다(내용은 캔버스) — 글자 읽기는 그 꼬리표 · 없으면 글자(모듈 없는 판)
+  const txt = (sel) => page.evaluate((s) => { const e = document.querySelector(s); return e ? (e.getAttribute('aria-label') || e.textContent).trim() : null; }, sel);
   ok((await txt('#vvName')) === F.name, '② 마을 이름 = 받은 자료', await txt('#vvName'));
   ok((await txt('#vvContrib')) === `${F.contrib.n} / ${F.contrib.need}`, '② 머리줄 "마을 사람이 되기까지 n / 50" = 받은 자료(기여 계량기 하나)', await txt('#vvContrib'));
   ok((await txt('#vvPop')) === `${F.stats.pop}명`, '② 사는 사람 = 받은 자료', await txt('#vvPop'));
@@ -124,12 +125,12 @@ async function enterAndGo(page, V) {
   await sleep(500);
   ok(sent.some((m) => m.type === 'village_donate' && m.vid === V.id && m.want && m.want['목재'] >= 1), '③ "재료 가져오기" = 기부(`village_donate` — 회관 기부 단추와 같은 문 · 든 것 중 그 일에 필요한 것)', JSON.stringify(sent.filter((m) => m.type === 'village_donate')));
   ok((await tab('mem')) === 'mem', '④ 구성원 탭');
-  const memN = await page.evaluate(() => document.querySelectorAll('#vvBody .vv-card').length);
+  const memN = await page.evaluate(() => document.querySelectorAll('#vvBody .vv-tabbody[data-k="mem"] .vv-card').length);
   ok(memN === Math.min(16, F.members.people.length), '④ 사람 칸 = 받은 자료(처음 16)', `${memN}`);
-  ok(await page.evaluate((n) => { const b = document.querySelector('[data-vv="more"]'); return !!b && b.textContent.includes(`${n}명 더 보기`); }, F.members.total - 16), '④ "n명 더 보기" = 전체 − 보인 수');
+  ok(await page.evaluate((n) => { const b = document.querySelector('[data-vv="more"]'); return !!b && (b.getAttribute('aria-label') || b.textContent).includes(`${n}명 더 보기`); }, F.members.total - 16), '④ "n명 더 보기" = 전체 − 보인 수');
   await page.screenshot({ path: path.join(SHOTS, 'vv-mem.png') });
   ok((await tab('store')) === 'store', '④ 창고 탭');
-  const priceCell = await page.evaluate(() => { const r = document.querySelectorAll('#vvBody .vv-row')[1]; return r ? r.children[3].textContent.trim() : null; });
+  const priceCell = await page.evaluate(() => { const r = document.querySelectorAll('#vvBody .vv-tabbody[data-k="store"] .vv-row')[1]; const c = r && r.children[3]; const t = c && c.querySelector('.vv-t'); return t ? (t.getAttribute('aria-label') || t.textContent).trim() : (c ? c.textContent.trim() : null); });
   ok(priceCell === `${F.store.rows[0].price}${F.store.rows.find((r) => r.item === F.store.base).unit}`, '④ 가까이서는 시세가 보인다(받은 자료 · 기준 품목 단위)', priceCell);
   ok(!(await page.$('#vvFar')), '④ 가까이서는 "가까이 가야" 안내가 없다');
   await page.screenshot({ path: path.join(SHOTS, 'vv-store.png') });
@@ -140,13 +141,11 @@ async function enterAndGo(page, V) {
     await tab(k);
     sizes.push(await page.evaluate(() => {
       const out = { min: 99, minText: '', emoji: [] };
+      const see = (t, fs) => { t = (t || '').trim(); if (!t) return; if (fs < out.min) { out.min = fs; out.minText = t.slice(0, 20); } if (/\p{Extended_Pictographic}/u.test(t)) out.emoji.push(t.slice(0, 20)); };
+      // ★[T1083] 판 글자 칸(캔버스 — 글자는 꼬리표) + 남은 글자 마디(모듈 없는 판 · 그 밖)
+      for (const e of document.querySelectorAll('#vvPane .vv-t')) see(e.getAttribute('aria-label') || e.textContent, parseFloat(getComputedStyle(e).fontSize));
       const w = document.createTreeWalker(document.getElementById('vvPane'), NodeFilter.SHOW_TEXT);
-      for (let n = w.nextNode(); n; n = w.nextNode()) {
-        const t = n.textContent.trim(); if (!t) continue;
-        const fs = parseFloat(getComputedStyle(n.parentElement).fontSize);
-        if (fs < out.min) { out.min = fs; out.minText = t.slice(0, 20); }
-        if (/\p{Extended_Pictographic}/u.test(t)) out.emoji.push(t.slice(0, 20));
-      }
+      for (let n = w.nextNode(); n; n = w.nextNode()) see(n.textContent, parseFloat(getComputedStyle(n.parentElement).fontSize));
       return out;
     }));
   }
@@ -161,8 +160,8 @@ async function enterAndGo(page, V) {
   await page.evaluate(() => { const b = document.querySelector('.vv-tab[data-k="store"]'); if (b) b.click(); });
   await sleep(300);
   ok(far, '[상황] 마을 중심에서 멀어졌다(근접 없음)');
-  ok(await page.evaluate(() => { const e = document.getElementById('vvFar'); return !!e && /가까이 가야 볼 수 있습니다/.test(e.textContent); }), '⑥ 멀리서는 창고 시세 = "가까이 가야 볼 수 있습니다"');
-  ok(await page.evaluate(() => [...document.querySelectorAll('#vvBody .vv-row')].slice(1, 4).every((r) => r.children[3].textContent.trim() === '')), '⑥ 멀리서는 시세 칸이 비었다(원격 시세 0)');
+  ok(await page.evaluate(() => { const e = document.getElementById('vvFar'); return !!e && /가까이 가야 볼 수 있습니다/.test([...e.querySelectorAll('.vv-t')].map((t) => t.getAttribute('aria-label') || t.textContent).join(' ') || e.textContent); }), '⑥ 멀리서는 창고 시세 = "가까이 가야 볼 수 있습니다"');
+  ok(await page.evaluate(() => [...document.querySelectorAll('#vvBody .vv-tabbody[data-k="store"] .vv-row')].slice(1, 4).every((r) => !r.children[3].querySelector('.vv-t') && r.children[3].textContent.trim() === '')), '⑥ 멀리서는 시세 칸이 비었다(원격 시세 0)');
   await page.screenshot({ path: path.join(SHOTS, 'vv-far.png') });
   await page.keyboard.press('Escape');
   await sleep(200);
