@@ -82,6 +82,34 @@ function floorDays(D, k) {
   return { bottom: pack(idx.slice(0, K)), top: pack(idx.slice(-K).reverse()), n: idx.length };
 }
 
+// ── 대조와 견주기 — 충격 판(S)과 같은 시드 충격 없는 판(B) ──────────────────────────────────────────────
+//   ① 두 판이 처음 갈린 날(마을 인구 · 곳간 줄이 다른 첫날) — 충격 날 다음 날이어야 충격 전 판이 같은 세계다(아니면 판 잡음이 먼저다).
+//   ② 충격 마을의 대조 대비 차(충격 − 대조) 추이 — 가장 크게 모자란 날 · 그 뒤 처음 따라잡은 날(차 ≥ 0) · 끝 차 · 끝 비율.
+//   ③ 잡음 바닥 — 충격을 안 받은 마을들의 끝 차 크기(중앙 · 90%) · 충격 마을보다 크게 갈린 마을 수(번진 몫과 판 잡음을 이 자료로는 못 가른다 — 둘 다 여기 든다).
+function vsControl(S, B) {
+  if (!S || !B || !S.shock) return null;
+  const i = S.shock.idx, n = (S.names || []).length;
+  const bd = new Map(B.rows.map((r) => [r[0], r]));
+  let first = null;
+  for (const r of S.rows) { const b = bd.get(r[0]); if (!b) continue; if (r[1].some((x, j) => x !== b[1][j]) || r[2].some((x, j) => x !== b[2][j])) { first = r[0]; break; } }
+  const gaps = [];
+  for (const r of S.rows) { if (r[0] < S.shock.day) continue; const b = bd.get(r[0]); if (b) gaps.push([r[0], r[1][i] - b[1][i]]); }
+  let worst = [S.shock.day, 0];
+  for (const g of gaps) if (g[1] < worst[1]) worst = g;
+  let caught = null;
+  if (worst[1] < 0) for (const g of gaps) if (g[0] > worst[0] && g[1] >= 0) { caught = g[0]; break; }
+  const lS = S.rows[S.rows.length - 1], lB = bd.get(lS[0]) || B.rows[B.rows.length - 1];
+  const endGap = lS[1][i] - lB[1][i];
+  const others = [];
+  for (let j = 0; j < n; j++) if (j !== i) others.push(Math.abs(lS[1][j] - lB[1][j]));
+  others.sort((a, b) => a - b);
+  const q = (p) => (others.length ? others[Math.min(others.length - 1, Math.floor(others.length * p))] : null);
+  return { firstDiverge: first, cleanBefore: first === null || first > S.shock.day, worstGap: worst[1], worstDay: worst[0], caught,
+    endGap, endRel: lB[1][i] > 0 ? +(endGap / lB[1][i]).toFixed(3) : null,
+    noiseMed: q(0.5), noiseP90: q(0.9), noiseMax: others.length ? others[others.length - 1] : null,
+    louder: others.filter((x) => x >= Math.abs(endGap)).length, others: others.length };
+}
+
 // ── 판 하나 요약(표 한 줄) ───────────────────────────────────────────────────────────────────────────────
 //   지니는 첫날 · 100날마다 · 끝 날. 추이 = 끝 − 첫날(+ 면 벌어졌다).
 function summarize(D, ctl) {
@@ -103,9 +131,9 @@ function summarize(D, ctl) {
     const cv = (j) => (ctl ? { days: ctl.rows.map((r) => r[0]), vals: ctl.rows.map((r) => r[j][i]) } : null);
     out.shock = { name: D.names[i], day: D.shock.day, until: D.shock.until, kind: D.shock.name,
       pop: recovery(D.rows.map((r) => r[1][i]), days, D.shock.day, cv(1)),
-      gran: recovery(D.rows.map((r) => r[2][i]), days, D.shock.day, cv(2)) };
+      gran: recovery(D.rows.map((r) => r[2][i]), days, D.shock.day, cv(2)), ctl: ctl ? vsControl(D, ctl) : null };
   }
   return out;
 }
 
-module.exports = { gini, series, recovery, floorDays, summarize, HAPPY_MID };
+module.exports = { gini, series, recovery, floorDays, vsControl, summarize, HAPPY_MID };

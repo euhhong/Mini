@@ -53,9 +53,16 @@ function table(runs, outJson) {
     console.log(`| ${s} | ${B.first.day} | ${f3(B.first.giniPop)} | ${f3(B.first.giniGran)} | | | |`);
     for (const m of B.marks) console.log(`| ${s} | ${m.day} | ${f3(m.giniPop)} | ${f3(m.giniGran)} | ${m.empty} | ${m.dissolved} | ${m.pop} |`);
   }
-  console.log('\n| 시드 | 인구 지니 끝 − 첫날 | 곳간 지니 끝 − 첫날 | 빈 마을(끝) | 해체(누계) |');
-  console.log('|---|---:|---:|---:|---:|');
-  for (const s of seeds) { const B = res[s].base; if (B) console.log(`| ${s} | ${B.dPop >= 0 ? '+' : ''}${B.dPop} | ${B.dGran >= 0 ? '+' : ''}${B.dGran} | ${B.empty} | ${B.dissolved} |`); }
+  //   첫날 지니는 0 이다(시딩이 마을마다 같은 인구) — 끝 − 첫날 에는 초기 분화가 섞인다. 가속은 후반(판 가운데 날 → 끝)으로 본다.
+  const sg = (x) => (x == null ? '—' : `${x >= 0 ? '+' : ''}${x.toFixed(3)}`);
+  console.log('\n| 시드 | 인구 지니 끝 − 첫날 | 곳간 지니 끝 − 첫날 | 인구 지니 가운데 → 끝 | 곳간 지니 가운데 → 끝 | 빈 마을(끝) | 해체(누계) |');
+  console.log('|---|---:|---:|---:|---:|---:|---:|');
+  for (const s of seeds) {
+    const B = res[s].base; if (!B) continue;
+    const mid = B.marks.find((m) => m.day >= B.days / 2) || null, end = B.marks[B.marks.length - 1];
+    B.mid = mid ? { day: mid.day, dPop: +(end.giniPop - mid.giniPop).toFixed(3), dGran: +(end.giniGran - mid.giniGran).toFixed(3) } : null;
+    console.log(`| ${s} | ${sg(B.dPop)} | ${sg(B.dGran)} | ${B.mid ? sg(B.mid.dPop) + `(${B.mid.day}→${end.day})` : '—'} | ${B.mid ? sg(B.mid.dGran) : '—'} | ${B.empty} | ${B.dissolved} |`);
+  }
   console.log('\n### ⓓ 행복 바닥(< 0.5) 날 수 — 판 평균 인구 하위 10 · 상위 10(대조 판)');
   console.log('| 시드 | 하위 10 평균 바닥 날 | 하위 10 바닥 비율 | 상위 10 평균 바닥 날 | 상위 10 바닥 비율 | 하위 10 마을 |');
   console.log('|---|---:|---:|---:|---:|---|');
@@ -72,6 +79,13 @@ function table(runs, outJson) {
     const back = (x) => (x.back == null ? (x.dipped ? '안 돌아옴' : '안 떨어짐') : `${x.back}(${x.backDays}날)`);
     console.log(`| ${s} | ${k.name} | ${k.day} → ${k.until} | ${pk ? pk.donor : '—'} | ${p.base} | ${p.min}(${p.minDay}) | ${back(p)} | ${p.end} · ${p.ctlEnd ?? '—'} · ${p.gapEnd ?? '—'} | ${p.tail}`
       + ` | ${g.base} | ${g.min}(${g.minDay}) | ${back(g)} | ${g.end} · ${g.ctlEnd ?? '—'} |`);
+  }
+  console.log('\n### ⓒ′ 대조와 견주기 — 충격 마을 인구(충격 − 대조) · 잡음 바닥(충격 안 받은 마을들의 끝 차)');
+  console.log('| 시드 | 두 판이 처음 갈린 날 | 충격 전 같은 세계 | 가장 모자란 차(날) | 따라잡은 날 | 끝 차 · 끝 비율 | 잡음 바닥 끝 차 중앙 · 90% · 최대 | 충격 마을보다 크게 갈린 마을 |');
+  console.log('|---|---:|---|---|---|---|---|---:|');
+  for (const s of seeds) {
+    const S = res[s].shock, c = S && S.shock && S.shock.ctl; if (!c) continue;
+    console.log(`| ${s} | ${c.firstDiverge ?? '—'} | ${c.cleanBefore ? '같음' : '다름'} | ${c.worstGap}(${c.worstDay}) | ${c.caught ?? (c.worstGap < 0 ? '못 따라잡음' : '—')} | ${c.endGap} · ${c.endRel} | ${c.noiseMed} · ${c.noiseP90} · ${c.noiseMax} | ${c.louder}/${c.others} |`);
   }
   console.log('\n| 시드 | 대조 · 충격 판이 같은 날 같은 마을을 골랐나 | 충격 판 인구 지니 끝 − 첫날 | 대조 판 |');
   console.log('|---|---|---:|---:|');

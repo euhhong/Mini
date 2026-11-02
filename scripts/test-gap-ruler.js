@@ -58,6 +58,21 @@ const F2 = G.floorDays(D4, 2);
 ok(F2.bottom.names.join() === '빈,작' && F2.bottom.low[1] === 6 && F2.bottom.share === +(9 / 13).toFixed(3), '④-3 하위 2 = 빈 · 작(6날 바닥) · 비율 = 바닥 날 / 산 날', F2.bottom);
 ok(G.HAPPY_MID === 0.5, '④-4 바닥 문턱 = econ 행복 중립점 0.5');
 
+console.log('④′ 대조와 견주기');
+{
+  const B = { names: ['가', '나', '다'], rows: [] }, S = { names: ['가', '나', '다'], rows: [], shock: { idx: 0, day: 3, until: 5 } };
+  const bp = [[10, 20, 30], [10, 20, 30], [10, 20, 30], [12, 21, 30], [14, 22, 30], [16, 23, 30], [18, 24, 30]];
+  const sp = [[10, 20, 30], [10, 20, 30], [10, 20, 30], [11, 21, 30], [11, 23, 30], [15, 22, 31], [19, 24, 34]];
+  bp.forEach((p, k) => B.rows.push([k + 1, p, [0, 0, 0], [null, null, null], [0, 0, 0]]));
+  sp.forEach((p, k) => S.rows.push([k + 1, p, [0, 0, 0], [null, null, null], [0, 0, 0]]));
+  const c = G.vsControl(S, B);
+  ok(c.firstDiverge === 4 && c.cleanBefore, '④′-1 두 판이 처음 갈린 날 = 충격 다음 날 · 충격 전 같은 세계', c);
+  ok(c.worstGap === -3 && c.worstDay === 5 && c.caught === 7 && c.endGap === 1, '④′-2 가장 모자란 차(날 5 · −3) · 따라잡은 날 7 · 끝 차 +1', c);
+  ok(c.noiseMed === 4 && c.noiseMax === 4 && c.louder === 1 && c.others === 2, '④′-3 잡음 바닥 = 충격 안 받은 마을들의 끝 차(0 · 4) · 충격 마을보다 크게 갈린 곳 1', c);
+  const S2 = JSON.parse(JSON.stringify(S)); S2.rows[1][1][2] = 29;
+  ok(!G.vsControl(S2, B).cleanBefore, '④′-4 충격 전에 갈리면 "다름"(판 잡음이 먼저다 — 숨기지 않는다)');
+}
+
 console.log('⑤ 요약 · 훅');
 const D5 = { names: ['가', '나', '다'], rows: D2.rows, shock: { idx: 0, day: 1, until: 2, name: '흉년' } };
 const S5 = G.summarize(D5, D2);
