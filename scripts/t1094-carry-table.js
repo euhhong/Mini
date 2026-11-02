@@ -27,20 +27,20 @@ for (const S of specs) {
   const ex = [], seeds = []; let cap = null, errs = 0;
   for (const f of files) { const P = rd(path.join(S.dir, f)); if (!P) continue; seeds.push(P.seed); cap = P.cap; errs += P.errs || 0; for (const e of (P.ex || [])) ex.push(Object.assign({ seed: P.seed }, e)); }
   const T = (e) => e.t1094 || {};
-  const a = { seeds, cap, errs, ex: ex.length, nMed: q(ex.map((e) => e.n), 0.5), nMax: ex.length ? Math.max(...ex.map((e) => e.n)) : null, forceMed: q(ex.map((e) => e.force), 0.5),
+  const a = { seeds, cap, errs, ex: ex.length, atE: ex.filter((e) => e.at === 'enlist').length, nMed: q(ex.map((e) => e.n), 0.5), nMax: ex.length ? Math.max(...ex.map((e) => e.n)) : null, forceMed: q(ex.map((e) => e.force), 0.5),
     kgMed: q(ex.map((e) => e.kg && e.kg[1]), 0.5), kgMax: ex.length ? Math.max(...ex.map((e) => (e.kg ? e.kg[2] : 0))) : null, overEx: ex.filter((e) => e.over > 0).length, overBodies: sum(ex.map((e) => e.over || 0)),
     packKg: sum(ex.map((e) => e.pack ? e.pack.kg : 0)), leftKg: sum(ex.map((e) => T(e).leftKg || 0)), leftFE: sum(ex.map((e) => T(e).leftFE || 0)), trim: sum(ex.map((e) => T(e).trim || 0)), trimEx: ex.filter((e) => (T(e).trim || 0) > 0).length,
     armsEx: ex.filter((e) => e.arms).length, armsOut: sum(ex.map((e) => e.arms ? e.arms.out : 0)), armsOn: sum(ex.map((e) => e.arms && e.arms.onBodies != null ? e.arms.onBodies : 0)), armsOnEx: ex.filter((e) => e.arms && e.arms.onBodies != null).length,
     armsKg: sum(ex.map((e) => e.arms && e.arms.kg != null ? e.arms.kg : 0)), armsLeft: sum(ex.map((e) => T(e).armsLeft || 0)), armsLeftEx: ex.filter((e) => (T(e).armsLeft || 0) > 0).length };
   J.arms[S.arm] = a; rows[S.arm] = ex;
 }
-L.push(`상한 = \`carry.js CAP_KG\` ${Object.values(J.arms).map((a) => a.cap).find((x) => x != null)}kg · 몸 짐 = 몸 인벤 전부(\`weights.js\`) · 잼 자리 = 몸이 서고 짐을 실은 뒤 첫 하루 경계(먹기 전)`, '');
+L.push(`상한 = \`carry.js CAP_KG\` ${Object.values(J.arms).map((a) => a.cap).find((x) => x != null)}kg · 몸 짐 = 몸 인벤 전부(\`weights.js\`) · 잼 자리 = 떠나는 순간(몸을 세우고 군량 · 무기를 실은 바로 뒤 교전 명부 \`enlist\` — 원정 칸의 괄호) · 그 문을 안 지난 원정만 하루 경계`, '');
 L.push('## ① 갈래 견줌', '');
 L.push('| 갈래 | 시드 | 원정 | 몸(가운데 · 가장 많은) | 병력(가운데) | 몸 짐 kg(원정 가운데의 가운데 · 가장 무거운 몸) | **상한 넘는 몸으로 떠난 원정 · 그 몸** | 군량 — 몸에 실은 kg · **집에 남긴 kg · 식량등가** · 덜어 낸 몸(원정) | 무기 — 반출 · 몸에 실은 자루(원정) · kg · **집에 남긴 자루(원정)** | 관찰 오류 |');
 L.push('|---|---|---|---|---|---|---|---|---|---|');
 for (const S of specs) {
   const a = J.arms[S.arm];
-  L.push(`| ${S.arm} | ${a.seeds.join('·')} | ${a.ex} | ${r1(a.nMed)} · ${a.nMax == null ? '-' : a.nMax} | ${r1(a.forceMed)} | ${r1(a.kgMed)} · ${r1(a.kgMax)} | **${a.overEx} · ${a.overBodies}** | ${r1(a.packKg)} · **${r1(a.leftKg)} · ${r1(a.leftFE)}** · ${a.trim}(${a.trimEx}) | ${r1(a.armsOut)} · ${r1(a.armsOn)}(${a.armsOnEx}) · ${r1(a.armsKg)} · **${r1(a.armsLeft)}(${a.armsLeftEx})** | ${a.errs} |`);
+  L.push(`| ${S.arm} | ${a.seeds.join('·')} | ${a.ex}(떠날 때 ${a.atE}) | ${r1(a.nMed)} · ${a.nMax == null ? '-' : a.nMax} | ${r1(a.forceMed)} | ${r1(a.kgMed)} · ${r1(a.kgMax)} | **${a.overEx} · ${a.overBodies}** | ${r1(a.packKg)} · **${r1(a.leftKg)} · ${r1(a.leftFE)}** · ${a.trim}(${a.trimEx}) | ${r1(a.armsOut)} · ${r1(a.armsOn)}(${a.armsOnEx}) · ${r1(a.armsKg)} · **${r1(a.armsLeft)}(${a.armsLeftEx})** | ${a.errs} |`);
 }
 L.push('', '## ② 원정마다 줄(갈래마다 — 남긴 것이 있는 원정 먼저 · 그다음 몸 짐이 무거운 원정)', '');
 for (const S of specs) {
