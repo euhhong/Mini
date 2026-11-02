@@ -159,7 +159,7 @@ async function runCase(tag, envOf, chromium, C, opt) {   // ★[T1092] opt = { r
     ['secret', (k) => ({ CENTRAL_SECRET: k === 'nippon' ? SEC_B : SEC_A })],
     ['same', () => ({})],
     // ★[T1077] central 만 닛폰 주소가 틀렸다(존 둘은 PUBLIC_HOST=localhost 그대로 — 존↔존 인계는 맞다)
-    ['host', (k) => (k === 'central' ? { ZONE_HOSTS: JSON.stringify({ hanbando: 'localhost', nippon: 'nippon.invalid' }) } : {})],
+    ['host', (k) => (k === 'central' ? { ZONE_HOSTS: JSON.stringify({ hanbando: 'localhost', nippon: 'nippon.invalid' }) } : { T1092_HANDOFF_BACK: '0' })],   // ★[PM land1039] ⓗ 는 T1092 앞 꼴(ACK 시한 · 배너)을 재현하는 판 — T1092 켬 기본 뒤엔 존을 끔으로(되돌림 꼴은 판 back 이 잰다)
   ];
   const R = {};
   for (const [tag, envOf] of cases) { console.log(`\n[판 ${tag}]`); R[tag] = await runCase(tag, envOf, chromium, C);
