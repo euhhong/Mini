@@ -4954,6 +4954,16 @@ function _oreWarmStart() {
   };
   setTimeout(step, 0);
 }
+// ★★[T1095 2026-11-03 · 세션4 · ★PM 11-02 문 7-c] **채굴 일괄도 수요 문에서 멈춘다** — 손잡이 `T1095_MINE_DEMAND`(켬 기본 · `=0` = 종전 글자).
+//   종전: 나무 · 채집 일괄(`_lifeDaily` 헤드리스 갈래)은 그날 수요(econ 정본 `woodDemandLeft` · `forageDemandLeft` — 몸통 `actDemandLeft`)가 0 이 되면 멈췄는데,
+//   채굴 일괄(이 함수)만 수요와 무관하게 광부당 하루 `NPC_MINE_PER_DAY`(14.73 덩이) × 깊이 효율을 셀에서 깎았다 — 수식 원석 0 인 날에도.
+//   켬: 같은 술어(econ 정본 `mineDemandLeft` = `actDemandLeft(D = 그날 수식이 낸 원석 `_oreOutLast`)` · 몸의 수요 문 `_t724BodyStep` ④ 그 줄)로
+//   그날 깎을 재고 덩이를 자른다 — 남은 수요(econ 원석 단위) × 원석 한 단위 kg(`_oreKg` · 정본 5.00) ÷ 덩이 kg(`mineChunkKg(마을 광부 숙련 평균)`)
+//   (몸이 친 덩이를 곳간 단위로 바꾸는 그 환산 `_t724Deliver` 의 역 · 몸의 타수 상한 `left × kgU / kgSw` 와 같은 꼴 · 새 수 0).
+//   ⚠수요 칸은 `T724_MINE_ACT`(켬 기본)가 세우고 수요 문은 `T374_DEMAND_STOP`(켬 기본)이 연다 — 둘 중 하나가 꺼져 있으면 자르지 않는다(종전 그대로).
+//   ⚠몸이 친 날(`_t724Skip`)은 이 문과 무관하다(일괄이 안 깎는다 · 몸은 이미 수요 문에서 멈춘다).
+const T1095_MINE_DEMAND = process.env.T1095_MINE_DEMAND !== '0';
+const _t1095Stat = { on: T1095_MINE_DEMAND, days: 0, cut: 0, zero: 0, open: 0, dug: 0, D: 0, vils: {} };   // 계측 전용(세계에 안 쓴다) — 일괄 날 · 자른 날 · 수요 0 날 · 깎은 재고 덩이 · 수요 합
 // 하루치 채굴 정산. 반환: { cells, consumed, oFrac }
 function _oreMineDaily(vil) {
   const cells = _oreCellsOf(vil);
@@ -4985,6 +4995,14 @@ function _oreMineDaily(vil) {
     const P = _t724P(); if (_t724Skip) P.skip++; else P.batch++;
     if (P.dv.length < 300) P.dv.push([vil.name, _t724Day(_dayNow()), nMiner, _t724Skip ? 1 : 0, +((vil.econ && vil.econ._oreOutLast) || 0).toFixed(4), +(lvlAvg).toFixed(2)]);
   }
+  //   ★[T1095] 그날 깎을 재고 덩이 상한(끔 · 수요 칸 없음 · 수요 문 끔 = Infinity → 아래 줄은 종전 그대로)
+  let _t1095Left = Infinity, _t1095D = null;
+  if (nMiner > 0 && !_t724Skip && _lifeEcon().T724_MINE_ACT && _lifeEcon().T374_DEMAND_STOP) {
+    const _l = _lifeEcon().mineDemandLeft(vil.econ);                    // econ 원석 단위(남은 수요 — 몸의 수요 문과 같은 술어)
+    const _kgU = _oreKg(), _S = _spec(), _ck = (_S && _S.mineChunkKg) ? _S.mineChunkKg(lvlAvg) : 0;
+    if (_l !== Infinity && _kgU > 0 && _ck > 0) { _t1095D = _l; if (T1095_MINE_DEMAND) _t1095Left = _l * _kgU / _ck; }
+  }
+  const _t1095Dug0 = consumed;
   if (nMiner > 0 && !_t724Skip) {
     // 2인 1조: 짝(2명)당 셀 하나. 조는 서로 다른 셀에 붙는다(랩 조 단위 분산 동형).
     const teams = Math.max(1, Math.ceil(nMiner / 2));
@@ -4992,7 +5010,7 @@ function _oreMineDaily(vil) {
       const inTeam = Math.min(2, nMiner - t * 2);
       let want = PER * inTeam;
       // 그 조의 셀 — 품위 순으로 조마다 다른 자리. 고갈되면 다음 자리로 밀린다.
-      for (let k = t; k < cells.length && want > 0.001; k += teams) {
+      for (let k = t; k < cells.length && want > 0.001 && _t1095Left > 1e-9; k += teams) {   // ★[T1095] 켬 = 수요가 찼으면 다음 셀로 안 간다
         const c = cells[k];
         // 깊이 페널티 — 표층은 그대로, 심층은 느려진다. 숙련이 그만큼 상쇄한다(플레이어와 동일 공식).
         const f = (dep.oreStockAt(c.cx, c.cy) || 0) / K0;
@@ -5002,10 +5020,17 @@ function _oreMineDaily(vil) {
         const eff = dep.mineDepthCost
           ? (dep.mineDepthP ? dep.mineDepthP(f) : 1) / dep.mineDepthCost(f)
           : 1;
-        const got = dep.oreConsumeAt(c.cx, c.cy, want * eff) / (eff || 1);   // 실제 소모는 재고 기준, 진척은 효율 기준
+        const got = dep.oreConsumeAt(c.cx, c.cy, _t1095Left === Infinity ? want * eff : Math.min(want * eff, _t1095Left)) / (eff || 1);   // 실제 소모는 재고 기준, 진척은 효율 기준 · ★[T1095] 켬 = 남은 수요 덩이까지
         want -= got; consumed += got * eff;
+        if (_t1095Left !== Infinity) _t1095Left -= got * eff;
       }
     }
+  }
+  if (nMiner > 0 && !_t724Skip) {   // ★[T1095 계측 전용] 일괄 날 · 수요 · 깎은 덩이(켬 · 끔 둘 다 센다 — 읽기만)
+    const S9 = _t1095Stat, dg = consumed - _t1095Dug0, r = S9.vils[vil.name] || (S9.vils[vil.name] = { days: 0, minerDays: 0, dug: 0, D: 0, zero: 0, cut: 0 });
+    S9.days++; r.days++; r.minerDays += nMiner; S9.dug += dg; r.dug += dg;
+    if (/^광산/.test(vil.name) && (r.ser || (r.ser = [])).length < 800) r.ser.push([nMiner, _t1095D == null ? null : +_t1095D.toFixed(3), +dg.toFixed(3)]);   // 광산 마을만 날마다(광부 · 수요 · 깎은 덩이)
+    if (_t1095D != null) { S9.D += _t1095D; r.D += _t1095D; if (!(_t1095D > 0)) { S9.zero++; r.zero++; } if (T1095_MINE_DEMAND && _t1095Left <= 1e-9) { S9.cut++; r.cut++; } } else S9.open++;
   }
   // oFrac — 생활권 광맥의 평균 잔여 비율(표본)
   let sum = 0, n = 0;
@@ -8640,6 +8665,7 @@ function __p3Bind(mock) {
     T1063_TERR_BUILD, _t1063Bnd, _t1063DayBnd, _t1063Msg, territoryBoundary,   // ★[T1063] 화면 영토 = 서버 영토(하네스 `test-t1063-terr-draw` 가 운영과 같은 문을 부른다)
     noteBodyExit, tickBodyExits, bodyExitStats, _starvedToday,   // ★[T590] 줄어드는 몸 — 하네스(`test-body-exit`)가 운영과 같은 문을 부른다
     _t765Depart, _t765Join,   // ★[T765] 후보 걷기 몸 문 둘(하네스 `test-cand-walk` 가 운영과 같은 문을 부른다)
+    _oreMineDaily, T1095_MINE_DEMAND, _t1095Stat,   // ★[T1095] 채굴 일괄 수요 문 — 하네스(`test-t1095-mine-demand`)가 운영과 같은 문을 부른다(내보내기만)
     _t1039Depart, _t1039Join, _t1039Leave,   // ★[T1039] 도적 전환 몸 문 셋(하네스 `test-bandit-body` 가 운영과 같은 문을 부른다)
     _t681Day, _t681Flush, T681_ON, T703_MARCH,   // ★[T703] T681 켬(기본) 판의 하루 경계 두 자리 — 하네스가 운영 하루 마감과 같은 차례(econ 앞 `_t681Flush` · 캐러밴 앞 `_t681Day`)로 부른다(값 무변 · 내보내기만)
     _warEngage, _warAfterDaily, _warEndFight, _warBuildRectIndex, _warBlockedCell, _warWorld, warPerf, _warOrderFallback, _warToStandoff,
@@ -14955,6 +14981,7 @@ module.exports = { t750CastPre, t750Stat: () => _t750Stat, t719ReachPre, t719Sta
   bodyExitStats, noteBodyExit, tickBodyExits,   // ★[T590] 줄어드는 몸 — 판 자(`t577-server-hook`)가 까닭별 수를 읽는다 · 하네스가 같은 문을 부른다
   t1039Stat: () => JSON.parse(JSON.stringify(_t1039Stat)),   // ★[T1039] 도적 전환 몸 증인(관찰기 `t1039-observe` · 하네스)
   t1039Exits: () => state.bodyExits || null,   // ★[T1039] 줄어드는 몸 기록(읽기만 — 관찰기가 은거지로 걷는 몸을 단마다 센다)
+  t1095Stat: () => JSON.parse(JSON.stringify(_t1095Stat)),   // ★[T1095] 채굴 일괄 수요 문 증인(관측 자 `t1095-observe` · 하네스)
   t765Stat: () => JSON.parse(JSON.stringify(_t765Stat)),   // ★[T765] 후보 걷기 몸 증인(관측 자 `t765-obs` · 실제 하루 판)
   villageFamine, playerVillageDepositMap, assignJob, assignRoster,   // ★[T1085] 촌장 일 맡기기
     // ★[T159] 기근 판정(엔진 판단을 읽는다) · 품목→재화 대응표
