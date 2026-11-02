@@ -75,6 +75,17 @@ const FIXTURE = process.env.BANDIT_FIXTURE || '';
 //        이유(보고/T577 §2-3 · §3-ⓓ): econ 기아 보호막(`SHIELD_DAYS` 365)과 도적 보호기가 **같은 날** 걷혀 첫해 겨울 끝 굶는 마을이
 //        한 주에 해체됐다(3시드 해체 51 중 39 가 day 375~394). 끔 판 빈 13 → 켬 판 1(시드 1020 · 800일).
 const T577_WALK = process.env.T577_CAND_WALK === '1';
+// ★★[T1039 2026-11-02 · T1022 회부 1 · 캐논 F7 "같은 몸" · ★재민 11-01 판정 "걸어간 몸이 단"(`walk` 정본 · `spawn` 대조 판)] **도적 전환 — 한 사람 몸 하나**.
+//   손잡이 `T1039_BANDIT_BODY` — 값 `walk` | `spawn` · 없음(그 밖) = 종전 글자(아래 갈래 줄이 하나도 안 닿는다).
+//   종전: 해체 그날 단이 서고(`GANGS` · 습격 길목 `pairSync`) · 그날 끝 `syncBodies` 가 은거지 곁에 단 몸 min(3, n) 을 **새로** 세운다 · 그 사람들의 마을 몸은
+//     까닭 줄(T590 `bandit`)로 하루 2명씩 은거지까지 걸어 닿으면 거둬진다 ⇒ 몸 상한 ∞ 판에선 한 사람이 몸 둘(T1022 28/28 · `villages.js` T1039 머리글).
+//   `walk` — 단은 **은거지에 닿아야** 선다. 해체 그 순간 단이 된 사람은 econ 에서 빠지고(종전 그대로) 단은 **길 위 장부**(`S.ROAD` — T765 `S.WALK` 그 꼴)에 든다:
+//     몸은 그 자리에서 같이 떠난다(호스트 `t1039Depart`) · 닿는 날 = 장부 길 ÷ 하루 걸음(T681 ③) · 그날 단이 `GANGS` 에 들고(결성 비축 · 습격 길목은 그때부터)
+//     걷던 몸이 단의 몸이 된다(호스트 `t1039Join` — 은거지 곁 새 몸 0). 가는 동안 단은 `GANGS` 밖이다 — 습격 0 · 토벌 표적 0 · 절망 이탈 합류 0 · 유지비 0(길 위 장부 · T765 정본 그 꼴 — 회부).
+//     부팅 실체화(다시 뜸 · 몸은 비영속)는 종전 그대로 은거지에 세운다.
+//   `spawn` — 단 · 단 몸은 종전 그대로 그날 선다 · 단 몸이 서는 그 틱에 단이 된 사람 몫의 마을 몸을 거둔다(호스트 `t1039Leave` — 떠남 표 · 순간이동 0 · 걷는 몸 0).
+const T1039_BODY = typeof process !== 'undefined' && !!process.env ? (process.env.T1039_BANDIT_BODY || '') : '';
+const T1039_WALK = T1039_BODY === 'walk', T1039_SPAWN = T1039_BODY === 'spawn';
 const T577_RAMP = process.env.T577_RAMP !== '0';   // ★[T577 추신] 기본 켬
 function _t577Hash(name) { let h = 0; const s = String(name || ''); for (let i = 0; i < s.length; i++) h = (Math.imul(h, 31) + s.charCodeAt(i)) | 0; return h >>> 0; }
 function _bdtOpenDay(vil) {   // 이 마을의 보호기가 끝나는 날(끔이면 모두 BDT_MIN_DAY — 종전) · ★[T984] 이 날부터 그 마을이 해체 · 절망 이탈 문을 탄다(소굴 습격은 이 날과 무관)
@@ -187,6 +198,7 @@ const S = {
   seq: 1, denSeq: 1,
   DENS: [],          // {id,cx,cy,sc,dv,dr,gen,next,cleared}
   GANGS: [],         // {id,camp:{cx,cy},n,food,zero,born,home,why,lootN,lastLoot,den(소굴id|null),_sup:{vilDbId,eta,force,wep}|null,_supKill}
+  ROAD: [],          // ★[T1039 walk] 은거지로 가는 단(켬만 찬다) — {g(단 — 아직 `GANGS` 밖), vid(떠난 마을 dbId), d0(떠난 날), len(장부 길 px), ppd(하루 걸음 px), pids(같이 걷는 몸)}
   WALK: [],          // ★[T765] 길 위 장부(켬만 찬다) — {npc(econ 항목 그대로), from·to(마을 dbId), d0(떠난 날), len(길 px), ppd(하루 걸음 px), pid(같이 걷는 몸|null)}
   pairs: new Map(),  // 'A|B'(econ name 정렬) → [gang,...] — econ 훅 O(1) 조회 테이블
   pairSig: '',
@@ -350,6 +362,7 @@ function campSpot(ocx, ocy) { // 은거지 탐색: 옛 터 기준 나선 — 완
     let ok = true;
     for (const g of guards) if (Math.hypot(x - g.cx, y - g.cy) < g.r) { ok = false; break; }
     if (ok) for (const b of S.GANGS) if (Math.hypot(x - b.camp.cx, y - b.camp.cy) < 30) { ok = false; break; }
+    if (ok && S.ROAD.length) for (const q of S.ROAD) if (Math.hypot(x - q.g.camp.cx, y - q.g.camp.cy) < 30) { ok = false; break; }   // ★[T1039 walk] 가는 단의 은거지도 그 단의 자리다(종전 = 장부가 빈 판 · 이 줄 무동작)
     if (!ok) continue;
     const rd = routeDistCells(x, y);
     let sc = (rd <= BDT_RT_R ? (BDT_RT_R - rd) * 1.4 : -Math.min(60, (rd - BDT_RT_R) * 0.15)); // 길목 가점/감점
@@ -491,6 +504,33 @@ function installHooks() { // econ 계약 훅(★v2 주사위는 이미 서버 �
 // =============================================================================
 // 결성·일일 순환 — 랩 bdtFormGang/banditDaily 서버판(로직 verbatim).
 // =============================================================================
+function _t1039Arrive(day) {   // ★[T1039 walk] 길 위 단 — 닿은 단을 세우고 걷던 몸을 단의 몸으로(차례 = 떠난 차례)
+  let n = 0;
+  for (let i = 0; i < S.ROAD.length; i++) {
+    const r = S.ROAD[i];
+    if (!(r.ppd > 0 && (day - r.d0) * r.ppd >= r.len - 0.5)) continue;   // 아직 길 위(T765 `_t765Arrive` 의 그 닿음 식)
+    const g = r.g;
+    S.GANGS.push(g);
+    { const _G = _gl(); if (_G) _G.gangIn(g, g.food, true); }   // ★[T748] 결성 비축 — 단이 선 그 순간(끄면 null)
+    if (S.GANGS.length > S.stats.peak) S.stats.peak = S.GANGS.length;
+    const want = Math.min(BDT_BODY_PER_GANG, g.n), got = [];
+    for (const pid of r.pids || []) {
+      const p = S.host.t1039Join ? S.host.t1039Join(pid, got.length < want) : null;
+      if (p) got.push(p);
+    }
+    if (got.length) _t1039Adopt(g, got);
+    S.stats.t1039Arrive = (S.stats.t1039Arrive || 0) + 1;
+    log(day, `도적단#${g.id} ${g.n}명 은거지(${g.camp.cx},${g.camp.cy})에 닿아 결성 — ${g.home}에서 ${day - r.d0}날 · 걸어온 몸 ${got.length}(단 몸 상한 ${want}) [T1039 walk]`);
+    S.ROAD.splice(i--, 1); n++;
+  }
+  return n;
+}
+function _t1039Adopt(g, bodies) {   // 걸어온 몸이 단의 몸 — `syncBodies` 새 몸 줄(자리 씨 · 홈 · 일터 · 직업 표 · 몸 주사위 신원)을 **그 몸이 받는다**(T765 `_t765Join` 의 그 꼴 · 사본 0)
+  const sp = S.host.spawnNpc, q = bodies.slice();
+  S.host.spawnNpc = (o) => { const p = q.shift(); if (!p) return null; p.tribeId = o.villageId || null; p.tribeName = o.villageName || null;
+    p.npcHomeX = o.npcHomeX != null ? o.npcHomeX : null; p.npcHomeY = o.npcHomeY != null ? o.npcHomeY : null; p.npcWorkX = o.npcWorkX != null ? o.npcWorkX : null; p.npcWorkY = o.npcWorkY != null ? o.npcWorkY : null; return p; };   // 존 `spawnNpc` 가 opts 로 세우는 칸만(그 몸은 선 자리 그대로)
+  try { syncBodies(false, { gid: g.id, n: bodies.length }); } finally { S.host.spawnNpc = sp; }
+}
 function formGang(vil, size, day, why) { // econ 인구에서 *살아있는* size명 이탈(사망 아님 — 부활·유령 금지)
   const e = vil.econ;
   if (!e || e.npcs.length < size || size < BDT_GMIN) return null;
@@ -503,9 +543,20 @@ function formGang(vil, size, day, why) { // econ 인구에서 *살아있는* siz
     if (e.counts && npc && npc.currentJob) e.counts[npc.currentJob] = Math.max(0, (e.counts[npc.currentJob] || 0) - 1);
   }
   const g = { id: S.seq++, camp, n: size, food: size * 6, zero: 0, born: day, home: vil.name, why, lootN: 0, lastLoot: day, den: null, _sup: null, _supKill: 0 };
+  if (T1039_WALK && S.host.t1039Depart) {   // ★[T1039 walk] 단은 은거지에 닿아야 선다 — 길 위 장부 · 몸은 지금 같이 떠난다(종전 까닭 줄 `bandit` 대신)
+    g.walk = 1;
+    const L = S.host.t1039Depart(vil, camp, size);
+    S.ROAD.push({ g, vid: vil.dbId, d0: day, len: L.len, ppd: L.ppd, pids: L.pids });
+    S.stats.conv += size;
+    S.stats.t1039Depart = (S.stats.t1039Depart || 0) + 1;
+    const eta = L.ppd > 0 ? day + Math.ceil(Math.max(0, L.len - 0.5) / L.ppd) : null;
+    log(day, `${vil.name} ${why} → 도적단#${g.id} ${size}명 은거지(${camp.cx},${camp.cy})로 떠남 — 몸 ${L.pids.length} · 길 ${Math.round(L.len / SZ)}셀 · 닿는 날 ${eta != null ? 'D' + eta : '없음'} [T1039 walk]`);
+    return g;
+  }
   S.GANGS.push(g);
   { const _G = _gl(); if (_G) _G.gangIn(g, g.food, true); }   // ★[T748] 결성 비축 — 그 순간(씨앗 · 끄면 null)
-  if (S.host.noteBodyExit) S.host.noteBodyExit(vil, 'bandit', size, camp);   // ★[T590] 몸은 은거지까지 걷는다(몸 층 · econ 무접촉)
+  if (T1039_SPAWN && BODIES_ON && S.host.t1039Leave) g._t1039Leave = { vil, n: size };   // ★[T1039 spawn] 마을 몸은 단 몸이 서는 그 틱에 거둔다(`syncBodies` · 비영속)
+  else if (S.host.noteBodyExit) S.host.noteBodyExit(vil, 'bandit', size, camp);   // ★[T590] 몸은 은거지까지 걷는다(몸 층 · econ 무접촉)
   S.stats.conv += size;
   if (S.GANGS.length > S.stats.peak) S.stats.peak = S.GANGS.length;
   log(day, `${vil.name} ${why} → 도적단#${g.id} ${size}명 결성(은거지 ${camp.cx},${camp.cy})`);
@@ -533,6 +584,7 @@ function daily(day) { // 하루 1회(villages econ 틱 직후): 위기 추적→
   if (S._pendingLogs && S._pendingLogs.length) { for (const m of S._pendingLogs) console.log(m); S._pendingLogs.length = 0; } // 침묵 창에서 쌓인 약탈 로그 방출
   if (FIXTURE === 'dissolve') applyFixture(day);
   if (S.WALK.length) _t765Arrive(day);   // ★[T765] 길 위 후보 — 닿은 사람부터 붙는다(장부가 빈 판 = 끔은 이 줄이 아무것도 안 한다)
+  if (S.ROAD.length) _t1039Arrive(day);   // ★[T1039 walk] 은거지에 닿은 단부터 선다(장부가 빈 판 = 종전은 이 줄이 아무것도 안 한다)
   for (const vil of host.villages) { // ── 위기 추적 + ①소멸 전환 + ②절망 이탈 (추적 카운터는 econ에 — serializeEcon 자동 영속) ──
     const e = vil.econ;
     if (!e) continue;
@@ -669,12 +721,14 @@ function daily(day) { // 하루 1회(villages econ 틱 직후): 위기 추적→
 // =============================================================================
 // 영속(zone-local-db bandit_state 1행 JSON) + 클라 마커(1종).
 // =============================================================================
+function _gSave(g) { return { id: g.id, camp: g.camp, n: g.n, food: g.food, zero: g.zero, born: g.born, home: g.home, why: g.why, lootN: g.lootN, lastLoot: g.lastLoot, den: g.den != null ? g.den : null, _sup: g._sup || null, _supKill: g._supKill || 0 , arms: g.arms || undefined, walk: g.walk || undefined }; }   // ★[T1039] `walk` 칸은 켬에서 걸어 선 단만(종전 = undefined · JSON 에 안 선다)
 function save(day) {
   try {
-    const gangs = S.GANGS.map(g => ({ id: g.id, camp: g.camp, n: g.n, food: g.food, zero: g.zero, born: g.born, home: g.home, why: g.why, lootN: g.lootN, lastLoot: g.lastLoot, den: g.den != null ? g.den : null, _sup: g._sup || null, _supKill: g._supKill || 0 , arms: g.arms || undefined }));
+    const gangs = S.GANGS.map(_gSave);
     { const _G = _gl(); if (_G) for (let i = 0; i < gangs.length; i++) { const L = _G.gangDump(S.GANGS[i]); if (L) gangs[i]._t748Lots = L; } }   // ★[T748] 갱 비축 줄(켬만 칸이 선다)
+    const _road = S.ROAD.length ? { road: S.ROAD.map((r) => ({ g: _gSave(r.g), vid: r.vid, d0: r.d0, len: r.len, ppd: r.ppd })) } : {};   // ★[T1039 walk] 길 위 단(켬에서 찰 때만 칸이 선다 · 몸 pid 는 비영속)
     const _walk = S.WALK.length ? { walk: S.WALK.map((w) => ({ npc: w.npc, from: w.from, to: w.to, d0: w.d0, len: w.len, ppd: w.ppd })) } : {};   // ★[T765] 길 위 장부(켬에서 찰 때만 칸이 선다 · 몸 pid 는 비영속)
-    S.db.upsertBanditState(S.zoneId, JSON.stringify({ seq: S.seq, denSeq: S.denSeq, dens: S.DENS, gangs, stats: { ...S.stats, log: undefined }, ..._walk }), day);
+    S.db.upsertBanditState(S.zoneId, JSON.stringify({ seq: S.seq, denSeq: S.denSeq, dens: S.DENS, gangs, stats: { ...S.stats, log: undefined }, ..._walk, ..._road }), day);
   } catch (e) {
     console.error(`[${S.zoneId}] 🏴 [도적] 저장 실패(다음 날 재시도):`, e.message);
   }
@@ -685,6 +739,7 @@ function restore(row) {
   S.DENS = Array.isArray(d.dens) ? d.dens : [];
   S.GANGS = (Array.isArray(d.gangs) ? d.gangs : []).map(g => ({ ...g, _sup: g._sup || null, _supKill: g._supKill || 0 }));
   if (d.stats) Object.assign(S.stats, d.stats, { log: S.stats.log });
+  if (Array.isArray(d.road)) S.ROAD = d.road.map((r) => ({ g: { ...r.g, _sup: r.g._sup || null, _supKill: r.g._supKill || 0 }, vid: r.vid, d0: r.d0, len: r.len, ppd: r.ppd, pids: [] }));   // ★[T1039 walk] 다시 뜨면 몸 없이 장부만(닿는 날 단이 선다 · 걸어온 몸 0)
   if (Array.isArray(d.walk)) S.WALK = d.walk.map((w) => ({ npc: w.npc, from: w.from, to: w.to, d0: w.d0, len: w.len, ppd: w.ppd, pid: null }));   // ★[T765] 다시 뜨면 몸 없이 장부만(몸은 비영속 — 닿으면 받는 마을이 econ 수를 따라 세운다)
   console.log(`[${S.zoneId}] 🏴 [도적] 복원: 소굴 ${S.DENS.length}곳(생존 ${S.DENS.filter(x => !x.cleared).length}) · 도적단 ${S.GANGS.length}(총원 ${S.GANGS.reduce((a, g) => a + g.n, 0)}) · 저장 day ${row.day}`);
 }
@@ -720,12 +775,13 @@ function despawnBody(pid) {
   const { players, npcs, broadcast } = S.host;
   if (players && players.has(pid)) { players.delete(pid); npcs.delete(pid); try { broadcast({ type: 'player_left', pid }); } catch (_) { } }
 }
-function syncBodies() {
+// ★[T1039] `boot` = 부팅 실체화(걸어 선 단도 종전처럼 세운다) · `adopt` = { gid, n } — 그 단 하나만 · 새 몸 줄을 걸어온 몸 n 이 받는다(`_t1039Adopt` 가 존 문을 잠깐 바꿔 끼운다)
+function syncBodies(boot, adopt) {
   if (!BODIES_ON || !S.host || !S.host.spawnNpc || !S.host.players) return;
   const players = S.host.players;
   if (!S.bodies) S.bodies = new Map(); // gangId → [pid,...]
   const liveG = new Map(S.GANGS.map(g => [g.id, g]));
-  for (const [gid, pids] of [...S.bodies]) { // 단 소멸·축소 회수 + stale 청소
+  if (!adopt) for (const [gid, pids] of [...S.bodies]) { // 단 소멸·축소 회수 + stale 청소
     const g = liveG.get(gid);
     for (let i = pids.length - 1; i >= 0; i--) { if (!players.has(pids[i])) pids.splice(i, 1); }
     const want = g ? Math.min(BDT_BODY_PER_GANG, g.n) : 0;
@@ -733,8 +789,9 @@ function syncBodies() {
     if (!g && !pids.length) S.bodies.delete(gid);
   }
   for (const g of S.GANGS) { // 신규·증원
+    if (adopt && g.id !== adopt.gid) continue;   // ★[T1039 walk] 걸어온 몸 받기 — 그 단 하나만
     const pids = S.bodies.get(g.id) || [];
-    const want = Math.min(BDT_BODY_PER_GANG, g.n);
+    const want = adopt ? Math.min(BDT_BODY_PER_GANG, g.n, pids.length + adopt.n) : (T1039_WALK && g.walk && !boot) ? pids.length : Math.min(BDT_BODY_PER_GANG, g.n);   // ★[T1039 walk] 걸어 선 단은 새 몸 0(걸어온 몸이 단의 몸 · 부팅 실체화만 종전)
     const cx = g.camp.cx * SZ + SZ / 2, cy = g.camp.cy * SZ + SZ / 2;
     while (pids.length < want) {
       _bSeed(g.camp.cx, g.camp.cy);   // ★[T350] 실체 도적이 서는 자리 — 은거지 셀이 씨
@@ -755,6 +812,11 @@ function syncBodies() {
       pids.push(p.pid);
     }
     if (pids.length) S.bodies.set(g.id, pids);
+    if (g._t1039Leave) {   // ★[T1039 spawn] 단 몸이 선 그 틱 — 단이 된 사람 몫의 마을 몸을 거둔다(떠남 표 · 순간이동 0) · 몸을 못 세웠으면 종전 까닭 줄(걸어 나감)
+      const L = g._t1039Leave; g._t1039Leave = null;
+      if (pids.length) S.host.t1039Leave(L.vil, L.n, g.camp);
+      else if (S.host.noteBodyExit) S.host.noteBodyExit(L.vil, 'bandit', L.n, g.camp);
+    }
   }
   let tot = 0; for (const pids of S.bodies.values()) tot += pids.length;
   if (tot !== S._bodyN) { S._bodyN = tot; console.log(`[${S.zoneId}] 🏴 [도적] 배회 실체 ${tot}명(단 ${S.GANGS.length}곳 — 연출 전용·econ 무접촉)`); }
@@ -793,7 +855,7 @@ function _bindRest(host, day0) {
   S.ready = true;
   lotsBoot(_gl());   // ★[T748] 복원한 갱 줄(켬 · 시계가 꽂힌 뒤 — 아니면 villages 의 장부 붙이기가 다시 부른다 · 끄면 null)
   save(day0);
-  syncBodies();   // ★[2파] 부팅 실체화(복원 단 포함 — pid 비영속이라 여기서 재스폰)
+  syncBodies(true);   // ★[2파] 부팅 실체화(복원 단 포함 — pid 비영속이라 여기서 재스폰) · ★[T1039] `true` = 부팅(걸어 선 단도 종전처럼 세운다)
   if (_bTickKeep != null) { _bTick = _bTickKeep; _bTickKeep = null; }   // ★[T742] 몸을 다시 세운 뒤 — 주사위 차례를 멈추기 전 값으로(위 `_bTick` 주석 · 끔이면 늘 null)
   console.log(`[${S.zoneId}] 🏴 도적 시뮬 준비(§11 1파: 경제·수명주기): 소굴 ${S.DENS.filter(d => !d.cleared).length}곳 · 도적단 ${S.GANGS.length} · econ 훅(banditRouteRisk/onBanditLoot) 설치 · day ${day0}${FIXTURE ? ` [FIXTURE=${FIXTURE}]` : ''}${BDT_MIN_DAY !== 365 ? ` [MINDAY=${BDT_MIN_DAY}]` : ''}`);
   return true;
@@ -916,6 +978,11 @@ function _dayRun(day) {
 
 module.exports = { init, onGameTick, dayTick, t986: () => ({ on: T986_BANDIT_DAY, lastDay: S.lastDay }), clientCamps, stats: () => S.stats, incomingFood, t766On: () => T766_INCOMING, armsHeld, ARMS_RES, lotsBoot, gangs: () => S.GANGS,
   t765: () => ({ on: T577_WALK, road: S.WALK.length, rows: (S.t765Rows || []).map((r) => Object.assign({}, r)) }),   // ★[T765] 길 위 장부 증인(관측 자 `t765-obs` · 하네스)
+  // ★[T1039] 도적 전환 몸 증인(관찰기 `t1039-observe` · 하네스 `test-bandit-body`) — 갈래 · 길 위 단 · 단마다 몸
+  t1039: () => ({ arm: T1039_WALK ? 'walk' : T1039_SPAWN ? 'spawn' : 'old', road: S.ROAD.map((r) => ({ id: r.g.id, n: r.g.n, home: r.g.home, camp: r.g.camp, d0: r.d0, len: r.len, ppd: r.ppd, pids: (r.pids || []).slice(),
+    eta: r.ppd > 0 ? r.d0 + Math.ceil(Math.max(0, r.len - 0.5) / r.ppd) : null })), bodies: S.bodies ? [...S.bodies].map(([id, pids]) => [id, pids.slice()]) : [] }),
+  _t1039Probe: { daily: (day) => daily(day), syncBodies: (boot) => syncBodies(boot), arrive: (day) => _t1039Arrive(day), road: () => S.ROAD, gangs: () => S.GANGS, pairs: () => S.pairs,
+    reset: () => { S.GANGS = []; S.ROAD = []; S.DENS = []; S.bodies = new Map(); S.pairs = new Map(); S.pairSig = ''; S._fixtured = false; S._routes = null; S.routeField = null; S.routeFieldSig = ''; S.seq = 1; } },   // 하네스 문 — 운영 함수 그대로(사본 0)
   // ★[T765] 하네스 문 — 운영 함수 그대로(사본 0): 호스트 · 저장소를 꽂고 해체 걷기 · 닿기 · 저장 · 복원을 부른다
   _t765Probe: { setHost: (h, db) => { const k = { host: S.host, db: S.db }; S.host = h; if (db !== undefined) S.db = db; return k; }, walk: (vil, day) => _t577Walk(vil, day), arrive: (day) => _t765Arrive(day),
     ledger: () => S.WALK, reset: () => { S.WALK = []; S.t765Rows = []; }, save: (day) => save(day), restore: (row) => restore(row), get ON() { return T577_WALK; },

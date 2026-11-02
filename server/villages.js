@@ -1497,6 +1497,7 @@ function tickBodyExits(now) {
     if (!(p.hp > 0)) { p.vx = 0; p.vy = 0; continue; }             // 길에서 늑대 등에 쓰러졌다 — 깨면 폴리라인으로 돌아온다(캐러밴 그 줄)
     const remain = r.len - r.prog;
     if (r.t765 && remain <= 0.5) { p.vx = 0; p.vy = 0; continue; }   // ★[T765] 후보 몸은 닿아도 안 거둔다 — 붙는 날(도적 하루 장부)까지 그 자리에 선다
+    if (r.t1039 && remain <= 0.5) { p.vx = 0; p.vy = 0; continue; }   // ★[T1039 walk] 단이 될 몸도 닿아도 안 거둔다 — 단이 서는 날(도적 하루 장부)까지 은거지에 선다
     if (remain <= 0.5) { if (T681_ON) { p.vx = 0; p.vy = 0; continue; } _bxGone(r, p); _bx.arrive++; continue; }   // ★[T681 ③] 켬이면 도착 회수는 하루 경계
     const step = T681_ON ? Math.min(remain, sp * dtMs, Math.max(0, _t681BxVis(r, now) - r.prog)) : Math.min(remain, sp * dtMs);   // ★[T681 ③] 켬 = 장부 일정을 넘지 않게(보이는 것)
     if (!(step > 0)) { p.vx = 0; p.vy = 0; continue; }
@@ -1556,6 +1557,73 @@ function _t765Join(pid, to) {
   try { spawnOneNpc(to); } finally { state.deps.spawnNpc = sp; }
   _t765Stat.joined++;
   return true;
+}
+// ═══ ★★[T1039 2026-11-02 · T1022 회부 1 · 일관성 캐논 F7 "같은 몸" · ★재민 11-01 "걸어간 몸이 단"] **도적 전환 — 한 사람 몸 하나** ═══
+//   손잡이 `T1039_BANDIT_BODY`(bandits.js 가 읽는다 · 값 `walk` | `spawn` · 그 밖 = 종전 글자 — 이 문 셋은 한 번도 안 불린다).
+//   종전: 해체 그날 `formGang` 이 까닭 줄에 `bandit` n 을 적고(T590) · 하루 마감이 그 수만큼 명부 맨 뒤 몸을 은거지로 걷게 하고(하루 2명씩 · 닿으면 거둠) ·
+//     같은 날 도적 하루 끝 `syncBodies` 가 은거지 곁에 단 몸 min(3, n) 을 **새로** 세웠다 ⇒ 몸 상한 ∞ 판에선 한 사람이 걷는 몸과 은거지 몸 둘이었다(T1022 28/28).
+//   ⓐ `walk` 떠나기(`_t1039Depart`) — 해체 그 순간 단이 된 사람 몫의 몸이 **같이** 떠난다(T765 `_t765Depart` 그 꼴):
+//      떠날 몸 수 = 명부의 자유 몸 − 줄 선 까닭 몫(먼저 적힌 까닭이 먼저) − 남은 사람이 쥘 몸 `min(econ 인구, 가시 몸 상한)` (0 ~ n) · 몸 = 명부 맨 뒤(T590 걸어 나감 그 차례).
+//      걸음 = `_bxWalk` 그대로(까닭 `bandit` · 은거지 칸 · 코스 A* · T681 ③ 걸음 장부) — 기록에 표식 `t1039` 하나만 더 단다(닿아도 거두지 않고 선다).
+//      단이 서는 날 = 장부 길이(회관 → 은거지 길 · 떠난 몸 길 중 가장 긴 것) ÷ 하루 걸음(존 걸음 × 하루 길이 — T681 ③ 그 식) — 떠난 몸이 다 닿는 날.
+//   ⓑ `walk` 붙기(`_t1039Join`) — 그날 도적 하루가 단을 세우며 부른다: 걷던 몸이 **그 단의 몸**이 된다(새 몸 0) · 단 몸 상한(`BDT_BODY_PER_GANG`)을 넘는 몸은 종전처럼 거둔다.
+//   ⓒ `spawn` 떠남(`_t1039Leave`) — 은거지 곁에 단 몸이 서는 그 틱(`syncBodies`)에 단이 된 사람 몫의 마을 몸(ⓐ 와 같은 수 · 같은 차례)을 **거둔다**:
+//      `player_left` + 떠남 표(`_t1039Stat.rows` — 마을 · 몸 · 은거지 · 날) — 순간이동이 아니다(그 몸은 은거지에 다시 서지 않는다 · 화면의 몸은 은거지 몸 하나).
+//   새 수 0 · 주사위 0 · econ 무접촉.
+const _t1039Stat = { depart: 0, bodied: 0, bodyless: 0, joined: 0, capped: 0, noBody: 0, left: 0, rows: [] };
+function _t1039Take(vil, n) {   // 단이 된 사람 몫으로 명부를 떠날 몸(맨 뒤부터) — ⓐ ⓒ 같은 셈
+  const players = state.deps.players;
+  let queued = 0; if (vil._bxQ) for (const h of vil._bxQ) queued += h.n | 0;
+  let free = 0; for (const pid of vil.npcPids) { const p = players.get(pid); if (p && !p._muster && !p._bxExit) free++; }
+  const keep = Math.min(vil.econ ? vil.econ.npcs.length : 0, NPC_CAP_PER_VILLAGE);
+  const take = Math.max(0, Math.min(n | 0, free - queued - keep));
+  const pick = [];
+  for (let j = vil.npcPids.length - 1; j >= 0 && pick.length < take; j--) { const p = players.get(vil.npcPids[j]); if (p && !p._muster && !p._bxExit) pick.push(vil.npcPids[j]); }
+  for (const pid of pick) { const i = vil.npcPids.indexOf(pid); if (i >= 0) { vil.npcPids.splice(i, 1); if (T822_BODY_SEED) _t822Rekey(vil, i); } }   // ★[T833] 명부가 줄면 그 자리부터
+  return { pick, queued, free, keep };
+}
+function _t1039Depart(vil, camp, n) {
+  const players = state.deps.players;
+  const dst = { x: camp.cx * SZ + SZ / 2, y: camp.cy * SZ + SZ / 2 };
+  let pts = null; try { pts = computeRoutePts(vil.ccx * SZ + SZ / 2, vil.ccy * SZ + SZ / 2, dst.x, dst.y); } catch (e) { pts = null; }
+  let len = 0;
+  if (pts && pts.length >= 2) { for (let i = 1; i < pts.length; i++) len += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y); }
+  else len = Math.hypot(dst.x - (vil.ccx * SZ + SZ / 2), dst.y - (vil.ccy * SZ + SZ / 2));   // 길을 못 찾았다 — 직선(`_bxWalk` 직선 폴백 그 꼴)
+  const hall = len;
+  const T = _t1039Take(vil, n);
+  for (const pid of T.pick) {
+    _bxWalk(vil, players.get(pid), { k: 'bandit', to: dst });
+    const r = state.bodyExits && state.bodyExits.get(pid);
+    if (r) { r.t1039 = 1; if (r.len > len) len = r.len; }
+  }
+  const ppd = (((state.deps && state.deps.moveSpeed) || 0) / 1000) * (state.dayMs || 0);   // T681 ③ 하루 걸음(`_bxWalk` 의 rec.ppd 그 식)
+  _t1039Stat.depart += n | 0; _t1039Stat.bodied += T.pick.length; _t1039Stat.bodyless += (n | 0) - T.pick.length;
+  if (_t1039Stat.rows.length < 200) _t1039Stat.rows.push({ arm: 'walk', day: state.world ? state.world.day : null, from: vil.name, n: n | 0, bodied: T.pick.length, queued: T.queued, keep: T.keep, hallPx: Math.round(hall), lenPx: Math.round(len), ppd, pids: T.pick.slice() });
+  return { len, ppd, pids: T.pick };
+}
+function _t1039Join(pid, keep) {
+  const { players, npcs } = state.deps;
+  const p = pid != null ? players.get(pid) : null;
+  const r = p && state.bodyExits ? state.bodyExits.get(pid) : null;
+  if (!p || !r || !r.t1039) { _t1039Stat.noBody++; return null; }
+  if (!keep) { _bxGone(r, p); _bx.arrive++; _t1039Stat.capped++; return null; }   // 단 몸 상한에 찼다 — 종전 닿음 회수 그 줄(사람은 단에 들었다)
+  state.bodyExits.delete(pid);
+  p.simCaravan = false; p._bxExit = undefined; p.vx = 0; p.vy = 0;
+  p.simVillageId = undefined; p.simLonOff = undefined; p.npcBedX = undefined; p.npcBedY = undefined;   // 마을 결속을 푼다(존 `spawnNpc` 로 선 단 몸에 없는 칸)
+  npcs.add(p.pid);   // AI 다시 켬 — 집 · 일터 칸은 도적 층이 단 몸 규칙으로 준다(`syncBodies` 그 식)
+  _t1039Stat.joined++;
+  return p;
+}
+function _t1039Leave(vil, n, camp) {
+  const { players, npcs, broadcast } = state.deps;
+  const T = _t1039Take(vil, n);
+  for (const pid of T.pick) {
+    const p = players.get(pid);
+    if (p) { _bxQuiet(p); players.delete(pid); npcs.delete(pid); try { broadcast({ type: 'player_left', pid }); } catch (e) {} }
+  }
+  _t1039Stat.left += T.pick.length;
+  if (_t1039Stat.rows.length < 200) _t1039Stat.rows.push({ arm: 'spawn', day: state.world ? state.world.day : null, from: vil.name, n: n | 0, left: T.pick.length, queued: T.queued, keep: T.keep, camp: camp ? [camp.cx, camp.cy] : null, pids: T.pick.slice() });
+  return T.pick.length;
 }
 // 몸 하나를 줄인다 — 까닭 `why`(`_bxTake` 한 몫 · 없으면 `unknown`)에 따라 그 자리에서 죽거나 걸어서 나간다.
 //   ★[P3 삼중 코히런스] 출정(징발·_muster) 중 병사는 대상에서 제외 — 전쟁 실체가 그 pid 를 쥔다(종전 그대로).
@@ -7247,6 +7315,7 @@ function _t681Day(now) {
       if (r.ppd == null) continue;
       r.L = Math.min(r.len, Math.max(0, (d - r.d0) * r.ppd));
       if (r.t765) continue;   // ★[T765] 후보 몸 — 거두지 않는다(붙기는 도적 하루가 econ 장부로 · `_t765Join`)
+      if (r.t1039) continue;   // ★[T1039 walk] 단이 될 몸 — 거두지 않는다(붙기는 도적 하루가 단을 세울 때 · `_t1039Join`)
       if (r.len - r.L <= 0.5) { _bxGone(r, p); _bx.arrive++; }
     }
   }
@@ -8311,6 +8380,7 @@ function __p3Bind(mock) {
     state, tickWarBodies, warThreats, syncVillagePop, removeOneNpc, spawnOneNpc,
     noteBodyExit, tickBodyExits, bodyExitStats, _starvedToday,   // ★[T590] 줄어드는 몸 — 하네스(`test-body-exit`)가 운영과 같은 문을 부른다
     _t765Depart, _t765Join,   // ★[T765] 후보 걷기 몸 문 둘(하네스 `test-cand-walk` 가 운영과 같은 문을 부른다)
+    _t1039Depart, _t1039Join, _t1039Leave,   // ★[T1039] 도적 전환 몸 문 셋(하네스 `test-bandit-body` 가 운영과 같은 문을 부른다)
     _t681Day, _t681Flush, T681_ON, T703_MARCH,   // ★[T703] T681 켬(기본) 판의 하루 경계 두 자리 — 하네스가 운영 하루 마감과 같은 차례(econ 앞 `_t681Flush` · 캐러밴 앞 `_t681Day`)로 부른다(값 무변 · 내보내기만)
     _warEngage, _warAfterDaily, _warEndFight, _warBuildRectIndex, _warBlockedCell, _warWorld, warPerf, _warOrderFallback, _warToStandoff,
     T1019_UNTRAP, T1019_ASSAULT_HP, _t1019HpRef, _t1019NoHurt,   // ★[T1019] 하네스(`test-t1019-untrap`)가 운영과 같은 문을 부른다(내보내기만)
@@ -8379,6 +8449,7 @@ function banditHost() {
     npcs: state.deps && state.deps.npcs,
     noteBodyExit,                                    // ★[T590] 사람이 줄어든 까닭 — 해체·이탈·원정 전사(몸이 걸어 나갈 곳 · 위 T590 머리글)
     t765Depart: _t765Depart, t765Join: _t765Join,    // ★[T765] 후보 걷기 몸 문 둘(도적 `_t577Walk` — `T577_CAND_WALK=1` 에서만 불린다)
+    t1039Depart: _t1039Depart, t1039Join: _t1039Join, t1039Leave: _t1039Leave,   // ★[T1039] 도적 전환 몸 문 셋(도적 `formGang` · `_t1039Arrive` · `syncBodies` — `T1039_BANDIT_BODY` 켬 갈래에서만 불린다)
     seed: state.villageSeed || 1020,
     cellsW: ZONE ? Math.ceil(ZONE.zoneWidth / SZ) : 0,
     cellsH: ZONE ? Math.ceil(ZONE.zoneHeight / SZ) : 0,
@@ -14518,6 +14589,8 @@ module.exports = { t750CastPre, t750Stat: () => _t750Stat, t719ReachPre, t719Sta
   cropAtCell,   // ★[T91 · T79c 회부 1] 그 칸의 작물 — claim 페이로드가 이걸 싣는다(사본 0)
   playerVillageWithdraw, playerVillageWithdrawStock, villageWithdrawGate,   // ★[T11] 곳간 인출 — 납품의 역연산(같은 표·같은 환산율)
   bodyExitStats, noteBodyExit, tickBodyExits,   // ★[T590] 줄어드는 몸 — 판 자(`t577-server-hook`)가 까닭별 수를 읽는다 · 하네스가 같은 문을 부른다
+  t1039Stat: () => JSON.parse(JSON.stringify(_t1039Stat)),   // ★[T1039] 도적 전환 몸 증인(관찰기 `t1039-observe` · 하네스)
+  t1039Exits: () => state.bodyExits || null,   // ★[T1039] 줄어드는 몸 기록(읽기만 — 관찰기가 은거지로 걷는 몸을 단마다 센다)
   t765Stat: () => JSON.parse(JSON.stringify(_t765Stat)),   // ★[T765] 후보 걷기 몸 증인(관측 자 `t765-obs` · 실제 하루 판)
   villageFamine, playerVillageDepositMap,   // ★[T159] 기근 판정(엔진 판단을 읽는다) · 품목→재화 대응표
   playerVillageWithdrawStockFoodEq, _countsAsFoodEq,   // ★[T20-ⓑ] 한도의 밑변 = econ 식량 등가(보존식 포함)

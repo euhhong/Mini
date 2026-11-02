@@ -1,0 +1,2755 @@
+{
+ "made": "2026-11-02",
+ "how": "T1039_TRACE=1 T1039_SUB=<N>,25 BANDIT_FIXTURE=dissolve BANDIT_MINDAY=1 [T1039_BANDIT_BODY=walk|spawn] [VILLAGE_NPC_CAP=1] node scripts/test-bandit-body.js (아이 판 · 목 세계 · 운영 함수 그대로 · 하루 마감 뒤 표)",
+ "runs": {
+  "old-1-13": {
+   "arm": "old",
+   "cap": "1",
+   "N": 13,
+   "audit": {
+    "ticks": 4500,
+    "excessMax": 0,
+    "excessTicks": 0,
+    "vilExcessMax": 0,
+    "totExcessMax": 0,
+    "jumps": 0,
+    "maxStep": 0,
+    "newBodies": 3,
+    "pairsEnRoute": 0,
+    "enRouteDays": 0,
+    "disDay": 401,
+    "gangDay": 401,
+    "gangBodies0": 3,
+    "walkersMax": 0,
+    "leftAtDis": 0,
+    "leftTicks": [],
+    "gangTick": null,
+    "arrive": null,
+    "persons0": 38,
+    "personsEnd": 38,
+    "early": null
+   },
+   "stat": {
+    "depart": 0,
+    "bodied": 0,
+    "bodyless": 0,
+    "joined": 0,
+    "capped": 0,
+    "noBody": 0,
+    "left": 0
+   },
+   "trace": [
+    {
+     "day": 401,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 402,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 403,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 404,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 405,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 406,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 407,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 408,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    }
+   ]
+  },
+  "old-1-3": {
+   "arm": "old",
+   "cap": "1",
+   "N": 3,
+   "audit": {
+    "ticks": 4500,
+    "excessMax": 1,
+    "excessTicks": 900,
+    "vilExcessMax": 0,
+    "totExcessMax": 0,
+    "jumps": 0,
+    "maxStep": 6.4000000000023745,
+    "newBodies": 3,
+    "pairsEnRoute": 0,
+    "enRouteDays": 0,
+    "disDay": 401,
+    "gangDay": 401,
+    "gangBodies0": 3,
+    "walkersMax": 1,
+    "leftAtDis": 0,
+    "leftTicks": [],
+    "gangTick": null,
+    "arrive": null,
+    "persons0": 28,
+    "personsEnd": 28,
+    "early": null
+   },
+   "stat": {
+    "depart": 0,
+    "bodied": 0,
+    "bodyless": 0,
+    "joined": 0,
+    "capped": 0,
+    "noBody": 0,
+    "left": 0
+   },
+   "trace": [
+    {
+     "day": 401,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": [
+        "n1@165셀"
+       ]
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 402,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": [
+        "n1@105셀"
+       ]
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 403,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": [
+        "n1@45셀"
+       ]
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 404,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n1"
+     ]
+    },
+    {
+     "day": 405,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n1"
+     ]
+    },
+    {
+     "day": 406,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n1"
+     ]
+    },
+    {
+     "day": 407,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n1"
+     ]
+    },
+    {
+     "day": 408,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n1"
+     ]
+    }
+   ]
+  },
+  "old-inf-13": {
+   "arm": "old",
+   "cap": "inf",
+   "N": 13,
+   "audit": {
+    "ticks": 4500,
+    "excessMax": 3,
+    "excessTicks": 900,
+    "vilExcessMax": 3,
+    "totExcessMax": 3,
+    "jumps": 0,
+    "maxStep": 6.400000000002287,
+    "newBodies": 3,
+    "pairsEnRoute": 0,
+    "enRouteDays": 0,
+    "disDay": 401,
+    "gangDay": 401,
+    "gangBodies0": 3,
+    "walkersMax": 5,
+    "leftAtDis": 0,
+    "leftTicks": [],
+    "gangTick": null,
+    "arrive": null,
+    "persons0": 38,
+    "personsEnd": 38,
+    "early": null
+   },
+   "stat": {
+    "depart": 0,
+    "bodied": 0,
+    "bodyless": 0,
+    "joined": 0,
+    "capped": 0,
+    "noBody": 0,
+    "left": 0
+   },
+   "trace": [
+    {
+     "day": 401,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8",
+      "n9",
+      "n10",
+      "n11"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n39",
+        "n40",
+        "n41"
+       ],
+       "walking": [
+        "n13@164셀",
+        "n12@148셀"
+       ]
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 402,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8",
+      "n9"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n39",
+        "n40",
+        "n41"
+       ],
+       "walking": [
+        "n13@104셀",
+        "n12@88셀",
+        "n11@153셀",
+        "n10@157셀"
+       ]
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 403,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n39",
+        "n40",
+        "n41"
+       ],
+       "walking": [
+        "n13@44셀",
+        "n12@28셀",
+        "n11@93셀",
+        "n10@97셀",
+        "n9@160셀"
+       ]
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 404,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n39",
+        "n40",
+        "n41"
+       ],
+       "walking": [
+        "n11@33셀",
+        "n10@37셀",
+        "n9@100셀"
+       ]
+      }
+     ],
+     "left": [
+      "n13",
+      "n12"
+     ]
+    },
+    {
+     "day": 405,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n39",
+        "n40",
+        "n41"
+       ],
+       "walking": [
+        "n9@40셀"
+       ]
+      }
+     ],
+     "left": [
+      "n13",
+      "n12",
+      "n11",
+      "n10"
+     ]
+    },
+    {
+     "day": 406,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n39",
+        "n40",
+        "n41"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n13",
+      "n12",
+      "n11",
+      "n10",
+      "n9"
+     ]
+    },
+    {
+     "day": 407,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n39",
+        "n40",
+        "n41"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n13",
+      "n12",
+      "n11",
+      "n10",
+      "n9"
+     ]
+    },
+    {
+     "day": 408,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n39",
+        "n40",
+        "n41"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n13",
+      "n12",
+      "n11",
+      "n10",
+      "n9"
+     ]
+    }
+   ]
+  },
+  "old-inf-3": {
+   "arm": "old",
+   "cap": "inf",
+   "N": 3,
+   "audit": {
+    "ticks": 4500,
+    "excessMax": 3,
+    "excessTicks": 1200,
+    "vilExcessMax": 1,
+    "totExcessMax": 3,
+    "jumps": 0,
+    "maxStep": 6.4000000000023745,
+    "newBodies": 3,
+    "pairsEnRoute": 0,
+    "enRouteDays": 0,
+    "disDay": 401,
+    "gangDay": 401,
+    "gangBodies0": 3,
+    "walkersMax": 3,
+    "leftAtDis": 0,
+    "leftTicks": [],
+    "gangTick": null,
+    "arrive": null,
+    "persons0": 28,
+    "personsEnd": 28,
+    "early": null
+   },
+   "stat": {
+    "depart": 0,
+    "bodied": 0,
+    "bodyless": 0,
+    "joined": 0,
+    "capped": 0,
+    "noBody": 0,
+    "left": 0
+   },
+   "trace": [
+    {
+     "day": 401,
+     "econVil": 0,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n29",
+        "n30",
+        "n31"
+       ],
+       "walking": [
+        "n3@157셀",
+        "n2@161셀"
+       ]
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 402,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n29",
+        "n30",
+        "n31"
+       ],
+       "walking": [
+        "n3@97셀",
+        "n2@101셀",
+        "n1@165셀"
+       ]
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 403,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n29",
+        "n30",
+        "n31"
+       ],
+       "walking": [
+        "n3@37셀",
+        "n2@41셀",
+        "n1@105셀"
+       ]
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 404,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n29",
+        "n30",
+        "n31"
+       ],
+       "walking": [
+        "n1@45셀"
+       ]
+      }
+     ],
+     "left": [
+      "n3",
+      "n2"
+     ]
+    },
+    {
+     "day": 405,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n29",
+        "n30",
+        "n31"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n3",
+      "n2",
+      "n1"
+     ]
+    },
+    {
+     "day": 406,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n29",
+        "n30",
+        "n31"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n3",
+      "n2",
+      "n1"
+     ]
+    },
+    {
+     "day": 407,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n29",
+        "n30",
+        "n31"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n3",
+      "n2",
+      "n1"
+     ]
+    },
+    {
+     "day": 408,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n29",
+        "n30",
+        "n31"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n3",
+      "n2",
+      "n1"
+     ]
+    }
+   ]
+  },
+  "spawn-1-13": {
+   "arm": "spawn",
+   "cap": "1",
+   "N": 13,
+   "audit": {
+    "ticks": 4500,
+    "excessMax": 0,
+    "excessTicks": 0,
+    "vilExcessMax": 0,
+    "totExcessMax": 0,
+    "jumps": 0,
+    "maxStep": 0,
+    "newBodies": 3,
+    "pairsEnRoute": 0,
+    "enRouteDays": 0,
+    "disDay": 401,
+    "gangDay": 401,
+    "gangBodies0": 3,
+    "walkersMax": 0,
+    "leftAtDis": 0,
+    "leftTicks": [],
+    "gangTick": null,
+    "arrive": null,
+    "persons0": 38,
+    "personsEnd": 38,
+    "early": null
+   },
+   "stat": {
+    "depart": 0,
+    "bodied": 0,
+    "bodyless": 0,
+    "joined": 0,
+    "capped": 0,
+    "noBody": 0,
+    "left": 0
+   },
+   "trace": [
+    {
+     "day": 401,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 402,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 403,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 404,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 405,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 406,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 407,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 408,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    }
+   ]
+  },
+  "spawn-1-3": {
+   "arm": "spawn",
+   "cap": "1",
+   "N": 3,
+   "audit": {
+    "ticks": 4500,
+    "excessMax": 0,
+    "excessTicks": 0,
+    "vilExcessMax": 0,
+    "totExcessMax": 0,
+    "jumps": 0,
+    "maxStep": 0,
+    "newBodies": 3,
+    "pairsEnRoute": 0,
+    "enRouteDays": 0,
+    "disDay": 401,
+    "gangDay": 401,
+    "gangBodies0": 3,
+    "walkersMax": 0,
+    "leftAtDis": 1,
+    "leftTicks": [],
+    "gangTick": null,
+    "arrive": null,
+    "persons0": 28,
+    "personsEnd": 28,
+    "early": null
+   },
+   "stat": {
+    "depart": 0,
+    "bodied": 0,
+    "bodyless": 0,
+    "joined": 0,
+    "capped": 0,
+    "noBody": 0,
+    "left": 1
+   },
+   "trace": [
+    {
+     "day": 401,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n1"
+     ]
+    },
+    {
+     "day": 402,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n1"
+     ]
+    },
+    {
+     "day": 403,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n1"
+     ]
+    },
+    {
+     "day": 404,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n1"
+     ]
+    },
+    {
+     "day": 405,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n1"
+     ]
+    },
+    {
+     "day": 406,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n1"
+     ]
+    },
+    {
+     "day": 407,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n1"
+     ]
+    },
+    {
+     "day": 408,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n4",
+        "n5"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n1"
+     ]
+    }
+   ]
+  },
+  "spawn-inf-13": {
+   "arm": "spawn",
+   "cap": "inf",
+   "N": 13,
+   "audit": {
+    "ticks": 4500,
+    "excessMax": 0,
+    "excessTicks": 0,
+    "vilExcessMax": 0,
+    "totExcessMax": 0,
+    "jumps": 0,
+    "maxStep": 0,
+    "newBodies": 3,
+    "pairsEnRoute": 0,
+    "enRouteDays": 0,
+    "disDay": 401,
+    "gangDay": 401,
+    "gangBodies0": 3,
+    "walkersMax": 0,
+    "leftAtDis": 5,
+    "leftTicks": [],
+    "gangTick": null,
+    "arrive": null,
+    "persons0": 38,
+    "personsEnd": 38,
+    "early": null
+   },
+   "stat": {
+    "depart": 0,
+    "bodied": 0,
+    "bodyless": 0,
+    "joined": 0,
+    "capped": 0,
+    "noBody": 0,
+    "left": 5
+   },
+   "trace": [
+    {
+     "day": 401,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n39",
+        "n40",
+        "n41"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n13",
+      "n12",
+      "n11",
+      "n10",
+      "n9"
+     ]
+    },
+    {
+     "day": 402,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n39",
+        "n40",
+        "n41"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n13",
+      "n12",
+      "n11",
+      "n10",
+      "n9"
+     ]
+    },
+    {
+     "day": 403,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n39",
+        "n40",
+        "n41"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n13",
+      "n12",
+      "n11",
+      "n10",
+      "n9"
+     ]
+    },
+    {
+     "day": 404,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n39",
+        "n40",
+        "n41"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n13",
+      "n12",
+      "n11",
+      "n10",
+      "n9"
+     ]
+    },
+    {
+     "day": 405,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n39",
+        "n40",
+        "n41"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n13",
+      "n12",
+      "n11",
+      "n10",
+      "n9"
+     ]
+    },
+    {
+     "day": 406,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n39",
+        "n40",
+        "n41"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n13",
+      "n12",
+      "n11",
+      "n10",
+      "n9"
+     ]
+    },
+    {
+     "day": 407,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n39",
+        "n40",
+        "n41"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n13",
+      "n12",
+      "n11",
+      "n10",
+      "n9"
+     ]
+    },
+    {
+     "day": 408,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n39",
+        "n40",
+        "n41"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n13",
+      "n12",
+      "n11",
+      "n10",
+      "n9"
+     ]
+    }
+   ]
+  },
+  "spawn-inf-3": {
+   "arm": "spawn",
+   "cap": "inf",
+   "N": 3,
+   "audit": {
+    "ticks": 4500,
+    "excessMax": 0,
+    "excessTicks": 0,
+    "vilExcessMax": 0,
+    "totExcessMax": 0,
+    "jumps": 0,
+    "maxStep": 0,
+    "newBodies": 3,
+    "pairsEnRoute": 0,
+    "enRouteDays": 0,
+    "disDay": 401,
+    "gangDay": 401,
+    "gangBodies0": 3,
+    "walkersMax": 0,
+    "leftAtDis": 3,
+    "leftTicks": [],
+    "gangTick": null,
+    "arrive": null,
+    "persons0": 28,
+    "personsEnd": 28,
+    "early": null
+   },
+   "stat": {
+    "depart": 0,
+    "bodied": 0,
+    "bodyless": 0,
+    "joined": 0,
+    "capped": 0,
+    "noBody": 0,
+    "left": 3
+   },
+   "trace": [
+    {
+     "day": 401,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n29",
+        "n30",
+        "n31"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n3",
+      "n2",
+      "n1"
+     ]
+    },
+    {
+     "day": 402,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n29",
+        "n30",
+        "n31"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n3",
+      "n2",
+      "n1"
+     ]
+    },
+    {
+     "day": 403,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n29",
+        "n30",
+        "n31"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n3",
+      "n2",
+      "n1"
+     ]
+    },
+    {
+     "day": 404,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n29",
+        "n30",
+        "n31"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n3",
+      "n2",
+      "n1"
+     ]
+    },
+    {
+     "day": 405,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n29",
+        "n30",
+        "n31"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n3",
+      "n2",
+      "n1"
+     ]
+    },
+    {
+     "day": 406,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n29",
+        "n30",
+        "n31"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n3",
+      "n2",
+      "n1"
+     ]
+    },
+    {
+     "day": 407,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n29",
+        "n30",
+        "n31"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n3",
+      "n2",
+      "n1"
+     ]
+    },
+    {
+     "day": 408,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n29",
+        "n30",
+        "n31"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n3",
+      "n2",
+      "n1"
+     ]
+    }
+   ]
+  },
+  "walk-1-13": {
+   "arm": "walk",
+   "cap": "1",
+   "N": 13,
+   "audit": {
+    "ticks": 4500,
+    "excessMax": 0,
+    "excessTicks": 0,
+    "vilExcessMax": 0,
+    "totExcessMax": 0,
+    "jumps": 0,
+    "maxStep": 0,
+    "newBodies": 0,
+    "pairsEnRoute": 0,
+    "enRouteDays": 3,
+    "disDay": 401,
+    "gangDay": 404,
+    "gangBodies0": null,
+    "walkersMax": 0,
+    "leftAtDis": 0,
+    "leftTicks": [],
+    "gangTick": null,
+    "arrive": {
+     "day": 404,
+     "n": 5,
+     "adopted": 0,
+     "adoptedOld": 0,
+     "farFromCamp": 0
+    },
+    "persons0": 38,
+    "personsEnd": 38,
+    "early": null
+   },
+   "stat": {
+    "depart": 5,
+    "bodied": 0,
+    "bodyless": 5,
+    "joined": 0,
+    "capped": 0,
+    "noBody": 0,
+    "left": 0
+   },
+   "trace": [
+    {
+     "day": 401,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 1,
+       "camp": [],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 402,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 1,
+       "camp": [],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 403,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 1,
+       "camp": [],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 404,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 405,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 406,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 407,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 408,
+     "econVil": 8,
+     "roster": [
+      "n1"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [],
+       "walking": []
+      }
+     ],
+     "left": []
+    }
+   ]
+  },
+  "walk-1-3": {
+   "arm": "walk",
+   "cap": "1",
+   "N": 3,
+   "audit": {
+    "ticks": 4500,
+    "excessMax": 0,
+    "excessTicks": 0,
+    "vilExcessMax": 0,
+    "totExcessMax": 0,
+    "jumps": 0,
+    "maxStep": 6.4000000000023745,
+    "newBodies": 0,
+    "pairsEnRoute": 0,
+    "enRouteDays": 3,
+    "disDay": 401,
+    "gangDay": 404,
+    "gangBodies0": null,
+    "walkersMax": 1,
+    "leftAtDis": 0,
+    "leftTicks": [],
+    "gangTick": null,
+    "arrive": {
+     "day": 404,
+     "n": 3,
+     "adopted": 1,
+     "adoptedOld": 1,
+     "farFromCamp": 0
+    },
+    "persons0": 28,
+    "personsEnd": 28,
+    "early": null
+   },
+   "stat": {
+    "depart": 3,
+    "bodied": 1,
+    "bodyless": 2,
+    "joined": 1,
+    "capped": 0,
+    "noBody": 0,
+    "left": 0
+   },
+   "trace": [
+    {
+     "day": 401,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 1,
+       "camp": [],
+       "walking": [
+        "n1@165셀"
+       ]
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 402,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 1,
+       "camp": [],
+       "walking": [
+        "n1@105셀"
+       ]
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 403,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 1,
+       "camp": [],
+       "walking": [
+        "n1@45셀"
+       ]
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 404,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n1"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 405,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n1"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 406,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n1"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 407,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n1"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 408,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n1"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    }
+   ]
+  },
+  "walk-inf-13": {
+   "arm": "walk",
+   "cap": "inf",
+   "N": 13,
+   "audit": {
+    "ticks": 4500,
+    "excessMax": 0,
+    "excessTicks": 0,
+    "vilExcessMax": 0,
+    "totExcessMax": 0,
+    "jumps": 0,
+    "maxStep": 6.400000000002287,
+    "newBodies": 0,
+    "pairsEnRoute": 0,
+    "enRouteDays": 3,
+    "disDay": 401,
+    "gangDay": 404,
+    "gangBodies0": null,
+    "walkersMax": 5,
+    "leftAtDis": 0,
+    "leftTicks": [],
+    "gangTick": null,
+    "arrive": {
+     "day": 404,
+     "n": 5,
+     "adopted": 3,
+     "adoptedOld": 3,
+     "farFromCamp": 0
+    },
+    "persons0": 38,
+    "personsEnd": 38,
+    "early": null
+   },
+   "stat": {
+    "depart": 5,
+    "bodied": 5,
+    "bodyless": 0,
+    "joined": 3,
+    "capped": 2,
+    "noBody": 0,
+    "left": 0
+   },
+   "trace": [
+    {
+     "day": 401,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 1,
+       "camp": [],
+       "walking": [
+        "n13@164셀",
+        "n12@148셀",
+        "n11@153셀",
+        "n10@157셀",
+        "n9@160셀"
+       ]
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 402,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 1,
+       "camp": [],
+       "walking": [
+        "n13@104셀",
+        "n12@88셀",
+        "n11@93셀",
+        "n10@97셀",
+        "n9@100셀"
+       ]
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 403,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 1,
+       "camp": [],
+       "walking": [
+        "n13@44셀",
+        "n12@28셀",
+        "n11@33셀",
+        "n10@37셀",
+        "n9@40셀"
+       ]
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 404,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n13",
+        "n12",
+        "n11"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n10",
+      "n9"
+     ]
+    },
+    {
+     "day": 405,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n13",
+        "n12",
+        "n11"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n10",
+      "n9"
+     ]
+    },
+    {
+     "day": 406,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n13",
+        "n12",
+        "n11"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n10",
+      "n9"
+     ]
+    },
+    {
+     "day": 407,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n13",
+        "n12",
+        "n11"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n10",
+      "n9"
+     ]
+    },
+    {
+     "day": 408,
+     "econVil": 8,
+     "roster": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8"
+     ],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 5,
+       "road": 0,
+       "camp": [
+        "n13",
+        "n12",
+        "n11"
+       ],
+       "walking": []
+      }
+     ],
+     "left": [
+      "n10",
+      "n9"
+     ]
+    }
+   ]
+  },
+  "walk-inf-3": {
+   "arm": "walk",
+   "cap": "inf",
+   "N": 3,
+   "audit": {
+    "ticks": 4500,
+    "excessMax": 0,
+    "excessTicks": 0,
+    "vilExcessMax": 0,
+    "totExcessMax": 0,
+    "jumps": 0,
+    "maxStep": 6.4000000000023745,
+    "newBodies": 0,
+    "pairsEnRoute": 0,
+    "enRouteDays": 3,
+    "disDay": 401,
+    "gangDay": 404,
+    "gangBodies0": null,
+    "walkersMax": 3,
+    "leftAtDis": 0,
+    "leftTicks": [],
+    "gangTick": null,
+    "arrive": {
+     "day": 404,
+     "n": 3,
+     "adopted": 3,
+     "adoptedOld": 3,
+     "farFromCamp": 0
+    },
+    "persons0": 28,
+    "personsEnd": 28,
+    "early": null
+   },
+   "stat": {
+    "depart": 3,
+    "bodied": 3,
+    "bodyless": 0,
+    "joined": 3,
+    "capped": 0,
+    "noBody": 0,
+    "left": 0
+   },
+   "trace": [
+    {
+     "day": 401,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 1,
+       "camp": [],
+       "walking": [
+        "n3@157셀",
+        "n2@161셀",
+        "n1@165셀"
+       ]
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 402,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 1,
+       "camp": [],
+       "walking": [
+        "n3@97셀",
+        "n2@101셀",
+        "n1@105셀"
+       ]
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 403,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 1,
+       "camp": [],
+       "walking": [
+        "n3@37셀",
+        "n2@41셀",
+        "n1@45셀"
+       ]
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 404,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n2",
+        "n1"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 405,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n2",
+        "n1"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 406,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n2",
+        "n1"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 407,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n2",
+        "n1"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    },
+    {
+     "day": 408,
+     "econVil": 0,
+     "roster": [],
+     "gangs": [
+      {
+       "id": 1,
+       "n": 3,
+       "road": 0,
+       "camp": [
+        "n3",
+        "n2",
+        "n1"
+       ],
+       "walking": []
+      }
+     ],
+     "left": []
+    }
+   ]
+  }
+ }
+}
