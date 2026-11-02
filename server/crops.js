@@ -168,7 +168,20 @@ function emojiOf(id) {
 }
 
 // ── 파종철 — econ 계절 정본을 **부르기만** 한다 ─────────────────────────────
-function seasonOfDay(day) { return _events().seasonOf(_day(day)); }
+// ★★[T1041 ⓓ 2026-11-02 · 손잡이 `T1041_CROP_MEMO`(켬 기본 후보 · `=0` 끔 = 아래 종전 줄 그대로)] **날 → 계절 · 활동일 셈을 그날 안에서 다시 쓰기.**
+//   몸∞ 판 자 800날 시간 해부(보고 T1041 §1): 생활층 농사 하루가 밭 칸 · 일꾼마다 `grownDays`(심은 날 → 오늘을 하루씩 `_dormant` → `seasonOf` → `calendar.dateOf`)를
+//   다시 세 판 CPU 의 16% 를 먹었다. 둘 다 순수 함수다(날 · 작물 · 심은 날 → 답 · 손잡이 상수는 적재 때 한 번) — 같은 물음에 같은 답을 기억만 한다.
+//   새 수 0 · 값 무변(같음 증명 = 서버 기준선 · 몸∞ 판 대조 · 하네스 `test-crop-memo`). 크기 상한은 춘화 사전(T834)과 같은 4096 이다(넘으면 비운다 — 답 무변).
+const T1041_CROP_MEMO = !(typeof process !== 'undefined' && process.env && process.env.T1041_CROP_MEMO === '0');
+const _seasonByDay = new Map();
+const _t1041Stat = { seasonHit: 0, seasonMiss: 0, grownHit: 0, grownMiss: 0 };   // 계측 전용(답 무변)
+function seasonOfDay(day) {
+  if (!T1041_CROP_MEMO) return _events().seasonOf(_day(day));
+  const d = _day(day);
+  let s = _seasonByDay.get(d);
+  if (s === undefined) { _t1041Stat.seasonMiss++; if (_seasonByDay.size > 4096) _seasonByDay.clear(); s = _events().seasonOf(d); _seasonByDay.set(d, s); } else _t1041Stat.seasonHit++;
+  return s;
+}
 function sowSeasons(id) { const c = get(id); return c ? (c.sow || []) : []; }
 function canSowOn(id, day) { return sowSeasons(id).includes(seasonOfDay(day)); }
 // 그 계절에 심을 수 있는 작물 전부(씨앗을 세계가 내줄 때도 이 목록을 쓴다)
@@ -297,7 +310,20 @@ function vernalDay(id, plantedDay) {
 // 심은 날부터 오늘까지 **활동일**이 얼마나 쌓였나(lazy · 틱 0).
 //   ★[T99] 월동은 **춘화일부터** 센다 — 가을 활동일은 뿌리내림이라 익음에 0 이다
 //     (돌봄·품질에는 그대로 셈한다 — 그건 `cropDayTick` 이 하고 여기와 무관하다).
+const _grownMemo = new Map();   // ★[T1041 ⓓ] 그날(오늘) 하나의 활동일 답 — 날이 바뀌면 비운다(어제 답은 다시 안 묻는다)
+let _grownMemoDay = null;
 function grownDays(id, plantedDay, today) {
+  if (T1041_CROP_MEMO) {
+    const b = _day(today);
+    if (b !== _grownMemoDay) { _grownMemo.clear(); _grownMemoDay = b; }
+    const k = id + ',' + _day(plantedDay);
+    let v = _grownMemo.get(k);
+    if (v === undefined) { _t1041Stat.grownMiss++; if (_grownMemo.size > 4096) _grownMemo.clear(); v = _grownDays0(id, plantedDay, today); _grownMemo.set(k, v); } else _t1041Stat.grownHit++;
+    return v;
+  }
+  return _grownDays0(id, plantedDay, today);
+}
+function _grownDays0(id, plantedDay, today) {   // 종전 `grownDays` 몸 그대로(글자 무변)
   const need = growDaysOf(id);
   let n = 0;
   const a = vernalDay(id, plantedDay), b = _day(today);
@@ -516,7 +542,7 @@ module.exports = {
   seasonOfDay, sowSeasons, canSowOn, sowableIn, sowableOn, wildSeedAt, WILD_SEED_CHANCE,
   monthOf, sowMonthsOf, fitsField, sowableMonth, h32, MONTHS_PER_YEAR, ANCHOR_MONTH,
   lifecycleOf, isPerennial, isWinterCrop, LC_WINTER, LC_PERENNIAL,
-  dormantAt, vernalDay, VERNAL, CARE_PAUSE, PER_DORMANT,   // ★[T99] 휴면 술어 하나 · 춘화일 — 마을·플레이어가 같이 부른다
+  dormantAt, vernalDay, VERNAL, CARE_PAUSE, PER_DORMANT, T1041_CROP_MEMO, t1041Stat: () => Object.assign({ on: T1041_CROP_MEMO }, _t1041Stat), _grownDays0,   // ★[T1041] 활동일 · 계절 기억 손잡이(하네스가 읽는다) · ★[T99] 휴면 술어 하나 · 춘화일 — 마을·플레이어가 같이 부른다
   rainedOn, RAIN_WATER,   // ★[T112] 비 온 날은 물 준 날 — 상태기 셋이 같이 부른다
   grownDays, isReady, readyDay, waterMult, harvestUnits,
   daysToFirstHarvest,   // ★[T100 5판] 창설 곳간의 밑변 — econ 이 45 를 지어내지 않게(사본 0)

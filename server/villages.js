@@ -190,6 +190,12 @@ function _t862Drop(o, k) { if (T862_ECON_FAST) o[k] = undefined; else delete o[k
 //   `in` 문(부팅 복원) — 켬이면 `undefined` 칸 = 지운 칸(저장 줄은 JSON 이라 실린 칸이 `undefined` 일 수 없다 ⇒ 끔의 `k in o` 와 같은 답 · 두 번 불러도 같다)
 function _t862Has(o, k) { return (k in o) && !(T862_ECON_FAST && o[k] === undefined); }
 const NPC_CAP_PER_VILLAGE = process.env.VILLAGE_NPC_CAP ? Math.max(1, parseInt(process.env.VILLAGE_NPC_CAP, 10) || 40) : Infinity;
+// ★[T1041 ⓑ 2026-11-02 · 판 자 전용 손잡이 `T1041_WAR_BODY=1`(기본 끔 = 종전 바이트 · 제품 무변)] **전쟁에 든 마을만 몸 무제한.**
+//   판 자는 `VILLAGE_NPC_CAP=1`(가시 몸 하나)이라 군대가 몸 하나 대 하나다(T1031). 몸∞ 판은 평시 몸까지 다 굴려 1시간을 넘긴다.
+//   켜면 war-core 의 진행 전쟁(`WARS` — 행군 · 주둔 · 교전 · 귀환)에 공 · 방으로 든 마을만 상한을 풀고(econ 인구까지) 그날 한 번에 채운다.
+//   (몸∞ 판에선 그 몸이 이미 서 있으니 하루 2명씩 따라가면 교전 때 몸이 모자란다 — 그래서 채움만 한 번에.) 전쟁이 끝나면 종전대로 하루 2명씩 줄어든다.
+const T1041_WAR_BODY = process.env.T1041_WAR_BODY === '1';
+function _t1041InWar(vil) { const W = state.war && state.war.WARS; if (!W) return false; for (const w of W) if (w && (w.atk === vil || w.def === vil)) return true; return false; }
 const POP_SYNC_PER_DAY = 2; // 인구 반영은 완만: 게임일당 마을당 ±2명까지 (증가=스폰, 감소=최근 NPC부터)
 // ★★[T559 ② 2026-09-30 · 재민 #78] **마을 간 최소 간격을 존마다 유도하는 식** — 손잡이 `T559_SPACING_DERIVE=1`(★기본 **끔** = 종전 12,000 그대로).
 //   12,000 은 옛 10곳 선별의 수였고, 한반도 후보 51의 **최근접 거리 분포에서 p80 자리**였다(T442 §0-ⓑ · 41/51 이 12,000 안에 이웃을 둔다).
@@ -1585,9 +1591,10 @@ function syncVillagePop(vil, maxDelta) {
   vil.npcPids = vil.npcPids.filter(pid => state.deps.players.has(pid));
   if (T822_BODY_SEED) _t822Rekey(vil, 0);   // ★[T833] 정리 뒤 명부 자리 열쇠(빠진 자리가 없으면 같은 값)
   _bxObserve(vil);   // ★[T590] econ 이 줄인 까닭(읽기만)
-  const target = Math.min(vil.econ.npcs.length, NPC_CAP_PER_VILLAGE);
+  const _t1041W = T1041_WAR_BODY && _t1041InWar(vil);   // ★[T1041 ⓑ] 끔이면 거짓(종전 두 줄 그대로)
+  const target = Math.min(vil.econ.npcs.length, _t1041W ? Infinity : NPC_CAP_PER_VILLAGE);
   let delta = target - vil.npcPids.length;
-  if (delta > 0) for (let i = 0; i < Math.min(delta, maxDelta); i++) spawnOneNpc(vil);
+  if (delta > 0) for (let i = 0; i < Math.min(delta, _t1041W ? Infinity : maxDelta); i++) spawnOneNpc(vil);
   else if (delta < 0) for (let i = 0; i < Math.min(-delta, maxDelta); i++) { if (!removeOneNpc(vil, _bxTake(vil))) break; } // 남은 게 전부 _muster면 중단(reconverge는 종전 후)
   // ★[T590] 몸이 econ 에 닿았으면 남은 까닭은 출생과 상쇄된 몫이다 — 버린다(내일 다른 몸에 붙지 않게).
   if (vil._bxQ && vil._bxQ.length && vil.npcPids.length <= target) { for (const h of vil._bxQ) _bx.trimmed += h.n; vil._bxQ.length = 0; }
