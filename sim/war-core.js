@@ -23,6 +23,20 @@
 var BattleCore = (typeof module !== 'undefined' && module.exports && typeof require === 'function')
   ? require('./battle-core.js')
   : root.BattleCore;
+// ── 평형 회귀 한 곳(T1076 원정 사기 · T1075 마을 행복이 같이 쓴다 — 사본 0) ──
+var Equilibrium = (typeof module !== 'undefined' && module.exports && typeof require === 'function')
+  ? require('./equilibrium.js')
+  : root.Equilibrium;
+// ★★[T1076 2026-11-02 · ★재민 11-02 문 2-b] **원정 사기 = 평형 회귀** — 손잡이 `T1076_ARMY_MORALE`(`=== '1'` 켬 · 끔 기본 = 아래 칸이 안 선다 · 종전 바이트).
+//   원정 하나에 사기 칸 `w._mrl`(0~1 · 선포 때 1). 하루마다(호스트가 몸이 제 짐에서 먹는 자리 `_warRationEat` 에서 부른다):
+//     평형 = min(짐 비율 r, 1 − 빚 깊이 ÷ 14) — r = 먹고 남은 짐 ÷ 오늘 몫(0~1 · 호스트의 그 칸 그대로) · 빚 = 몸마다 못 먹은 몫(하루치 단위)의 평균.
+//     사기는 그 평형 쪽으로 반감기 14날로 다가간다(`Equilibrium.step`). 14 = ★재민 11-02 굶주림 시계(T1074 "14일") — 빚이 그 날을 다 채우면 평형 0.
+//   사건 계단: 원정 몸이 죽으면(교전 정산의 공격 사상 · 굶어 죽음) 그 몫(죽은 수 ÷ 원정 병력)에 battle-core 제 사상 계수 `M_KABS`(교전 사기 식의 그 항)를 곱해 뺀다.
+//   사기의 손: ① 주둔 결단 — 사기가 battle-core 궤주 문턱 `M_BREAK` 밑이면 철수(원정이 무너진다) ② 교전 — 호스트가 편 칸 `armyMrl` 에 실어
+//     battle-core 사기 목표에 곱한다(낮은 사기 = 낮은 목표 = 먼저 흔들린다 · 칸이 없으면 무변 — 랩 · 헤드리스는 종전 그대로).
+//   새 수 0 — 14(재민) · M_KABS · M_BREAK(battle-core) 뿐. 빚의 갚기 · 죽음 규칙(T1074)은 그 카드 몫이다(여기선 쌓기만 — 회부).
+function _t1076On() { return typeof process !== 'undefined' && !!process.env && process.env.T1076_ARMY_MORALE === '1'; }
+const T1076_DEBT_DAYS = 14;   // ★재민 11-02(T1074 카드 "14일") — 빚 깊이의 자 · 사기 반감기
 
 // ═══════════ 결정론 RNG (lab _muRng/_warCapRng 와 동형 xorshift32) ═══════════
 function makeRng(seed) { let s = (seed >>> 0) || 1; return function () { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
@@ -86,6 +100,7 @@ const WAR_CAP_EU = WAR_CAP_ON ? 8 : 0;
 //   랩은 프레임 틱(블록B tickWarGroups) 소유 — 서버 추상층은 daily(일 단위) 어댑터(결정론 rng 시드 랩 동형).
 const WAR_SIEGE_PACK = 12;         // 동원 시 공성 군량 적재(일분) — 행군분(marchDays×2)과 별도. camp/siege 1일=병력×WAR_RATION 소모
 const WAR_PACK_CRIT = 3;           // 군량 잔량 임계(일) — 미만이면 도박 돌격 or 철수 강제
+const _T1074_FD = (typeof process !== 'undefined' && process.env && process.env.T1074_FOOD_DEBT === '1');   // ★[T1074] 식량 빚 손잡이(econ 과 같은 글자 · 끔 기본)
 const WAR_ASSAULT_ODDS = 0.58;     // 결단: 이 승산 이상이면 즉시 돌격(포위 소모전보다 낫다)
 const WAR_GAMBLE_ODDS = 0.38;      // 군량 임계 시 도박 돌격 하한(미만=철수)
 const WAR_HOLD_GAMBLE = 0.45;      // 소모전 열세(팩≤곳간추정)일 때 돌격 전환 하한(미만=철수)
@@ -708,6 +723,7 @@ function createWar(opts) {
     const _vetRoster = (_mob && _mob.veteranRoster) ? _mob.veteranRoster : null, stones = (_mob && _mob.stones) || 0;
     const _actualForce = _mob ? _mob.force : force;
     const _war = { id: world._warSeq++, atk: V, def: U, casus, force: _actualForce, warriors, wep, arm, composition, arrows, stones, weapQ, phase: 'march', eta: day + marchDays, marchDays, born: day, _vetRoster };
+    if (_t1076On()) { _war._mrl = 1; _war._mrlForce = Math.max(1, _actualForce || 1); }   // ★[T1076] 원정 사기 — 선포 때 1 · 계단의 분모 = 떠난 병력(끔이면 칸 0)
     // ★★[T295 ②] **한 적재** — 행군분(marchDays×2)과 공성분(WAR_SIEGE_PACK)을 한 번에 싣는다(규모 비례:
     //   병력 × 일수 × WAR_RATION · 전부 기존 상수). 종전엔 여기 위에서 행군분을 곳간에서 먼저 빼고
     //   `_opPackLoad` 가 공성분을 또 뺐다 — 두 장부가 갈려 행군분은 환급도 없었다(회부 ②).
@@ -852,6 +868,12 @@ function createWar(opts) {
         return;
       }
     }
+    // ★[T1074 ⑤] 켬 = 원정군은 **제 짐 빚**(마을 빚 무관) — 장부 길에서 팩이 하루치에 모자라면 모자란 몫(일)을 그 전쟁의 짐 먹는 병사마다 빚에 더한다.
+    //   (몸이 짐을 먹는 길 — 호스트 `rationEat` — 은 위에서 이미 돌아갔다 · 그 길의 모자람은 호스트 몫 · 회부) · 끔 = 이 줄 안 돈다.
+    if (_T1074_FD && (w._packRem || 0) < 1 && w.atk && w.atk.econ) {
+      const _short = 1 - Math.max(0, w._packRem || 0), _id = (w.id | 0) || 1;
+      for (const p of w.atk.econ.npcs) if (p._warPack && p._warDraft === _id) p._fd = (p._fd || 0) + _short;
+    }
     w._packRem = Math.max(0, (w._packRem || 0) - 1);
   }
   // 팩을 몸 n 개로 나눈다 — 남은 몫(잔량 일수 × 하루치 ÷ 적재)만큼 품목 그대로 · 한 번만(팩은 이제 몸의 것이다).
@@ -947,6 +969,7 @@ function createWar(opts) {
   // NPC 결단(도착 시+매일·결정론 — 랩 rng 시드 동형): assault(승산) vs siege(소모전 우위) vs withdraw(둘 다 나쁨)
   function _opNpcDecide(w, day) {
     if (w.phase !== 'march') return;
+    if (w._mrl != null && _t1076On() && w._mrl < BattleCore.M_BREAK) { _opTransNPC(w, 'withdraw', day, '사기 붕괴 ' + Math.round(w._mrl * 100) + '%'); return; }   // ★[T1076] 사기가 궤주 문턱 밑 — 원정이 무너진다(정책보다 앞)
     if (w._opPolicy === 'assault') { _opTransNPC(w, 'assault', day, '정책'); return; }
     const pWin = _opAtkOdds(w);
     const rng = makeRng((((w.id || 1) * 7919 + (day | 0) * 131 + 17) >>> 0));
@@ -1090,6 +1113,22 @@ function createWar(opts) {
   //     스킵하고 그 결과(runBattleHeadless 반환형 동형 res)로 되먹임만 수행. spec은 방어 veteranRoster 승계용.
   //   precomputedRes 없음(기존 2인자 headless 경로) → 내부 toBattleSpec+runBattleHeadless로 즉시 판정.
   //   ★byte 불변: precomputedRes undefined → 아래 if 조건 거짓 → else 분기 = 기존 2줄과 값·순서 동일(P1 헤드리스 회귀 동일).
+  // ★[T1076] 원정 사기 하루 — 호스트가 몸이 먹은 뒤 부른다(r = 짐 비율 0~1 · debt = 몸 평균 빚 · 하루치 단위). 반환 = 새 사기(끔 · 칸 없음 = null)
+  function armyMoraleDay(w, r, debt) {
+    if (!w || w._mrl == null || !_t1076On()) return null;
+    const rr = Math.max(0, Math.min(1, +r || 0)), dd = Math.max(0, Math.min(1, (+debt || 0) / T1076_DEBT_DAYS));
+    const target = Math.min(rr, 1 - dd);
+    w._mrlEq = target;
+    w._mrl = Equilibrium.step(w._mrl, target, T1076_DEBT_DAYS, 1);
+    return w._mrl;
+  }
+  // ★[T1076] 원정 몸이 죽었다(교전 공격 사상 · 굶어 죽음) — 계단: 죽은 몫 × battle-core 제 사상 계수
+  function armyMoraleLoss(w, dead) {
+    if (!w || w._mrl == null || !_t1076On() || !(dead > 0)) return null;
+    w._mrl = Equilibrium.drop(w._mrl, BattleCore.M_KABS * dead / (w._mrlForce || Math.max(1, w.force || 1)));
+    w._mrlDead = (w._mrlDead || 0) + dead;
+    return w._mrl;
+  }
   function warResolveBattle(w, day, precomputedRes) {
     const st = stats(), A = w.atk.econ, D = w.def.econ;
     if (!A || !D || A.npcs.length < 2 || D.npcs.length < 2) return;
@@ -1101,6 +1140,7 @@ function createWar(opts) {
     const atkWin = _res.winner === 'A'; st.battle++;
     const loserE = atkWin ? D : A, winnerE = atkWin ? A : D;
     const _atkDead = Math.min(A.npcs.length - 1, Math.max(0, _res.atkDead)), _defDead = Math.min(D.npcs.length - 1, Math.max(0, _res.defDead));
+    if (_atkDead > 0) armyMoraleLoss(w, _atkDead);   // ★[T1076] 전사 계단(끔이면 무동작)
     const J = warJustice(A, w.def.name, w.casus);
     // ★[3파 포로 §18] 패자 사상 판정자 35% 기절→포로(warKill 前 분리 — 승자 전장 장악). 기절(후보)분은 사망에서 제외.
     //   승자 편입(warCaptiveIntake)은 warKill '이후' — 자군 사상 주사위가 방금 끌려온 포로를 집지 않게(림보 격리, 랩 수리 계승).
@@ -1274,6 +1314,7 @@ function createWar(opts) {
     OPS_ON: true, _opNpcDecide, _opCheckSurrender, _opDefenseDaily, _warWalkoverOutcome, _opDoSurrender, _opSetSiege, _opPackLoad, _opPackRefund,
     // ★[T295] 동원의 대가 — 결속(pid 정본) · 군량 환급 한 곳. 호스트(server/villages.js)와 하네스가 이 문만 쓴다.
     warDraftBind, warDraftFill, warDraftReleasePid, warDraftReleaseWar, warDraftCount, warRationRefund,
+    armyMoraleDay, armyMoraleLoss, T1076_ON: _t1076On, T1076_DEBT_DAYS,   // ★[T1076] 원정 사기 평형 — 호스트(server/villages.js)와 하네스가 이 문만 쓴다
     warDraftKillPid,   // ★[T906] 굶어 죽은 원정 몸 — 묶인 징발자 한 사람의 econ 사망(호스트가 손잡이 켤 때만 부른다)
     packSplit, bodyEat, bagFE, rationLayDown, rationActOn: _rationActOn,
     lootGive, lootActOn: _lootActOn, warLog: (day, m) => log(day, m),   // ★[T466] 약탈 = 행위(손잡이 끔 · 끔이면 호스트 훅을 안 부른다)   // ★[T423] 짐이 먹는다(손잡이 끔이면 packSplit 이 null)

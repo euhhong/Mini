@@ -25,6 +25,7 @@ let onbWarmTries = 0;          // 도착 지점이 다 구워질 때까지 시�
 let onbArrive = null;           // ★[T1064] 도착 기록(서버 `arrivalOf` 그대로 · 존 로컬 · `onboarding_state.arrive`)
 let onbGreetGot = null;         // ★[T1064] 촌장 첫 인사를 받았나 — 'greet' 한 통 그대로 { vid, quest, lines }(빈 판이면 quest null)
 let onbNextLast = null;         // ★[T1064] 「지금 할 일」 칸이 마지막으로 그린 것(하네스 읽기 훅)
+let onbJoin = null;             // ★[T1086] 서버가 실어 보낸 가입 형편 { member:{vid,name}|null, offer:vid|null } — 켬(`uiCfg.firstJoin`)일 때만 온다
 
 // ── 존 HTTP 주소 — 로비는 central 오리진에서 뜨고 존은 다른 호스트다 ────────────
 //   `/startinfo` 는 존이 CORS 를 열어 답한다(`/lifedbg` 와 같은 규약).
@@ -327,6 +328,7 @@ function onbOnMessage(msg) {
       onbState = msg.state || null;
       window.__onbState = onbState;
       if (msg.arrive) { onbArrive = msg.arrive; onbFaceVillage(msg.arrive); }   // ★[T1064] 도착 기록을 들고 있는다(「지금 할 일」의 자리 이름 · 나루터/어귀)
+      if (msg.join !== undefined) onbJoin = msg.join;   // ★[T1086] 가입 형편(켬일 때만 실려 온다)
       updateHud();
     } else if (msg.type === 'onboarding_quest') {
       if (msg.quest) { onbQuest = msg.quest; window.__onbQuest = onbQuest; }
@@ -334,14 +336,16 @@ function onbOnMessage(msg) {
       if (msg.kind === 'greet') onbGreetGot = { vid: msg.vid, quest: msg.quest || null, lines: Array.isArray(msg.lines) ? msg.lines.slice(0, 3) : [] };
       onbState = msg.state || onbState;
       window.__onbState = onbState;
+      if (msg.join !== undefined) onbJoin = msg.join;   // ★[T1086] 가입 형편(켬일 때만 실려 온다)
       // ★촌장의 말 — **기존 말풍선 그대로** 그린다(세계 안 · 새 패널 0). 통로만 온보딩 전용이다.
       if (msg.lines && msg.lines.length) {
         // ★★[T529] 말하는 몸(`by` — 걸어온 촌장)이 있으면 **그 사람 입에** 건다(T126 "사람에게 물은 답" 문법 · 같은 말풍선 통로).
         //   없으면 종전 그대로 마을 중심 위다.
-        if (msg.by != null) speechBubbles.set(msg.by, { text: msg.lines[0], lines: msg.lines.slice(0, 3), until: performance.now() + 11000 });
-        else villageBubbles.set(msg.vid, { lines: msg.lines.slice(0, 3), until: performance.now() + 11000 });
+        //   ★[T1086] 넷째 줄까지 — 첫 의뢰 훅이 밥 · 쉼터 · 권함 · 빈터 넷을 말한다(끔이면 셋을 넘는 한 통이 없다 = 종전 그대로).
+        if (msg.by != null) speechBubbles.set(msg.by, { text: msg.lines[0], lines: msg.lines.slice(0, 4), until: performance.now() + 11000 });
+        else villageBubbles.set(msg.vid, { lines: msg.lines.slice(0, 4), until: performance.now() + 11000 });
         showNotice(`${msg.name || ''} 촌장 — ${msg.lines[0]}`, 6000);
-        window.__onbGreet = { vid: msg.vid, kind: msg.kind || '', lines: msg.lines.slice(0, 3), ...(msg.by != null ? { by: msg.by } : {}) };
+        window.__onbGreet = { vid: msg.vid, kind: msg.kind || '', lines: msg.lines.slice(0, 4), ...(msg.by != null ? { by: msg.by } : {}) };
         needsRedraw = true;
       }
       updateHud();
@@ -391,6 +395,65 @@ function onbHudLine() {
 //   ⚠§9.5 "퀘스트 화살표 금지(디에게틱 안내)"와 부딪친다 — 세계에는 아무것도 꽂지 않고 이 칸 안의 화살 하나로 **쪽**만 가리킨다.
 //     켤지는 재민 판정(보고/T1064 회부 1 · 손잡이로 끈다).
 function onbNextOn() { return !!(typeof uiCfg !== 'undefined' && uiCfg && uiCfg.nextStep === true); }
+// ══ ★★[T1086 2026-11-02] 첫 의뢰 뒤 바로 — 마을 가입 · 사유지 터 잡기 · 내 집 짓기(★재민 11-01 "마을 가입과 개인 사유지 건설은 강하게 유도") ══
+//   켬(서버 손잡이 `T1086_FIRST_JOIN` → welcome `uiCfg.firstJoin = { cost }`)이고 서버가 가입 형편(`join` 칸)을 실어 보냈을 때만 고른다.
+//   아니면 null — 아래 `onbNextPlan` 의 종전(T1064) 차례가 그대로 선다(끔 = 종전 칸).
+//     ⓐ 권함이 걸려 있고 아직 마을 사람이 아니면 "마을 가입" — 단추 = 채팅 `/소속` 그 한 줄(서버 문은 하나 · 새 메시지 0)
+//     ⓑ 빈터 권리가 섰고 빈터에 제 터가 없으면 "사유지 터 잡기" — 빈터 밖이면 그 쪽 화살 · 안이면 단추(= C 키 그 메시지) ·
+//        재료가 모자라면 무엇이 몇 개 있어야 하고 지금 몇 개인지(터 값은 서버 정본 · 가진 것은 짐)
+//     ⓒ 빈터에 제 터가 있으면 "내 집 짓기" — 터 밖이면 그 터 쪽 화살
+//   ★새 수 0 — 터 값은 welcome 이 실은 서버 정본(`CLAIM_COST.personal`) · 닿음은 서버 `lot.r` 과 제 터 사각뿐이다.
+//   ★순수 함수(입력 → 계획 · DOM 0) — `onbNextPlan` 이 부른다. 하네스(`test-t1086-first-join`)가 제품 글자 그대로 부른다.
+function onbJoinPlan(I, s, lot, inLot, K) {
+  const J = I && I.join;
+  const cost = I && I.firstJoin && I.firstJoin.cost;
+  if (!cost || !J) return null;
+  if (!J.member && J.offer != null) {
+    return { stage: 'join', item: '마을 가입', btn: 'join', target: null,
+      guide: ['촌장이 마을 사람으로 받아 주겠다고 합니다. 마을 가입 단추를 누르거나 채팅에 /소속 이라고 적으십시오.'] };
+  }
+  if (!s.lotOk) return null;
+  const mine = I.myLot || null;
+  if (mine) {
+    return { stage: 'build', item: '내 집 짓기', target: mine.inside ? null : { x: mine.x, y: mine.y },
+      guide: ['내 터가 생겼습니다. 터 안에서 건축 판 ', K('Shift B'), ' 에서 움집 터파기를 고르십시오.'] };
+  }
+  if (!inLot) {
+    return { stage: 'claim', item: '사유지 터 잡기', target: lot,
+      guide: ['촌장이 어귀 빈터를 내어 주었습니다. 화살표 쪽으로 가면 빈터입니다.'] };
+  }
+  const inv = I.inv || {};
+  const w = inv.wood | 0, st = inv.stone | 0;
+  if (w >= (cost.wood | 0) && st >= (cost.stone | 0)) {
+    return { stage: 'claim', item: '사유지 터 잡기', btn: 'claim', target: null,
+      guide: ['여기가 빈터입니다. 터 잡기 단추를 누르거나 ', K('C'), ` 키로 선 자리에 터를 잡으십시오. 나무 ${cost.wood}개와 돌 ${cost.stone}개가 듭니다.`] };
+  }
+  return { stage: 'claim', item: '사유지 터 잡기', target: null,
+    guide: [`여기가 빈터입니다. 터를 잡으려면 나무 ${cost.wood}개와 돌 ${cost.stone}개가 있어야 합니다. 지금 나무 ${w}개와 돌 ${st}개가 있습니다.`] };
+}
+// ★[T1086] 빈터 안 제 개인 사유지(첫 칸) — 클라가 이미 받은 사유지(`claim_added` · 존 로컬)를 읽기만 한다. { x, y 절대 중심, inside } | null
+function onbMyLot(c, off, me) {
+  const s = onbState;
+  if (!s || !s.lot || !c || !c.claims || !me) return null;
+  const who = (typeof myPlayerId !== 'undefined' && myPlayerId) || (typeof myUsername !== 'undefined' && myUsername) || null;
+  if (!who) return null;
+  const lx = s.lot.x + off.x, ly = s.lot.y + off.y;
+  for (const cl of c.claims.values()) {
+    if (!cl || cl.ownerPid !== who || cl.kind !== 'personal') continue;
+    const x0 = cl.x + off.x, y0 = cl.y + off.y;
+    const cx = x0 + cl.w / 2, cy = y0 + cl.h / 2;
+    if (Math.hypot(cx - lx, cy - ly) > s.lot.r) continue;
+    return { x: cx, y: cy, inside: me.x >= x0 && me.x < x0 + cl.w && me.y >= y0 && me.y < y0 + cl.h };
+  }
+  return null;
+}
+// ★[T1086] 칸의 단추 — 이미 있는 두 길만 보낸다(채팅 `/소속` · C 키의 사유지 메시지). 누른 수는 하네스가 센다.
+function onbNextPress(act) {
+  if (act === 'join') sendPrimary({ type: 'chat', text: '/소속' });
+  else if (act === 'claim') sendPrimary({ type: 'claim', kind: 'personal' });
+  else return false;
+  return true;
+}
 // 단계 고르기 — **순수 함수**(입력 한 벌 → 계획 한 벌 · DOM 0). 하네스(`test-t1064-next-step`)가 제품 글자 그대로 부른다.
 //   I = { state, arrive, greet, nearVid, me:{x,y}, off:{x,y}, anchor(vid) → {x,y,name} 절대, itemKo(k) }
 //   돌려주는 것 = { stage, place, item, guide:[글자 | {k:단축키}], target:{x,y} 절대 | null }
@@ -412,8 +475,10 @@ function onbNextPlan(I) {
   if (here) place = `${here.name} 마을 안`;
   else if (inLot && homeName) place = `${homeName} ${arr && arr.kind === 'dock' ? '나루터' : '어귀'}`;
   else if (homeName) place = `${homeName} 마을 밖`;
-  let p;
-  if (s.lotOk) {
+  let p = onbJoinPlan(I, s, lot, inLot, K);   // ★[T1086] 켬이면 가입 · 터 잡기 · 집 짓기가 먼저 선다(끔 · 해당 없음 = null)
+  if (p) {
+    // ★[T1086] 위에서 골랐다 — 종전 차례를 안 탄다
+  } else if (s.lotOk) {
     p = inLot
       ? { stage: 'build', item: '내 집 짓기', guide: ['여기가 빈터입니다. ', K('C'), ' 키로 땅을 걸고 건축 판 ', K('Shift B'), ' 에서 움집 터파기를 고르십시오.'], target: null }
       : { stage: 'lot', item: '빈터로 가기', guide: ['촌장이 어귀 빈터를 내어 주었습니다. 화살표 쪽으로 가면 빈터입니다.'], target: lot };
@@ -462,6 +527,12 @@ function onbNextInputs() {
       return a ? { x: a.x, y: a.y, name: (a.v && a.v.name) || '' } : null;
     },
     itemKo: (k) => (typeof itemKo === 'function' ? itemKo(k) : String(k)),
+    // ★[T1086] 가입 형편(서버) · 손잡이와 터 값(welcome) · 짐의 나무 · 돌 · 빈터 안 제 터(받은 사유지)
+    join: onbJoin,
+    firstJoin: (typeof uiCfg !== 'undefined' && uiCfg && uiCfg.firstJoin) || null,
+    inv: (typeof inventory !== 'undefined' && inventory) ? { wood: inventory.wood | 0, stone: inventory.stone | 0 } : null,
+    myLot: onbMyLot(c, { x: (c && c.meta && c.meta.worldOffsetX) || 0, y: (c && c.meta && c.meta.worldOffsetY) || 0 },
+      (typeof myAbsPredicted !== 'undefined' && myAbsPredicted) ? myAbsPredicted : null),
   };
 }
 function onbNextEsc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
@@ -474,8 +545,14 @@ function onbEnsureNext() {
   el.className = 'hidden';
   el.innerHTML = '<div class="pane-head"><span>지금 할 일</span><span id="onbNextPlace" class="ph-sub ph-key"></span></div>'
     + '<div class="onb-next-body"><span id="onbNextArrow" class="onb-next-arrow"></span>'
-    + '<div class="onb-next-text"><div id="onbNextItem" class="onb-next-item"></div><div id="onbNextGuide" class="onb-next-guide"></div></div></div>';
+    + '<div class="onb-next-text"><div id="onbNextItem" class="onb-next-item"></div><div id="onbNextGuide" class="onb-next-guide"></div>'
+    + '<button id="onbNextBtn" type="button" class="onb-next-btn hidden"></button></div></div>';   // ★[T1086] 단추 하나(마을 가입 · 터 잡기)
   host.appendChild(el);
+  const bt = document.getElementById('onbNextBtn');
+  if (bt && bt.addEventListener) {   // ★[T1086] 누를 때 초점을 안 가져간다(초점이 남으면 다음 Enter · Space 가 단추를 또 누른다)
+    bt.addEventListener('mousedown', (e) => e.preventDefault());
+    bt.addEventListener('click', () => { onbNextPress(bt.dataset.act); if (bt.blur) bt.blur(); });
+  }
   return el;
 }
 // 그리기 — `onbHudLine()`(HUD 틱 100ms)이 부른다. 글자는 바뀔 때만 다시 쓰고, 화살 돌림만 틱마다 맞춘다.
@@ -497,14 +574,36 @@ function onbNextRender() {
   if (r && r.height > 0) {
     const low = (mr && mr.height > 0 && mr.right > r.left) ? Math.max(r.bottom, mr.bottom) : r.bottom;
     el.style.top = `${Math.round(low)}px`; el.style.right = `${Math.round(innerWidth - r.right)}px`; el.style.width = `${Math.round(r.width)}px`;
+    // ★[T1086] 게시판 판(`#boardPane` — 오른쪽 위에 떠 있는 판 · 납품하면 서버가 판을 다시 보내 저절로 열린다)이 이 자리를 덮으면
+    //   그 판 **밑으로** 비켜 선다(오른쪽 줄 그대로) — 첫 의뢰를 낸 그 순간 「마을 가입」 단추가 판 밑에 깔리지 않는다(닫기 한 번이 더 들지 않는다).
+    //   판이 길어 밑에 자리가 없으면 그 판 왼쪽으로 선다. 틈은 칸 위 틈(CSS `margin-top`) 그대로 쓴다(새 수 0).
+    //   ⚠왼쪽을 먼저 쓰지 않는다 — 판 왼쪽은 화면 한가운데(마을 중심 · 촌장 말풍선 자리)라 1차 판에서 말풍선을 덮었다(사진 실측).
+    //   켬(welcome `uiCfg.firstJoin`)일 때만 — 끔이면 종전(T1064) 자리 그대로다.
+    const bp = (typeof uiCfg !== 'undefined' && uiCfg && uiCfg.firstJoin) ? document.getElementById('boardPane') : null;
+    const br = (bp && !bp.classList.contains('hidden') && bp.getBoundingClientRect) ? bp.getBoundingClientRect() : null;
+    if (br && br.width > 0 && typeof getComputedStyle === 'function') {
+      const gap = parseFloat(getComputedStyle(el).marginTop) || 0;
+      const h = el.getBoundingClientRect().height || 0;
+      const top0 = low + gap, bot0 = top0 + h;
+      if (br.left < r.right && br.right > r.left && br.top < bot0 && br.bottom > top0) {
+        if (br.bottom + gap + h <= innerHeight) el.style.top = `${Math.round(br.bottom)}px`;
+        else el.style.right = `${Math.round(innerWidth - br.left + gap)}px`;
+      }
+    }
   } else { el.style.top = ''; el.style.right = ''; el.style.width = ''; }
-  const sig = `${p.stage}|${p.place}|${p.item}|${JSON.stringify(p.guide)}`;
+  const sig = `${p.stage}|${p.place}|${p.item}|${JSON.stringify(p.guide)}|${p.btn || ''}`;
   if (el.dataset.sig !== sig) {
     el.dataset.sig = sig;
     el.dataset.stage = p.stage;
     document.getElementById('onbNextPlace').textContent = p.place;
     document.getElementById('onbNextItem').textContent = p.item;
     document.getElementById('onbNextGuide').innerHTML = p.guide.map((x) => (x && x.k != null) ? `<span class="key">${onbNextEsc(x.k)}</span>` : onbNextEsc(x)).join('');
+    const bt = document.getElementById('onbNextBtn');   // ★[T1086] 단추 — 명사형 이름 · 이 단계에서 누를 수 있을 때만 보인다
+    if (bt) {
+      const lab = p.btn === 'join' ? '마을 가입' : (p.btn === 'claim' ? '터 잡기' : '');
+      bt.textContent = lab; bt.dataset.act = lab ? p.btn : '';
+      if (lab) bt.classList.remove('hidden'); else bt.classList.add('hidden');
+    }
   }
   // 화살 — 화면에서 목표 쪽(사영된 두 점의 각) · 세계에는 아무것도 안 그린다
   const ar = document.getElementById('onbNextArrow');
@@ -521,7 +620,7 @@ function onbNextRender() {
   el.classList.remove('hidden');
   onbNextLast = { stage: p.stage, place: p.place, item: p.item,
     guide: p.guide.map((x) => (x && x.k != null) ? `[${x.k}]` : x).join(''),
-    target: p.target ? { x: Math.round(p.target.x), y: Math.round(p.target.y) } : null, angle: ang };
+    target: p.target ? { x: Math.round(p.target.x), y: Math.round(p.target.y) } : null, angle: ang, btn: p.btn || null };
   return p;
 }
 // 하네스 훅 — **읽기 전용만**. 발신은 기존 `window.__sendPrimary` 를 쓴다(새 창구 안 만든다).

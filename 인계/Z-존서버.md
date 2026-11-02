@@ -3,6 +3,15 @@
 > ★이 파일은 **영역 소유 세션만** 갱신한다. 다른 영역에 쓸 말이 생기면 `인계/회부.md` 에 한 줄.
 > 원문은 `_아카이브_2026-08_다음세션_인계.md` 에 그대로 동결돼 있다(족보 · 삭제 금지).
 > 이사할 때 **문장을 한 글자도 안 고쳤다** — 낡아 보이는 줄엔 `[낡음? 확인 필요]` 표만 붙였다.
+## T1092. ★★2026-11-03 — **넘기에 실패해도 말없이 멈추지 않는다** — 브라우저가 받는 존에 못 붙으면 옛 존에 머물고 까닭 한 줄(손잡이 `T1092_HANDOFF_BACK` · 켬 기본 후보 · 승인 대기 · 보고/T1092_2026-11-03.md)
+
+* 재민 11-02 실기 "한반도 → 닛폰 경계에서 끊김 · 멈춤". 서버끼리 인계(`/handoff_prepare`)는 되는데 브라우저가 받는 존 소켓을 못 열면(central 주소 — T1077 · 포트 · 방화벽 · 까닭 무관) ACK 가 안 오고 종전엔 보낸 존 3초 시한이 사람을 지우고 소켓을 닫았다(행은 넘기기 전 저장의 `last_zone` = 받는 존 — 다시 들어가도 또 그 존).
+* 켬: 그 시한에 받는 존에 토큰을 놓으라 한다 — 같은 문 `/handoff_prepare` 의 `kind: 'drop'`(새 라우트 0 · 받는 존 끔 · 옛 판은 400 → 종전 정리). 답 `dropped` = 토큰이 안 쓰였고 그 사람이 받는 존에 따로 서 있지 않다.
+  * 놓았다 → 넘기 전 자리(T564 `_t564Pre` · 몸 되돌림 한 자리 `_t564Hold`) · 저장 한 번(행 `last_zone` 이 이 존) · `handoff_back` + welcome(`back` — 승격 welcome 한 벌 `_promoteWelcome`) · 알림 "<표시 이름> 쪽으로 넘어가지 못했습니다. 저쪽 서버에 닿지 않습니다."(T564 의 10초 창).
+  * 못 놓았다(이미 썼다 · 그 사람이 받는 존에 섰다 · 못 물었다 · 받는 존 끔) → 종전 정리 그대로(`_ackGone` — 종전 시한 몸통 · T843 · T867 술어 그대로).
+* 클라: `handoff.back`(받는 존 토큰 수명 5초 — `HANDOFF_TOKEN_MS` · 종전 글자에 이름) 안에서 넘긴 존 소켓이 열려 있으면 받는 존에 이름 · 열쇠로 따로 붙지 않는다(`33-m-conn.js` `_t1092Wait` — 기다리는 사이 재시도가 받는 존에 행 몸을 세우면 몸 둘 · 게스트는 존 사이 중복 차단이 없다). `handoff_back` 이 이 소켓을 다시 주 소켓으로 · 받을 존 시도를 접는다 · welcome `back` 은 승격처럼 관측 상태를 둔다(게스트 열쇠는 안 건드린다).
+* 자: `scripts/test-t1092-handoff-back.js`(신설 · @regress · 판 넷 A · S · M · O) · `e2e-handoff-proto` 판 `back`(받는 존 클라 소켓만 닫힌 포트).
+
 ## T1027. ★★2026-10-31 — 거리행렬 BFS 조각 안 +38% = 조각마다 다시 데워짐(조각 사이 존 일 · 하드웨어 캐시) · 우리 코드 · JIT · GC 스레드 아님
 
 * 존 안 무효화 다시 세기 BFS 몸통(지형 판정 · GC 뺌): 한 번에 199~230ns/노드(판 셋) · **200ms 조각 211~216** · 16ms 조각 230~388(판 여덟 × 둘 · 중앙 ≈ 304).
@@ -10,6 +19,16 @@
 * 아님: `--single-threaded-gc` 274~334(그대로) · `--trace-opt/--trace-deopt` + 시계 줄 — 발생기는 다시 세기 +0.35초부터 BFS 끝(+20.4초 · `다 셈`)까지 TurboFan 코드였다(그 뒤 탈최적화는 T968 `hold` 꼬리 · 일 끝난 뒤).
 * 같은 꼴(작게): A* 교역로 재개형 +5~24% · 생활층 쉼표 +10~16%(`T1027_PROBE=1` · `VILLAGE_TICK_SLICE_MS=0` 대조 · 판 둘씩).
 * 재는 셈 둘(`T977_PROBE` · `T1027_PROBE`)은 `=1` 일 때만 돈다. `scripts/t646-anatomy.js` 에 `T1027_ZFLAGS`(존 덧 V8 깃발).
+## T1077. ★★2026-11-02 — **경계 "끊김·멈춤" = central `/zones` 의 닛폰 주소**(브라우저가 옮겨 붙을 `wsUrl`) · 고침 스크립트 `fix-central-hosts.sh` · update-live ⑧ central · 반대 줄 · 클라 까닭 한 줄 (승인 대기 · 보고/T1077_2026-11-02.md)
+
+* 재민 11-02 "경계에서 이번엔 튕기지 않고 연결 끊김으로 멈춘다" — 서버끼리 인계(`/handoff_prepare` · 한반도 env `ZONE_HOST_NIPPON` · T1048)는 통과 · 브라우저 주소는 central `/zones`(`server/central.js:774` `publicZoneMap(PUBLIC_HOST)` → `hostFromEnv`)가 준다. central env 에 키가 없거나 빈 줄이면 26존 표(`ZONE_HOSTS` = 서울) → 서울:3021(닫힘) → 브라우저 접속 실패 → 보낸 존 ACK 3초 시한 `⚠ ACK timeout` 이 몸을 지운다(서버 알림 0).
+* 재현: `scripts/e2e-handoff-proto.js` 판 `ⓗ`(central env 만 닛폰 = `nippon.invalid` · 존 env 는 맞음) — 인계 됨 · `⚠ ACK timeout` · 알림 0 · 배너만 선다.
+* central 을 다시 짓는 길(`redeploy-hanbando.sh` `recreate()` · `redeploy-all.sh` central 칸 · `reset-world.sh` `build_env`)은 옛 env 를 **통째로 옮긴다** — 빼지도 되살리지도 않는다. 손 줄: T485 §3 8 이 넣었고 §3 13 롤백이 빈 줄로 둔다 · T1048 되넣기 줄은 한반도만.
+* 고침(재민 손 한 번 · 서울): `ssh seoul 'cd /opt/Mini && bash scripts/fix-central-hosts.sh --dry'` → 인자 없이. 존 컨테이너 env 의 `ZONE_HOST_<ID>` 중 central 에 없거나 빈 것만 넣고 central 하나만 다시 띄운다(같은 이미지 · 포트 · `/data` · 라벨 · 옛 env 그대로 · 값 화면 0). 다른 값이면 손대지 않는다(✗ · 사람 판정).
+* 확인 줄: `update-live.sh` ⑧ 에 셋 더 — `도쿄 <존> → hanbando`(존 안에서 /health · 키 요구 0) · `central /zones → <도쿄 존>: wsUrl 주소 = 한반도가 넘기는 주소` · `central /zones → hanbando: wsUrl 주소 = 도쿄 <존> 가 넘기는 주소`(같음/다름만 · 값 0). ✗ 면 끝에서 멈춘다(rc 1).
+* 클라: 넘겨받을 존에 못 붙으면 배너 까닭 줄 맨 앞 "<표시 이름> 서버에 연결하지 못했습니다"(30-n-net `onclose` · 00-const `paintConnBanner` · 문턱 무변).
+* 자: `test-xhost-env` 33/0(`--against 54d20ebf` 22/11) · `test-update-snap` 26/0(main 22/4) · `e2e-handoff-proto` 27/0(main + 하네스 26/1).
+
 ## T1048. ★★2026-11-01 — **서울 한반도 env 의 `ZONE_HOST_NIPPON` 을 뺀 길 = `redeploy-light.sh`(T538 재배포 줄)** · 이어 싣기 · update-live 끝 `[⑧] 경계` (승인 대기 · 보고/T1048_2026-11-01.md)
 
 * 재민 11-01 "닛폰(으)로 못 넘어간다 — 저쪽 서버가 연결을 받지 않는다" = `_t564HandoffWhy` 거절 갈래. 한반도 env 에 키가 없으면 `hostFromEnv` 가 `ZONE_HOSTS[nippon]`(= `CENTRAL_IP` 서울) → 서울:3021 닫힘 → ECONNREFUSED 다.

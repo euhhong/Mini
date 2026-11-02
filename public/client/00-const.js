@@ -431,6 +431,12 @@ function cropSprite(stage, crop) {
   let _reconnAt = 0;             // 재연결 백오프 시계(성공하면 푼다)
   let _firstWait = false;        // ★[T1024] central `/zones` 칸 `firstWait`(손잡이 `T1024_FIRST_WAIT` · 켬 기본) — 첫 재시도도 백오프 간격을 기다린다(33-m-conn)
   let connReason = '', connStage = '', connRef = '';
+  // ★★[T1077 2026-11-02 · ★재민 11-02 실기 "경계에서 연결 끊김으로 멈춘다"] **넘겨받을 존에 못 붙으면 그 까닭을 한 줄로 말한다.**
+  //   서버끼리 인계(`/handoff_prepare`)는 되는데 브라우저가 옮겨 붙을 주소(central `/zones` 의 `wsUrl`)가 그 존이 없는 자리면(central env 에 `ZONE_HOST_<ID>` 가 없다 ·
+  //   보고/T1077) 새 소켓이 못 열리고, 보낸 존은 ACK 3초 시한에 몸을 지운다 — 사람에겐 "서버 응답을 기다리는 중" 배너뿐이었다(까닭 0).
+  //   `_hoTo` · `_hoFrom` = 30-n-net `handoff` 가 적는 넘김의 두 끝 · `_hoFail` = 받는 존이 welcome 전에 닫혔거나(접속 실패) 보낸 존이 먼저 닫혔을 때 선다 ·
+  //   welcome 이 오면 셋 다 걷는다. 배너(`paintConnBanner`)가 `why` 줄 맨 앞에 싣는다(새 수 0 · 배너 유예 `CONN_QUIET_MS` 그대로).
+  let _hoTo = null, _hoFrom = null, _hoFail = '';
   function connMark(phase, extra) {
     connPhase = phase;
     if (extra) { if (extra.reason !== undefined) connReason = extra.reason;
@@ -470,11 +476,11 @@ function cropSprite(stage, crop) {
       state = hard ? 'error' : 'waiting';
       title = hard ? '서버가 대답하지 않습니다. 계속 다시 시도하는 중이지만 오류일 수 있습니다.'
                    : '서버의 대답을 기다리는 중입니다. 잠시 기다리면 대개 들어가집니다.';
-      why = `${(el3 / 1000).toFixed(0)}초 경과 · ${connAttempts}번째 시도`;
+      why = `${_hoFail ? _hoFail + ' · ' : ''}${(el3 / 1000).toFixed(0)}초 경과 · ${connAttempts}번째 시도`;   // ★[T1077] 넘겨받을 존에 못 붙었으면 그 까닭이 맨 앞
     } else if (netStalled) {
       state = 'lost'; hard = true;
       title = '연결 끊김 — 재접속 중';
-      why = connReason || '서버 응답 없음';
+      why = _hoFail || connReason || '서버 응답 없음';   // ★[T1077] 넘겨받을 존에 못 붙었으면 그 까닭
     }
 
     if (!state) { el.classList.remove('on'); return; }
@@ -486,7 +492,7 @@ function cropSprite(stage, crop) {
     const b = el2('.nl-reload'); if (b) b.hidden = !hard;
   }
   setInterval(paintConnBanner, 500);
-  window.__connState = () => ({ phase: connPhase, attempts: connAttempts, hello: !!connHelloAt,
+  window.__connState = () => ({ phase: connPhase, attempts: connAttempts, hello: !!connHelloAt, hoFail: _hoFail,   // ★[T1077] 넘김 실패 까닭(없으면 '')
     reason: connReason, stage: connStage, ref: connRef, everReady: connEverReady,
     state: (document.getElementById('netLost') || {}).dataset?.state || '',
     hard: ((document.getElementById('netLost') || {}).dataset?.hard === '1') });

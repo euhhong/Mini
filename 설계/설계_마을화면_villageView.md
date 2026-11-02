@@ -3,6 +3,8 @@
 > 정본 그림 `설계/시안/오석/마을_{dash,proj,mem,store}.jpg` · 화면 정본 `설계/설계_마을화면_오석.md` · 클라 카드 T1070(세션12).
 > 고정 자료 `test/fixtures/village-view.json` — 이 표와 **같은 모양**이다(값은 예시 · 클라 배치용).
 > 칸 전수표(시안 칸 하나하나 → 서버 정본 파일:줄 · 있음/파생/없음)는 `보고/T1072_2026-11-02.md`.
+> T1084(2026-11-02): 없던 29칸 중 지금 세계에서 셀 수 있는 둘을 더했다 — `projects.now[]` 집터 줄 `bedsGain` · 새 줄 `kind:'clear'`(`fields` · `crew`). **새 칸만** — 옛 이름 · 뜻 무변. 29칸 표 `보고/T1084_2026-11-02.md`.
+> T1105(2026-11-03): PM 임시 `vvAdapt` 가 비워 둔 칸 중 서버에 이미 있는 값 셋을 더했다 — `head.region`(지역 이름 = 그 존의 `displayName`) · `dash.foodDays`(먹을 것 며칠치) · `dash.fuelCov` · `dash.fuelShort`(땔감 충당 몫 · 모자람). **새 칸만** — 옛 이름 · 뜻 무변. 겨울 준비 %(분모) · 인구 증감 · 다음 일 한 줄은 여전히 키가 없다. 화면 칸 ← 서버 칸 표 `보고/T1105_2026-11-03.md`.
 
 ## 0. 규약
 * **있는 칸만 싣는다.** 서버에 없는 칸은 키 자체가 없다(빈 문자열 · 0 으로 채우지 않는다) — 회부 `인계/회부.md` `T1072`.
@@ -14,7 +16,7 @@
 ## 1. 메시지
 | 방향 | 모양 | 뜻 |
 |---|---|---|
-| 클라 → 서버 | `{ type:'village_view', vid, numeraire? }` | 연다(열린 채 다시 보내면 기준 품목만 바꿔 **통째로** 다시 받는다) |
+| 클라 → 서버 | `{ type:'village_view', vid, numeraire? }` | 연다(열린 채 다시 보내면 기준 품목만 바꿔 **통째로** 다시 받는다) · `numeraire` = res id(화면은 `prices.basis[].ko` 이름을 보이고 `res` 를 보낸다 · T1103) |
 | 클라 → 서버 | `{ type:'village_view_close' }` | 닫는다(그 뒤로 바뀐 칸을 안 보낸다) |
 | 서버 → 클라 | `{ type:'village_view', vid, seq, full:true, view:{…칸 전부} }` | 열 때 한 번 |
 | 서버 → 클라 | `{ type:'village_view', vid, seq, full:false, slots:{ 바뀐 칸만 } }` | 열려 있는 동안 — 칸 단위로 통째 교체(칸 안을 부분 갱신하지 않는다) |
@@ -31,20 +33,23 @@
 | | `cal` `{ label, season, seasonKo, dayOfSeason, seasonDays, year }` | obj | `events.calendarOf(day)` | 대시 "지금은 가을" |
 | | `age` | int | `day − econ.foundedDay` (파생) | 머리줄 "412일째" |
 | | `chief` `{ name, npc }` \| `null` | obj | `village-kin.chiefOf(vil)` | 머리줄 "촌장 도미" |
+| | `region` (T1105) | str | 이 마을이 선 존의 이름 `zone-config.js ZONES[zoneId].displayName`(손잡이 `villageViewSrc().zoneId` · 한반도 존 = "새벌") — 게임이 "지역"이라 부르는 그 이름 · 존을 모르는 판이면 키 없음 | 머리줄 부제 자리("남해 바닷가 마을" — 그 문장은 회부 T1072 2) |
 | `me` | `member` · `memberVid` | bool · int\|null | `membership.publicState().vid` (=== vid 이면 이 마을 사람) | 가입 안내 "아직 이 마을 사람이 아닙니다" |
 | | `contrib` · `need` | int · int | `onboarding.contrib`(`membership.contribOf`) · `membership.CFG.N_MEMBER` | 머리줄 "마을 사람이 되기까지 n / m" |
 | | `left` | int | `need − contrib`(0 아래로 안 간다 · 파생) | 가입 안내 "n 더 모으면" |
 | | `chief` · `offer` | bool · int\|null | `membership.publicState` | — |
 | `dash` | `pop` | int | `econ.npcs.length` | "사는 사람 48명" |
 | | `toWinter` | int \| null | 달력 정본으로 다음 겨울 첫날까지(파생 · 겨울이면 0) | "겨울까지 34일 남았습니다" |
-| | `projectsN` | int | `projects.now.length` | "하고 있는 일 5가지" |
+| | `projectsN` | int | `projects.now.length`(T1084 부터 밭 일구기 줄도 든다) | "하고 있는 일 5가지" |
+| | `foodDays` (T1105) | num | 곳간 스냅숏 정본 `playerVillageInventory().foodDays`(= econ `totalFoodEquivalent ÷ 인구` · 한 사람 하루 1 → "며칠치" · 소수 한 자리) — 새로 오는 사람 문의 "자립 n일"과 같은 함수 · ⚠겨울 준비 %가 아니다(분모 없음 · 회부) | 겨울 준비 "먹을 것" 자리(%는 회부 — 며칠치만) |
+| | `fuelCov` · `fuelShort` (T1105) | num · bool | econ 이 그날 연료 단계에서 남긴 땔감 충당 몫 `_fuelCov`(`sim/economy-sim.js` · (짚 + 잔가지·껍질 + 땔나무) ÷ 그날 땔감 수요 · 0..1 · 겨울엔 추위만큼 수요가 커진다 · econ 이 이 값으로 건강을 깎는다) · 소수 둘째 자리 · `fuelShort` = 그 값 < 1 · 첫 econ 날 전엔 둘 다 키 없음 · ⚠**오늘** 몫이지 겨울 목표 대비가 아니다 | 겨울 준비 "땔감" 막대 · "땔감이 모자랍니다" |
 | `requests` | `rows[]` `{ res, ko, item, qty, filled, remain, rewRes?, rewKo?, rewQty?, line? }` | arr | `villageBoard().rows`(게시판 정본) | "마을의 부탁" · "12 / 30 모임" |
 | | `withheld` | int | 구하는 품목이 뭉뚱그린 것이라 뺀 줄 수 | — |
 | | `rewardWithheld` | int | 갚는 품목만 뭉뚱그린 것(거의 곡식)이라 **갚는 칸 · 문장(`line` = "나무 18 → 곡식 4")을 뺀** 줄 수 — 그 줄은 `rewRes`·`rewKo`·`rewQty`·`line` 키가 없다 | — |
-| `news` | `rows[]` `{ line, type, day, heard, ago, from }` | arr | `villageBoard().news`(= `ledger.visibleEvents` · 소문 가시성) | "마을 소식" · "3일 전 · 들려온 소문"(`from` ≠ null) |
+| `news` | `rows[]` `{ line, type, day, heard, ago, from }` | arr | `villageViewNews()` = 게시판 소식과 같은 술어 · 같은 줄 수(`ledger.visibleEvents` · 소문 가시성) · **줄은 하십시오체 `events.newsLine`**(T1103 — 게시판 · 촌장 말은 하게체 `briefLine` 그대로) | "마을 소식" · "3일 전 · 들려온 소문"(`from` ≠ null) |
 | | `withheld` | int | 위와 같음 | — |
-| `projects` | `now[]` — 아래 §3 | arr | 집터 `vil._site` · 의뢰 집터 `vil._psite` · 캐러밴 `world.caravans` | "지금 하고 있는 일" 카드 |
-| | `done[]` `{ line, day, ago }` | arr | `ledger.chronicle` 의 `BUILT`(올해) | "끝낸 일" |
+| `projects` | `now[]` — 아래 §3 | arr | 집터 `vil._site` · 의뢰 집터 `vil._psite` · 밭 일구기(개간 술어 · T1084) · 캐러밴 `world.caravans` | "지금 하고 있는 일" 카드 · "다 지으면 침상이 n 늘어납니다"(`bedsGain`) · "밭 일구기 · 하는 중"(`kind:'clear'`) |
+| | `done[]` `{ line, day, ago }` | arr | `ledger.chronicle` 의 `BUILT`(올해) · 줄 = 하십시오체 `events.newsLine`(T1103) | "끝낸 일" |
 | `members` | `n` | int | `vil.npcPids` 중 몸이 있는 사람 | "함께 사는 사람 48명" |
 | | `byJob[]` `{ job, ko, n }` | arr | 몸의 `simJob` 집계 · 이름표 `zone.js JOB_KR_NPC` | 직업별 수 "어부 14" |
 | | `people[]` `{ pid, name, job, jobKo, act, chief }` | arr | 몸 `name` · `simJob` · 행위 라벨 `_lifeAct` · 촌장 = `chiefOf` | 사람 칸 |
@@ -59,15 +64,20 @@
 | `gate` | `near` | bool | `_villageNear` | — |
 
 ## 3. `projects.now[]` 한 줄
-| 필드 | 집터(`kind:'house'`) | 의뢰 집터(`kind:'phouse'`) | 행상(`kind:'caravan'`) |
-|---|---|---|---|
-| `kind` · `name` | `'house'` · `"움집 짓기"` | `'phouse'` · `"<의뢰한 사람> 움집"` | `'caravan'` · `"<가는 마을>로 가는 행상"` |
-| `stage` · `stages` | 공정 단계 · `hut-stages.js HUT_STAGES.length` | 같음 | — |
-| `stageLabel` | `HUT_STAGES[stage].label`(지금 하는 공정) | 같음 | — |
-| `need[]` `{ res, ko, need, have }` | `econ.hutEconStage(stage)` · `_site.mat` | — (선납이라 자재가 이미 들어와 있다) | — |
-| `state` · `toDays` | — | — | `'outbound'`/`'inbound'`… · 도착까지 날 수(`arriveDay`/`returnArriveDay − day`) |
-| `cargo[]` `{ res, ko, n }` | — | — | `giveRes`/`giveAmt`(+둘째 화물) |
-| `to` | — | — | 가는 마을 이름 |
+| 필드 | 집터(`kind:'house'`) | 의뢰 집터(`kind:'phouse'`) | 밭 일구기(`kind:'clear'` · T1084) | 행상(`kind:'caravan'`) |
+|---|---|---|---|---|
+| `kind` · `name` | `'house'` · `"움집 짓기"` | `'phouse'` · `"<의뢰한 사람> 움집"` | `'clear'` · (이름 키 없음) | `'caravan'` · `"<가는 마을>로 가는 행상"` |
+| `stage` · `stages` | 공정 단계 · `hut-stages.js HUT_STAGES.length` | 같음 | — | — |
+| `stageLabel` | `HUT_STAGES[stage].label`(지금 하는 공정) | 같음 | — | — |
+| `need[]` `{ res, ko, need, have, give[] }` | `econ.hutEconStage(stage)` · `_site.mat` · `give` = 그 자재로 곳간에 들어가는 내 물건 키(기부 문 정본 `playerVillageDepositMap` · T1103 — 화면 "재료 가져오기"가 보낸다) | — (선납이라 자재가 이미 들어와 있다) | — | — |
+| `bedsGain` (T1084) | 다 지으면 늘어나는 침상 = econ `hutCapPerHut()`(층당 정원 6 × 층수 상한 1 = 침상 명부 `villages.js _mapBedsOf` 가 집 한 채에 더하는 수) | — (마을 침상 명부 밖) | — | — |
+| `fields` · `crew` (T1084) | — | — | 지금 밭 칸 수(`vil._farmSet.size`) · 지금 개간을 쥔 몸 수(`vil._clearCrew`) | — |
+| `state` · `toDays` | — | — | — | `'outbound'`/`'inbound'`… · 도착까지 날 수(`arriveDay`/`returnArriveDay − day`) |
+| `cargo[]` `{ res, ko, n }` | — | — | — | `giveRes`/`giveAmt`(+둘째 화물) |
+| `to` | — | — | — | 가는 마을 이름 |
+
+* 밭 일구기 줄은 **개간 술어 정본**(`villages.js _lifeNeedClear` — 손잡이 `villageViewSrc().needClear`)이 참이고 그 마을에 농부 몸이 있는 동안만 선다(개간 두 길 — 몸 · 일괄 `_lifeClearDay(vil, farmerN)` — 의 문 그대로). 술어가 거짓이면 줄이 없다. 목표 칸 수("6칸 중 4칸")는 술어 안의 식이라 싣지 않는다(회부 T1084).
+* ⚠`name` 은 지금 서버가 싣지 않는다(T1072 그대로 — 고정 자료에만 예시가 있다). 화면 이름은 `kind` 로 정한다.
 
 ## 4. 보내는 때
 | 때 | 무엇을 | 상한 |
@@ -84,3 +94,9 @@
 | 열린 동안 다시 읽기(시세 입력 그대로) | 157~275µs | 124~133µs | 0.4~3.2ms | 게시판 · 연대기 · 곳간 스냅숏 · 몸 명부 |
 | 통째 메시지 | 약 5KB | | | 사람 칸이 인구만큼 는다 |
 박자 5초 × 열린 사람 하나 = 다시 읽기 한 번(시세 입력이 바뀐 박자만 거래소 정본 한 번 더).
+
+## 6. 화면 맞춤 — 클라 `vvAdapt`(T1103 · `public/client/52-v-village-view.js`)
+* 받기: `full:true` 면 칸 덩어리를 갈아 끼우고, `full:false` 면 온 칸만 바꾼다(다른 마을 · 지난 seq 는 버린다). 바뀐 칸을 읽는 판(머리 · 탭)만 다시 짓는다.
+* 없는 칸은 화면에도 없다 — 줄 · 카드를 통째로 안 그린다(빈 문자열 · 0 · 예시 문장 0).
+* 클라가 만드는 것은 문장 틀(하십시오체) · 막대 비율(넉넉함 = `daysOf / glutDays` · 공정 = `stage / stages` · 부탁 = `filled / qty`) · 공사 줄 이름(`kind` 로 — 서버가 `name` 을 안 싣는다)뿐이다.
+* 아직 서버에 없는 칸(T1105 가 셀 것) — 키가 오면 그린다: `head.region` · `dash.popDelta` · `dash.winter[] { label, frac, short }` · `dash.workNext` · `members.delta` · `projects.next[]`(문장 줄).

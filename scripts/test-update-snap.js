@@ -15,6 +15,8 @@
 //     ⑥ ⓪ 과 ① 사이에 main 이 움직이면 멈춘다(라벨 판 ≠ 받은 판)
 //     ⑦ --rollback(--dry) — 대상마다 "갱신 앞 스냅샷" 자리 · 되놓기 줄(T907 꼴) · 이 갱신 커밋이면 그렇다고 · DB 무접촉
 //     ⑧ 미끼 — 디스크 멈춤 줄을 뺀 사본은 ① 에서 pull 까지 간다(① 이 문다)
+//     ⑨ ★[T1077] ⑧ 경계 줄 — central `/zones` 가 브라우저에 주는 이웃 주소 = 존끼리 넘기는 주소(앞 · 반대) · 도쿄 → 한반도 줄 · 값 0
+//        · 다르면(재민 11-02 꼴 — central 이 닛폰을 서울 주소로 준다) 갱신 끝에서 멈추고 고침 스크립트 줄(`fix-central-hosts.sh --dry`)을 찍는다 · --dry 는 찍기만
 'use strict';
 const fs = require('fs'), os = require('os'), path = require('path');
 const { execFileSync } = require('child_process');
@@ -42,6 +44,9 @@ const fi = a.indexOf('--format'); const f = fi >= 0 ? a[fi + 1] : null;
 if (a[0] === 'inspect' && a[1] === 'durango-zone-hanbando' && /Config\\.Env/.test(f || '')) return console.log('PORT=3020\\nZONE_HOST_NIPPON=203.0.113.9');   // ★[PM land1036 · T1048] ⑧ 경계 줄이 한반도 env 키를 본다(값은 대역)
 if (a[0] === 'inspect' && /Config\\.Env/.test(f || '')) return console.log('PLAYER_CAP=150\\nCENTRAL_HOST=10.9.9.9\\nZONE_SECRET=x');
 if (a[0] === 'ps' && a.includes('-a') && /Names/.test(f || '')) return console.log(process.env.FAKE_HOST === 'tokyo' ? 'durango-zone-nippon' : 'durango-central\\ndurango-zone-hanbando');   // ★[T1048] ⑧ 이 도쿄 존 이름을 읽는다
+if (a[0] === 'exec' && /publicZoneMap/.test(a[4] || '')) {   // ★[T1077] ⑧ host_of — 그 컨테이너 정본이 보는 존 주소(대역 표 · FAKE_ZHOSTS 가 칸을 갈음)
+  const H = Object.assign({ 'durango-zone-hanbando:nippon': '203.0.113.9', 'durango-central:nippon': '203.0.113.9', 'durango-zone-nippon:hanbando': '198.51.100.7', 'durango-central:hanbando': '198.51.100.7' }, JSON.parse(process.env.FAKE_ZHOSTS || '{}'));
+  return console.log(H[a[1] + ':' + a[5]] || ''); }
 if (a[0] === 'exec') return console.log('ok 대역 · :3021/health 200 · 1ms');   // ★[T1048] ⑧ 존 안에서 이웃 /health(대역 답 · 진짜 길은 test-xhost-env)
 if (a[0] === 'inspect' && f === '{{.Image}}') return S.c[a[1]] ? console.log(S.c[a[1]]) : process.exit(1);
 if (a[0] === 'image' && a[1] === 'inspect') { const n = a[2]; const id = S.tags[n] || (S.img[n] ? n : null); if (!id) process.exit(1);
@@ -170,6 +175,26 @@ K = fresh(); const BAIT = path.join(TMP, 'bait.sh');
 const src = fs.readFileSync(SCRIPT, 'utf8'); const baited = src.split('\n').filter((l) => !/\[ "\$DOK" = 1 \] \|\| stop "디스크/.test(l)).join('\n');
 fs.writeFileSync(BAIT, baited); r = run([], { FAKE_DISK_BAD: 'seoul', FAKE_SC: '1', FAKE_SZ: '1', FAKE_TZ: '0' }, BAIT);
 ok(baited !== src && head() !== K.A && idx(/^seoul backup label=/) >= 0, '[미끼] 멈춤 줄을 뺀 사본은 디스크 ✗ 에도 스냅샷 · pull 까지 간다 — ① 이 문다', `rc=${r.rc}`);
+
+console.log('\n⑨ ★[T1077] ⑧ 경계 줄 — central /zones 의 이웃 주소 · 도쿄 → 한반도(갱신 끝 · 값 0)');
+const xl = (o, re) => (o.match(re) || [''])[0].trim();
+const ZV = /203\.0\.113\.9|198\.51\.100\.7|203\.0\.113\.50/;
+K = fresh(); r = run([], { FAKE_SC: '1', FAKE_SZ: '1', FAKE_TZ: '0' });
+ok(r.rc === 0 && xl(r.out, /^ *[✓✗] 경계 central \/zones → nippon: .*$/m) === '✓ 경계 central /zones → nippon: wsUrl 주소 = 한반도가 넘기는 주소'
+  && /^ *✓ 경계 도쿄 nippon → hanbando: env ZONE_HOST_HANBANDO 없음\(ZONE_HOSTS\) · /m.test(r.out)
+  && xl(r.out, /^ *[✓✗] 경계 central \/zones → hanbando: .*$/m) === '✓ 경계 central /zones → hanbando: wsUrl 주소 = 도쿄 nippon 가 넘기는 주소' && /✓ 끝 — /.test(r.out),
+  '★[⑧] 새 줄 셋(central → 닛폰 · 도쿄 닛폰 → 한반도 · central → 한반도) ✓ · 갱신 끝(rc 0)', xl(r.out, /^ *[✓✗] 경계 central \/zones → nippon: .*$/m));
+ok(!ZV.test(r.out), '[⑧] 화면에 주소 값 0(같음/다름만)');
+K = fresh(); r = run([], { FAKE_SC: '1', FAKE_SZ: '1', FAKE_TZ: '0', FAKE_ZHOSTS: JSON.stringify({ 'durango-central:nippon': '198.51.100.7' }) });
+ok(r.rc === 1 && xl(r.out, /^ *[✓✗] 경계 central \/zones → nippon: .*$/m) === '✗ 경계 central /zones → nippon: wsUrl 주소 ≠ 한반도가 넘기는 주소'
+  && /✗ 멈췄다 — 경계 ✗\(위 \[⑧\] 줄\)/.test(r.out) && /fix-central-hosts\.sh --dry/.test(r.out) && head() === K.B && !ZV.test(r.out),
+  '★★재민 11-02 꼴(central 이 닛폰을 서울 주소로 준다 · 존↔존은 ✓) — central 줄 ✗ · 멈춤(rc 1) · 고침 스크립트 줄 · 갱신 자체는 다 됐다 · 값 0', (r.out.match(/✗ 멈췄다.*$/m) || [''])[0].slice(0, 60));
+K = fresh(); r = run(['--dry'], { FAKE_SC: '1', FAKE_SZ: '1', FAKE_TZ: '1', FAKE_ZHOSTS: JSON.stringify({ 'durango-central:nippon': '198.51.100.7', 'durango-zone-nippon:hanbando': '203.0.113.50' }) });
+ok(r.rc === 0 && /\[예행 ⑧\]/.test(r.out) && /✗ 경계 central \/zones → nippon: wsUrl 주소 ≠ 한반도가 넘기는 주소/.test(r.out)
+  && /✗ 경계 central \/zones → hanbando: wsUrl 주소 ≠ 도쿄 nippon 가 넘기는 주소/.test(r.out) && head() === K.A && idx(/reset-world|^redeploy$/) < 0 && !ZV.test(r.out),
+  '--dry 는 앞 · 반대 central 줄 ✗ 을 찍기만(멈춤 0 · 라이브 무변 · 값 0)');
+K = fresh(); r = run(['--dry'], { FAKE_SC: '0', FAKE_SZ: '0', FAKE_TZ: '0', FAKE_ZHOSTS: JSON.stringify({ 'durango-central:hanbando': '' }) });
+ok(/✗ 경계 central \/zones → hanbando: wsUrl 주소 ≠ 도쿄 nippon 가 넘기는 주소\(central 에서 못 물었다\)/.test(r.out), 'central 에서 못 물으면 ✗ 에 "(central 에서 못 물었다)"(말없이 지나가지 않는다)');
 
 fs.rmSync(TMP, { recursive: true, force: true });
 console.log(`\n=== PASS ${pass} / FAIL ${fail} ===`);

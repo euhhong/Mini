@@ -135,5 +135,9 @@
       ctx.fillText(lines[i], x, by + padding + (i + 1) * lineH - 3);
     }
     ctx.textAlign = 'start';
+    return bubH;   // ★[T1086] 판 높이 — 여러 판을 쌓는 쪽(`bubbleStep`)이 줄바꿈된 판끼리 겹치지 않게 쓴다
   }
+  // ★[T1086] 여러 판을 쌓는 간격 — 켬(welcome `uiCfg.firstJoin` · 서버 손잡이 `T1086_FIRST_JOIN`)이면 판 높이만큼 올린다
+  //   (첫 의뢰 훅이 넷째 줄까지 말한다 · 두 줄로 접힌 판이 위 판을 덮지 않는다 · 한 줄 판은 종전 26 그대로). 끔이면 종전 26 그대로.
+  function bubbleStep(h) { return (typeof uiCfg !== 'undefined' && uiCfg && uiCfg.firstJoin) ? Math.max(26, (h | 0) - 1) : 26; }
 

@@ -1,0 +1,3190 @@
+{
+ "card": "T1097",
+ "made": "2026-11-03",
+ "base": "origin/land1038 0a235ffa",
+ "cmd": {
+  "now": "node scripts/lint-harness-words.js --list ref",
+  "nowOld": "node scripts/lint-harness-words.js --old be2e8c5e^1",
+  "pre": "(worktree 0a235ffa^ = 말투 착지 뒤 · PM 하네스 고침 앞) node scripts/lint-harness-words.js --old be2e8c5e^1"
+ },
+ "now": {
+  "files": 336,
+  "judged": 1306,
+  "red": 0,
+  "ref": [
+   {
+    "f": "e2e-char3d.js",
+    "line": 410,
+    "why": "ok() 조건",
+    "text": "시트:clip",
+    "missing": [
+     "시트:clip"
+    ],
+    "drift": [],
+    "ref": "100794ff7d585e2860c203545753f3313761f5a6"
+   },
+   {
+    "f": "e2e-chronicle.js",
+    "line": 418,
+    "why": "ok() 조건",
+    "text": "비옥도 0.7배로 떨어졌다",
+    "missing": [
+     "비옥도 0.7배로 떨어졌다"
+    ],
+    "drift": [],
+    "ref": "a66fbb791a18452e03b5afe033d0d99a042084b4"
+   },
+   {
+    "f": "e2e-fishing.js",
+    "line": 188,
+    "why": ".test() 수신자",
+    "text": "/낚싯대가 있어야 낚시를 할 수 있습니다/",
+    "missing": [
+     "낚싯대가 있어야 낚시를 할 수 있습니다"
+    ],
+    "drift": [],
+    "ref": "fd4d7c6115574140198f895aa801c2fc79e8dfda"
+   },
+   {
+    "f": "e2e-friends.js",
+    "line": 280,
+    "why": "ok() 조건",
+    "text": "/쪽 멀리 있습니다/",
+    "missing": [
+     "쪽 멀리 있습니다"
+    ],
+    "drift": [],
+    "ref": "96e89c4c8a1843d74ffb5de81941a26e6798ea84"
+   },
+   {
+    "f": "e2e-guild.js",
+    "line": 196,
+    "why": "ok() 조건",
+    "text": "/강가에 산다/",
+    "missing": [
+     "강가에 산다"
+    ],
+    "drift": [],
+    "ref": "eb5b6fd6a0b1f5edee2907b7a2e1cc1e4be1890f"
+   },
+   {
+    "f": "e2e-guild.js",
+    "line": 234,
+    "why": "ok() 조건",
+    "text": "/돌칼에서 당신을 부릅니다/",
+    "missing": [
+     "돌칼에서 당신을 부릅니다"
+    ],
+    "drift": [],
+    "ref": "96e89c4c8a1843d74ffb5de81941a26e6798ea84"
+   },
+   {
+    "f": "e2e-guild.js",
+    "line": 283,
+    "why": "ok() 조건",
+    "text": "/부름이 2건 더 있습니다/",
+    "missing": [
+     "부름이 2건 더 있습니다"
+    ],
+    "drift": [],
+    "ref": "96e89c4c8a1843d74ffb5de81941a26e6798ea84"
+   },
+   {
+    "f": "e2e-guild.js",
+    "line": 323,
+    "why": "ok() 조건",
+    "text": "/돌칼에서 당신을 부릅니다/",
+    "missing": [
+     "돌칼에서 당신을 부릅니다"
+    ],
+    "drift": [],
+    "ref": "96e89c4c8a1843d74ffb5de81941a26e6798ea84"
+   },
+   {
+    "f": "e2e-handoff-proto.js",
+    "line": 142,
+    "why": "ok() 조건",
+    "text": "/✗ 넘기 실패 → nippon .*까닭=규약/",
+    "missing": [
+     "까닭=규약"
+    ],
+    "drift": [],
+    "ref": "e5b23409514b352e54c9df4caa011f9736af5c0b"
+   },
+   {
+    "f": "e2e-handoff-proto.js",
+    "line": 150,
+    "why": "ok() 조건",
+    "text": "/✗ 넘기 실패 → nippon .*까닭=문/",
+    "missing": [
+     "까닭=문"
+    ],
+    "drift": [],
+    "ref": "e5b23409514b352e54c9df4caa011f9736af5c0b"
+   },
+   {
+    "f": "e2e-handoff-proto.js",
+    "line": 150,
+    "why": "ok() 조건",
+    "text": "/✗ handoff_prepare 안 문 거절 — 비밀 헤더 다름/",
+    "missing": [
+     "안 문 거절 — 비밀 헤더 다름"
+    ],
+    "drift": [],
+    "ref": "e5b23409514b352e54c9df4caa011f9736af5c0b"
+   },
+   {
+    "f": "e2e-metallurgy.js",
+    "line": 186,
+    "why": ".test() 수신자",
+    "text": "/노\\(爐\\)|노 터 잡기/",
+    "missing": [
+     "노 터 잡기"
+    ],
+    "drift": [],
+    "ref": "f7cb5181dcd92251e83f077b9786703abadbb4de"
+   },
+   {
+    "f": "e2e-salt.js",
+    "line": 242,
+    "why": ".test() 수신자",
+    "text": "/보관 ∞/",
+    "missing": [
+     "보관 ∞"
+    ],
+    "drift": [],
+    "ref": "36ed86a904972e3d4efeb8eade45b73406aa99e6"
+   },
+   {
+    "f": "e2e-ui.js",
+    "line": 469,
+    "why": "ok() 조건",
+    "text": "/후유증 2일/",
+    "missing": [
+     "후유증 2일"
+    ],
+    "drift": [],
+    "ref": "805c3366002b315f2d3c147d4cd8dcfdbc59fade"
+   },
+   {
+    "f": "e2e-ui.js",
+    "line": 470,
+    "why": "ok() 조건",
+    "text": "/힘 70%/",
+    "missing": [
+     "힘 70%"
+    ],
+    "drift": [],
+    "ref": "805c3366002b315f2d3c147d4cd8dcfdbc59fade"
+   },
+   {
+    "f": "e2e-ui.js",
+    "line": 639,
+    "why": "ok() 조건",
+    "text": "/재료가 모자란다 ×3/",
+    "missing": [
+     "재료가 모자란다 ×3"
+    ],
+    "drift": [],
+    "ref": "8d23baf53d3e5bb88ac112a2576f541a96f9ab96"
+   },
+   {
+    "f": "e2e-ui.js",
+    "line": 669,
+    "why": "ok() 조건",
+    "text": "한 줄뿐",
+    "missing": [
+     "한 줄뿐"
+    ],
+    "drift": [],
+    "ref": "8d23baf53d3e5bb88ac112a2576f541a96f9ab96"
+   },
+   {
+    "f": "e2e-verbs.js",
+    "line": 984,
+    "why": "ok() 조건",
+    "text": "const W = { tree: '벌목' };",
+    "missing": [
+     "벌목' };"
+    ],
+    "drift": [],
+    "ref": "7269c087c52fb0a290aac99cee5cd3f77bd5a76c"
+   },
+   {
+    "f": "e2e-village.js",
+    "line": 445,
+    "why": "ok() 조건",
+    "text": "인구\\s*${}",
+    "missing": [
+     "인구\\s*"
+    ],
+    "drift": [],
+    "ref": "90d880e51c748de5b8d8fb59862cc2d1f7d67a52"
+   },
+   {
+    "f": "e2e-winter.js",
+    "line": 301,
+    "why": "ok() 조건",
+    "text": "/올겨울 몫/",
+    "missing": [
+     "올겨울 몫"
+    ],
+    "drift": [],
+    "ref": "96e89c4c8a1843d74ffb5de81941a26e6798ea84"
+   },
+   {
+    "f": "test-assault-miss.js",
+    "line": 114,
+    "why": "ok() 조건",
+    "text": "/철수\\(승산 \\d+%·소모전 열세·D399 돌격이 닿지 못했다\\)/",
+    "missing": [
+     "소모전 열세·D399 돌격이 닿지 못했다"
+    ],
+    "drift": [],
+    "ref": "6b840696d3a5c1b94cef0de787f4ddb689f4c732"
+   },
+   {
+    "f": "test-assault-miss.js",
+    "line": 123,
+    "why": "ok() 조건",
+    "text": "/철수\\(군량 0\\.0일·D399 돌격이 닿지 못했다\\)/",
+    "missing": [
+     "군량 0",
+     "일·D399 돌격이 닿지 못했다"
+    ],
+    "drift": [],
+    "ref": "6b840696d3a5c1b94cef0de787f4ddb689f4c732"
+   },
+   {
+    "f": "test-assault-miss.js",
+    "line": 126,
+    "why": "ok() 조건",
+    "text": "/돌격 결단\\(군량 0\\.0일 — 도박 승산/",
+    "missing": [
+     "군량 0"
+    ],
+    "drift": [],
+    "ref": "6b840696d3a5c1b94cef0de787f4ddb689f4c732"
+   },
+   {
+    "f": "test-assay.js",
+    "line": 159,
+    "why": ".test() 수신자",
+    "text": "/^구리다$|^쓰다$|^질기다$/",
+    "missing": [
+     "구리다",
+     "쓰다",
+     "질기다"
+    ],
+    "drift": [],
+    "ref": "5cc6fffcbf031d7e079bd927974a2737951dc4d1"
+   },
+   {
+    "f": "test-assets-audit.js",
+    "line": 662,
+    "why": "ok() 조건",
+    "text": "보고/T422_2026-09-26.md",
+    "missing": [
+     "보고/T422_2026-09-26.md"
+    ],
+    "drift": [],
+    "ref": "944d802817d44399069615792f840011064b444f"
+   },
+   {
+    "f": "test-assets-audit.js",
+    "line": 993,
+    "why": "=== 비교",
+    "text": "자료 읽기(폴더·끝)",
+    "missing": [
+     "자료 읽기(폴더·끝)"
+    ],
+    "drift": [],
+    "ref": "0fdaab788d87b138685e9b1be950dd6743ae7d43"
+   },
+   {
+    "f": "test-audio.js",
+    "line": 688,
+    "why": ".indexOf()",
+    "text": "단위 하네스",
+    "missing": [
+     "단위 하네스"
+    ],
+    "drift": [],
+    "ref": "425401bf9bcfcfb52a9e213543879a22a11d7b46"
+   },
+   {
+    "f": "test-backup-live.js",
+    "line": 106,
+    "why": "ok() 조건",
+    "text": "/✓ hanbando → .* 검사 ok · 표 3 · 행 550 /",
+    "missing": [
+     "검사 ok · 표 3 · 행 550"
+    ],
+    "drift": [],
+    "ref": "4b03e3f29030cbdfc379b862916cf5ff66a17045"
+   },
+   {
+    "f": "test-backup-live.js",
+    "line": 106,
+    "why": "ok() 조건",
+    "text": "/✓ central → .* 표 2 · 행 15 /",
+    "missing": [
+     "표 2 · 행 15"
+    ],
+    "drift": [],
+    "ref": "4b03e3f29030cbdfc379b862916cf5ff66a17045"
+   },
+   {
+    "f": "test-backup-live.js",
+    "line": 112,
+    "why": "ok() 조건",
+    "text": "/보관 2 벌 넘음 — 지움/",
+    "missing": [
+     "보관 2 벌 넘음 — 지움"
+    ],
+    "drift": [],
+    "ref": "4b03e3f29030cbdfc379b862916cf5ff66a17045"
+   },
+   {
+    "f": "test-backup-live.js",
+    "line": 146,
+    "why": "ok() 조건",
+    "text": "5 4 * * * /usr/bin/true # 남의 줄",
+    "missing": [
+     "남의 줄"
+    ],
+    "drift": [],
+    "ref": "4b03e3f29030cbdfc379b862916cf5ff66a17045"
+   },
+   {
+    "f": "test-backup-live.js",
+    "line": 151,
+    "why": "ok() 조건",
+    "text": "5 4 * * * /usr/bin/true # 남의 줄",
+    "missing": [
+     "남의 줄"
+    ],
+    "drift": [],
+    "ref": "4b03e3f29030cbdfc379b862916cf5ff66a17045"
+   },
+   {
+    "f": "test-backup-live.js",
+    "line": 151,
+    "why": "ok() 조건",
+    "text": "/남은 durango-backup-live 줄 0개/",
+    "missing": [
+     "남은 durango-backup-live 줄 0개"
+    ],
+    "drift": [],
+    "ref": "4b03e3f29030cbdfc379b862916cf5ff66a17045"
+   },
+   {
+    "f": "test-battle-fast.js",
+    "line": 78,
+    "why": "ok() 조건",
+    "text": "미끼.js",
+    "missing": [
+     "미끼.js"
+    ],
+    "drift": [],
+    "ref": "50a38ee041a6fa640a1b80830cf2852ca8dd4b38"
+   },
+   {
+    "f": "test-body-chunks.js",
+    "line": 45,
+    "why": "ok() 조건",
+    "text": "// transition: 새로 활성된 청크",
+    "missing": [
+     "새로 활성된 청크"
+    ],
+    "drift": [],
+    "ref": "82784e6c9e820349b771770f97be389f70038fce"
+   },
+   {
+    "f": "test-calendar.js",
+    "line": 181,
+    "why": "ok() 조건",
+    "text": "1년 3월 1일 (봄)",
+    "missing": [
+     "년 3월 1일 (봄)"
+    ],
+    "drift": [],
+    "ref": "48d056edc1cbcd246e0118b4cde0f529924cd5e5"
+   },
+   {
+    "f": "test-calendar.js",
+    "line": 194,
+    "why": "ok() 조건",
+    "text": "0년 봄 1일",
+    "missing": [
+     "년 봄 1일"
+    ],
+    "drift": [],
+    "ref": "48d056edc1cbcd246e0118b4cde0f529924cd5e5"
+   },
+   {
+    "f": "test-calendar.js",
+    "line": 226,
+    "why": "ok() 조건",
+    "text": "1년 봄 36일",
+    "missing": [
+     "년 봄 36일"
+    ],
+    "drift": [],
+    "ref": "48d056edc1cbcd246e0118b4cde0f529924cd5e5"
+   },
+   {
+    "f": "test-cell-memo.js",
+    "line": 69,
+    "why": "ok() 조건",
+    "text": "    return _villageCropFor(vil, nong ? '논' : '밭', _Crops().monthOf(day), par) ? 2 : 0;\n  }\n  return cropTaskOf(e, nong, day);",
+    "missing": [
+     "논' : '밭', _Crops().monthOf(day), par) ? 2 : 0;\n  }\n  return cropTaskOf(e, nong, day);"
+    ],
+    "drift": [],
+    "ref": "920658bbc5d4a056922cdda6cab50b96dd69985e"
+   },
+   {
+    "f": "test-claim-v2.js",
+    "line": 357,
+    "why": "ok() 조건",
+    "text": "/일부러 안 넘긴다|gameDay` 를 아예 받지 않는다/",
+    "missing": [
+     "일부러 안 넘긴다",
+     "를 아예 받지 않는다"
+    ],
+    "drift": [],
+    "ref": "ebf265ef6c770ff4ff4184b4ff3349b1da443069"
+   },
+   {
+    "f": "test-coast-shape.js",
+    "line": 111,
+    "why": ".indexOf()",
+    "text": "// zonesMeta 받으면 모든 zone water tiles 미리 계산",
+    "missing": [
+     "받으면 모든 zone water tiles 미리 계산"
+    ],
+    "drift": [],
+    "ref": "b95122d4ea5831148f527cb5ccb017cdbd70302f"
+   },
+   {
+    "f": "test-coast-shape.js",
+    "line": 221,
+    "why": ".indexOf()",
+    "text": "// zonesMeta 받으면 모든 zone water tiles 미리 계산",
+    "missing": [
+     "받으면 모든 zone water tiles 미리 계산"
+    ],
+    "drift": [],
+    "ref": "09dbdd031a91d7a26413cec8e03f833bffee330e"
+   },
+   {
+    "f": "test-coast-shape.js",
+    "line": 303,
+    "why": ".indexOf()",
+    "text": "// zonesMeta 받으면 모든 zone water tiles 미리 계산",
+    "missing": [
+     "받으면 모든 zone water tiles 미리 계산"
+    ],
+    "drift": [],
+    "ref": "09dbdd031a91d7a26413cec8e03f833bffee330e"
+   },
+   {
+    "f": "test-disk-check.js",
+    "line": 100,
+    "why": "ok() 조건",
+    "text": "/_reset 백업 1벌/",
+    "missing": [
+     "백업 1벌"
+    ],
+    "drift": [],
+    "ref": "b88549c2a316f2d8b38514a40ab528824dbef619"
+   },
+   {
+    "f": "test-disk-check.js",
+    "line": 100,
+    "why": "ok() 조건",
+    "text": "/볼륨 hanbando .*\\(DB /",
+    "missing": [
+     "볼륨 hanbando"
+    ],
+    "drift": [],
+    "ref": "b88549c2a316f2d8b38514a40ab528824dbef619"
+   },
+   {
+    "f": "test-disk-check.js",
+    "line": 102,
+    "why": "ok() 조건",
+    "text": "/_daily 매일 스냅샷 1벌/",
+    "missing": [
+     "매일 스냅샷 1벌"
+    ],
+    "drift": [],
+    "ref": "4b03e3f29030cbdfc379b862916cf5ff66a17045"
+   },
+   {
+    "f": "test-disk-check.js",
+    "line": 102,
+    "why": "ok() 조건",
+    "text": "/볼륨 _daily/",
+    "missing": [
+     "볼륨 _daily"
+    ],
+    "drift": [],
+    "ref": "4b03e3f29030cbdfc379b862916cf5ff66a17045"
+   },
+   {
+    "f": "test-disk-check.js",
+    "line": 108,
+    "why": "ok() 조건",
+    "text": "/판정: 빈 자리 .* ≥ 백업 한 벌/",
+    "missing": [
+     "판정: 빈 자리"
+    ],
+    "drift": [],
+    "ref": "b88549c2a316f2d8b38514a40ab528824dbef619"
+   },
+   {
+    "f": "test-disk-check.js",
+    "line": 108,
+    "why": "ok() 조건",
+    "text": "/판정: 두 호스트 모두/",
+    "missing": [
+     "판정: 두 호스트 모두"
+    ],
+    "drift": [],
+    "ref": "b88549c2a316f2d8b38514a40ab528824dbef619"
+   },
+   {
+    "f": "test-disk-check.js",
+    "line": 110,
+    "why": "ok() 조건",
+    "text": "/판정: 빈 자리 60\\.0 MB < 백업 한 벌/",
+    "missing": [
+     "판정: 빈 자리 60"
+    ],
+    "drift": [],
+    "ref": "b88549c2a316f2d8b38514a40ab528824dbef619"
+   },
+   {
+    "f": "test-disk-check.js",
+    "line": 132,
+    "why": "ok() 조건",
+    "text": "/판정: 도쿄 못 읽음/",
+    "missing": [
+     "판정: 도쿄 못 읽음"
+    ],
+    "drift": [],
+    "ref": "b88549c2a316f2d8b38514a40ab528824dbef619"
+   },
+   {
+    "f": "test-ditch.js",
+    "line": 121,
+    "why": ".indexOf()",
+    "text": "// 강가(land 인접 water) 셀",
+    "missing": [
+     "강가(land 인접 water) 셀"
+    ],
+    "drift": [],
+    "ref": "2ef4c5148565bfd283f94d0b1418e86b61f80b38"
+   },
+   {
+    "f": "test-drop-kg.js",
+    "line": 249,
+    "why": "ok() 조건",
+    "text": "/먹을 수 없는 아이템: meat_game/",
+    "missing": [
+     "먹을 수 없는 아이템: meat_game"
+    ],
+    "drift": [],
+    "ref": "9e31524227b1054fe3d0ba607eb3e453b9e0d204"
+   },
+   {
+    "f": "test-farm-metrics.js",
+    "line": 115,
+    "why": "ok() 조건",
+    "text": "/_lifeFrontier|LIFE_CLEAR_PDAY\\s*=|프론티어[^\\n]*정렬/",
+    "missing": [
+     "프론티어"
+    ],
+    "drift": [],
+    "ref": "16cd54bef971fcc0d3f951609b73e5b21b9f4f52"
+   },
+   {
+    "f": "test-food-sick.js",
+    "line": 189,
+    "why": "ok() 조건",
+    "text": "/\\*\\*30분~8시간\\*\\*/",
+    "missing": [
+     "분~8시간"
+    ],
+    "drift": [],
+    "ref": "93103e8c0a585d4217be5008623a8dc5f687cd6c"
+   },
+   {
+    "f": "test-food-sick.js",
+    "line": 189,
+    "why": "ok() 조건",
+    "text": "/\\*\\*24시간 이하\\*\\*/",
+    "missing": [
+     "시간 이하"
+    ],
+    "drift": [],
+    "ref": "93103e8c0a585d4217be5008623a8dc5f687cd6c"
+   },
+   {
+    "f": "test-forage-act.js",
+    "line": 599,
+    "why": "ok() 조건",
+    "text": "/반음지/",
+    "missing": [
+     "반음지"
+    ],
+    "drift": [],
+    "ref": "cba8ac3d6767e1927bd70ba72eb4570a106a1541"
+   },
+   {
+    "f": "test-forage-act.js",
+    "line": 599,
+    "why": "ok() 조건",
+    "text": "/산림 유형 혼합/",
+    "missing": [
+     "산림 유형 혼합"
+    ],
+    "drift": [],
+    "ref": "cba8ac3d6767e1927bd70ba72eb4570a106a1541"
+   },
+   {
+    "f": "test-game-meat.js",
+    "line": 259,
+    "why": "ok() 조건",
+    "text": "/곰 도살 \\+meat_bear 36/",
+    "missing": [
+     "곰 도살"
+    ],
+    "drift": [],
+    "ref": "af57112a979021a902bdfe5b7cc9c8fe4455c9a8"
+   },
+   {
+    "f": "test-game-meat.js",
+    "line": 259,
+    "why": ".test() 수신자",
+    "text": "/곰 도살/",
+    "missing": [
+     "곰 도살"
+    ],
+    "drift": [],
+    "ref": "af57112a979021a902bdfe5b7cc9c8fe4455c9a8"
+   },
+   {
+    "f": "test-game-meat.js",
+    "line": 291,
+    "why": "ok() 조건",
+    "text": "/meat_raw:\\s*\\{ thirst: 0, hpDelta: -3 \\}, \\/\\/ 날고기는 약간 해로움/",
+    "missing": [
+     "날고기는 약간 해로움"
+    ],
+    "drift": [],
+    "ref": "af57112a979021a902bdfe5b7cc9c8fe4455c9a8"
+   },
+   {
+    "f": "test-guest-identity.js",
+    "line": 149,
+    "why": "ok() 조건",
+    "text": "/게스트 신원 발급: anon_/",
+    "missing": [
+     "게스트 신원 발급: anon_"
+    ],
+    "drift": [],
+    "ref": "3a12e2d3c4a6114e65f1613cdc719ec87d8cdd68"
+   },
+   {
+    "f": "test-guest-identity.js",
+    "line": 274,
+    "why": "ok() 조건",
+    "text": "/게스트 승계: anon_/",
+    "missing": [
+     "게스트 승계: anon_"
+    ],
+    "drift": [],
+    "ref": "c4de24696cd64ee210656e2197f4553443f254a7"
+   },
+   {
+    "f": "test-guest-identity.js",
+    "line": 700,
+    "why": "ok() 조건",
+    "text": "존이 쓴 소개문",
+    "missing": [
+     "존이 쓴"
+    ],
+    "drift": [],
+    "ref": "635230504a3e122683dffc98693b3459664fe6a7"
+   },
+   {
+    "f": "test-harness-lint.js",
+    "line": 200,
+    "why": "ok() 조건",
+    "text": "// PNG.sync.read 는 주석일 뿐이다\nconst a = 1;",
+    "missing": [
+     "는 주석일 뿐이다\nconst a = 1;"
+    ],
+    "drift": [],
+    "ref": "b27e1ab25269cca2963ff0b0b0e131573541431e"
+   },
+   {
+    "f": "test-harness-lint.js",
+    "line": 232,
+    "why": "ok() 조건",
+    "text": "console.log('  ✗ 씨앗 DB 없음 — `node scripts/test-tick-slicer.js` 를 먼저 한 번 돌려라');",
+    "missing": [
+     "씨앗 DB 없음 — `node scripts/test-tick-slicer.js` 를 먼저 한 번 돌려라');"
+    ],
+    "drift": [],
+    "ref": "36ed86a904972e3d4efeb8eade45b73406aa99e6"
+   },
+   {
+    "f": "test-harness-lint.js",
+    "line": 234,
+    "why": "ok() 조건",
+    "text": "console.log('  ✓ 씨앗을 스스로 만들었다');",
+    "missing": [
+     "씨앗을 스스로 만들었다');"
+    ],
+    "drift": [],
+    "ref": "36ed86a904972e3d4efeb8eade45b73406aa99e6"
+   },
+   {
+    "f": "test-icons.js",
+    "line": 362,
+    "why": "ok() 조건",
+    "text": "# 옛 값 0.885, 0.875, 0.835 은 이제 render_common 에 있다",
+    "missing": [
+     "옛 값 0.885, 0.875, 0.835 은 이제 render_common 에 있다"
+    ],
+    "drift": [],
+    "ref": "0175f2b52730d3400954d2c747cd4ccdfbacbca1"
+   },
+   {
+    "f": "test-icons.js",
+    "line": 363,
+    "why": "ok() 조건",
+    "text": "# 옛 값 0.885, 0.875, 0.835 …",
+    "missing": [
+     "옛 값 0.885, 0.875, 0.835 …"
+    ],
+    "drift": [],
+    "ref": "0175f2b52730d3400954d2c747cd4ccdfbacbca1"
+   },
+   {
+    "f": "test-indoor-on.js",
+    "line": 59,
+    "why": "ok() 조건",
+    "text": "켬 켬 켬 켬 끔",
+    "missing": [
+     "켬 켬 켬 켬 끔"
+    ],
+    "drift": [],
+    "ref": "c203a7a9bec92a37bd7917299eaec7b718e70d58"
+   },
+   {
+    "f": "test-indoor-on.js",
+    "line": 61,
+    "why": "ok() 조건",
+    "text": "켬 켬 켬 켬 끔",
+    "missing": [
+     "켬 켬 켬 켬 끔"
+    ],
+    "drift": [],
+    "ref": "c203a7a9bec92a37bd7917299eaec7b718e70d58"
+   },
+   {
+    "f": "test-indoor-on.js",
+    "line": 93,
+    "why": ".indexOf()",
+    "text": "    // ★지붕 아래선 안 그린다",
+    "missing": [
+     "지붕 아래선 안 그린다"
+    ],
+    "drift": [],
+    "ref": "c203a7a9bec92a37bd7917299eaec7b718e70d58"
+   },
+   {
+    "f": "test-itemlabel.js",
+    "line": 367,
+    "why": "ok() 조건",
+    "text": "\nconst X = { ko: '밤나무' };\n",
+    "missing": [
+     "밤나무' };"
+    ],
+    "drift": [],
+    "ref": "96a6a30fa2e6c0ea9f9fee2af88dceb943d5f428"
+   },
+   {
+    "f": "test-itemlabel.js",
+    "line": 384,
+    "why": "ok() 조건",
+    "text": "🌰 밤나무에서 밤 4",
+    "missing": [
+     "밤나무에서 밤 4"
+    ],
+    "drift": [],
+    "ref": "96a6a30fa2e6c0ea9f9fee2af88dceb943d5f428"
+   },
+   {
+    "f": "test-itemlabel.js",
+    "line": 386,
+    "why": "ok() 조건",
+    "text": "🌰 산뽕나무에서 오디 4",
+    "missing": [
+     "산뽕나무에서 오디 4"
+    ],
+    "drift": [],
+    "ref": "96a6a30fa2e6c0ea9f9fee2af88dceb943d5f428"
+   },
+   {
+    "f": "test-lab-hunt.js",
+    "line": 276,
+    "why": "ok() 조건",
+    "text": "/counts: Object\\.fromEntries\\(JOB_NAMES\\.map\\(j => \\[j, 0\\]\\)\\),\\s*\\/\\/ 직업별 인구 \\(incremental\\)/",
+    "missing": [
+     "직업별 인구"
+    ],
+    "drift": [],
+    "ref": "31cda54d30ed069af09337b7cc0175b439a34091"
+   },
+   {
+    "f": "test-lint-harness-words.js",
+    "line": 51,
+    "why": "ok() 조건",
+    "text": "/^LINT-HARNESS-WORDS PASS · 빨강 0 · 한글 판정 리터럴 4 · /",
+    "missing": [
+     "빨강 0 · 한글 판정 리터럴 4 ·"
+    ],
+    "drift": [],
+    "ref": "HEAD"
+   },
+   {
+    "f": "test-lint-harness-words.js",
+    "line": 55,
+    "why": "ok() 조건",
+    "text": "/test-x\\.js:7 .*먹였다.*그때 있음 먹였다/",
+    "missing": [
+     "그때 있음 먹였다"
+    ],
+    "drift": [],
+    "ref": "HEAD"
+   },
+   {
+    "f": "test-lint-harness-words.js",
+    "line": 55,
+    "why": "ok() 조건",
+    "text": "/^LINT-HARNESS-WORDS FAIL · 빨강 1 · test-x\\.js:7 먹였다/",
+    "missing": [
+     "빨강 1 · test-x"
+    ],
+    "drift": [],
+    "ref": "HEAD"
+   },
+   {
+    "f": "test-lint-harness-words.js",
+    "line": 59,
+    "why": "ok() 조건",
+    "text": "/test-x\\.js:8 .*너무 멀.*줄어듦 너무 멀 2→1/",
+    "missing": [
+     "줄어듦 너무 멀 2→1"
+    ],
+    "drift": [],
+    "ref": "HEAD"
+   },
+   {
+    "f": "test-map-editor.js",
+    "line": 133,
+    "why": "ok() 조건",
+    "text": "이어 긋는 중(끝)",
+    "missing": [
+     "이어 긋는 중(끝)"
+    ],
+    "drift": [],
+    "ref": "27632db9abe144b160673e3deacf31b833550dd8"
+   },
+   {
+    "f": "test-map-editor.js",
+    "line": 140,
+    "why": "ok() 조건",
+    "text": "이어 긋는 중(시작)",
+    "missing": [
+     "이어 긋는 중(시작)"
+    ],
+    "drift": [],
+    "ref": "27632db9abe144b160673e3deacf31b833550dd8"
+   },
+   {
+    "f": "test-membership.js",
+    "line": 415,
+    "why": "ok() 조건",
+    "text": "없는것",
+    "missing": [
+     "없는것"
+    ],
+    "drift": [],
+    "ref": "4eadeb916e904d40b933b414cb0b02047647c0e7"
+   },
+   {
+    "f": "test-mining.js",
+    "line": 655,
+    "why": "ok() 조건",
+    "text": "/철광석/",
+    "missing": [
+     "철광석"
+    ],
+    "drift": [],
+    "ref": "5cc6fffcbf031d7e079bd927974a2737951dc4d1"
+   },
+   {
+    "f": "test-move-soa.js",
+    "line": 2164,
+    "why": ".match()",
+    "text": "/시속 (\\d+(?:\\.\\d+)?)~(\\d+(?:\\.\\d+)?)km\\(짐 41kg/",
+    "missing": [
+     "짐 41kg"
+    ],
+    "drift": [],
+    "ref": "f52e9dc4065b05e90785c05a3a9e2035768bdd51"
+   },
+   {
+    "f": "test-newcomers.js",
+    "line": 118,
+    "why": ".indexOf()",
+    "text": "// 교역 거리 행렬(BFS·지형)",
+    "missing": [
+     "교역 거리 행렬(BFS·지형)"
+    ],
+    "drift": [],
+    "ref": "12c66c1f12c7ba3dc4635ba4dfee283184279161"
+   },
+   {
+    "f": "test-nightly.js",
+    "line": 89,
+    "why": "ok() 조건",
+    "text": "/상시 밖 빨강 1건\\*\\*/",
+    "missing": [
+     "상시 밖 빨강 1건"
+    ],
+    "drift": [],
+    "ref": "7f262ee5b41718c8887c6991b210e7ab2d13bdf6"
+   },
+   {
+    "f": "test-nightly.js",
+    "line": 95,
+    "why": "ok() 조건",
+    "text": "/## 3\\. 미측정 1종[\\s\\S]*e2e-neverran/",
+    "missing": [
+     "미측정 1종"
+    ],
+    "drift": [],
+    "ref": "7f262ee5b41718c8887c6991b210e7ab2d13bdf6"
+   },
+   {
+    "f": "test-nightly.js",
+    "line": 97,
+    "why": "ok() 조건",
+    "text": "/시작 \\*\\*04:00\\*\\* → 종료 \\*\\*05:30\\*\\* \\(1시간 30분\\)/",
+    "missing": [
+     "시간 30분"
+    ],
+    "drift": [],
+    "ref": "7f262ee5b41718c8887c6991b210e7ab2d13bdf6"
+   },
+   {
+    "f": "test-nightly.js",
+    "line": 98,
+    "why": "ok() 조건",
+    "text": "/기준 커밋 `deadbeef`/",
+    "missing": [
+     "기준 커밋 `deadbeef`"
+    ],
+    "drift": [],
+    "ref": "7f262ee5b41718c8887c6991b210e7ab2d13bdf6"
+   },
+   {
+    "f": "test-nightly.js",
+    "line": 105,
+    "why": "ok() 조건",
+    "text": "/상시 밖 빨강 2건\\*\\*/",
+    "missing": [
+     "상시 밖 빨강 2건"
+    ],
+    "drift": [],
+    "ref": "7f262ee5b41718c8887c6991b210e7ab2d13bdf6"
+   },
+   {
+    "f": "test-nightly.js",
+    "line": 138,
+    "why": "ok() 조건",
+    "text": "/상시 밖 빨강 1건\\*\\*/",
+    "missing": [
+     "상시 밖 빨강 1건"
+    ],
+    "drift": [],
+    "ref": "7f262ee5b41718c8887c6991b210e7ab2d13bdf6"
+   },
+   {
+    "f": "test-nightly.js",
+    "line": 254,
+    "why": "ok() 조건",
+    "text": "/· 상자 의존 `python 3\\.13\\.0 · numpy 2\\.5\\.3 · PIL 12\\.3\\.0 · zlib 1\\.3`/",
+    "missing": [
+     "상자 의존 `python 3"
+    ],
+    "drift": [],
+    "ref": "5a85903425784d0154078c16d8bdcf291ffa576b"
+   },
+   {
+    "f": "test-nightly.js",
+    "line": 267,
+    "why": "ok() 조건",
+    "text": "/· 층 데이터 인코더 차이\\(화소 같음 · 통과 · T1051\\) — .*PNG 6 자리 바이트만 다르다 · PIL 12\\.3\\.0 · zlib 1\\.3/",
+    "missing": [
+     "자리 바이트만 다르다 · PIL 12"
+    ],
+    "drift": [],
+    "ref": "deab8b881a7db32958bc5a96149fd316d8ec1416"
+   },
+   {
+    "f": "test-nightly.js",
+    "line": 277,
+    "why": "ok() 조건",
+    "text": "/\\[의존\\] \\[상황\\] python3 · numpy · PIL 중 없는 것이 있다 — ModuleNotFoundError/",
+    "missing": [
+     "중 없는 것이 있다 — ModuleNotFoundError"
+    ],
+    "drift": [],
+    "ref": "5a85903425784d0154078c16d8bdcf291ffa576b"
+   },
+   {
+    "f": "test-nightly.js",
+    "line": 307,
+    "why": "ok() 조건",
+    "text": "/손 보고 2026-09-10 건너뜀/",
+    "missing": [
+     "손 보고 2026-09-10 건너뜀"
+    ],
+    "drift": [],
+    "ref": "721b5601ed35968d6fcef88fc3d39d7e6e01839a"
+   },
+   {
+    "f": "test-nightly.js",
+    "line": 311,
+    "why": "ok() 조건",
+    "text": "/· 상시 점검\\(§1b · T1038\\) — 뺄 차례 \\*\\*0\\*\\* · 상시 올릴지 \\*\\*1\\*\\* · 상시 줄 2/",
+    "missing": [
+     "상시 줄 2"
+    ],
+    "drift": [],
+    "ref": "721b5601ed35968d6fcef88fc3d39d7e6e01839a"
+   },
+   {
+    "f": "test-nightly.js",
+    "line": 315,
+    "why": "ok() 조건",
+    "text": "/\\| `A` \\| 상시\\(기계 의존\\) \\| 초록 \\*\\*10밤\\*\\*.*\\*\\*뺄 차례\\*\\*\\(T1038 규칙 · 10밤/",
+    "missing": [
+     "규칙 · 10밤"
+    ],
+    "drift": [],
+    "ref": "721b5601ed35968d6fcef88fc3d39d7e6e01839a"
+   },
+   {
+    "f": "test-oremix.js",
+    "line": 154,
+    "why": ".indexOf()",
+    "text": "// ★중간재 상한",
+    "missing": [
+     "중간재 상한"
+    ],
+    "drift": [],
+    "ref": "b6a5401985ff56891a031704f48e2de4552292df"
+   },
+   {
+    "f": "test-oremix.js",
+    "line": 156,
+    "why": ".indexOf()",
+    "text": "P(원석) ≤ 제련수율",
+    "missing": [
+     "원석) ≤ 제련수율"
+    ],
+    "drift": [],
+    "ref": "b6a5401985ff56891a031704f48e2de4552292df"
+   },
+   {
+    "f": "test-preserve.js",
+    "line": 390,
+    "why": "ok() 조건",
+    "text": "/건조대 앞에서만/",
+    "missing": [
+     "건조대 앞에서만"
+    ],
+    "drift": [],
+    "ref": "2529c9957581df93b684b75cbcb12d601eb2e971"
+   },
+   {
+    "f": "test-redeploy.js",
+    "line": 108,
+    "why": "ok() 조건",
+    "text": "/central: 한다  ·  zone: 한다/",
+    "missing": [
+     "한다  ·  zone: 한다"
+    ],
+    "drift": [],
+    "ref": "96f1f2c3b4daab8c7068657f961fcf8c0b80a03e"
+   },
+   {
+    "f": "test-relic.js",
+    "line": 114,
+    "why": ".indexOf()",
+    "text": "// bnd 없는 구DB",
+    "missing": [
+     "없는 구DB"
+    ],
+    "drift": [],
+    "ref": "b6a5401985ff56891a031704f48e2de4552292df"
+   },
+   {
+    "f": "test-reset-world.js",
+    "line": 172,
+    "why": "ok() 조건",
+    "text": "/두 마을이 가진 영토 셀 1\\b/",
+    "missing": [
+     "두 마을이 가진 영토 셀 1"
+    ],
+    "drift": [],
+    "ref": "d2d8dbdf4b6746691bcc9222ef89349631901c12"
+   },
+   {
+    "f": "test-reset-world.js",
+    "line": 172,
+    "why": "ok() 조건",
+    "text": "/세계 날 3,341/",
+    "missing": [
+     "세계 날 3,341"
+    ],
+    "drift": [],
+    "ref": "d2d8dbdf4b6746691bcc9222ef89349631901c12"
+   },
+   {
+    "f": "test-reset-world.js",
+    "line": 276,
+    "why": "ok() 조건",
+    "text": "/사람 2\\(계정 1 · 손님 1\\)/",
+    "missing": [
+     "사람 2",
+     "계정 1 · 손님 1"
+    ],
+    "drift": [],
+    "ref": "d2d8dbdf4b6746691bcc9222ef89349631901c12"
+   },
+   {
+    "f": "test-reset-world.js",
+    "line": 276,
+    "why": "ok() 조건",
+    "text": "/길드 2/",
+    "missing": [
+     "길드 2"
+    ],
+    "drift": [],
+    "ref": "d2d8dbdf4b6746691bcc9222ef89349631901c12"
+   },
+   {
+    "f": "test-reset-world.js",
+    "line": 291,
+    "why": "ok() 조건",
+    "text": "여행자abcd",
+    "missing": [
+     "여행자abcd"
+    ],
+    "drift": [],
+    "ref": "d2d8dbdf4b6746691bcc9222ef89349631901c12"
+   },
+   {
+    "f": "test-reset-world.js",
+    "line": 310,
+    "why": "ok() 조건",
+    "text": "/옛 이미지 durango-zone:pre-reset = 이 컨테이너 것/",
+    "missing": [
+     "옛 이미지 durango-zone:pre-reset = 이 컨테이너 것"
+    ],
+    "drift": [],
+    "ref": "d2d8dbdf4b6746691bcc9222ef89349631901c12"
+   },
+   {
+    "f": "test-reset-world.js",
+    "line": 326,
+    "why": "ok() 조건",
+    "text": "/고정 전 — 빌드 \\*\\*전에\\*\\* --pin\\(태그 durango-zone:pre-reset\\)/",
+    "missing": [
+     "태그 durango-zone:pre-reset"
+    ],
+    "drift": [],
+    "ref": "d2d8dbdf4b6746691bcc9222ef89349631901c12"
+   },
+   {
+    "f": "test-reset-world.js",
+    "line": 339,
+    "why": "ok() 조건",
+    "text": "/가짜 관측자 줄/",
+    "missing": [
+     "가짜 관측자 줄"
+    ],
+    "drift": [],
+    "ref": "96f1f2c3b4daab8c7068657f961fcf8c0b80a03e"
+   },
+   {
+    "f": "test-reset-world.js",
+    "line": 371,
+    "why": "ok() 조건",
+    "text": "/이미 durango-zone:prev-hanbando 로 돈다/",
+    "missing": [
+     "이미 durango-zone:prev-hanbando 로 돈다"
+    ],
+    "drift": [],
+    "ref": "52408d5bfedaa662b3054fb7cfd4a502697f934b"
+   },
+   {
+    "f": "test-reset-world.js",
+    "line": 375,
+    "why": "ok() 조건",
+    "text": "/고정본 durango-zone:prev-hanbando 없음/",
+    "missing": [
+     "고정본 durango-zone:prev-hanbando 없음"
+    ],
+    "drift": [],
+    "ref": "52408d5bfedaa662b3054fb7cfd4a502697f934b"
+   },
+   {
+    "f": "test-resume-one.js",
+    "line": 31,
+    "why": "ok() 조건",
+    "text": "    if (T896_RESUME_ONE) { if (_t896NeedSlot(c)) { if (slotTaken) { keep.push(c); _probe.t896Held = (_probe.t896Held || 0) + 1; continue; } slotTaken = true; } }   // ★[T896] 빈 쌍은 한 틱 한 대\n    const r = _t1026Door('resume775', () => spawnCaravanBody(c, now));   // ★[T1026] 꼬리표(값 무변)\n    if (r === 'wait') { keep.push(c); continue; }   // 길이 아직 — 줄에 남긴다(다음 틱)",
+    "missing": [
+     "빈 쌍은 한 틱 한 대\n    const r = _t1026Door('resume775', () => spawnCaravanBody(c, now));   // ★[T1026] 꼬리표(값 무변)\n    if (r === 'wait') { keep.push(c); continue; }   // 길이 아직 — 줄에 남긴다(다음 틱)"
+    ],
+    "drift": [],
+    "ref": "6b55c5ba43cf5c0837cb8d313668e2f724b756d5"
+   },
+   {
+    "f": "test-route-sig.js",
+    "line": 30,
+    "why": "ok() 조건",
+    "text": "  if (T910_SIG_PURE) terr = _t910PureTerrain();   // ★[T910] 켬 = 파일 그대로\n  else try { terr = require('./hanbando-terrain.json'); } catch (e) {}",
+    "missing": [
+     "켬 = 파일 그대로\n  else try { terr = require('./hanbando-terrain.json'); } catch (e) {}"
+    ],
+    "drift": [],
+    "ref": "c62e8e27133a33d883121328e4b91dcc222a0e54"
+   },
+   {
+    "f": "test-salt.js",
+    "line": 193,
+    "why": "ok() 조건",
+    "text": "/소금가마 앞에서만/",
+    "missing": [
+     "소금가마 앞에서만"
+    ],
+    "drift": [],
+    "ref": "4c667d86a86405982575903281f8c12b84b22b9d"
+   },
+   {
+    "f": "test-salt.js",
+    "line": 213,
+    "why": "ok() 조건",
+    "text": "/소금가마 앞에서만/",
+    "missing": [
+     "소금가마 앞에서만"
+    ],
+    "drift": [],
+    "ref": "4c667d86a86405982575903281f8c12b84b22b9d"
+   },
+   {
+    "f": "test-site-memo.js",
+    "line": 233,
+    "why": "ok() 조건",
+    "text": "1마을:site",
+    "missing": [
+     "마을:site"
+    ],
+    "drift": [],
+    "ref": "1fed0362ec2886d3efbd7e237fc89299b49da1ac"
+   },
+   {
+    "f": "test-sortie-miss.js",
+    "line": 121,
+    "why": "ok() 조건",
+    "text": "/방어 태세: 응전 소집/",
+    "missing": [
+     "방어 태세: 응전 소집"
+    ],
+    "drift": [],
+    "ref": "80cf876de59c500984a3301064eeab403a00832e"
+   },
+   {
+    "f": "test-stone-real.js",
+    "line": 208,
+    "why": ".indexOf()",
+    "text": "★주거 증축: 집이 인구보다 모자라면",
+    "missing": [
+     "주거 증축: 집이 인구보다 모자라면"
+    ],
+    "drift": [],
+    "ref": "a3e771e0f78fda25704e785c0c9dd5e391942fbc"
+   },
+   {
+    "f": "test-stone-real.js",
+    "line": 210,
+    "why": "ok() 조건",
+    "text": "★주거 증축",
+    "missing": [
+     "주거 증축"
+    ],
+    "drift": [],
+    "ref": "5e8092e78902ef5b7bdc2c27239a537560ec1b86"
+   },
+   {
+    "f": "test-streams.js",
+    "line": 279,
+    "why": "ok() 조건",
+    "text": "/같음 \\d+ · 기하 바뀜 0 · 이름 바뀜 0 · 존 옮김 0 · 뺌 0 · 새로 0/",
+    "missing": [
+     "기하 바뀜 0 · 이름 바뀜 0 · 존 옮김 0 · 뺌 0 · 새로 0"
+    ],
+    "drift": [],
+    "ref": "b948ecfe9847e788cfaaaadc4a9792695b8bc19a"
+   },
+   {
+    "f": "test-streams.js",
+    "line": 279,
+    "why": "ok() 조건",
+    "text": "/바뀐 존 절: 0/",
+    "missing": [
+     "바뀐 존 절: 0"
+    ],
+    "drift": [],
+    "ref": "b948ecfe9847e788cfaaaadc4a9792695b8bc19a"
+   },
+   {
+    "f": "test-streams.js",
+    "line": 293,
+    "why": "ok() 조건",
+    "text": "/기하 바뀜 1 · 이름 바뀜 1 · 존 옮김 0 · 뺌 1 · 새로 1/",
+    "missing": [
+     "기하 바뀜 1 · 이름 바뀜 1 · 존 옮김 0 · 뺌 1 · 새로 1"
+    ],
+    "drift": [],
+    "ref": "b948ecfe9847e788cfaaaadc4a9792695b8bc19a"
+   },
+   {
+    "f": "test-t1043-gate-house.js",
+    "line": 49,
+    "why": "ok() 조건",
+    "text": "/^GATE-HOUSE PASS · 벽시계 = 가상 시계 같음 1\\/1 · /",
+    "missing": [
+     "벽시계 = 가상 시계 같음 1"
+    ],
+    "drift": [],
+    "ref": "4df90472a67da885dcda3122d5ae3c1a3f4fdb33"
+   },
+   {
+    "f": "test-t1043-gate-house.js",
+    "line": 51,
+    "why": "ok() 조건",
+    "text": "/^GATE-HOUSE FAIL · 벽시계 ≠ 가상 시계 다름 1\\/1 · /",
+    "missing": [
+     "벽시계 ≠ 가상 시계 다름 1"
+    ],
+    "drift": [],
+    "ref": "4df90472a67da885dcda3122d5ae3c1a3f4fdb33"
+   },
+   {
+    "f": "test-t1064-next-step.js",
+    "line": 93,
+    "why": "ok() 조건",
+    "text": "/광산1 마을이 화살표 쪽에 있습니다/",
+    "missing": [
+     "광산1 마을이 화살표 쪽에 있습니다"
+    ],
+    "drift": [],
+    "ref": "e313eae1a0c117dea61622ad2d652bfe298925c2"
+   },
+   {
+    "f": "test-t1064-next-step.js",
+    "line": 94,
+    "why": "ok() 조건",
+    "text": "광산1 마을 밖",
+    "missing": [
+     "광산1 마을 밖"
+    ],
+    "drift": [],
+    "ref": "e313eae1a0c117dea61622ad2d652bfe298925c2"
+   },
+   {
+    "f": "test-t1064-next-step.js",
+    "line": 96,
+    "why": "ok() 조건",
+    "text": "광산1 나루터",
+    "missing": [
+     "광산1 나루터"
+    ],
+    "drift": [],
+    "ref": "e313eae1a0c117dea61622ad2d652bfe298925c2"
+   },
+   {
+    "f": "test-t1064-next-step.js",
+    "line": 98,
+    "why": "ok() 조건",
+    "text": "광산1 어귀",
+    "missing": [
+     "광산1 어귀"
+    ],
+    "drift": [],
+    "ref": "e313eae1a0c117dea61622ad2d652bfe298925c2"
+   },
+   {
+    "f": "test-t1064-next-step.js",
+    "line": 100,
+    "why": "ok() 조건",
+    "text": "광산1 마을 안",
+    "missing": [
+     "광산1 마을 안"
+    ],
+    "drift": [],
+    "ref": "e313eae1a0c117dea61622ad2d652bfe298925c2"
+   },
+   {
+    "f": "test-t1064-next-step.js",
+    "line": 102,
+    "why": "ok() 조건",
+    "text": "나무 2개 구해 오기",
+    "missing": [
+     "나무 2개 구해 오기"
+    ],
+    "drift": [],
+    "ref": "e313eae1a0c117dea61622ad2d652bfe298925c2"
+   },
+   {
+    "f": "test-t1064-next-step.js",
+    "line": 103,
+    "why": "ok() 조건",
+    "text": "/촌장이 “해 뜨는 쪽 강가로 가 보게\\.” 하고 일렀습니다/",
+    "missing": [
+     "촌장이 “해 뜨는 쪽 강가로 가 보게"
+    ],
+    "drift": [],
+    "ref": "e313eae1a0c117dea61622ad2d652bfe298925c2"
+   },
+   {
+    "f": "test-t1064-next-step.js",
+    "line": 111,
+    "why": "ok() 조건",
+    "text": "/촌장이 “지금은 급한 일이 없네\\. 마을 쉼터에서 쉬게\\.” 하고 일렀습니다/",
+    "missing": [
+     "촌장이 “지금은 급한 일이 없네"
+    ],
+    "drift": [],
+    "ref": "e313eae1a0c117dea61622ad2d652bfe298925c2"
+   },
+   {
+    "f": "test-t1064-next-step.js",
+    "line": 117,
+    "why": "ok() 조건",
+    "text": "/의뢰를 2번 더 하면 촌장이 빈터를 내어 줍니다/",
+    "missing": [
+     "의뢰를 2번 더 하면 촌장이 빈터를 내어 줍니다"
+    ],
+    "drift": [],
+    "ref": "e313eae1a0c117dea61622ad2d652bfe298925c2"
+   },
+   {
+    "f": "test-t1064-next-step.js",
+    "line": 156,
+    "why": "ok() 조건",
+    "text": "나무 7개 구해 오기",
+    "missing": [
+     "나무 7개 구해 오기"
+    ],
+    "drift": [],
+    "ref": "e313eae1a0c117dea61622ad2d652bfe298925c2"
+   },
+   {
+    "f": "test-t1064-next-step.js",
+    "line": 156,
+    "why": "ok() 조건",
+    "text": "/의뢰를 3번 더/",
+    "missing": [
+     "의뢰를 3번 더"
+    ],
+    "drift": [],
+    "ref": "e313eae1a0c117dea61622ad2d652bfe298925c2"
+   },
+   {
+    "f": "test-t1064-next-step.js",
+    "line": 203,
+    "why": "ok() 조건",
+    "text": "나무 2개 구해 오기",
+    "missing": [
+     "나무 2개 구해 오기"
+    ],
+    "drift": [],
+    "ref": "e313eae1a0c117dea61622ad2d652bfe298925c2"
+   },
+   {
+    "f": "test-t1064-next-step.js",
+    "line": 220,
+    "why": ".indexOf()",
+    "text": "// 하네스 훅 — **읽기 전용만**",
+    "missing": [
+     "하네스 훅 — **읽기 전용만**"
+    ],
+    "drift": [],
+    "ref": "e313eae1a0c117dea61622ad2d652bfe298925c2"
+   },
+   {
+    "f": "test-t1065-tool-gate.js",
+    "line": 207,
+    "why": "ok() 조건",
+    "text": "/조잡한 돌도끼가 있어야 나무를 벨 수 있습니다\\. .*자갈 2개.*잔가지 1개.*풀 2개.*만들 수 있습니다\\./",
+    "missing": [
+     "조잡한 돌도끼가 있어야 나무를 벨 수 있습니다",
+     "자갈 2개",
+     "잔가지 1개",
+     "풀 2개"
+    ],
+    "drift": [],
+    "ref": "fd4d7c6115574140198f895aa801c2fc79e8dfda"
+   },
+   {
+    "f": "test-t1065-tool-gate.js",
+    "line": 209,
+    "why": "ok() 조건",
+    "text": "/조잡한 돌도끼를 손에 들어야 나무를 벨 수 있습니다/",
+    "missing": [
+     "조잡한 돌도끼를 손에 들어야 나무를 벨 수 있습니다"
+    ],
+    "drift": [],
+    "ref": "fd4d7c6115574140198f895aa801c2fc79e8dfda"
+   },
+   {
+    "f": "test-t1065-tool-gate.js",
+    "line": 212,
+    "why": "ok() 조건",
+    "text": "/조잡한 돌괭이가 있어야 돌을 캘 수 있습니다/",
+    "missing": [
+     "조잡한 돌괭이가 있어야 돌을 캘 수 있습니다"
+    ],
+    "drift": [],
+    "ref": "fd4d7c6115574140198f895aa801c2fc79e8dfda"
+   },
+   {
+    "f": "test-t1065-tool-gate.js",
+    "line": 221,
+    "why": "ok() 조건",
+    "text": "/조잡한 돌칼이 있어야 싸울 수 있습니다/",
+    "missing": [
+     "조잡한 돌칼이 있어야 싸울 수 있습니다"
+    ],
+    "drift": [],
+    "ref": "fd4d7c6115574140198f895aa801c2fc79e8dfda"
+   },
+   {
+    "f": "test-t1065-tool-gate.js",
+    "line": 223,
+    "why": "ok() 조건",
+    "text": "/활이 있어야 활을 쏠 수 있습니다\\. 활은 아직 만들 수 없습니다\\./",
+    "missing": [
+     "활이 있어야 활을 쏠 수 있습니다",
+     "활은 아직 만들 수 없습니다"
+    ],
+    "drift": [],
+    "ref": "fd4d7c6115574140198f895aa801c2fc79e8dfda"
+   },
+   {
+    "f": "test-t1065-tool-gate.js",
+    "line": 224,
+    "why": "ok() 조건",
+    "text": "/활이 있어야/",
+    "missing": [
+     "활이 있어야"
+    ],
+    "drift": [],
+    "ref": "fd4d7c6115574140198f895aa801c2fc79e8dfda"
+   },
+   {
+    "f": "test-t1065-tool-gate.js",
+    "line": 227,
+    "why": "ok() 조건",
+    "text": "/막대 낚싯대가 있어야 낚시를 할 수 있습니다\\. 잔가지 1개, 풀 2개로/",
+    "missing": [
+     "막대 낚싯대가 있어야 낚시를 할 수 있습니다",
+     "잔가지 1개, 풀 2개로"
+    ],
+    "drift": [],
+    "ref": "fd4d7c6115574140198f895aa801c2fc79e8dfda"
+   },
+   {
+    "f": "test-t1065-tool-gate.js",
+    "line": 239,
+    "why": "ok() 조건",
+    "text": "/활이 있어야/",
+    "missing": [
+     "활이 있어야"
+    ],
+    "drift": [],
+    "ref": "fd4d7c6115574140198f895aa801c2fc79e8dfda"
+   },
+   {
+    "f": "test-t931-slotk-ema.js",
+    "line": 161,
+    "why": "ok() 조건",
+    "text": "  v._kDbg = { slot: +slotK.toFixed(1), prod: +prodK.toFixed(1), fuel: +fuelK.toFixed(1) };   // ★K 분해 노출",
+    "missing": [
+     "분해 노출"
+    ],
+    "drift": [],
+    "ref": "9f63647262df7fae7db3c9d1dd7d146c8b81aed8"
+   },
+   {
+    "f": "test-t976-want-capped.js",
+    "line": 120,
+    "why": "=== 비교",
+    "text": "마을이 ${} 1개를 내줄 수 없습니다. 지금 내줄 수 있는 것은 ${}개까지입니다.",
+    "missing": [
+     "개를 내줄 수 없습니다. 지금 내줄 수 있는 것은"
+    ],
+    "drift": [],
+    "ref": "96e89c4c8a1843d74ffb5de81941a26e6798ea84"
+   },
+   {
+    "f": "test-terrain-memo.js",
+    "line": 147,
+    "why": "ok() 조건",
+    "text": "두 번 굽는다",
+    "missing": [
+     "두 번 굽는다"
+    ],
+    "drift": [],
+    "ref": "8c266bc4eb84dbf19eaceafc60f5ba701a62d36c"
+   },
+   {
+    "f": "test-trade.js",
+    "line": 100,
+    "why": "ok() 조건",
+    "text": "/가격 갱신|updatePrice|recomputePrice/",
+    "missing": [
+     "가격 갱신"
+    ],
+    "drift": [],
+    "ref": "2fad5614247188693a460686c8c10f23e8af2786"
+   },
+   {
+    "f": "test-trade.js",
+    "line": 196,
+    "why": "ok() 조건",
+    "text": "/updatePrice|가격 갱신/",
+    "missing": [
+     "가격 갱신"
+    ],
+    "drift": [],
+    "ref": "2fad5614247188693a460686c8c10f23e8af2786"
+   },
+   {
+    "f": "test-update-snap.js",
+    "line": 112,
+    "why": "ok() 조건",
+    "text": "/\\[⓪ 디스크\\] ✗ — seoul 빈 자리 60\\.0 MB < 백업 한 벌/",
+    "missing": [
+     "빈 자리 60"
+    ],
+    "drift": [],
+    "ref": "41b35490dd5617b2037c49c2e2b1017afea3b810"
+   },
+   {
+    "f": "test-update-snap.js",
+    "line": 112,
+    "why": "ok() 조건",
+    "text": "/멈췄다 — 디스크 ✗\\(위 \\[⓪ 디스크\\] 줄\\)/",
+    "missing": [
+     "멈췄다 — 디스크 ✗"
+    ],
+    "drift": [],
+    "ref": "41b35490dd5617b2037c49c2e2b1017afea3b810"
+   },
+   {
+    "f": "test-update-snap.js",
+    "line": 112,
+    "why": "ok() 조건",
+    "text": "/바뀐 것: 없음\\(라이브 무변\\)/",
+    "missing": [
+     "바뀐 것: 없음"
+    ],
+    "drift": [],
+    "ref": "41b35490dd5617b2037c49c2e2b1017afea3b810"
+   },
+   {
+    "f": "test-update-snap.js",
+    "line": 123,
+    "why": "ok() 조건",
+    "text": "/바뀐 것: 서울 스냅샷 2벌 → 서울 코드 /",
+    "missing": [
+     "바뀐 것: 서울 스냅샷 2벌 → 서울 코드"
+    ],
+    "drift": [],
+    "ref": "41b35490dd5617b2037c49c2e2b1017afea3b810"
+   },
+   {
+    "f": "test-update-snap.js",
+    "line": 137,
+    "why": "ok() 조건",
+    "text": "/멈췄다 — 도쿄 갱신 앞 스냅샷\\(backup-live rc 1\\)/",
+    "missing": [
+     "멈췄다 — 도쿄 갱신 앞 스냅샷"
+    ],
+    "drift": [],
+    "ref": "41b35490dd5617b2037c49c2e2b1017afea3b810"
+   },
+   {
+    "f": "test-update-snap.js",
+    "line": 142,
+    "why": "ok() 조건",
+    "text": "^\\[⓪ 스냅샷\\] 갱신 ${}\\(서울 스탬프\\) · ${}\\(도쿄 스탬프\\) → ${} — 뜰 자리:",
+    "missing": [
+     "스냅샷\\] 갱신",
+     "서울 스탬프\\) ·",
+     "도쿄 스탬프\\) →"
+    ],
+    "drift": [],
+    "ref": "41b35490dd5617b2037c49c2e2b1017afea3b810"
+   },
+   {
+    "f": "test-update-snap.js",
+    "line": 150,
+    "why": "ok() 조건",
+    "text": "/멈췄다 — 받은 판 [0-9a-f]{12} ≠ ⓪ 판정 · 스냅샷 라벨의 판/",
+    "missing": [
+     "멈췄다 — 받은 판"
+    ],
+    "drift": [],
+    "ref": "41b35490dd5617b2037c49c2e2b1017afea3b810"
+   },
+   {
+    "f": "test-update-snap.js",
+    "line": 157,
+    "why": ".match()",
+    "text": "^    (서울|도쿄) ${} — .*$",
+    "missing": [
+     "서울|도쿄)"
+    ],
+    "drift": [],
+    "ref": "41b35490dd5617b2037c49c2e2b1017afea3b810"
+   },
+   {
+    "f": "test-update-snap.js",
+    "line": 162,
+    "why": "ok() 조건",
+    "text": "/ssh -t seoul 'cd .* && bash scripts\\/backup-live\\.sh hanbando --restore \\/srv\\/durango\\/_daily\\/\\d{8}-\\d{6}-hanbando'  # 답: hanbando/",
+    "missing": [
+     "답: hanbando"
+    ],
+    "drift": [],
+    "ref": "41b35490dd5617b2037c49c2e2b1017afea3b810"
+   },
+   {
+    "f": "test-update-snap.js",
+    "line": 166,
+    "why": "ok() 조건",
+    "text": "/서울 hanbando — 갱신 앞 사본 없음/",
+    "missing": [
+     "서울 hanbando — 갱신 앞 사본 없음"
+    ],
+    "drift": [],
+    "ref": "41b35490dd5617b2037c49c2e2b1017afea3b810"
+   },
+   {
+    "f": "test-vil-fast.js",
+    "line": 46,
+    "why": "ok() 조건",
+    "text": "/if \\(T846_VIL_FAST\\) \\{ for \\(const vil of state\\.villages\\) vil\\._bRows = null; \\}\\n\\s+else for \\(const vil of state\\.villages\\) delete vil\\._bRows; \\/\\/ 수만 행 재참조 방지\\(메모리\\)/",
+    "missing": [
+     "수만 행 재참조 방지"
+    ],
+    "drift": [],
+    "ref": "38042e76d462dc434a44f84ef50b133560fc6db0"
+   },
+   {
+    "f": "test-village-label.js",
+    "line": 103,
+    "why": "ok() 조건",
+    "text": "농촌23",
+    "missing": [
+     "농촌23"
+    ],
+    "drift": [],
+    "ref": "461cad896a1b651cdb4f3bc618277878c57f108f"
+   },
+   {
+    "f": "test-village-label.js",
+    "line": 103,
+    "why": "ok() 조건",
+    "text": "어촌17",
+    "missing": [
+     "어촌17"
+    ],
+    "drift": [],
+    "ref": "461cad896a1b651cdb4f3bc618277878c57f108f"
+   },
+   {
+    "f": "test-village-label.js",
+    "line": 104,
+    "why": "ok() 조건",
+    "text": "미도리어촌",
+    "missing": [
+     "미도리어촌"
+    ],
+    "drift": [],
+    "ref": "461cad896a1b651cdb4f3bc618277878c57f108f"
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 250,
+    "why": "ok() 조건",
+    "text": "/소개 물레방아 곁에 산다",
+    "missing": [
+     "방아 곁에 산다"
+    ],
+    "drift": [],
+    "ref": "96e89c4c8a1843d74ffb5de81941a26e6798ea84"
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 253,
+    "why": "ok() 조건",
+    "text": "물레방아 곁에 산다",
+    "missing": [
+     "방아 곁에 산다"
+    ],
+    "drift": [],
+    "ref": "4846827a2aa78fcc4727ae23f279455fee2917bb"
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 284,
+    "why": "ok() 조건",
+    "text": "물레방아 곁에 산다",
+    "missing": [
+     "방아 곁에 산다"
+    ],
+    "drift": [],
+    "ref": "4846827a2aa78fcc4727ae23f279455fee2917bb"
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 306,
+    "why": "ok() 조건",
+    "text": "/초대 kinB",
+    "missing": [
+     "초대 kinB"
+    ],
+    "drift": [],
+    "ref": "96e89c4c8a1843d74ffb5de81941a26e6798ea84"
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 312,
+    "why": "ok() 조건",
+    "text": "/초대 kinA",
+    "missing": [
+     "초대 kinA"
+    ],
+    "drift": [],
+    "ref": "96e89c4c8a1843d74ffb5de81941a26e6798ea84"
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 327,
+    "why": "ok() 조건",
+    "text": "/촌장 — kinA/",
+    "missing": [
+     "촌장 — kinA"
+    ],
+    "drift": [],
+    "ref": "622681b9be1f787d4fd38592e38c02318a69256d"
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 328,
+    "why": "ok() 조건",
+    "text": "/촌장 kinA",
+    "missing": [
+     "촌장 kinA"
+    ],
+    "drift": [],
+    "ref": "622681b9be1f787d4fd38592e38c02318a69256d"
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 329,
+    "why": "ok() 조건",
+    "text": "/촌장 kinC",
+    "missing": [
+     "촌장 kinC"
+    ],
+    "drift": [],
+    "ref": "96e89c4c8a1843d74ffb5de81941a26e6798ea84"
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 330,
+    "why": "ok() 조건",
+    "text": "/촌장 kinB",
+    "missing": [
+     "촌장 kinB"
+    ],
+    "drift": [],
+    "ref": "96e89c4c8a1843d74ffb5de81941a26e6798ea84"
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 340,
+    "why": "ok() 조건",
+    "text": "/추방 kinB",
+    "missing": [
+     "추방 kinB"
+    ],
+    "drift": [],
+    "ref": "96e89c4c8a1843d74ffb5de81941a26e6798ea84"
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 342,
+    "why": "ok() 조건",
+    "text": "/소개 남이 쓴 줄",
+    "missing": [
+     "소개 남이 쓴 줄"
+    ],
+    "drift": [],
+    "ref": "622681b9be1f787d4fd38592e38c02318a69256d"
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 343,
+    "why": "ok() 조건",
+    "text": "/소개   새   물레  소리  ",
+    "missing": [
+     "소개   새"
+    ],
+    "drift": [],
+    "ref": "96e89c4c8a1843d74ffb5de81941a26e6798ea84"
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 349,
+    "why": "ok() 조건",
+    "text": "/촌장 .* · 아무나 듦 · \"새 물레 소리\"/",
+    "missing": [
+     "아무나 듦 · \"새",
+     "소리\""
+    ],
+    "drift": [],
+    "ref": "96e89c4c8a1843d74ffb5de81941a26e6798ea84"
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 351,
+    "why": "ok() 조건",
+    "text": "/길드 공개",
+    "missing": [
+     "길드 공개"
+    ],
+    "drift": [],
+    "ref": "96e89c4c8a1843d74ffb5de81941a26e6798ea84"
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 399,
+    "why": "ok() 조건",
+    "text": "/촌장 — kinC/",
+    "missing": [
+     "촌장 — kinC"
+    ],
+    "drift": [],
+    "ref": "622681b9be1f787d4fd38592e38c02318a69256d"
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 403,
+    "why": "ok() 조건",
+    "text": "/추방 kinC",
+    "missing": [
+     "추방 kinC"
+    ],
+    "drift": [],
+    "ref": "4c1d98fb4bd05028f791ccc3674986030d60dba8"
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 483,
+    "why": "ok() 조건",
+    "text": "/촌장 — kinB/",
+    "missing": [
+     "촌장 — kinB"
+    ],
+    "drift": [],
+    "ref": "622681b9be1f787d4fd38592e38c02318a69256d"
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 521,
+    "why": "ok() 조건",
+    "text": "/촌장 — kinB/",
+    "missing": [
+     "촌장 — kinB"
+    ],
+    "drift": [],
+    "ref": "622681b9be1f787d4fd38592e38c02318a69256d"
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 548,
+    "why": "ok() 조건",
+    "text": "/길드 곳간이 섰다/",
+    "missing": [
+     "길드 곳간이 섰다"
+    ],
+    "drift": [],
+    "ref": "2cb96231651d7e158b9358645a937d91314e44e2"
+   },
+   {
+    "f": "test-well-art.js",
+    "line": 131,
+    "why": "ok() 조건",
+    "text": "우물가에서 E를 누르면 목을 축이고, 물병이 있으면 민물을 담습니다.",
+    "missing": [
+     "우물가에서 E를 누르면 목을 축이고, 물병이 있으면 민물을 담습니다."
+    ],
+    "drift": [],
+    "ref": "96e89c4c8a1843d74ffb5de81941a26e6798ea84"
+   },
+   {
+    "f": "test-well-art.js",
+    "line": 173,
+    "why": "ok() 조건",
+    "text": "/우물에서/",
+    "missing": [
+     "우물에서"
+    ],
+    "drift": [],
+    "ref": "f2abb2fde6d444ec4f22ded3723da229cf36218f"
+   },
+   {
+    "f": "test-well-art.js",
+    "line": 178,
+    "why": "ok() 조건",
+    "text": "물가에서 민물 한 되 1",
+    "missing": [
+     "물가에서 민물 한 되 1"
+    ],
+    "drift": [],
+    "ref": "f2abb2fde6d444ec4f22ded3723da229cf36218f"
+   },
+   {
+    "f": "test-well-art.js",
+    "line": 178,
+    "why": "ok() 조건",
+    "text": "우물에서 짠물 1",
+    "missing": [
+     "우물에서 짠물 1"
+    ],
+    "drift": [],
+    "ref": "f2abb2fde6d444ec4f22ded3723da229cf36218f"
+   },
+   {
+    "f": "test-wood-act.js",
+    "line": 136,
+    "why": "ok() 조건",
+    "text": "/하루 걸음 한도\\*\\*가 그 그루를 못 대면/",
+    "missing": [
+     "하루 걸음 한도",
+     "가 그 그루를 못 대면"
+    ],
+    "drift": [],
+    "ref": "efd443873718801a43874cee357e477759e4700d"
+   },
+   {
+    "f": "test-xhost-env.js",
+    "line": 112,
+    "why": "ok() 조건",
+    "text": "/\\[이어 싣기\\] durango-zone-hanbando ← 옛 컨테이너 ZONE_HOST_NIPPON/",
+    "missing": [
+     "옛 컨테이너 ZONE_HOST_NIPPON"
+    ],
+    "drift": [],
+    "ref": "bc636615adbeeef439933c4235d5b043396881fe"
+   },
+   {
+    "f": "test-xhost-env.js",
+    "line": 143,
+    "why": ".match()",
+    "text": "/^ *[✓✗] 경계 서울 한반도 → nippon: .*$/",
+    "missing": [
+     "경계 서울 한반도 → nippon:"
+    ],
+    "drift": [],
+    "ref": "bc636615adbeeef439933c4235d5b043396881fe"
+   },
+   {
+    "f": "test-xhost-env.js",
+    "line": 149,
+    "why": "ok() 조건",
+    "text": "/^✓ 경계 서울 한반도 → nippon: env ZONE_HOST_NIPPON 있음 · 주소 = 도쿄 ssh 주소 · :3021\\/health 200 · \\d+ms$/",
+    "missing": [
+     "경계 서울 한반도 → nippon: env ZONE_HOST_NIPPON 있음 · 주소 = 도쿄 ssh 주소 · :3021"
+    ],
+    "drift": [],
+    "ref": "bc636615adbeeef439933c4235d5b043396881fe"
+   },
+   {
+    "f": "test-xhost-env.js",
+    "line": 155,
+    "why": "ok() 조건",
+    "text": "/^✗ 경계 서울 한반도 → nippon: env ZONE_HOST_NIPPON 없음 · 주소 ≠ 도쿄 ssh 주소 · :3021 ECONNREFUSED/",
+    "missing": [
+     "경계 서울 한반도 → nippon: env ZONE_HOST_NIPPON 없음 · 주소 ≠ 도쿄 ssh 주소 · :3021 ECONNREFUSED"
+    ],
+    "drift": [],
+    "ref": "bc636615adbeeef439933c4235d5b043396881fe"
+   },
+   {
+    "f": "test-xhost-env.js",
+    "line": 155,
+    "why": "ok() 조건",
+    "text": "/✗ 멈췄다 — 경계 ✗/",
+    "missing": [
+     "멈췄다 — 경계 ✗"
+    ],
+    "drift": [],
+    "ref": "bc636615adbeeef439933c4235d5b043396881fe"
+   },
+   {
+    "f": "test-xhost-env.js",
+    "line": 161,
+    "why": "ok() 조건",
+    "text": "/^✗ 경계 서울 한반도 → nippon: env ZONE_HOST_NIPPON 있음 · 주소 ≠ 도쿄 ssh 주소 · :3021 ECONNREFUSED/",
+    "missing": [
+     "경계 서울 한반도 → nippon: env ZONE_HOST_NIPPON 있음 · 주소 ≠ 도쿄 ssh 주소 · :3021 ECONNREFUSED"
+    ],
+    "drift": [],
+    "ref": "bc636615adbeeef439933c4235d5b043396881fe"
+   },
+   {
+    "f": "test-xhost-env.js",
+    "line": 165,
+    "why": "ok() 조건",
+    "text": "/^✗ 경계 서울 한반도 → nippon: env ZONE_HOST_NIPPON 없음 · 주소 = 도쿄 ssh 주소 · :3021\\/health 200/",
+    "missing": [
+     "경계 서울 한반도 → nippon: env ZONE_HOST_NIPPON 없음 · 주소 = 도쿄 ssh 주소 · :3021"
+    ],
+    "drift": [],
+    "ref": "bc636615adbeeef439933c4235d5b043396881fe"
+   },
+   {
+    "f": "test-xhost-env.js",
+    "line": 169,
+    "why": "ok() 조건",
+    "text": "/^✗ 경계 서울 한반도 → nippon: env ZONE_HOST_NIPPON 없음 · 존 안에서 못 물었다/",
+    "missing": [
+     "경계 서울 한반도 → nippon: env ZONE_HOST_NIPPON 없음 · 존 안에서 못 물었다"
+    ],
+    "drift": [],
+    "ref": "bc636615adbeeef439933c4235d5b043396881fe"
+   },
+   {
+    "f": "test-xhost-env.js",
+    "line": 173,
+    "why": "ok() 조건",
+    "text": "/^✗ 경계 서울 한반도 → nippon: env ZONE_HOST_NIPPON 없음/",
+    "missing": [
+     "경계 서울 한반도 → nippon: env ZONE_HOST_NIPPON 없음"
+    ],
+    "drift": [],
+    "ref": "bc636615adbeeef439933c4235d5b043396881fe"
+   },
+   {
+    "f": "test-zone-fauna.js",
+    "line": 174,
+    "why": ".indexOf()",
+    "text": "// 6) 랩몹 → shadow 동기",
+    "missing": [
+     "랩몹 → shadow 동기"
+    ],
+    "drift": [],
+    "ref": "a58e878b7c65eeca800681e91ed99b2c4ff58ab4"
+   },
+   {
+    "f": "test-zone-fauna.js",
+    "line": 176,
+    "why": ".indexOf()",
+    "text": "// ═══ [C] 본체 브리지",
+    "missing": [
+     "본체 브리지"
+    ],
+    "drift": [],
+    "ref": "a58e878b7c65eeca800681e91ed99b2c4ff58ab4"
+   }
+  ]
+ },
+ "nowOld": {
+  "yellow": [
+   {
+    "f": "e2e-cold.js",
+    "line": 264,
+    "why": "ok() 조건",
+    "text": "/이미|너무 멉|없음|불가|막혀|알 수 없는/",
+    "drop": [
+     "불가 49→45"
+    ]
+   },
+   {
+    "f": "e2e-conn.js",
+    "line": 297,
+    "why": "ok() 조건",
+    "text": "시간 초과",
+    "drop": [
+     "시간 초과 5→4"
+    ]
+   },
+   {
+    "f": "e2e-conn.js",
+    "line": 334,
+    "why": "ok() 조건",
+    "text": "/기다리면/",
+    "drop": [
+     "기다리면 3→2"
+    ]
+   },
+   {
+    "f": "e2e-craft.js",
+    "line": 151,
+    "why": "ok() 조건",
+    "text": "/초 남음|걸어 둔 것/",
+    "drop": [
+     "초 남음 4→1"
+    ]
+   },
+   {
+    "f": "e2e-craft.js",
+    "line": 151,
+    "why": ".match()",
+    "text": "/[^\\n]{0,20}초 남음/",
+    "drop": [
+     "초 남음 4→1"
+    ]
+   },
+   {
+    "f": "e2e-craft.js",
+    "line": 159,
+    "why": ".match()",
+    "text": "/[^\\n]{0,24}다 됐다[^\\n]{0,12}/",
+    "drop": [
+     "다 됐다 2→1"
+    ]
+   },
+   {
+    "f": "e2e-downed.js",
+    "line": 152,
+    "why": ".test() 수신자",
+    "text": "/텔레포트|강·바다/",
+    "drop": [
+     "텔레포트 12→11"
+    ]
+   },
+   {
+    "f": "e2e-downed.js",
+    "line": 175,
+    "why": ".test() 수신자",
+    "text": "/텔레포트/",
+    "drop": [
+     "텔레포트 12→11"
+    ]
+   },
+   {
+    "f": "e2e-emptystart.js",
+    "line": 289,
+    "why": ".test() 수신자",
+    "text": "/장인|구매|마을/",
+    "drop": [
+     "구매 16→15"
+    ]
+   },
+   {
+    "f": "e2e-events.js",
+    "line": 213,
+    "why": ".test() 수신자",
+    "text": "/없다|미지원|없음/",
+    "drop": [
+     "없다 479→378"
+    ]
+   },
+   {
+    "f": "e2e-events.js",
+    "line": 424,
+    "why": "ok() 조건",
+    "text": "/납품|바쳤습니다/",
+    "drop": [
+     "납품 14→12"
+    ]
+   },
+   {
+    "f": "e2e-events.js",
+    "line": 602,
+    "why": "ok() 조건",
+    "text": "걸린 의뢰",
+    "drop": [
+     "걸린 의뢰 2→1"
+    ]
+   },
+   {
+    "f": "e2e-friends.js",
+    "line": 313,
+    "why": "ok() 조건",
+    "text": "/걸음|쪽 멀리/",
+    "drop": [
+     "쪽 멀리 1→0"
+    ]
+   },
+   {
+    "f": "e2e-guest-reconnect.js",
+    "line": 393,
+    "why": "ok() 조건",
+    "text": "/관리자가 아닙니다|관리자가 아니어서|우리 마을이 아니어서/",
+    "drop": [
+     "관리자가 아닙니다 4→2"
+    ]
+   },
+   {
+    "f": "e2e-guild.js",
+    "line": 260,
+    "why": "ok() 조건",
+    "text": "/열린뜰에 들었습니다|\\[열린뜰\\] 에 들었다/",
+    "drop": [
+     "에 들었다 3→0"
+    ]
+   },
+   {
+    "f": "e2e-guild.js",
+    "line": 403,
+    "why": ".test() 수신자",
+    "text": "/곳간 —|곳간에 먹을 것이/",
+    "drop": [
+     "곳간 — 6→5"
+    ]
+   },
+   {
+    "f": "e2e-guild.js",
+    "line": 404,
+    "why": "ok() 조건",
+    "text": "/남은 몫|누적 기여/",
+    "drop": [
+     "누적 기여 4→1"
+    ]
+   },
+   {
+    "f": "e2e-guild.js",
+    "line": 416,
+    "why": "ok() 조건",
+    "text": "/사람 — .*일째|사람이 된 지 .*일째/",
+    "drop": [
+     "사람 — 6→5"
+    ]
+   },
+   {
+    "f": "e2e-membership.js",
+    "line": 266,
+    "why": ".test() 수신자",
+    "text": "/오늘부터|사람 —/",
+    "drop": [
+     "사람 — 6→5"
+    ]
+   },
+   {
+    "f": "e2e-membership.js",
+    "line": 285,
+    "why": ".match()",
+    "text": "/[^\\n]*받는 것 없음[^\\n]{0,30}/",
+    "drop": [
+     "받는 것 없음 5→2"
+    ]
+   },
+   {
+    "f": "e2e-membership.js",
+    "line": 330,
+    "why": "ok() 조건",
+    "text": "/남은 몫|누적 기여/",
+    "drop": [
+     "누적 기여 4→1"
+    ]
+   },
+   {
+    "f": "e2e-metallurgy.js",
+    "line": 215,
+    "why": ".test() 수신자",
+    "text": "/사유지|재료|곡괭이|물·바위|바위|멀어서/",
+    "drop": [
+     "사유지 47→32",
+     "물·바위 12→10"
+    ]
+   },
+   {
+    "f": "e2e-onboarding.js",
+    "line": 70,
+    "why": ".test() 수신자",
+    "text": "/up on|시딩|마을 시뮬 준비|사건 장부|도착 지점/",
+    "drop": [
+     "도착 지점 11→9"
+    ]
+   },
+   {
+    "f": "e2e-onboarding.js",
+    "line": 458,
+    "why": "ok() 조건",
+    "text": "/납품|바쳤습니다/",
+    "drop": [
+     "납품 14→12"
+    ]
+   },
+   {
+    "f": "e2e-onboarding.js",
+    "line": 543,
+    "why": "ok() 조건",
+    "text": "/의뢰|빈터|오늘/",
+    "drop": [
+     "의뢰 66→52"
+    ]
+   },
+   {
+    "f": "e2e-onboarding.js",
+    "line": 705,
+    "why": ".test() 수신자",
+    "text": "/사유지/",
+    "drop": [
+     "사유지 47→32"
+    ]
+   },
+   {
+    "f": "e2e-onboarding.js",
+    "line": 821,
+    "why": ".test() 수신자",
+    "text": "/사람 — .*일째/",
+    "drop": [
+     "사람 — 6→5"
+    ]
+   },
+   {
+    "f": "e2e-onboarding.js",
+    "line": 873,
+    "why": ".test() 수신자",
+    "text": "/납품|바쳤습니다/",
+    "drop": [
+     "납품 14→12"
+    ]
+   },
+   {
+    "f": "e2e-pick-top.js",
+    "line": 141,
+    "why": ".test() 수신자",
+    "text": "/텔레포트/",
+    "drop": [
+     "텔레포트 12→11"
+    ]
+   },
+   {
+    "f": "e2e-pick-top.js",
+    "line": 253,
+    "why": ".test() 수신자",
+    "text": "/먹였다/",
+    "drop": [
+     "먹였다 4→1"
+    ]
+   },
+   {
+    "f": "e2e-pick-top.js",
+    "line": 258,
+    "why": ".test() 수신자",
+    "text": "/먹였(다|습니다)/",
+    "drop": [
+     "먹였 4→3"
+    ]
+   },
+   {
+    "f": "e2e-preserve.js",
+    "line": 205,
+    "why": "ok() 조건",
+    "text": "/초 남음|걸어 둔 것/",
+    "drop": [
+     "초 남음 4→1"
+    ]
+   },
+   {
+    "f": "e2e-preserve.js",
+    "line": 205,
+    "why": ".match()",
+    "text": "/[^\\n]{0,20}초 남음/",
+    "drop": [
+     "초 남음 4→1"
+    ]
+   },
+   {
+    "f": "e2e-preserve.js",
+    "line": 208,
+    "why": ".match()",
+    "text": "/[^\\n]{0,24}다 됐다[^\\n]{0,12}/",
+    "drop": [
+     "다 됐다 2→1"
+    ]
+   },
+   {
+    "f": "e2e-salt.js",
+    "line": 158,
+    "why": ".test() 수신자",
+    "text": "/건축물/",
+    "drop": [
+     "건축물 25→19"
+    ]
+   },
+   {
+    "f": "e2e-salt.js",
+    "line": 255,
+    "why": "ok() 조건",
+    "text": "/초 남음|걸어 둔 것/",
+    "drop": [
+     "초 남음 4→1"
+    ]
+   },
+   {
+    "f": "e2e-salt.js",
+    "line": 255,
+    "why": ".match()",
+    "text": "/[^\\n]{0,20}초 남음/",
+    "drop": [
+     "초 남음 4→1"
+    ]
+   },
+   {
+    "f": "e2e-salt.js",
+    "line": 258,
+    "why": ".match()",
+    "text": "/[^\\n]{0,24}다 됐다[^\\n]{0,12}/",
+    "drop": [
+     "다 됐다 2→1"
+    ]
+   },
+   {
+    "f": "e2e-salt.js",
+    "line": 296,
+    "why": "ok() 조건",
+    "text": "/걸어 둔 것|초 남음/",
+    "drop": [
+     "초 남음 4→1"
+    ]
+   },
+   {
+    "f": "e2e-terrain.js",
+    "line": 56,
+    "why": ".test() 수신자",
+    "text": "/server up|Error|사망|다운/",
+    "drop": [
+     "사망 20→19"
+    ]
+   },
+   {
+    "f": "e2e-trade.js",
+    "line": 223,
+    "why": ".test() 수신자",
+    "text": "/텔레포트|강·바다/",
+    "drop": [
+     "텔레포트 12→11"
+    ]
+   },
+   {
+    "f": "e2e-trade.js",
+    "line": 418,
+    "why": ".test() 수신자",
+    "text": "/거래소 —|거래소에서 .*받았습니다/",
+    "drop": [
+     "거래소 — 1→0"
+    ]
+   },
+   {
+    "f": "e2e-ui.js",
+    "line": 891,
+    "why": "ok() 조건",
+    "text": "/^살피기 — .+ · (임자 없음|내 땅|.+의 (사유지|마을 땅))$/",
+    "drop": [
+     "사유지 47→32"
+    ]
+   },
+   {
+    "f": "e2e-verbs.js",
+    "line": 219,
+    "why": ".test() 수신자",
+    "text": "/텔레포트/",
+    "drop": [
+     "텔레포트 12→11"
+    ]
+   },
+   {
+    "f": "e2e-verbs.js",
+    "line": 1332,
+    "why": ".test() 수신자",
+    "text": "/텔레포트/",
+    "drop": [
+     "텔레포트 12→11"
+    ]
+   },
+   {
+    "f": "e2e-village-view.js",
+    "line": 123,
+    "why": "ok() 조건",
+    "text": "목재",
+    "drop": [
+     "목재 104→103"
+    ]
+   },
+   {
+    "f": "e2e-village.js",
+    "line": 51,
+    "why": ".test() 수신자",
+    "text": "/실패|Error|error/",
+    "drop": [
+     "실패 526→517"
+    ]
+   },
+   {
+    "f": "e2e-village.js",
+    "line": 277,
+    "why": "ok() 조건",
+    "text": "/섰다|섰습니다|인구 0/",
+    "drop": [
+     "섰다 18→14",
+     "인구 0 7→5"
+    ]
+   },
+   {
+    "f": "e2e-village.js",
+    "line": 400,
+    "why": ".test() 수신자",
+    "text": "/관리자가 아닙니다|관리자가 아니어서|우리 마을이 아니어서|너무 멀리/",
+    "drop": [
+     "관리자가 아닙니다 4→2"
+    ]
+   },
+   {
+    "f": "e2e-village.js",
+    "line": 488,
+    "why": ".test() 수신자",
+    "text": "/이방인을 받/",
+    "drop": [
+     "이방인을 받 6→5"
+    ]
+   },
+   {
+    "f": "e2e-village.js",
+    "line": 490,
+    "why": "ok() 조건",
+    "text": "/이방인을 받/",
+    "drop": [
+     "이방인을 받 6→5"
+    ]
+   },
+   {
+    "f": "e2e-village.js",
+    "line": 490,
+    "why": ".test() 수신자",
+    "text": "/이방인/",
+    "drop": [
+     "이방인 18→17"
+    ]
+   },
+   {
+    "f": "test-assay.js",
+    "line": 156,
+    "why": "ok() 조건",
+    "text": "/틀림없|이다$|다$/",
+    "drop": [
+     "이다 448→401"
+    ]
+   },
+   {
+    "f": "test-assay.js",
+    "line": 156,
+    "why": "ok() 조건",
+    "text": "/같|듯|성싶|보인다|…/",
+    "drop": [
+     "보인다 24→20"
+    ]
+   },
+   {
+    "f": "test-backup-live.js",
+    "line": 122,
+    "why": "ok() 조건",
+    "text": "/그만뒀다/",
+    "drop": [
+     "그만뒀다 7→6"
+    ]
+   },
+   {
+    "f": "test-backup-live.js",
+    "line": 140,
+    "why": "ok() 조건",
+    "text": "/hanbando 것이 아니다|central 것이 아니다/",
+    "drop": [
+     "것이 아니다 10→5"
+    ]
+   },
+   {
+    "f": "test-disk-check.js",
+    "line": 117,
+    "why": "ok() 조건",
+    "text": "/그만뒀다/",
+    "drop": [
+     "그만뒀다 7→6"
+    ]
+   },
+   {
+    "f": "test-donate.js",
+    "line": 211,
+    "why": "ok() 조건",
+    "text": "/멀|멉|가까이|떨어/",
+    "drop": [
+     "떨어 48→45"
+    ]
+   },
+   {
+    "f": "test-donate.js",
+    "line": 241,
+    "why": "ok() 조건",
+    "text": "/남은 몫|누적 기여/",
+    "drop": [
+     "누적 기여 4→1"
+    ]
+   },
+   {
+    "f": "test-donate.js",
+    "line": 263,
+    "why": "ok() 조건",
+    "text": "/관리자가 아닙니다/",
+    "drop": [
+     "관리자가 아닙니다 4→2"
+    ]
+   },
+   {
+    "f": "test-donate.js",
+    "line": 268,
+    "why": "ok() 조건",
+    "text": "/기부/",
+    "drop": [
+     "기부 21→18"
+    ]
+   },
+   {
+    "f": "test-downed.js",
+    "line": 452,
+    "why": "ok() 조건",
+    "text": "/떨어짐/",
+    "drop": [
+     "떨어짐 10→7"
+    ]
+   },
+   {
+    "f": "test-downed.js",
+    "line": 462,
+    "why": "ok() 조건",
+    "text": "/시간이 지났/",
+    "drop": [
+     "시간이 지났 3→1"
+    ]
+   },
+   {
+    "f": "test-furnace.js",
+    "line": 121,
+    "why": "ok() 조건",
+    "text": "/사유지/",
+    "drop": [
+     "사유지 47→32"
+    ]
+   },
+   {
+    "f": "test-guest-identity.js",
+    "line": 583,
+    "why": "=== 비교",
+    "text": "본인",
+    "drop": [
+     "본인 10→9"
+    ]
+   },
+   {
+    "f": "test-guest-identity.js",
+    "line": 584,
+    "why": ".endsWith()",
+    "text": "남음",
+    "drop": [
+     "남음 24→22"
+    ]
+   },
+   {
+    "f": "test-guest-rejoin.js",
+    "line": 78,
+    "why": ".test() 수신자",
+    "text": "/중복 차단|1회용|승계/",
+    "drop": [
+     "승계 13→12"
+    ]
+   },
+   {
+    "f": "test-handoff-body.js",
+    "line": 185,
+    "why": ".test() 수신자",
+    "text": "/텔레포트|물/",
+    "drop": [
+     "텔레포트 12→11"
+    ]
+   },
+   {
+    "f": "test-handoff-body.js",
+    "line": 185,
+    "why": ".test() 수신자",
+    "text": "/텔레포트/",
+    "drop": [
+     "텔레포트 12→11"
+    ]
+   },
+   {
+    "f": "test-harness-lint.js",
+    "line": 70,
+    "why": ".test() 수신자",
+    "text": "/has-text\\([\"'][^\"']*입장|has-text\\([\"'][^\"']*나루터/",
+    "drop": [
+     "입장 38→36"
+    ]
+   },
+   {
+    "f": "test-newcomers.js",
+    "line": 258,
+    "why": "ok() 조건",
+    "text": "/관리자가 아닙니다/",
+    "drop": [
+     "관리자가 아닙니다 4→2"
+    ]
+   },
+   {
+    "f": "test-nightly.js",
+    "line": 96,
+    "why": "ok() 조건",
+    "text": "/끊김[\\s\\S]*e2e-cutoff/",
+    "drop": [
+     "끊김 15→14"
+    ]
+   },
+   {
+    "f": "test-redeploy.js",
+    "line": 160,
+    "why": "ok() 조건",
+    "text": "/PLAN|central: 한다/",
+    "drop": [
+     "한다 317→300"
+    ]
+   },
+   {
+    "f": "test-render-common.js",
+    "line": 337,
+    "why": "ok() 조건",
+    "text": "/들어가기만|들어간다|안에 들어가/",
+    "drop": [
+     "들어간다 8→7"
+    ]
+   },
+   {
+    "f": "test-save-periodic.js",
+    "line": 42,
+    "why": ".test() 수신자",
+    "text": "/승계|사망|다운/",
+    "drop": [
+     "승계 13→12",
+     "사망 20→19"
+    ]
+   },
+   {
+    "f": "test-t1066-village-fire.js",
+    "line": 104,
+    "why": "ok() 조건",
+    "text": "/모닥불·화덕 앞에서만|모닥불이나 화덕 앞에서만/",
+    "drop": [
+     "모닥불·화덕 앞에서만 1→0"
+    ]
+   },
+   {
+    "f": "test-t1066-village-fire.js",
+    "line": 109,
+    "why": "ok() 조건",
+    "text": "/내 것이 (아니다|아닙니다)/",
+    "drop": [
+     "아니다 152→143"
+    ]
+   },
+   {
+    "f": "test-terr-overlap.js",
+    "line": 104,
+    "why": "ok() 조건",
+    "text": "남의 마을",
+    "drop": [
+     "남의 마을 6→5"
+    ]
+   },
+   {
+    "f": "test-terr-overlap.js",
+    "line": 106,
+    "why": "ok() 조건",
+    "text": "남의 마을",
+    "drop": [
+     "남의 마을 6→5"
+    ]
+   },
+   {
+    "f": "test-terr-overlap.js",
+    "line": 114,
+    "why": "ok() 조건",
+    "text": "남의 마을",
+    "drop": [
+     "남의 마을 6→5"
+    ]
+   },
+   {
+    "f": "test-trade.js",
+    "line": 216,
+    "why": "ok() 조건",
+    "text": "/삯|잡아 둔|못 판다/",
+    "drop": [
+     "못 판다 1→0"
+    ]
+   },
+   {
+    "f": "test-update-snap.js",
+    "line": 113,
+    "why": ".match()",
+    "text": "/✗ 멈췄다.*$/",
+    "drop": [
+     "멈췄다 7→4"
+    ]
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 189,
+    "why": ".test() 수신자",
+    "text": "/사유지/",
+    "drop": [
+     "사유지 47→32"
+    ]
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 304,
+    "why": "ok() 조건",
+    "text": "/수락",
+    "drop": [
+     "수락 15→14"
+    ]
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 309,
+    "why": "ok() 조건",
+    "text": "/수락",
+    "drop": [
+     "수락 15→14"
+    ]
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 339,
+    "why": "ok() 조건",
+    "text": "/탈퇴",
+    "drop": [
+     "탈퇴 10→9"
+    ]
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 408,
+    "why": "ok() 조건",
+    "text": "/이방인을 받/",
+    "drop": [
+     "이방인을 받 6→5"
+    ]
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 495,
+    "why": ".test() 수신자",
+    "text": "/텔레포트|물/",
+    "drop": [
+     "텔레포트 12→11"
+    ]
+   },
+   {
+    "f": "test-village-only.js",
+    "line": 495,
+    "why": ".test() 수신자",
+    "text": "/텔레포트/",
+    "drop": [
+     "텔레포트 12→11"
+    ]
+   },
+   {
+    "f": "test-well-art.js",
+    "line": 90,
+    "why": ".match()",
+    "text": "/우물 터 \\$\\{st\\}\\/(\\d+)단계/",
+    "drop": [
+     "우물 터 5→4"
+    ]
+   },
+   {
+    "f": "test-well.js",
+    "line": 97,
+    "why": "ok() 조건",
+    "text": "/사유지/",
+    "drop": [
+     "사유지 47→32"
+    ]
+   },
+   {
+    "f": "test-well.js",
+    "line": 104,
+    "why": "ok() 조건",
+    "text": "/재료 부족/",
+    "drop": [
+     "재료 부족 10→8"
+    ]
+   },
+   {
+    "f": "test-well.js",
+    "line": 128,
+    "why": "ok() 조건",
+    "text": "임업4",
+    "drop": [
+     "임업4 15→13"
+    ]
+   },
+   {
+    "f": "test-well.js",
+    "line": 128,
+    "why": "ok() 조건",
+    "text": "농촌10",
+    "drop": [
+     "농촌10 20→18"
+    ]
+   },
+   {
+    "f": "test-well.js",
+    "line": 128,
+    "why": "ok() 조건",
+    "text": "임업1",
+    "drop": [
+     "임업1 13→11"
+    ]
+   },
+   {
+    "f": "test-xhost-env.js",
+    "line": 189,
+    "why": "ok() 조건",
+    "text": "거절",
+    "drop": [
+     "거절 9→8"
+    ]
+   }
+  ]
+ },
+ "pre": {
+  "judged": 1299,
+  "red": [
+   {
+    "f": "e2e-guild.js",
+    "line": 260,
+    "why": "ok() 조건",
+    "text": "/\\[열린뜰\\] 에 들었다/",
+    "missing": [
+     "에 들었다"
+    ],
+    "drift": [
+     "에 들었다"
+    ],
+    "ref": "be2e8c5e^1"
+   },
+   {
+    "f": "e2e-trade.js",
+    "line": 418,
+    "why": ".test() 수신자",
+    "text": "/거래소 —/",
+    "missing": [
+     "거래소 —"
+    ],
+    "drift": [
+     "거래소 —"
+    ],
+    "ref": "be2e8c5e^1"
+   },
+   {
+    "f": "test-t1066-village-fire.js",
+    "line": 104,
+    "why": "ok() 조건",
+    "text": "/모닥불·화덕 앞에서만/",
+    "missing": [
+     "모닥불·화덕 앞에서만"
+    ],
+    "drift": [
+     "모닥불·화덕 앞에서만"
+    ],
+    "ref": "be2e8c5e^1"
+   },
+   {
+    "f": "test-t1066-village-fire.js",
+    "line": 109,
+    "why": "ok() 조건",
+    "text": "/내 것이 아니다/",
+    "missing": [
+     "내 것이 아니다"
+    ],
+    "drift": [
+     "내 것이 아니다"
+    ],
+    "ref": "be2e8c5e^1"
+   },
+   {
+    "f": "test-xhost-env.js",
+    "line": 189,
+    "why": "ok() 조건",
+    "text": "저쪽 서버가 연결을 받지 않는다",
+    "missing": [
+     "저쪽 서버가 연결을 받지 않는다"
+    ],
+    "drift": [
+     "저쪽 서버가 연결을 받지 않는다"
+    ],
+    "ref": "be2e8c5e^1"
+   }
+  ],
+  "yellow": 94
+ },
+ "redsBeforeFix": [
+  "test-t1066-village-fire.js:109 /내 것이 아니다/",
+  "test-xhost-env.js:189 '저쪽 서버가 연결을 받지 않는다'",
+  "e2e-trade.js:418 /거래소 —/",
+  "(ALLOW) test-notice.js:101 '약탈!' — 입력 픽스처 → 기대값"
+ ]
+}

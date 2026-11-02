@@ -848,6 +848,11 @@ html, body { margin: 0; padding: 0; height: 100%; font-family: var(--font); back
 .onb-next-item { font-size: 14px; font-weight: 700; color: var(--fg-strong); line-height: 1.4; }
 .onb-next-guide { margin-top: 4px; font-size: 12px; color: var(--dim); line-height: 1.6; }
 .onb-next-guide .key { margin: 0 1px; }
+/* ★[T1086 2026-11-02] 「지금 할 일」의 단추 하나 — 마을 가입(채팅 `/소속` 그 줄) · 터 잡기(C 키 그 메시지). 칸은 눌림을 안 먹고 단추만 먹는다.
+   ★먹선 그대로: 테 1px(--line-2) · 바탕 없음 · 모서리 0 · 그림자 0 · 손을 올리면 강조 호박색 하나(--accent). 이름은 명사형. */
+.onb-next-btn { pointer-events: auto; margin-top: 8px; padding: 5px 12px; background: none; border: 1px solid var(--line-2);
+  color: var(--fg); font: inherit; font-size: 13px; cursor: pointer; }
+.onb-next-btn:hover { border-color: var(--accent); color: var(--accent); }
 
 /* ── ★[T80 2026-09-03] 게시판 판 — 토스트가 아니라 벽에 붙은 판 ──────────────
    ★새 색 0 · 모서리 0 · 이모지 0. 값은 전부 위 `:root` 토큰이다.
@@ -874,3 +879,6 @@ html, body { margin: 0; padding: 0; height: 100%; font-family: var(--font); back
 .bp-hint{margin-top:8px;color:var(--dim-2);font:500 11px/1.45 var(--font)}
 .bp-news{padding:3px 6px;font:500 12px/1.45 var(--font);color:var(--fg)}
 .bp-from{color:var(--dim-2);font-size:11px}
+/* ★[T1085] 촌장 명부(게시판 판 안 · 구성원 칸) — 판의 줄 문법 그대로(줄 · 버튼 토큰 공유 · 새 색 0) */
+.bm-hdr,.bm-row{display:grid;grid-template-columns:1fr 44px 1fr 1fr 72px;gap:6px;align-items:center}
+.bm-row select{font:500 11px var(--font);background:var(--inset);color:var(--fg);border:1px solid var(--line-2);border-radius:0}

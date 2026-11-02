@@ -379,8 +379,9 @@ async function waitHttp(url, tries = 900) {
   //   내가 직접 만든다. `test-guest-rejoin` 이 B-6 을 자를 때 쓴 그 칼이다.
   // ★★고정 대기 0 — 두 순서 모두 **관측으로** 확정한다:
   //     · 겹침 = 옛 세션이 `kicked: duplicate_login` 을 실제로 받았다
-  //     · 닫힘 = central 행의 `last_x` 가 표식 좌표로 바뀌었다. `teleport_debug` 는 저장을 안 부르므로
-  //       (zone.js 그 분기에 `savePlayer` 없음) 그 좌표가 행에 뜨면 **close 의 저장이 착지한 것**이다.
+  //     · 닫힘 = central 행의 `last_x` 가 표식 좌표로 바뀌었다. `teleport_debug` 는 저장을 안 부르지만(zone.js 그 분기에 `savePlayer` 없음)
+  //       ★[T1081] 청크를 넘으면 그 틱에 청크 저장이 선다(T1000) — 그래서 표식은 **마지막 저장 자리와 같은 청크 안**으로 옮긴 것만 쓴다
+  //       (같은 청크면 청크 저장이 안 선다 ⇒ 그 좌표가 행에 뜨면 **close 의 저장이 착지한 것**이다 · 아래 MARK0B · MARK1).
   //       ⚠`lastSeenDay` 로는 못 센다 — 고친 뒤엔 값이 안 바뀌어 영원히 기다리게 된다(자가 제품을 가정하면 안 된다).
   {
     await freeze(false);
@@ -413,7 +414,7 @@ async function waitHttp(url, tries = 900) {
     const rawWel = async (s, ms = 20000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (s.welcomed && s.pos) return true; await sleep(100); } return false; };
     const until = async (f, ms = 30000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { const v = await f(); if (v) return v; await sleep(150); } return null; };
     const [bpx, bpy] = px(B);
-    const MARK0 = 500, MARK1 = 777;            // 좌표 표식 둘 — 어느 저장이 착지했는지 가른다
+    const MARK0 = 500, MARK0B = 540, MARK1 = 777;   // 좌표 표식 — 어느 저장이 착지했는지 가른다(셋 다 같은 청크 · 아래 T1081)
 
     async function orderArm(closeFirst) {
       const tag = closeFirst ? 'close먼저' : 'conn먼저';
@@ -421,8 +422,15 @@ async function waitHttp(url, tries = 900) {
       const token = s0.guestToken, pid = s0.playerId;
       // ★마을에서 멀리 — 재접속 스폰이 게이트 밖이어야 브리핑이 내가 청할 때 난다(위 ⑦0 과 같은 이유)
       s0.send({ type: 'teleport_debug', x: MARK0, y: MARK0 }); await sleep(800);
+      // ★★[T1081 2026-11-02] **순간이동도 저장을 부른다** — T1000(`T989_CHUNK_SAVE` 켬 기본)부터 청크를 넘은 차례의 틱에 저장한다.
+      //   그 저장이 MARK0 을 **닫기 전에** 먼저 쓴다(그 날 = 순간이동한 날). 종전 이 자는 "MARK0 이 행에 뜨면 close 저장이 착지했다"로 읽어
+      //   기준일을 순간이동한 날로 잡았고, 실제 기준일(닫힌 날 — 0.8초 = 1 ~ 2일 뒤)과 그만큼 어긋나 ⑦d2 가 1 ~ 2일 '누락'을 보고했다(야간 11-02 첫 밤).
+      //   ⇒ 그 저장이 착지한 것을 보고(끈 세계 `=0` 에선 안 오니 상한 3초), **같은 청크 안** 둘째 표식(MARK0B)으로 한 번 더 옮긴 뒤 닫는다.
+      //     같은 청크라 청크 저장이 안 서고(`_t989Chunk` — 마지막 저장 자리와 같은 칸), 그 좌표는 **닫힐 때 저장만** 쓴다(단언 · 문턱 무변).
+      await until(async () => { const v = savedOf(pid); return (v && Math.abs((v.x || 0) - MARK0) < 2) ? v : null; }, 3000);
+      s0.send({ type: 'teleport_debug', x: MARK0B, y: MARK0B }); await sleep(300);
       s0.close();
-      const landed0 = await until(async () => { const v = savedOf(pid); return (v && Math.abs((v.x || 0) - MARK0) < 2) ? v : null; });
+      const landed0 = await until(async () => { const v = savedOf(pid); return (v && Math.abs((v.x || 0) - MARK0B) < 2) ? v : null; });
       const d0 = landed0 ? landed0.day : null;
       // ★게임일을 흘린다 — 이게 "자리를 비웠다"의 정의다(0.5초/일)
       await sleep(5000);

@@ -168,6 +168,192 @@ M['g_sard'] = striped_mat("f_sardine", (0.16, 0.30, 0.38), (0.24, 0.38, 0.46), 3
 M['g_octo'] = bumped_mat("t_octopus", (0.58, 0.27, 0.20), (0.40, 0.17, 0.13), 9, 0.40, 0.55)          # 문어 — 적갈 살갗(오돌토돌)
 M['g_sucker'] = simple_mat("t_sucker", (0.84, 0.72, 0.64), 0.50)                                    # 문어 빨판 — 살빛
 M['g_squid'] = bumped_mat("t_squid", (0.78, 0.66, 0.56), (0.52, 0.34, 0.26), 14, 0.22, 0.42)       # 오징어 — 살빛에 갈색 색소점
+# ── [T1088] 그림 없는 품목 이어서 — 같은 팔레트 문법 · datablock 이름은 `p_h_*`(이 파일 네임스페이스) ──
+#   있는 재질로 되는 것은 **있는 것을 쓴다**(굴 껍데기 · 미역 · 소쿠리 · 청동 · 모시옷 빛) — 같은 물건은 같은 재질이다.
+M['h_grain'] = bumped_mat("p_h_grain", (0.80, 0.66, 0.40), (0.60, 0.46, 0.24), 70, 0.35, 0.70)     # 곡식 더미 — 잡곡 낟알 결
+M['h_kern1'] = simple_mat("p_h_kern1", (0.84, 0.70, 0.40), 0.6)                                   # 낟알 — 누런
+M['h_kern2'] = simple_mat("p_h_kern2", (0.58, 0.40, 0.20), 0.6)                                   # 낟알 — 갈색
+M['h_kern3'] = simple_mat("p_h_kern3", (0.90, 0.85, 0.66), 0.6)                                   # 낟알 — 흰
+M['h_cooked'] = bumped_mat("p_h_cooked", (0.93, 0.90, 0.80), (0.80, 0.73, 0.56), 60, 0.25, 0.45)  # 익힌 곡식 — 불어 뽀얀 낟알
+M['h_bowl'] = bumped_mat("p_h_bowl", (0.60, 0.40, 0.27), (0.46, 0.29, 0.18), 8, 0.30, 0.70)       # 바리(무문토기) — 붉은 갈색
+M['h_redware'] = bumped_mat("p_h_redware", (0.56, 0.17, 0.10), (0.44, 0.12, 0.07), 6, 0.20, 0.35) # 붉은 간토기(홍도) — 윤 낸 붉은 그릇
+M['h_kelpcooked'] = striped_mat("p_h_kelpcooked", (0.14, 0.34, 0.10), (0.10, 0.26, 0.07), 30, 0.45, 0.25)   # 끓인 미역 — 데치면 새파래진다(날미역 `t_kelp` 의 익은 빛)
+M['h_soot'] = bumped_mat("p_h_soot", (0.21, 0.16, 0.12), (0.12, 0.09, 0.07), 5, 0.20, 0.80)       # 끓임 그릇 — 그을린 몸
+M['h_broth'] = simple_mat("p_h_broth", (0.62, 0.57, 0.44), 0.65)                                  # 조개탕 국물 — 뽀얀 누런빛
+M['h_soup'] = simple_mat("p_h_soup", (0.27, 0.17, 0.07), 0.65)                                    # 미역국 국물 — 맑은 갈색
+M['h_porridge'] = bumped_mat("p_h_porridge", (0.84, 0.66, 0.30), (0.70, 0.52, 0.22), 36, 0.25, 0.50)  # 죽(곡식 + 부재료)
+M['h_meatbit'] = simple_mat("p_h_meatbit", (0.40, 0.18, 0.10), 0.6)                               # 고깃점(익은)
+M['h_green'] = simple_mat("p_h_green", (0.24, 0.46, 0.14), 0.6)                                   # 나물
+M['h_bronzemet'] = simple_mat("p_h_bronzemet", tuple(principled(M['bronze']).inputs['Base Color'].default_value)[:3], 0.24, metal=1.0)   # 청동 덩이 — 이 파일 청동 빛(`M['bronze']`) 그대로 · 쇠붙이 윤만 올렸다
+M['h_patina'] = bumped_mat("p_h_patina", (0.30, 0.54, 0.44), (0.18, 0.38, 0.30), 14, 0.35, 0.85)  # 청동 푸른 녹
+M['h_stalk'] = striped_mat("p_h_stalk", (0.58, 0.56, 0.32), (0.44, 0.42, 0.22), 40, 0.6, 0.30)    # 삼대 — 누런 풀빛 줄기
+M['h_hempleaf'] = simple_mat("p_h_hempleaf", (0.22, 0.38, 0.12), 0.6)                             # 삼 잎
+M['h_ramief'] = striped_mat("p_h_ramief", rc.CLOTH_MATS['ramie'][0],
+                            tuple(v * 0.90 for v in rc.CLOTH_MATS['ramie'][0]), 90, 0.55, 0.25)   # 모시 올 — 모시옷과 같은 빛(정본 `CLOTH_MATS`) · 결만 줬다
+M['h_resin'] = simple_mat("p_h_resin", (0.80, 0.47, 0.07), 0.12)                                  # 송진 — 노란 호박빛(윤)
+M['h_clayraw'] = bumped_mat("p_h_clayraw", (0.58, 0.42, 0.30), (0.50, 0.35, 0.24), 4, 0.12, 0.38)  # 날진흙 — 젖은 갈흙(찰지고 매끈)
+M['h_tiger'] = striped_mat("p_h_tiger", (0.84, 0.40, 0.06), (0.05, 0.04, 0.03), 2.2, 0.85, 0.15, 7.0)  # 호피 — 주황 바탕 굽이진 검은 줄
+M['h_hempweave'] = striped_mat("p_h_hempweave", rc.CLOTH_MATS['hemp'][0],
+                                tuple(v * 0.82 for v in rc.CLOTH_MATS['hemp'][0]), 70, 0.9, 0.35)   # 삼베 결 — 삼베옷 빛(정본 `CLOTH_MATS`) · 올만 줬다
+M['h_tigerw'] = simple_mat("p_h_tigerw", (0.88, 0.84, 0.74), 0.9)                                 # 호피 배 — 흰 털
+# ── [T1088 ②] 빌린 그림이 다른 물건으로 보이던 것 — 숲 · 광물 ──
+M['h_amber'] = simple_mat("p_h_amber", (0.78, 0.36, 0.04), 0.08)                                  # 호박 — 윤 나는 주황 송진 화석
+M['h_ambercrust'] = bumped_mat("p_h_ambercrust", (0.42, 0.26, 0.12), (0.30, 0.18, 0.08), 12, 0.6, 0.9)   # 호박 원석 겉껍질(풍화)
+M['h_bamboo'] = striped_mat("p_h_bamboo", (0.46, 0.58, 0.20), (0.38, 0.50, 0.16), 30, 0.45, 0.25)  # 대나무 줄기
+M['h_bambnode'] = simple_mat("p_h_bambnode", (0.32, 0.40, 0.13), 0.5)                              # 대 마디
+M['h_bambcut'] = simple_mat("p_h_bambcut", (0.86, 0.82, 0.62), 0.7)                                # 벤 면(속 빈 대)
+M['h_wax'] = bumped_mat("p_h_wax", (0.88, 0.74, 0.38), (0.80, 0.64, 0.28), 8, 0.25, 0.45)         # 밀랍
+M['h_birchbark'] = striped_mat("p_h_birchbark", (0.88, 0.86, 0.80), (0.20, 0.18, 0.16), 12, 0.8, 0.3, 4.0)   # 자작나무 껍질 — 흰 바탕 검은 껍질눈
+M['h_sap'] = simple_mat("p_h_sap", (0.50, 0.56, 0.52), 0.25)                                       # 수액 — 맑은 물빛
+M['h_petal'] = simple_mat("p_h_petal", (0.94, 0.93, 0.88), 0.7)                                    # 흰 꽃잎
+M['h_disc'] = simple_mat("p_h_disc", (0.90, 0.66, 0.08), 0.6)                                      # 노란 꽃술
+M['h_stem'] = simple_mat("p_h_stem", (0.30, 0.48, 0.18), 0.6)                                      # 풀 줄기
+M['h_leaf'] = simple_mat("p_h_leaf", (0.22, 0.42, 0.14), 0.55)                                     # 잎
+M['h_cork'] = bumped_mat("p_h_cork", (0.78, 0.60, 0.38), (0.64, 0.46, 0.27), 25, 0.7, 0.95)        # 코르크 — 숭숭한 갈색 껍질
+M['h_raspberry'] = simple_mat("p_h_raspberry", (0.72, 0.07, 0.11), 0.35)                           # 산딸기 알
+M['h_ginseng'] = bumped_mat("p_h_ginseng", (0.86, 0.76, 0.54), (0.74, 0.62, 0.40), 20, 0.3, 0.6)   # 인삼 — 누르스름한 흰 뿌리
+M['h_wildgin'] = bumped_mat("p_h_wildgin", (0.70, 0.56, 0.36), (0.56, 0.42, 0.24), 22, 0.4, 0.7)   # 산삼 — 묵은 누런 갈색 뿌리
+M['h_redberry'] = simple_mat("p_h_redberry", (0.80, 0.08, 0.06), 0.3)                              # 붉은 열매(삼 열매)
+M['h_latex'] = simple_mat("p_h_latex", (0.94, 0.93, 0.88), 0.30)                                   # 라텍스 — 흰 유액
+M['h_rubber'] = simple_mat("p_h_rubber", (0.11, 0.09, 0.07), 0.35)                                 # 고무 — 검갈색
+M['h_walnut'] = bumped_mat("p_h_walnut", (0.62, 0.46, 0.28), (0.44, 0.30, 0.17), 30, 0.9, 0.8)     # 호두 껍데기(골)
+M['h_hazel'] = simple_mat("p_h_hazel", (0.46, 0.27, 0.11), 0.40)                                   # 개암
+M['h_almond'] = striped_mat("p_h_almond", (0.70, 0.50, 0.30), (0.58, 0.39, 0.21), 40, 0.6, 0.3)   # 아몬드
+M['h_dakin'] = striped_mat("p_h_dakin", (0.88, 0.82, 0.66), (0.78, 0.71, 0.54), 50, 0.8, 0.25)    # 닥 속껍질(흰)
+M['h_dakout'] = bumped_mat("p_h_dakout", (0.44, 0.32, 0.20), (0.33, 0.23, 0.14), 18, 0.5, 0.9)    # 닥 겉껍질
+M['h_truffle'] = bumped_mat("p_h_truffle", (0.17, 0.13, 0.10), (0.07, 0.05, 0.04), 40, 1.0, 0.85)  # 송로 — 오돌토돌 검갈색
+M['h_trufflein'] = bumped_mat("p_h_trufflein", (0.42, 0.30, 0.22), (0.82, 0.76, 0.68), 18, 0.2, 0.7, (0.55, 0.62))   # 송로 속 — 대리석 무늬
+M['h_coal'] = bumped_mat("p_h_coal", (0.055, 0.052, 0.05), (0.025, 0.024, 0.023), 10, 0.5, 0.30)   # 석탄 — 윤 나는 검정
+M['h_kaolin'] = bumped_mat("p_h_kaolin", (0.91, 0.90, 0.86), (0.83, 0.82, 0.77), 4, 0.12, 0.50)   # 고령토 — 흰 찰흙
+M['h_mercury'] = simple_mat("p_h_mercury", (0.82, 0.83, 0.86), 0.05, metal=1.0)                    # 수은 — 거울 같은 은빛 물
+M['h_nitrate'] = simple_mat("p_h_nitrate", (0.93, 0.93, 0.91), 0.25)                               # 초석 — 흰 바늘 결정
+M['h_sand'] = bumped_mat("p_h_sand", (0.82, 0.72, 0.50), (0.68, 0.58, 0.38), 90, 0.4, 0.95)       # 모래
+M['h_sodaash'] = bumped_mat("p_h_sodaash", (0.88, 0.88, 0.86), (0.74, 0.74, 0.72), 60, 0.3, 0.95)  # 소다재 — 흰 잿가루
+M['h_burlap'] = striped_mat("p_h_burlap", (0.58, 0.48, 0.32), (0.47, 0.37, 0.23), 60, 0.9, 0.35)  # 삼베 자루
+# ── [T1088 ②] 향신료 갈래(약초 풀 그림) · 농산물 갈래(곡물 밭 그림) ──
+M['h_pepper'] = bumped_mat("p_h_pepper", (0.13, 0.10, 0.08), (0.06, 0.05, 0.04), 30, 0.8, 0.6)    # 후추 알 — 쭈글한 검은 알
+M['h_cumin'] = striped_mat("p_h_cumin", (0.58, 0.48, 0.30), (0.42, 0.33, 0.18), 50, 0.7, 0.3)    # 큐민 씨 — 줄진 회갈색
+M['h_cardamom'] = striped_mat("p_h_cardamom", (0.58, 0.66, 0.36), (0.48, 0.56, 0.28), 24, 0.6, 0.3)   # 카다멈 꼬투리 — 옅은 풀빛
+M['h_clove'] = bumped_mat("p_h_clove", (0.34, 0.16, 0.08), (0.24, 0.10, 0.05), 20, 0.5, 0.6)      # 정향 — 붉은 흑갈색
+M['h_nutmeg'] = bumped_mat("p_h_nutmeg", (0.48, 0.32, 0.18), (0.36, 0.22, 0.12), 14, 0.5, 0.7)    # 육두구 씨
+M['h_mace'] = simple_mat("p_h_mace", (0.80, 0.10, 0.06), 0.4)                                      # 육두구 씨옷(새빨간 그물)
+M['h_nutfruit'] = simple_mat("p_h_nutfruit", (0.88, 0.78, 0.44), 0.5)                              # 육두구 열매 살(노란)
+M['h_anise'] = bumped_mat("p_h_anise", (0.46, 0.22, 0.10), (0.34, 0.15, 0.06), 20, 0.6, 0.6)      # 팔각 — 붉은 갈색 꼬투리
+M['h_cinnamon'] = striped_mat("p_h_cinnamon", (0.58, 0.32, 0.15), (0.46, 0.23, 0.10), 30, 0.7, 0.3)   # 계피 — 말린 붉은 갈색 껍질
+M['h_vanilla'] = striped_mat("p_h_vanilla", (0.16, 0.10, 0.06), (0.10, 0.06, 0.04), 40, 0.4, 0.3)     # 바닐라 꼬투리 — 윤 나는 흑갈색
+M['h_saffron'] = simple_mat("p_h_saffron", (0.80, 0.14, 0.04), 0.5)                                # 사프란 암술 — 붉은 실
+M['h_crocus'] = simple_mat("p_h_crocus", (0.52, 0.34, 0.72), 0.5)                                  # 사프란 꽃잎 — 연보라
+M['h_paprika'] = simple_mat("p_h_paprika", (0.76, 0.08, 0.04), 0.18)                               # 파프리카 — 윤 나는 빨강
+M['h_redpowder'] = bumped_mat("p_h_redpowder", (0.70, 0.16, 0.06), (0.56, 0.10, 0.04), 80, 0.3, 0.95)   # 붉은 가루
+M['h_turmskin'] = bumped_mat("p_h_turmskin", (0.56, 0.38, 0.20), (0.44, 0.28, 0.14), 20, 0.5, 0.8)    # 강황 겉
+M['h_turmeric'] = simple_mat("p_h_turmeric", (0.92, 0.52, 0.04), 0.6)                              # 강황 속 · 가루 — 샛노란 주황
+M['h_frank'] = simple_mat("p_h_frank", (0.88, 0.80, 0.54), 0.45)                                   # 유향 — 우윳빛 노란 진
+M['h_myrrh'] = simple_mat("p_h_myrrh", (0.46, 0.15, 0.05), 0.20)                                   # 몰약 — 붉은 갈색 진
+M['h_apple'] = simple_mat("p_h_apple", (0.66, 0.06, 0.05), 0.35)                                   # 사과 — 붉은 껍질
+M['h_appley'] = simple_mat("p_h_appley", (0.78, 0.62, 0.16), 0.40)                                 # 사과 — 노란 볼
+M['h_appleflesh'] = simple_mat("p_h_appleflesh", (0.94, 0.90, 0.72), 0.6)                          # 사과 속살
+M['h_banana'] = simple_mat("p_h_banana", (0.92, 0.76, 0.16), 0.5)                                  # 바나나 — 노랑
+M['h_cassava'] = bumped_mat("p_h_cassava", (0.44, 0.28, 0.14), (0.32, 0.19, 0.09), 16, 0.6, 0.9)   # 카사바 겉(갈색 껍질)
+M['h_whiteflesh'] = simple_mat("p_h_whiteflesh", (0.95, 0.93, 0.86), 0.6)                          # 흰 속살(카사바 · 코코넛)
+M['h_chickpea'] = bumped_mat("p_h_chickpea", (0.86, 0.72, 0.46), (0.74, 0.60, 0.36), 18, 0.5, 0.7)   # 병아리콩
+M['h_pod'] = simple_mat("p_h_pod", (0.46, 0.60, 0.24), 0.55)                                       # 푸른 꼬투리
+M['h_chiligreen'] = simple_mat("p_h_chiligreen", (0.16, 0.42, 0.08), 0.25)                         # 풋고추
+M['h_cocoapod'] = striped_mat("p_h_cocoapod", (0.84, 0.54, 0.10), (0.66, 0.36, 0.06), 10, 0.5, 0.4)   # 카카오 꼬투리 — 골진 주황
+M['h_cocoabean'] = simple_mat("p_h_cocoabean", (0.36, 0.18, 0.10), 0.5)                            # 카카오 콩
+M['h_husk'] = striped_mat("p_h_husk", (0.46, 0.32, 0.18), (0.30, 0.20, 0.10), 60, 0.9, 0.4)       # 코코넛 겉 — 섬유 결
+M['h_coffee'] = simple_mat("p_h_coffee", (0.30, 0.16, 0.08), 0.35)                                 # 볶은 커피콩
+M['h_corn'] = bumped_mat("p_h_corn", (0.94, 0.72, 0.12), (0.82, 0.58, 0.06), 46, 0.6, 0.5)        # 옥수수 낟알
+M['h_cornhusk'] = striped_mat("p_h_cornhusk", (0.78, 0.74, 0.48), (0.62, 0.62, 0.34), 40, 0.8, 0.3)   # 옥수수 껍질
+M['h_cotton'] = simple_mat("p_h_cotton", (0.96, 0.95, 0.92), 0.95)                                 # 목화솜
+M['h_bract'] = simple_mat("p_h_bract", (0.38, 0.24, 0.12), 0.8)                                    # 마른 꽃받침
+M['h_date'] = simple_mat("p_h_date", (0.40, 0.17, 0.06), 0.22)                                     # 대추야자 — 윤 나는 적갈
+M['h_fig'] = simple_mat("p_h_fig", (0.30, 0.16, 0.26), 0.45)                                       # 무화과 — 검보라
+M['h_figin'] = bumped_mat("p_h_figin", (0.82, 0.34, 0.36), (0.94, 0.80, 0.62), 30, 0.2, 0.6, (0.40, 0.70))   # 무화과 속 — 붉은 씨 결
+M['h_flax'] = striped_mat("p_h_flax", (0.72, 0.68, 0.42), (0.60, 0.56, 0.32), 40, 0.7, 0.3)       # 아마 줄기 — 옅은 볏짚빛
+M['h_flaxflower'] = simple_mat("p_h_flaxflower", (0.36, 0.48, 0.86), 0.5)                          # 아마 꽃 — 하늘빛
+M['h_lentil'] = simple_mat("p_h_lentil", (0.80, 0.40, 0.16), 0.5)                                  # 렌즈콩 — 주황
+M['h_mango'] = simple_mat("p_h_mango", (0.90, 0.60, 0.10), 0.35)                                   # 망고 — 익은 노란 주황 껍질
+M['h_mangored'] = simple_mat("p_h_mangored", (0.86, 0.38, 0.12), 0.35)                             # 망고 — 붉은 볼
+M['h_mangoflesh'] = simple_mat("p_h_mangoflesh", (0.96, 0.62, 0.08), 0.45)                         # 망고 속 — 진주황
+M['h_mulleaf'] = simple_mat("p_h_mulleaf", (0.20, 0.44, 0.12), 0.30)                               # 뽕잎 — 윤 나는 진초록
+M['h_olive'] = simple_mat("p_h_olive", (0.22, 0.14, 0.20), 0.25)                                   # 올리브 — 검보라
+M['h_olivegreen'] = simple_mat("p_h_olivegreen", (0.46, 0.52, 0.16), 0.30)                         # 푸른 올리브
+M['h_oliveleaf'] = simple_mat("p_h_oliveleaf", (0.42, 0.50, 0.38), 0.55)                           # 올리브 잎 — 은빛 회록
+M['h_onion'] = striped_mat("p_h_onion", (0.70, 0.44, 0.16), (0.56, 0.32, 0.10), 30, 0.5, 0.25)    # 양파 겉껍질 — 금갈색 결
+M['h_onionin'] = simple_mat("p_h_onionin", (0.94, 0.92, 0.84), 0.5)                                # 양파 속 — 흰
+M['h_peanut'] = bumped_mat("p_h_peanut", (0.90, 0.78, 0.56), (0.80, 0.66, 0.44), 30, 0.6, 0.8)    # 땅콩 껍데기 — 그물 결
+M['h_peanutk'] = simple_mat("p_h_peanutk", (0.62, 0.24, 0.16), 0.5)                                # 땅콩 알 — 붉은 속껍질
+M['h_pineapple'] = bumped_mat("p_h_pineapple", (0.80, 0.58, 0.16), (0.52, 0.34, 0.10), 9, 0.9, 0.6, (0.50, 0.56))   # 파인애플 — 마름모 눈
+M['h_pineleaf'] = simple_mat("p_h_pineleaf", (0.28, 0.48, 0.24), 0.5)                              # 파인애플 잎
+M['h_potato'] = bumped_mat("p_h_potato", (0.70, 0.54, 0.34), (0.58, 0.42, 0.24), 14, 0.4, 0.8)    # 감자 — 누런 갈색
+M['h_potatoin'] = simple_mat("p_h_potatoin", (0.94, 0.88, 0.62), 0.55)                             # 감자 속 — 연노랑
+M['h_pumpkin'] = striped_mat("p_h_pumpkin", (0.86, 0.46, 0.08), (0.74, 0.36, 0.05), 6, 0.5, 0.3)  # 늙은호박 — 주황 골
+M['h_beet'] = simple_mat("p_h_beet", (0.90, 0.86, 0.74), 0.55)                                     # 사탕무 — 흰 뿌리
+M['h_cane'] = striped_mat("p_h_cane", (0.48, 0.26, 0.32), (0.38, 0.18, 0.24), 30, 0.4, 0.25)      # 사탕수수 — 자줏빛 줄기
+M['h_canenode'] = simple_mat("p_h_canenode", (0.78, 0.70, 0.42), 0.5)                              # 사탕수수 마디(누런 테)
+M['h_sweetpot'] = simple_mat("p_h_sweetpot", (0.52, 0.16, 0.22), 0.45)                             # 고구마 — 자홍 껍질
+M['h_sweetin'] = simple_mat("p_h_sweetin", (0.96, 0.74, 0.30), 0.5)                                # 고구마 속 — 노란 주황
+M['h_tobacco'] = striped_mat("p_h_tobacco", (0.62, 0.42, 0.16), (0.48, 0.30, 0.10), 18, 0.8, 0.3)   # 말린 담뱃잎 — 금갈색
+M['h_tomato'] = simple_mat("p_h_tomato", (0.82, 0.10, 0.06), 0.25)                                 # 토마토
+M['h_tomatoin'] = bumped_mat("p_h_tomatoin", (0.90, 0.28, 0.18), (0.96, 0.78, 0.30), 26, 0.2, 0.5, (0.55, 0.62))   # 토마토 속(씨)
+# ── [T1088] 보석 · 주화 · 위세품 ──
+M['h_diamond'] = simple_mat("p_h_diamond", (0.86, 0.91, 0.96), 0.03)                               # 다이아몬드 — 맑은 흰빛
+M['h_ruby'] = simple_mat("p_h_ruby", (0.66, 0.03, 0.08), 0.05)                                     # 루비
+M['h_sapphire'] = simple_mat("p_h_sapphire", (0.05, 0.16, 0.62), 0.05)                             # 사파이어
+M['h_emerald'] = simple_mat("p_h_emerald", (0.04, 0.48, 0.22), 0.05)                               # 에메랄드
+M['h_amethyst'] = simple_mat("p_h_amethyst", (0.42, 0.16, 0.60), 0.08)                             # 자수정
+M['h_topaz'] = simple_mat("p_h_topaz", (0.92, 0.64, 0.14), 0.05)                                   # 토파즈 — 금빛
+M['h_turq'] = bumped_mat("p_h_turq", (0.28, 0.70, 0.66), (0.16, 0.20, 0.18), 7, 0.2, 0.35, (0.60, 0.66))   # 터키석 — 하늘빛에 검은 그물
+M['h_jade'] = simple_mat("p_h_jade", (0.16, 0.44, 0.26), 0.12)                                     # 옥(갈아 윤 낸 것)
+M['h_goldmet'] = simple_mat("p_h_goldmet", (0.88, 0.64, 0.18), 0.22, metal=1.0)                    # 금화
+M['h_silvmet'] = simple_mat("p_h_silvmet", (0.78, 0.78, 0.80), 0.22, metal=1.0)                    # 은화
+M['h_ironmet'] = simple_mat("p_h_ironmet", (0.36, 0.36, 0.38), 0.35, metal=1.0)                    # 쇠(위세 칼)
+M['h_paper'] = striped_mat("p_h_paper", (0.90, 0.86, 0.74), (0.84, 0.79, 0.66), 70, 0.9, 0.15)    # 종이 · 두루마리
+M['h_redcord'] = simple_mat("p_h_redcord", (0.66, 0.10, 0.08), 0.6)                                # 붉은 끈
+M['h_ink'] = simple_mat("p_h_ink", (0.06, 0.06, 0.07), 0.4)                                        # 먹빛
+# ── [T1088] 공예품 · 가축 산물 · 바다 · 그 밖 ──
+M['h_foam'] = bumped_mat("p_h_foam", (0.96, 0.94, 0.88), (0.86, 0.84, 0.78), 30, 0.3, 0.8)        # 맥주 거품
+M['h_beer'] = simple_mat("p_h_beer", (0.62, 0.36, 0.06), 0.3)                                      # 맥주 — 호박빛
+M['h_wine'] = simple_mat("p_h_wine", (0.30, 0.02, 0.06), 0.15)                                     # 포도주 — 검붉은
+M['h_soy'] = simple_mat("p_h_soy", (0.07, 0.04, 0.02), 0.08)                                       # 간장 — 윤 나는 검정
+M['h_onggi'] = bumped_mat("p_h_onggi", (0.30, 0.18, 0.10), (0.22, 0.12, 0.07), 6, 0.15, 0.25)     # 옹기 — 윤 낸 검붉은 갈색
+M['h_kimchi'] = bumped_mat("p_h_kimchi", (0.92, 0.70, 0.52), (0.80, 0.20, 0.09), 14, 0.3, 0.5, (0.58, 0.66))   # 김치 — 고춧물 든 배춧잎
+M['h_cabbage'] = simple_mat("p_h_cabbage", (0.86, 0.88, 0.62), 0.5)                                # 배추 줄기 — 연한 흰 초록
+M['h_crust'] = bumped_mat("p_h_crust", (0.62, 0.36, 0.14), (0.48, 0.26, 0.08), 10, 0.4, 0.7)      # 빵 껍질
+M['h_crumb'] = bumped_mat("p_h_crumb", (0.94, 0.86, 0.66), (0.84, 0.74, 0.52), 40, 0.4, 0.9)      # 빵 속
+M['h_bowwood'] = striped_mat("p_h_bowwood", (0.20, 0.12, 0.07), (0.30, 0.18, 0.10), 20, 0.35, 0.3)  # 각궁 몸(뿔 · 나무 · 옻)
+M['h_brushhair'] = simple_mat("p_h_brushhair", (0.10, 0.08, 0.07), 0.7)                            # 붓털(먹 머금은)
+M['h_inkstone'] = bumped_mat("p_h_inkstone", (0.20, 0.20, 0.22), (0.12, 0.12, 0.13), 8, 0.3, 0.5) # 벼루
+M['h_mudbrick'] = bumped_mat("p_h_mudbrick", (0.66, 0.46, 0.28), (0.54, 0.36, 0.20), 16, 0.6, 0.95)   # 진흙 벽돌(햇볕에 말린)
+M['h_cutstone'] = bumped_mat("p_h_cutstone", (0.62, 0.61, 0.58), (0.50, 0.49, 0.46), 12, 0.4, 0.9)   # 다듬은 돌
+M['h_indigo'] = simple_mat("p_h_indigo", (0.06, 0.10, 0.34), 0.45)                                 # 쪽빛(인디고)
+M['h_indigocake'] = bumped_mat("p_h_indigocake", (0.10, 0.14, 0.42), (0.05, 0.07, 0.24), 12, 0.4, 0.7)   # 인디고 덩이
+M['h_purple'] = simple_mat("p_h_purple", (0.36, 0.06, 0.32), 0.35)                                 # 자색 염료
+M['h_purpleyarn'] = striped_mat("p_h_purpleyarn", (0.48, 0.10, 0.42), (0.36, 0.06, 0.30), 60, 0.6, 0.3)   # 자색 실
+M['h_glass'] = simple_mat("p_h_glass", (0.16, 0.50, 0.58), 0.02)                                   # 유리 — 푸른 물빛
+M['h_perfume'] = simple_mat("p_h_perfume", (0.78, 0.42, 0.62), 0.03)                               # 향수병 — 분홍 유리
+M['h_celadon'] = simple_mat("p_h_celadon", (0.56, 0.70, 0.62), 0.12)                               # 도자기 유약 — 비색
+M['h_silk'] = striped_mat("p_h_silk", (0.66, 0.08, 0.12), (0.54, 0.05, 0.09), 50, 0.22, 0.15)     # 비단 — 윤 나는 진홍
+M['h_tallow'] = bumped_mat("p_h_tallow", (0.93, 0.89, 0.74), (0.86, 0.80, 0.62), 6, 0.15, 0.55)   # 소기름 — 굳은 흰 기름
+M['h_cheese'] = bumped_mat("p_h_cheese", (0.96, 0.80, 0.34), (0.90, 0.72, 0.26), 10, 0.2, 0.6)    # 치즈 속
+M['h_rind'] = simple_mat("p_h_rind", (0.78, 0.52, 0.16), 0.5)                                      # 치즈 껍질
+M['h_duck'] = bumped_mat("p_h_duck", (0.40, 0.08, 0.08), (0.30, 0.05, 0.05), 20, 0.3, 0.5)        # 오리 살 — 검붉은
+M['h_duckskin'] = simple_mat("p_h_duckskin", (0.90, 0.80, 0.62), 0.45)                             # 오리 껍질 · 기름
+M['h_milk'] = simple_mat("p_h_milk", (0.97, 0.96, 0.93), 0.4)                                      # 젖
+M['h_ivory'] = striped_mat("p_h_ivory", (0.92, 0.88, 0.76), (0.84, 0.79, 0.64), 14, 0.3, 0.2)     # 상아 — 결 진 미색
+M['h_linen'] = striped_mat("p_h_linen", (0.80, 0.76, 0.64), (0.70, 0.66, 0.54), 80, 0.9, 0.3)     # 리넨 — 거친 회베이지 올
+M['h_beef'] = bumped_mat("p_h_beef", (0.90, 0.84, 0.76), (0.52, 0.05, 0.06), 22, 0.2, 0.5, (0.64, 0.70))   # 쇠고기 — 마블링
+M['h_mutton'] = simple_mat("p_h_mutton", (0.70, 0.22, 0.22), 0.45)                                 # 양고기 살
+M['h_porkfat'] = simple_mat("p_h_porkfat", (0.96, 0.90, 0.84), 0.5)                                # 비계
+M['h_porklean'] = simple_mat("p_h_porklean", (0.86, 0.46, 0.46), 0.45)                             # 돼지 살(분홍)
+M['h_porkskin'] = simple_mat("p_h_porkskin", (0.84, 0.66, 0.52), 0.5)                              # 돼지 껍질
+M['h_cocoon'] = bumped_mat("p_h_cocoon", (0.96, 0.95, 0.90), (0.88, 0.86, 0.80), 40, 0.3, 0.8)    # 고치
+M['h_silkthread'] = striped_mat("p_h_silkthread", (0.92, 0.84, 0.56), (0.84, 0.74, 0.44), 90, 0.25, 0.2)   # 생사 — 윤 나는 금빛 흰 실
+M['h_silkworm'] = bumped_mat("p_h_silkworm", (0.92, 0.91, 0.86), (0.80, 0.78, 0.72), 30, 0.2, 0.5)   # 누에
+M['h_wool'] = bumped_mat("p_h_wool", (0.95, 0.92, 0.82), (0.88, 0.84, 0.72), 50, 0.3, 0.98)       # 양털
+M['h_lobster'] = bumped_mat("p_h_lobster", (0.14, 0.22, 0.28), (0.08, 0.14, 0.18), 20, 0.4, 0.4) # 바닷가재 — 검푸른 껍데기
+M['h_lobsterj'] = simple_mat("p_h_lobsterj", (0.86, 0.36, 0.12), 0.4)                              # 바닷가재 마디 · 집게 끝(주황)
+M['h_murex'] = bumped_mat("p_h_murex", (0.84, 0.76, 0.62), (0.62, 0.52, 0.40), 18, 0.5, 0.6)      # 자색고둥 껍데기
 # ── [T95] 옷 여섯 · 시설 셋 ─────────────────────────────────────────────────
 # ★★옷 색의 정본은 **`render_common.CLOTH_MATS`** 하나다(T81 이 fiber·ramie 를 밀어낸 값 그대로).
 #   짐 창의 갖옷과 몸에 걸친 갖옷이 **같은 물건**으로 읽혀야 한다 — 색이 갈리면 그 순간 두 물건이 된다.
@@ -1639,6 +1825,1688 @@ def m_sulfur():
              rot=(random.uniform(-0.4, 0.4), random.uniform(-0.4, 0.4), 0), mat=M['g_sulfur'], verts=5)
 
 
+# ═══════════════ [T1088] 그림 없는 품목 이어서 — 첫 1시간 제작창 · 곳간 · 거래 빈도 순 ═══════════════
+# ★차례의 자: 제작창 음식 칸(모두가 첫 1시간에 본다) → 곳간 · 거래 · 게시판 빈도(`T17_ITEMFREQ` · 보고/T1088 §1).
+# ★같은 물건은 같은 재질 — 조개탕은 **굴**(그 요리의 재료 `tidal.cookMap`)의 껍데기 · 살 재질 · 미역국은 미역 재질 ·
+#   모시는 모시옷 빛(`CLOTH_MATS`) · 청동은 이 파일의 청동 재질 그대로다.
+
+def _ring(R, r, loc, mat, rot=(0, 0, 0), maj=32, mnr=8):
+    """고리 — 아가리 테 · 동여맨 끈 · 섬유 타래(원환체)."""
+    bpy.ops.mesh.primitive_torus_add(major_radius=R, minor_radius=r, major_segments=maj, minor_segments=mnr,
+                                     location=loc, rotation=rot)
+    o = bpy.context.active_object
+    for pg in o.data.polygons:
+        pg.use_smooth = True
+    return add(o, mat)
+
+
+def _bowl(R, H, mat, base=0.56):
+    """바리(사발) — 바닥이 좁고 아가리가 벌어진 무문토기 그릇 + 아가리 테. 안에 담는 것은 부르는 쪽이 얹는다."""
+    cone(R * base, R, H, (0, 0, H / 2), mat=mat, verts=32)
+    _ring(R - 0.03, 0.05, (0, 0, H), mat)
+
+
+def _kernels(n, cx, cy, cz, rx, ry, rz, seed, mats, r=0.034):
+    """낟알 n 개 — 반타원 둔덕 위에 흩뿌린다(작은 것은 개수로 말한다 · §9)."""
+    random.seed(seed)
+    for i in range(n):
+        a = random.uniform(0, math.tau); t = math.sqrt(random.uniform(0, 1))
+        x, y = cx + math.cos(a) * rx * t, cy + math.sin(a) * ry * t
+        z = cz + rz * math.sqrt(max(0.0, 1 - t * t))
+        o = ico(r * random.uniform(0.85, 1.15), (x, y, z), subdiv=1, mat=mats[i % len(mats)], scale=(1.5, 1.0, 0.9), smooth=True)
+        o.rotation_euler = (random.uniform(-0.5, 0.5), random.uniform(-0.5, 0.5), random.uniform(0, math.tau))
+
+
+def m_food():
+    """곡식(`food` — econ 곡식 칸 · 이름표 '곡식' · 곳간 · 게시판 보상 · 모닥불 · 익힌 곡식의 재료).
+    **한 곡식을 고르지 않는다** — 누런 · 갈색 · 흰 낟알을 섞은 잡곡을 소쿠리에 고봉으로 담고 앞에 몇 알 흘렸다(§9 — 작은 것은 그릇과 개수로)."""
+    random.seed(1801)
+    cone(0.50, 0.70, 0.44, (0, 0, 0.22), mat=M['g_basket'], verts=32)                                     # 소쿠리(엮은 결)
+    _ring(0.69, 0.055, (0, 0, 0.44), M['g_basket'])
+    ico(0.68, (0, 0, 0.44), subdiv=3, mat=M['h_grain'], scale=(1.0, 1.0, 0.52), smooth=True)              # 고봉
+    _kernels(80, 0, 0, 0.44, 0.62, 0.62, 0.34, 18011, [M['h_kern1'], M['h_kern2'], M['h_kern3']])
+    _kernels(12, 0.42, -0.66, 0.02, 0.26, 0.14, 0.03, 18012, [M['h_kern1'], M['h_kern2'], M['h_kern3']])  # 흘린 낟알
+
+
+def m_food_cooked():
+    """익힌 곡식(`food_cooked` — 곡식 1 을 모닥불에서 · 제작창 음식 칸) — 바리에 고봉으로 담았다.
+    낟알이 불어 뽀얗고, 곡식(`food`)과 같은 잡곡 낟알이 군데군데 박혔다(한 곡식을 고르지 않는다)."""
+    random.seed(1803)
+    _bowl(0.62, 0.40, M['h_bowl'])
+    ico(0.60, (0, 0, 0.40), subdiv=3, mat=M['h_cooked'], scale=(1.0, 1.0, 0.64), smooth=True)
+    _kernels(36, 0, 0, 0.40, 0.55, 0.55, 0.38, 18031, [M['h_kern3'], M['h_kern3'], M['h_kern1'], M['h_kern2']], r=0.030)
+
+
+def _oyster_half(x, y, z, rz, s=1.0):
+    """굴 반쪽 — 굴 아이콘(`_oyster`)의 껍데기 · 진주층 · 살 재질 그대로(조개탕의 재료가 굴 셋이다)."""
+    o = ico(0.30 * s, (x, y, z), subdiv=2, mat=M['shell'], scale=(1.05, 0.80, 0.30), jitter=0.16, smooth=False); o.rotation_euler = (0, 0, rz)
+    o = ico(0.25 * s, (x, y, z + 0.05 * s), subdiv=2, mat=M['nacre'], scale=(0.95, 0.74, 0.10), jitter=0.08, smooth=True); o.rotation_euler = (0, 0, rz)
+    o = ico(0.17 * s, (x, y, z + 0.08 * s), subdiv=2, mat=M['flesh'], scale=(1.0, 0.78, 0.40), jitter=0.12, smooth=True); o.rotation_euler = (0, 0, rz)
+
+
+def m_clam_stew():
+    """조개탕(`clam_stew` — 굴 3 을 끓인 요리 · 제작창 음식 칸 · `tidal.cookMap`) — 그을린 **심발**(깊은 끓임 그릇)에 뽀얀 국물 ·
+    반쪽 껍데기째 끓인 굴(굴 아이콘과 같은 껍데기 · 진주층 · 살 재질) · 달래 몇 가닥. 바리에 담은 미역국 · 익힌 곡식 · 요리와 그릇 꼴로 갈린다."""
+    random.seed(1804)
+    cone(0.46, 0.70, 0.66, (0, 0, 0.33), mat=M['h_soot'], verts=32)
+    _ring(0.68, 0.06, (0, 0, 0.66), M['h_soot'])
+    cyl(0.66, 0.03, (0, 0, 0.665), mat=M['h_broth'], verts=32)                                            # 국물 면(그릇 윗면보다 살짝 위)
+    for (x, y, rz, s_) in ((0.22, -0.22, 0.5, 0.80), (-0.30, 0.02, 2.3, 0.76), (0.10, 0.32, -1.0, 0.72), (-0.06, -0.40, 3.4, 0.58)):
+        _oyster_half(x, y, 0.67, rz, s=s_)
+    for i in range(7):                                                                                     # 달래
+        a = i * 0.90 + 0.4; d = random.uniform(0.10, 0.50)
+        cyl(0.016, 0.24, (math.cos(a) * d, math.sin(a) * d, 0.69), rot=(0, math.radians(90), a), mat=M['h_green'], verts=6)
+
+
+def m_seaweed_soup():
+    """미역국(`seaweed_soup` — 미역 2 를 끓인 요리 · 제작창 음식 칸) — 바리에 맑은 갈색 국물 · 풀어져 국물에 누운 미역 가닥
+    (미역 아이콘과 같은 리본 꼴 · 끓여서 새파래진 빛) · 걸쳐 둔 나무 국자. 흙빛 접시(씨앗 · 건굴 · 말린 열매)와 국 빛 · 국자로 갈린다."""
+    random.seed(1805)
+    _bowl(0.66, 0.42, M['h_bowl'], base=0.54)
+    cyl(0.62, 0.03, (0, 0, 0.425), mat=M['h_soup'], verts=32)                                            # 국물 면(그릇 윗면보다 살짝 위)
+    for i in range(11):                                                                                   # 미역 가닥 — 이어진 리본이 물결지며 눕는다
+        a0 = i * 0.571 + random.uniform(-0.2, 0.2); d0 = random.uniform(0.05, 0.36)
+        x0, y0 = math.cos(a0) * d0, math.sin(a0) * d0
+        h = a0 + random.uniform(1.2, 2.0)
+        for j in range(9):
+            t = j / 8.0
+            px = x0 + math.cos(h) * (t - 0.5) * 0.80 + math.sin(t * 6.0 + i) * 0.05 * -math.sin(h)
+            py = y0 + math.sin(h) * (t - 0.5) * 0.80 + math.sin(t * 6.0 + i) * 0.05 * math.cos(h)
+            if px * px + py * py > 0.54 ** 2:
+                continue
+            box(0.12, 0.16 - t * 0.06, 0.012, (px, py, 0.445 + j * 0.001), rot=(0, 0, h + math.sin(t * 6.0 + i) * 0.5), mat=M['h_kelpcooked'])
+    cyl(0.036, 1.00, (-0.62, 0.0, 0.70), rot=(0, math.radians(-59), 0), mat=M['haft'], verts=10)          # 국자 자루(아가리에 걸쳤다)
+    ico(0.13, (-0.16, 0.0, 0.44), subdiv=2, mat=M['haft'], scale=(1.1, 1.0, 0.35), smooth=True)              # 국자 머리(국에 잠겼다)
+
+
+def m_cooked_food():
+    """요리(`cooked_food` — econ 칸: 곡식 + 부재료를 끓인 조리식 · `sim/economy-sim.js` cook '곡식 + 부재료 → 요리' · 곳간 '요리') —
+    윤 낸 붉은 간토기(홍도) 바리에 걸쭉한 **죽** · 위에 고깃점과 나물(부재료). 밥 한 그릇(익힌 곡식) · 국 둘과 꼴 · 빛으로 갈린다."""
+    random.seed(1806)
+    _bowl(0.64, 0.44, M['h_redware'], base=0.50)
+    ico(0.60, (0, 0, 0.42), subdiv=3, mat=M['h_porridge'], scale=(1.0, 1.0, 0.18), smooth=True)
+    for i in range(7):                                                                                    # 고깃점
+        a = i * 0.898 + 0.3; d = random.uniform(0.10, 0.40)
+        o = ico(0.09, (math.cos(a) * d, math.sin(a) * d, 0.50), subdiv=1, mat=M['h_meatbit'], scale=(1.3, 1.0, 0.7), jitter=0.2)
+        o.rotation_euler = (0, 0, a)
+    for i in range(8):                                                                                    # 나물
+        a = i * 0.785 + 0.7; d = random.uniform(0.05, 0.44)
+        o = ico(0.08, (math.cos(a) * d, math.sin(a) * d, 0.51), subdiv=1, mat=M['h_green'], scale=(1.8, 0.6, 0.15), jitter=0.1)
+        o.rotation_euler = (0, 0, a + 1.2)
+
+
+def _bar(x, y, z, rz, L, W, H, mat):
+    """막대 덩이 — 열린 거푸집 바닥 꼴(아래가 넓고 위가 좁다)."""
+    o = box(L, W, H, (x, y, z), rot=(0, 0, rz), mat=mat)
+    for v in o.data.vertices:
+        if v.co.z > 0:
+            v.co.x *= 0.88; v.co.y *= 0.62
+    return o
+
+
+def m_bronze():
+    """청동(`bronze` — 구리와 주석을 녹여 섞은 쇠 · 장비 재질 칸 · 시설창 노 · 작업대) — 열린 거푸집에 부어 굳힌 **막대 덩이** 둘을
+    엇걸어 놓았다 · 등이 부풀었고 겉에 푸른 녹이 앉았다. 빛은 이 파일의 청동(`M['bronze']`) 그대로에 쇠붙이 윤만.
+    구리 · 주석 · 납의 빵떡 덩이(`icon_render._ingot`)와 꼴로 갈린다."""
+    random.seed(1807)
+    bars = ((0.0, 0.0, 0.10, math.radians(-20)), (0.04, 0.02, 0.32, math.radians(52)))
+    for (x, y, z, rz) in bars:
+        _bar(x, y, z, rz, 1.50, 0.44, 0.20, M['h_bronzemet'])
+        o = cyl(0.15, 1.28, (x, y, z + 0.10), rot=(0, math.radians(90), rz), mat=M['h_bronzemet'], verts=20)   # 부푼 등
+        o.scale = (0.55, 1.0, 1.0)
+    for k in range(14):                                                                                     # 녹
+        x, y, z, rz = bars[k % 2]
+        t = random.uniform(-0.60, 0.60)
+        o = ico(random.uniform(0.09, 0.15), (x + math.cos(rz) * t, y + math.sin(rz) * t + random.uniform(-0.05, 0.05) * math.cos(rz), z + 0.175),
+                subdiv=1, mat=M['h_patina'], scale=(1.5, 1.0, 0.25), jitter=0.25)
+        o.rotation_euler = (0, 0, rz + random.uniform(-0.6, 0.6))
+
+
+def m_ramie():
+    """모시(`ramie` — 옷 재질 칸 · 곳간 '모시') — 모시풀 껍질을 째어 낸 **흰 섬유 타래**: 가는 올이 긴 고리를 이루고 한쪽을 끈으로 동였다.
+    빛은 모시옷과 같은 값(정본 `render_common.CLOTH_MATS['ramie']`) — 같은 물건의 앞뒤라는 표시."""
+    random.seed(1809)
+    for k in range(7):                                                                                      # 올 다발(고리)
+        o = _ring(0.80 + random.uniform(-0.05, 0.05), 0.055, (random.uniform(-0.03, 0.03), random.uniform(-0.03, 0.03), 0.07 + k * 0.022),
+                  M['h_ramief'], rot=(random.uniform(-0.05, 0.05), random.uniform(-0.05, 0.05), 0), maj=48, mnr=8)
+        o.scale = (1.0, 0.36, 1.0)
+    for i in range(3):                                                                                      # 동인 끈(한쪽 끝)
+        cyl(0.11, 0.05, (0.74 - i * 0.07, 0.0, 0.14), rot=(0, math.radians(90), 0), mat=M['cord'], verts=12)
+    for i in range(9):                                                                                      # 끝에서 풀린 올
+        a = random.uniform(-0.5, 0.5)
+        o = cyl(0.012, 0.42, (-0.98 - math.cos(a) * 0.12, math.sin(a) * 0.20, 0.10), rot=(0, math.radians(90), a), mat=M['h_ramief'], verts=6)
+
+
+def m_hemp():
+    """대마(`hemp` — 삼 · 옷 재질 칸 · 곳간 '삼베' 감) — 벤 **삼대 한 단**: 긴 줄기를 두 군데 묶고 윗동에 손바닥꼴 잎이 달렸다."""
+    random.seed(1808)
+    for i in range(11):                                                                                     # 줄기
+        dy = (i - 5) * 0.045 + random.uniform(-0.01, 0.01); dz = 0.06 + (i % 3) * 0.04
+        cyl(0.036, 2.30, (-0.10, dy, dz), rot=(0, math.radians(90), dy * 0.35), mat=M['h_stalk'], verts=7)
+    for x in (-0.45, 0.20):                                                                                 # 묶은 끈
+        cyl(0.21, 0.06, (x, 0.0, 0.10), rot=(0, math.radians(90), 0), mat=M['cord'], verts=12)
+    for (cx, cy, cz, rz) in ((1.02, -0.16, 0.16, -0.5), (1.12, 0.16, 0.20, 0.4), (0.84, 0.02, 0.30, 0.0)):    # 잎(손바닥꼴 · 잎줄기 일곱)
+        for j in range(7):
+            a = rz + (j - 3) * 0.42
+            L = 0.30 - abs(j - 3) * 0.05
+            o = ico(L * 0.5, (cx + math.cos(a) * L * 0.5, cy + math.sin(a) * L * 0.5, cz), subdiv=2, mat=M['h_hempleaf'],
+                    scale=(1.0, 0.20, 0.05), smooth=True)
+            o.rotation_euler = (0, 0, a)
+
+
+def m_clothes():
+    """옷(`clothes` — 옷 갈래 키 · econ 재봉사 산출 '옷' · 곳간 '옷') — **펼친 관두의**(머리를 넣는 구멍을 낸 통옷) 한 벌을 허리끈과 함께 눕혔다.
+    재질 여섯(`clothes_<재질>`)은 **개켜 쌓은** 그림이다 — 갈래 그림은 펼친 꼴로 갈린다. 빛은 삼베옷 값(정본 `CLOTH_MATS` — 청동기 한반도 옷감의 바탕)."""
+    random.seed(1810)
+    n0 = len(OBJS)
+    box(1.00, 1.04, 0.05, (0, 0, 0.04), mat=M['h_hempweave'])                                            # 몸판(어깨 +x · 단 −x)
+    for sgn in (-1, 1):                                                                                     # 소매 — 양쪽으로 뻗었다
+        box(0.44, 0.66, 0.05, (0.24, sgn * 0.82, 0.045), rot=(0, 0, sgn * -0.10), mat=M['h_hempweave'])
+        box(0.46, 0.06, 0.055, (0.24, sgn * 1.13, 0.05), rot=(0, 0, sgn * -0.10), mat=M['cl_hemp_t'])      # 소맷부리
+    for i in range(3):                                                                                       # 주름
+        box(0.70, 0.035, 0.03, (-0.10, -0.30 + i * 0.30, 0.075), rot=(0, 0, 0.06 * (i - 1)), mat=M['cl_hemp_t'])
+    cyl(0.15, 0.02, (0.36, 0.0, 0.075), mat=M['cl_hemp_p'], verts=20)                                       # 목 구멍
+    box(0.26, 0.035, 0.02, (0.18, 0.0, 0.075), mat=M['cl_hemp_p'])                                          # 앞 트임
+    box(0.11, 1.10, 0.05, (-0.08, 0.0, 0.085), mat=M['cl_hemp_p'])                                          # 허리끈
+    for sgn in (-1, 1):
+        box(0.40, 0.07, 0.03, (-0.36, sgn * 0.10, 0.09), rot=(0, 0, sgn * 0.45), mat=M['cl_hemp_p'])        # 늘어진 끈 끝
+    _spin(n0, math.radians(135))                                                                            # 소매가 화면 가로로 · 어깨가 안쪽으로
+
+
+def m_resin():
+    """송진(`resin` — 숲 갈래 채집물) — 소나무 껍질 조각에 흘러 굳은 **노란 진** 방울 · 옆에 떨어진 진 덩이 둘(윤이 난다)."""
+    random.seed(1811)
+    box(1.30, 0.56, 0.14, (0, 0, 0.07), rot=(0, 0, math.radians(8)), mat=M['bark2'])                       # 껍질 조각
+    for i in range(4):
+        box(1.20, 0.07, 0.06, (0.0, -0.20 + i * 0.13, 0.15), rot=(0, 0, math.radians(8)), mat=M['bark2'])  # 껍질 골
+    for (x, y, r) in ((-0.30, 0.02, 0.22), (0.10, -0.06, 0.18), (0.42, 0.06, 0.15), (-0.02, 0.16, 0.12)):
+        ico(r, (x, y, 0.18 + r * 0.5), subdiv=2, mat=M['h_resin'], scale=(1.2, 1.0, 0.75), jitter=0.10, smooth=True)
+        ico(r * 0.55, (x + 0.06, y - r * 0.9, 0.12), subdiv=2, mat=M['h_resin'], scale=(1.0, 1.6, 0.6), jitter=0.10, smooth=True)  # 흘러내린 자국
+    ico(0.20, (0.66, -0.56, 0.12), subdiv=2, mat=M['h_resin'], scale=(1.2, 1.0, 0.7), jitter=0.18, smooth=True)
+    ico(0.13, (0.30, -0.66, 0.08), subdiv=2, mat=M['h_resin'], scale=(1.1, 1.0, 0.7), jitter=0.18, smooth=True)
+
+
+def m_clay():
+    """진흙(`clay` — 광물 갈래 · 그릇 · 벽돌 감) — 젖은 갈흙 덩이(`_earth`)."""
+    _earth(M['h_clayraw'], 1812)
+
+
+def m_tigerhide():
+    """호피(`tigerhide` — econ 칸: 호랑이 도축 · 최고가 위신재 · 곳간 '호피') — 펼친 **범 가죽**: 주황 바탕에 굽이진 검은 줄 ·
+    네 다리를 옆으로 벌렸고 꼬리가 길며 가장자리가 희다."""
+    random.seed(1813)
+    n0 = len(OBJS)
+    ico(0.70, (0, 0, 0.03), subdiv=3, mat=M['h_tigerw'], scale=(1.50, 0.86, 0.03), smooth=True)            # 흰 배 가장자리
+    ico(0.66, (0, 0, 0.06), subdiv=3, mat=M['h_tiger'], scale=(1.50, 0.78, 0.04), smooth=True)              # 등가죽
+    for (x, sgn) in ((0.66, 1), (0.66, -1), (-0.70, 1), (-0.70, -1)):                                        # 다리(옆으로 벌렸다)
+        a = sgn * (1.25 if x > 0 else 1.90)
+        for j in range(4):
+            t = j / 3.0
+            ico(0.17 - t * 0.05, (x + math.cos(a) * (0.38 + t * 0.42), sgn * 0.30 + math.sin(a) * (0.30 + t * 0.42) * sgn * sgn, 0.05),
+                subdiv=2, mat=M['h_tiger'], scale=(1.3, 1.0, 0.25), smooth=True)
+        ico(0.09, (x + math.cos(a) * 0.98, sgn * 0.30 + math.sin(a) * 0.86, 0.06), subdiv=2, mat=M['h_tigerw'], scale=(1.2, 1.0, 0.4), smooth=True)
+    for j in range(9):                                                                                       # 꼬리(검은 고리)
+        t = j / 8.0
+        ico(0.085 - t * 0.025, (-1.06 - t * 0.80, 0.08 + math.sin(t * 3.0) * 0.26, 0.05), subdiv=2,
+            mat=(M['g_furblk'] if j % 2 else M['h_tiger']), scale=(1.3, 1.0, 0.45), smooth=True)
+    ico(0.30, (1.20, 0.0, 0.09), subdiv=2, mat=M['h_tiger'], scale=(0.95, 1.0, 0.32), smooth=True)          # 머리 가죽
+    ico(0.14, (1.42, 0.0, 0.10), subdiv=2, mat=M['h_tigerw'], scale=(0.8, 1.2, 0.35), smooth=True)          # 주둥이(흰)
+    for sgn in (-1, 1):
+        ico(0.09, (1.10, sgn * 0.26, 0.16), subdiv=1, mat=M['g_furblk'], scale=(1.0, 1.0, 0.5))            # 귀
+        ico(0.035, (1.30, sgn * 0.11, 0.18), subdiv=1, mat=M['g_furblk'])                                   # 눈
+
+
+def _earth(mat, seed):
+    """흙덩이 — 캐어 낸 찰흙: 뭉친 덩이의 윗면을 칼로 잘라 매끈하다 · 손가락 자국 · 말아 둔 흙가래(그릇을 쌓는 감) · 떼어 낸 덩이.
+    진흙(`clay`)과 고령토(`kaolin`)가 **같은 흙 문법**이다 — 빛만 다르다."""
+    random.seed(seed)
+    o = ico(0.58, (-0.06, 0.06, 0.30), subdiv=3, mat=mat, scale=(1.20, 1.0, 0.62), jitter=0.04, smooth=True)
+    for v in o.data.vertices:                                                                                  # 칼로 자른 윗면
+        if v.co.z > 0.40:
+            v.co.z = 0.40
+    for i in range(3):                                                                                        # 손가락 자국
+        ico(0.09, (-0.40 + i * 0.20, -0.42, 0.40), subdiv=2, mat=mat, scale=(0.6, 1.0, 0.4), smooth=True)
+    _ring(0.22, 0.075, (0.52, -0.62, 0.075), mat, maj=40, mnr=10)                                             # 감은 흙가래
+    cyl(0.075, 0.80, (-0.10, -0.80, 0.075), rot=(0, math.radians(90), math.radians(-10)), mat=mat, verts=14)
+    ico(0.20, (0.70, 0.28, 0.14), subdiv=2, mat=mat, scale=(1.1, 1.0, 0.7), jitter=0.06, smooth=True)          # 떼어 낸 덩이
+
+
+def m_kaolin():
+    """고령토(`kaolin` — 광물 갈래 · 흰 찰흙) — 진흙과 같은 흙 덩이(`_earth`) · 흰빛."""
+    _earth(M['h_kaolin'], 1830)
+
+
+def m_amber_resin():
+    """호박(`amber_resin` — 숲 갈래 채집물 · 땅에서 줍는 송진 화석) — 윤 나는 주황 호박 덩이 다섯(둥글게 닳았다)."""
+    random.seed(1820)
+    for (x, y, r) in ((0.0, 0.0, 0.34), (0.46, -0.20, 0.24), (-0.40, -0.26, 0.22), (0.18, 0.40, 0.20), (-0.30, 0.34, 0.16)):
+        ico(r, (x, y, r * 0.75), subdiv=2, mat=M['h_amber'], scale=(1.25, 1.0, 0.85), jitter=0.18, smooth=True)
+
+
+def m_amber_raw():
+    """호박 원석(`amber_raw` — 광물 갈래 · 캐낸 것) — 풍화된 **겉껍질**을 쓴 덩이를 쪼개 윤 나는 주황 속살이 드러났다(옥 원석과 같은 문법)."""
+    random.seed(1821)
+    ico(0.60, (-0.10, 0.10, 0.42), subdiv=2, mat=M['h_ambercrust'], scale=(1.15, 1.0, 0.82), jitter=0.18, smooth=False)
+    ico(0.46, (0.30, -0.28, 0.34), subdiv=2, mat=M['h_amber'], scale=(1.0, 1.0, 0.86), jitter=0.12, smooth=True)    # 쪼갠 면 — 속살
+    ico(0.18, (0.60, 0.40, 0.14), subdiv=2, mat=M['h_amber'], jitter=0.2, smooth=True)                               # 떨어진 조각
+    ico(0.14, (-0.62, -0.40, 0.10), subdiv=1, mat=M['h_ambercrust'], jitter=0.3)
+
+
+def m_bamboo():
+    """대나무(`bamboo` — 숲 갈래 · 벤 것) — 벤 **대 세 토막**: 마디가 도드라진 푸른 줄기 · 속 빈 벤 면 · 잎 몇 장."""
+    random.seed(1822)
+    for (y, z, L, rz) in ((-0.22, 0.12, 2.0, 0.0), (0.20, 0.12, 1.8, 0.06), (0.0, 0.34, 1.9, -0.04)):
+        cyl(0.12, L, (0.0, y, z), rot=(0, math.radians(90), rz), mat=M['h_bamboo'], verts=14)
+        for k in range(-2, 3):                                                                               # 마디
+            cyl(0.128, 0.05, (k * 0.42 + 0.1, y, z), rot=(0, math.radians(90), rz), mat=M['h_bambnode'], verts=14)
+        cyl(0.11, 0.02, (L / 2 + 0.005, y, z), rot=(0, math.radians(90), rz), mat=M['h_bambcut'], verts=14)    # 벤 면
+        cyl(0.06, 0.025, (L / 2 + 0.01, y, z), rot=(0, math.radians(90), rz), mat=M['scorch'], verts=12)       # 빈 속
+    for (x, y, a) in ((-0.70, -0.10, 2.4), (-0.55, 0.10, 2.0), (-0.85, 0.05, 2.8)):
+        o = ico(0.26, (x + math.cos(a) * 0.22, y + math.sin(a) * 0.22, 0.46), subdiv=2, mat=M['h_leaf'], scale=(1.0, 0.18, 0.04), smooth=True)
+        o.rotation_euler = (0, math.radians(-10), a)
+
+
+def m_beeswax():
+    """밀랍(`beeswax` — 숲 갈래 · 벌집을 녹여 거른 것) — 둥글게 굳힌 **밀랍 떡** 둘을 어긋나게 포갰다 · 깨진 조각 하나."""
+    random.seed(1823)
+    cyl(0.62, 0.20, (0.0, 0.0, 0.10), mat=M['h_wax'], verts=36)
+    cyl(0.50, 0.18, (0.16, 0.12, 0.29), mat=M['h_wax'], verts=36)
+    _ring(0.60, 0.035, (0.0, 0.0, 0.195), M['h_wax'], maj=40)                                                 # 굳으며 부푼 가장자리
+    o = ico(0.20, (0.58, -0.54, 0.08), subdiv=1, mat=M['h_wax'], scale=(1.4, 1.0, 0.5), jitter=0.2)
+
+
+def m_birch_sap():
+    """자작나무 수액(`birch_sap` — 숲 갈래 채집물) — 흰 **자작나무 껍질 그릇**에 받은 맑은 수액 · 껍질 귀를 접어 꿰맸다."""
+    random.seed(1824)
+    cyl(0.52, 0.62, (0, 0, 0.31), mat=M['h_birchbark'], verts=24)
+    cyl(0.49, 0.02, (0, 0, 0.625), mat=M['h_sap'], verts=24)                                                  # 수액 면
+    _ring(0.52, 0.04, (0, 0, 0.62), M['h_birchbark'])
+    for sgn in (-1, 1):                                                                                      # 접은 귀
+        box(0.10, 0.30, 0.50, (sgn * 0.52, 0.0, 0.34), rot=(0, sgn * 0.12, 0), mat=M['h_birchbark'])
+    for i in range(5):                                                                                        # 꿰맨 실
+        cyl(0.012, 0.18, (0.36, -0.36 + i * 0.03, 0.12 + i * 0.10), rot=(0, 0, math.radians(45)), mat=M['cord'], verts=5)
+    for (x, y) in ((0.64, -0.50), (0.52, -0.66)):                                                             # 떨어진 방울
+        ico(0.05, (x, y, 0.04), subdiv=2, mat=M['h_sap'], scale=(1.0, 1.0, 0.5), smooth=True)
+
+
+def m_chamomile():
+    """카모마일(`chamomile` — 숲 갈래 채집물) — 흰 꽃잎 · 노란 꽃술의 **꽃 한 줌**을 줄기째 묶었다."""
+    random.seed(1825)
+    for i in range(7):                                                                                        # 줄기
+        cyl(0.018, 1.30, (-0.25, (i - 3) * 0.035, 0.08), rot=(0, math.radians(90), (i - 3) * 0.06), mat=M['h_stem'], verts=6)
+    cyl(0.07, 0.10, (-0.50, 0.0, 0.08), rot=(0, math.radians(90), 0), mat=M['cord'], verts=10)
+    for i, (x, y, z) in enumerate(((0.46, -0.30, 0.20), (0.62, 0.02, 0.26), (0.44, 0.30, 0.22), (0.28, -0.04, 0.34), (0.76, -0.26, 0.14), (0.70, 0.30, 0.16), (0.20, 0.30, 0.18))):
+        ico(0.075, (x, y, z + 0.03), subdiv=2, mat=M['h_disc'], scale=(1.0, 1.0, 0.7), smooth=True)          # 꽃술
+        for k in range(12):                                                                                   # 꽃잎
+            a = k * math.tau / 12 + i
+            o = ico(0.07, (x + math.cos(a) * 0.12, y + math.sin(a) * 0.12, z), subdiv=1, mat=M['h_petal'], scale=(1.6, 0.55, 0.15))
+            o.rotation_euler = (0, 0, a)
+
+
+def m_cork():
+    """코르크(`cork` — 숲 갈래 · 코르크참나무 겉껍질) — 벗겨 낸 **두꺼운 껍질 판** 둘(숭숭한 결 · 속은 붉은 갈색)과 그 판을 뚫어 낸 **마개** 셋."""
+    random.seed(1826)
+    for (x, y, z, rz, w) in ((0.0, -0.10, 0.12, 0.2, 0.62), (-0.10, 0.30, 0.20, -0.25, 0.56)):
+        o = cyl(0.62, 1.40, (x, y, z), rot=(0, math.radians(90), rz), mat=M['h_cork'], verts=28)
+        o.scale = (0.22, w / 0.62 * 0.6, 1.0)
+        o = cyl(0.60, 1.42, (x, y, z + 0.04), rot=(0, math.radians(90), rz), mat=M['h_dakout'], verts=28)    # 속면(붉은 갈색)
+        o.scale = (0.10, w / 0.62 * 0.55, 1.0)
+    for (x, y, rz) in ((0.52, -0.58, 0.3), (0.80, -0.30, -0.4), (0.20, -0.72, 1.2)):                        # 마개
+        cyl(0.13, 0.30, (x, y, 0.13), rot=(0, math.radians(90), rz), mat=M['h_cork'], verts=16)
+
+
+def m_fruit_berries():
+    """산딸기(`fruit_berries` — 숲 갈래 채집물) — 잔 알갱이가 뭉친 **붉은 산딸기** 여섯 · 잎 둘. 매끈한 베리 알(`berry`)과 결로 갈린다."""
+    random.seed(1827)
+    for (x, y) in ((-0.30, -0.35), (0.40, -0.10), (-0.10, 0.10), (0.15, 0.48), (-0.55, 0.30), (0.55, 0.42)):
+        z = 0.22
+        ico(0.18, (x, y, z), subdiv=2, mat=M['h_raspberry'], scale=(1.0, 1.0, 1.1), smooth=True)
+        for k in range(22):
+            u = random.uniform(-1, 1); a = random.uniform(0, math.tau); rr = math.sqrt(1 - u * u)
+            ico(0.065, (x + rr * math.cos(a) * 0.18, y + rr * math.sin(a) * 0.18, z + u * 0.20), subdiv=1, mat=M['h_raspberry'], smooth=True)
+    for (x, y, a) in ((0.05, -0.62, 0.3), (-0.70, -0.20, 2.0)):
+        o = ico(0.30, (x, y, 0.05), subdiv=2, mat=M['h_leaf'], scale=(1.0, 0.55, 0.06), smooth=True)
+        o.rotation_euler = (0, 0, a)
+
+
+def _root(x, y, z, L, r, ang, mat, legs=2, hair=8, seed=0):
+    """뿌리(삼) — 통통한 몸 · 갈라진 다리 · 잔뿌리. `ang` 은 머리(줄기 쪽) 방향."""
+    random.seed(seed)
+    ca, sa = math.cos(ang), math.sin(ang)
+    o = ico(r, (x, y, z), subdiv=2, mat=mat, scale=(L / r * 0.5, 1.0, 0.9), jitter=0.08, smooth=True); o.rotation_euler = (0, 0, ang)
+    for k in range(legs):                                                                                     # 다리
+        b = ang + math.pi + (k - (legs - 1) / 2) * 0.55
+        lx, ly = x - ca * L * 0.40 + math.cos(b) * L * 0.30, y - sa * L * 0.40 + math.sin(b) * L * 0.30
+        o = ico(r * 0.55, (lx, ly, z - r * 0.15), subdiv=2, mat=mat, scale=(L / r * 0.45, 0.8, 0.7), jitter=0.10, smooth=True)
+        o.rotation_euler = (0, 0, b)
+    for k in range(hair):                                                                                     # 잔뿌리
+        b = ang + math.pi + random.uniform(-1.2, 1.2)
+        d0 = random.uniform(0.2, 0.7) * L
+        cyl(0.012, L * 0.5, (x - ca * d0 * 0.5 + math.cos(b) * L * 0.3, y - sa * d0 * 0.5 + math.sin(b) * L * 0.3, z - r * 0.3),
+            rot=(0, math.radians(90), b), mat=mat, verts=5)
+    for k in range(4):                                                                                        # 뇌두(나이 마디)
+        ico(r * 0.30, (x + ca * (L * 0.5 + k * r * 0.25), y + sa * (L * 0.5 + k * r * 0.25), z + r * 0.1), subdiv=1, mat=mat, scale=(0.8, 1.0, 0.8))
+
+
+def _palm5(x, y, z, s, mat, rz=0.0):
+    """다섯 잎(손바닥꼴 겹잎) — 삼(蔘) 잎."""
+    for k in range(5):
+        a = rz + k * math.tau / 5
+        o = ico(0.20 * s, (x + math.cos(a) * 0.20 * s, y + math.sin(a) * 0.20 * s, z), subdiv=2, mat=mat, scale=(1.0, 0.42, 0.06), smooth=True)
+        o.rotation_euler = (0, 0, a)
+
+
+def m_ginseng():
+    """인삼(`ginseng` — 숲 갈래 · 기른 삼) — **통통한 흰 뿌리** 둘(갈라진 다리 · 잔뿌리 · 뇌두)과 다섯 잎 한 줄기."""
+    _root(-0.05, -0.18, 0.18, 1.10, 0.20, math.radians(160), M['h_ginseng'], legs=2, hair=7, seed=1828)
+    _root(0.20, 0.28, 0.16, 0.90, 0.16, math.radians(200), M['h_ginseng'], legs=2, hair=5, seed=18281)
+    cyl(0.02, 0.60, (-0.80, 0.0, 0.30), rot=(0, math.radians(60), math.radians(180)), mat=M['h_stem'], verts=6)
+    _palm5(-1.02, 0.0, 0.46, 1.0, M['h_leaf'], 0.3)
+
+
+def m_wild_ginseng():
+    """산삼(`wild_ginseng` — 숲 갈래 · 산에서 캔 삼) — **가늘고 긴 묵은 뿌리**(긴 잔뿌리 · 마디진 뇌두)와 줄기 끝의 **붉은 열매** 한 송이 · 다섯 잎."""
+    _root(0.05, 0.0, 0.12, 1.30, 0.11, math.radians(170), M['h_wildgin'], legs=3, hair=14, seed=1829)
+    cyl(0.018, 0.80, (-0.88, 0.02, 0.36), rot=(0, math.radians(55), math.radians(175)), mat=M['h_stem'], verts=6)
+    _palm5(-1.10, 0.10, 0.52, 0.9, M['h_leaf'], 0.0)
+    for k in range(9):                                                                                        # 붉은 열매 송이
+        a = k * 2.399; d = 0.05 + (k % 3) * 0.035
+        ico(0.055, (-1.18 + math.cos(a) * d, -0.06 + math.sin(a) * d, 0.78 + (k % 2) * 0.03), subdiv=2, mat=M['h_redberry'], smooth=True)
+
+
+def m_latex():
+    """라텍스(`latex` — 숲 갈래 · 고무나무 유액) — 칼금 낸 나무껍질에서 흘러내린 **흰 유액**을 그릇에 받았다."""
+    random.seed(1831)
+    box(0.30, 0.90, 1.10, (-0.30, 0.10, 0.55), rot=(0, 0, math.radians(-8)), mat=M['bark2'])                    # 껍질 조각(세웠다)
+    for k in range(3):                                                                                        # 칼금
+        box(0.04, 0.70, 0.05, (-0.14, 0.10, 0.50 + k * 0.22), rot=(math.radians(20), 0, math.radians(-8)), mat=M['h_latex'])
+    cyl(0.03, 0.40, (-0.12, -0.08, 0.30), mat=M['h_latex'], verts=8)                                         # 흘러내림
+    _bowl(0.40, 0.30, M['h_bowl'])
+    o = OBJS[-2]; o.location.x += 0.10; o.location.y -= 0.30
+    o = OBJS[-1]; o.location.x += 0.10; o.location.y -= 0.30
+    cyl(0.37, 0.03, (0.10, -0.30, 0.31), mat=M['h_latex'], verts=24)                                          # 받은 유액
+
+
+def m_rubber():
+    """고무(`rubber` — 숲 갈래 · 유액을 굳힌 것) — 검갈색 **고무 공** 둘과 말아 굳힌 고무 판."""
+    random.seed(1832)
+    ico(0.40, (0.0, 0.0, 0.40), subdiv=3, mat=M['h_rubber'], smooth=True)
+    ico(0.28, (0.62, -0.32, 0.28), subdiv=3, mat=M['h_rubber'], smooth=True)
+    o = cyl(0.20, 0.80, (-0.50, -0.42, 0.20), rot=(0, math.radians(90), math.radians(30)), mat=M['h_rubber'], verts=20)
+    _ring(0.20, 0.02, (-0.16, -0.22, 0.20), M['h_latex'], rot=(0, math.radians(90), math.radians(30)))      # 말린 가장자리(흰 유액 자국)
+
+
+def m_nuts():
+    """견과류(`nuts` — 숲 갈래 채집물) — **섞인 견과 한 무더기**: 골진 호두 · 반들한 개암 · 길쭉한 아몬드. 밤 · 도토리(제 그림)와 무더기로 갈린다."""
+    random.seed(1833)
+    for (x, y) in ((0.0, 0.0), (0.38, -0.26), (-0.36, 0.30)):                                                  # 호두
+        ico(0.24, (x, y, 0.24), subdiv=3, mat=M['h_walnut'], scale=(1.0, 0.92, 0.92), jitter=0.04, smooth=True)
+    for (x, y) in ((-0.40, -0.26), (0.30, 0.36), (0.62, 0.10), (-0.10, -0.50)):                                # 개암
+        ico(0.15, (x, y, 0.15), subdiv=2, mat=M['h_hazel'], smooth=True)
+        ico(0.06, (x + 0.06, y - 0.06, 0.27), subdiv=1, mat=M['h_walnut'], scale=(1.4, 1.4, 0.5))
+    for (x, y, a) in ((0.12, 0.55, 0.4), (-0.62, 0.0, 1.8), (0.58, -0.48, -0.6), (0.20, -0.40, 2.6)):         # 아몬드
+        o = ico(0.15, (x, y, 0.09), subdiv=2, mat=M['h_almond'], scale=(1.5, 0.95, 0.55), smooth=True)
+        o.rotation_euler = (0, 0, a)
+
+
+def m_paper_mulberry():
+    """닥나무 껍질(`paper_mulberry` — 숲 갈래 · 종이 감) — 벗겨 낸 **흰 속껍질 띠** 다발을 묶었다 · 몇 가닥엔 갈색 겉껍질이 남았다."""
+    random.seed(1834)
+    for i in range(9):
+        dy = (i - 4) * 0.075; dz = 0.05 + (i % 3) * 0.035
+        mat = M['h_dakout'] if i in (1, 6) else M['h_dakin']
+        o = box(2.10, 0.09, 0.02, (0.0, dy, dz), rot=(0, 0, dy * 0.25), mat=mat)
+    for i in range(5):                                                                                        # 끝이 풀려 휜 띠
+        a = (i - 2) * 0.25
+        box(0.50, 0.08, 0.02, (1.18 + math.cos(a) * 0.1, (i - 2) * 0.10 + math.sin(a) * 0.15, 0.06), rot=(0, math.radians(-8), a), mat=M['h_dakin'])
+    for x in (-0.50, 0.30):                                                                                   # 묶은 끈
+        cyl(0.20, 0.06, (x, 0.0, 0.08), rot=(0, math.radians(90), 0), mat=M['cord'], verts=12)
+        o = OBJS[-1]; o.scale = (0.45, 1.0, 1.0)
+
+
+def m_truffle():
+    """송로버섯(`truffle` — 숲 갈래 · 땅속 버섯) — **오돌토돌한 검은 덩이** 하나와 반을 갈라 **대리석 무늬 속살**을 위로 둔 반쪽."""
+    random.seed(1835)
+    ico(0.40, (-0.36, 0.22, 0.36), subdiv=3, mat=M['h_truffle'], scale=(1.1, 1.0, 0.92), jitter=0.06, smooth=True)
+    _half(0.34, -0.24, 0.40, (1.1, 1.0, 0.8), M['h_truffle'], M['h_trufflein'], k=0.92)
+
+
+def m_coal():
+    """석탄(`coal` — 광물 갈래) — 소쿠리에 담은 윤 나는 **검은 덩이**(모난 조각이 수북하다). 흑요석(덩이 하나 · 유리 면) · 숯(나뭇결)과 갈린다."""
+    random.seed(1836)
+    cone(0.50, 0.70, 0.44, (0, 0, 0.22), mat=M['g_basket'], verts=32)                                     # 소쿠리(곡식과 같은 그릇)
+    _ring(0.69, 0.055, (0, 0, 0.44), M['g_basket'])
+    for i in range(18):
+        a = i * 2.399; d = math.sqrt(i / 18.0) * 0.58
+        ico(random.uniform(0.15, 0.22), (math.cos(a) * d, math.sin(a) * d, 0.46 + (0.58 - d) * 0.40), subdiv=1, mat=M['h_coal'],
+            scale=(1.2, 1.0, 0.85), jitter=0.30, smooth=False)
+    for (x, y) in ((0.52, -0.70), (0.80, -0.44)):                                                           # 흘린 덩이
+        ico(0.12, (x, y, 0.08), subdiv=1, mat=M['h_coal'], jitter=0.3)
+
+
+def m_mercury():
+    """수은(`mercury` — 광물 갈래) — 돌 확에 고인 **거울 같은 은빛 물** · 옆에 굴러 나온 동그란 방울 셋."""
+    random.seed(1837)
+    cone(0.60, 0.70, 0.26, (0, 0, 0.13), mat=M['ground'], verts=28)                                          # 돌 확
+    _ring(0.66, 0.06, (0, 0, 0.26), M['ground'])
+    o = ico(0.56, (0, 0, 0.25), subdiv=3, mat=M['h_mercury'], scale=(1.0, 1.0, 0.10), smooth=True)          # 고인 수은(가운데가 부푼다)
+    for (x, y, r) in ((0.72, -0.52, 0.10), (0.48, -0.74, 0.07), (0.90, -0.30, 0.055)):
+        ico(r, (x, y, r * 0.8), subdiv=3, mat=M['h_mercury'], scale=(1.0, 1.0, 0.8), smooth=True)
+
+
+def m_nitrate():
+    """초석(`nitrate` — 광물 갈래 · 흙벽에서 긁어 모은 흰 결정) — 덩이 위에 돋은 **흰 바늘 결정** 다발."""
+    random.seed(1838)
+    ico(0.44, (0, 0, 0.18), subdiv=2, mat=M['h_sodaash'], scale=(1.3, 1.1, 0.45), jitter=0.20)
+    for i in range(22):
+        a = random.uniform(0, math.tau); d = random.uniform(0.0, 0.40); L = random.uniform(0.30, 0.62)
+        tilt = d * 1.4
+        cyl(0.035, L, (math.cos(a) * d, math.sin(a) * d, 0.26 + L * 0.4), rot=(math.sin(a) * -tilt, math.cos(a) * tilt, 0),
+            mat=M['h_nitrate'], verts=6, smooth=False)
+
+
+def m_sand():
+    """모래(`sand` — 광물 갈래) — 부어 놓은 **모래 둔덕** · 흘러내린 자락과 섞인 잔돌 몇."""
+    random.seed(1839)
+    o = cone(0.80, 0.10, 0.52, (0, 0, 0.26), mat=M['h_sand'], verts=40)
+    ico(0.12, (0, 0, 0.50), subdiv=2, mat=M['h_sand'], scale=(1.0, 1.0, 0.4), smooth=True)
+    ico(0.52, (0.50, -0.42, 0.02), subdiv=3, mat=M['h_sand'], scale=(1.2, 0.8, 0.12), smooth=True)          # 흘러내린 자락
+    for (x, y) in ((0.70, -0.62), (-0.60, -0.40), (0.30, 0.66)):
+        ico(0.06, (x, y, 0.05), subdiv=1, mat=M['river'], jitter=0.2)
+
+
+def m_soda_ash():
+    """소다재(`soda_ash` — 광물 갈래 · 풀을 태워 얻는 흰 잿가루) — 삼베 **자루**에 담은 흰 가루가 고봉이고 앞에 흘렀다."""
+    random.seed(1840)
+    o = ico(0.56, (0, 0, 0.42), subdiv=3, mat=M['h_burlap'], scale=(1.0, 1.0, 0.85), jitter=0.04, smooth=True)   # 자루 몸
+    _ring(0.50, 0.07, (0, 0, 0.80), M['h_burlap'])                                                            # 접어 내린 아가리
+    ico(0.48, (0, 0, 0.80), subdiv=3, mat=M['h_sodaash'], scale=(1.0, 1.0, 0.40), smooth=True)              # 흰 가루 고봉
+    ico(0.34, (0.48, -0.56, 0.02), subdiv=3, mat=M['h_sodaash'], scale=(1.2, 0.8, 0.14), smooth=True)        # 흘린 가루
+
+
+def _mound(n, R, H, z0, seed, put):
+    """작은 것 n 개를 둔덕으로 쌓는다(§9 — 작은 것은 개수로). `put(x, y, z, a)` 가 한 알을 놓는다."""
+    random.seed(seed)
+    for i in range(n):
+        a = i * 2.399 + random.uniform(-0.2, 0.2); d = math.sqrt((i + 0.5) / n) * R
+        put(math.cos(a) * d, math.sin(a) * d, z0 + (1 - d / R) * H, random.uniform(0, math.tau))
+
+
+def m_black_pepper():
+    """후추(`black_pepper` — 향신료 갈래) — 쭈글한 **검은 알 무더기**와 덩굴에서 딴 알송이(푸른 알 · 붉게 익은 알) · 하트꼴 잎 둘."""
+    _mound(34, 0.62, 0.36, 0.08, 1841, lambda x, y, z, a: ico(0.085, (x, y, z), subdiv=2, mat=M['h_pepper'], jitter=0.08, smooth=True))
+    cyl(0.02, 0.90, (0.60, -0.50, 0.12), rot=(0, math.radians(90), math.radians(30)), mat=M['h_stem'], verts=6)
+    for k in range(12):
+        t = k / 11.0
+        for sgn in (-1, 1):
+            ico(0.065, (0.26 + t * 0.74 + sgn * 0.03, -0.70 + t * 0.42 - sgn * 0.05, 0.17), subdiv=2, mat=(M['h_redberry'] if k % 3 == 0 else M['h_pod']), smooth=True)
+    for (x, y, a) in ((0.98, -0.12, 0.9), (0.70, -0.04, 2.0)):
+        o = ico(0.26, (x, y, 0.10), subdiv=2, mat=M['h_leaf'], scale=(1.0, 0.75, 0.05), smooth=True); o.rotation_euler = (0, 0, a)
+
+
+def m_cumin():
+    """큐민(`cumin` — 향신료 갈래 · 씨) — 삼베 주머니에 담은 **줄진 회갈색 씨** 고봉 · 앞에 흘린 씨 몇."""
+    random.seed(1842)
+    ico(0.44, (0, 0, 0.30), subdiv=3, mat=M['h_burlap'], scale=(1.0, 1.0, 0.72), jitter=0.04, smooth=True)
+    _ring(0.38, 0.06, (0, 0, 0.58), M['h_burlap'])
+    _mound(46, 0.38, 0.20, 0.58, 18421, lambda x, y, z, a: _seedlet(x, y, z, a, 0.05, M['h_cumin']))
+    for k in range(8):
+        a = random.uniform(-1, 1)
+        _seedlet(0.50 + random.uniform(-0.2, 0.2), -0.52 + random.uniform(-0.15, 0.15), 0.02, a, 0.05, M['h_cumin'])
+
+
+def _seedlet(x, y, z, a, r, mat):
+    """길쭉한 씨 한 알."""
+    o = ico(r, (x, y, z), subdiv=1, mat=mat, scale=(2.2, 0.9, 0.8), smooth=True)
+    o.rotation_euler = (0, 0, a)
+
+
+def m_cardamom():
+    """카다멈(`cardamom` — 향신료 갈래 · 꼬투리) — 골진 **옅은 풀빛 꼬투리** 무더기 · 하나는 갈라 검은 씨가 보인다."""
+    def pod(x, y, z, a):
+        o = ico(0.12, (x, y, z), subdiv=2, mat=M['h_cardamom'], scale=(1.6, 1.0, 0.95), smooth=True); o.rotation_euler = (0, 0, a)
+    _mound(16, 0.60, 0.30, 0.10, 1843, pod)
+    o = ico(0.13, (0.66, -0.50, 0.08), subdiv=2, mat=M['h_cardamom'], scale=(1.6, 1.0, 0.5), smooth=True); o.rotation_euler = (0, 0, 0.5)
+    for k in range(5):
+        ico(0.04, (0.60 + k * 0.03, -0.50 + (k % 2) * 0.04, 0.14), subdiv=1, mat=M['h_pepper'])
+
+
+def m_clove():
+    """정향(`clove` — 향신료 갈래 · 말린 꽃봉오리) — **못 꼴 봉오리**(가는 꽃대 · 둥근 봉오리 · 네 꽃받침) 무더기."""
+    def bud(x, y, z, a):
+        ca, sa = math.cos(a), math.sin(a)
+        cyl(0.03, 0.30, (x, y, z), rot=(0, math.radians(90), a), mat=M['h_clove'], verts=6)
+        ico(0.055, (x + ca * 0.17, y + sa * 0.17, z), subdiv=2, mat=M['h_clove'], smooth=True)
+        for k in range(4):
+            b = k * math.pi / 2
+            ico(0.03, (x + ca * 0.14 + math.cos(b) * 0.04, y + sa * 0.14 + math.sin(b) * 0.04, z + 0.02), subdiv=1, mat=M['h_clove'])
+    _mound(22, 0.62, 0.30, 0.06, 1844, bud)
+
+
+def m_nutmeg():
+    """육두구(`nutmeg` — 향신료 갈래 · 씨) — 반 갈라진 노란 열매 속에 **새빨간 그물(씨옷)**에 싸인 씨 · 옆에 씨 둘."""
+    random.seed(1845)
+    for sgn in (-1, 1):                                                                                     # 갈라진 열매 두 쪽
+        o = ico(0.42, (0.0, sgn * 0.30, 0.26), subdiv=3, mat=M['h_nutfruit'], scale=(1.0, 0.62, 0.62), smooth=True)
+        o.rotation_euler = (sgn * 0.5, 0, 0)
+    ico(0.26, (0.0, 0.0, 0.34), subdiv=3, mat=M['h_nutmeg'], scale=(1.15, 0.9, 0.9), smooth=True)          # 씨
+    for k in range(9):                                                                                       # 씨옷 그물
+        a = k * 0.7
+        o = cyl(0.025, 0.42, (math.cos(a) * 0.12, math.sin(a) * 0.08, 0.40), rot=(math.radians(70), 0, a), mat=M['h_mace'], verts=6)
+    for (x, y) in ((0.60, -0.46), (0.82, -0.12)):
+        ico(0.18, (x, y, 0.16), subdiv=3, mat=M['h_nutmeg'], scale=(1.2, 0.9, 0.9), smooth=True)
+
+
+def m_star_anise():
+    """팔각(`star_anise` — 향신료 갈래) — 여덟 꼬투리가 **별꼴**로 벌어진 붉은 갈색 열매 다섯 · 꼬투리마다 윤 나는 씨."""
+    random.seed(1846)
+    for (x, y, z, rz) in ((0.0, 0.0, 0.16, 0.0), (0.62, -0.20, 0.06, 0.4), (-0.56, 0.22, 0.06, 0.9), (0.20, 0.60, 0.06, 0.2), (-0.20, -0.62, 0.06, 1.3)):
+        for k in range(8):
+            a = rz + k * math.pi / 4
+            o = ico(0.12, (x + math.cos(a) * 0.15, y + math.sin(a) * 0.15, z), subdiv=2, mat=M['h_anise'], scale=(1.5, 0.55, 0.55), smooth=True)
+            o.rotation_euler = (0, 0, a)
+            ico(0.035, (x + math.cos(a) * 0.15, y + math.sin(a) * 0.15, z + 0.06), subdiv=1, mat=M['h_date'])
+        ico(0.05, (x, y, z + 0.03), subdiv=1, mat=M['h_anise'])
+
+
+def m_cinnamon():
+    """계피(`cinnamon` — 향신료 갈래 · 나무껍질) — 말려 둘둘 감긴 **붉은 갈색 껍질 대롱** 다섯을 묶었다 · 끝에 감긴 결이 보인다."""
+    random.seed(1847)
+    for (y, z, L) in ((-0.22, 0.12, 1.8), (0.0, 0.12, 1.9), (0.22, 0.12, 1.75), (-0.11, 0.32, 1.85), (0.11, 0.32, 1.8)):
+        cyl(0.11, L, (0.0, y, z), rot=(0, math.radians(90), 0.03), mat=M['h_cinnamon'], verts=14)
+        _ring(0.07, 0.02, (L / 2 + 0.005, y, z), M['h_cinnamon'], rot=(0, math.radians(90), 0.03), maj=16, mnr=6)   # 감긴 결
+        cyl(0.05, 0.02, (L / 2 + 0.012, y, z), rot=(0, math.radians(90), 0.03), mat=M['scorch'], verts=10)
+    for x in (-0.45, 0.40):
+        cyl(0.36, 0.05, (x, 0.0, 0.22), rot=(0, math.radians(90), 0), mat=M['cord'], verts=16)
+        o = OBJS[-1]; o.scale = (0.55, 1.0, 1.0)
+
+
+def m_vanilla():
+    """바닐라(`vanilla` — 향신료 갈래 · 꼬투리) — 윤 나는 **흑갈색 긴 꼬투리** 열을 끈으로 묶었다 · 옆에 연노랑 바닐라 꽃 하나."""
+    random.seed(1848)
+    for i in range(10):
+        dy = (i - 4.5) * 0.075; dz = 0.06 + (i % 2) * 0.05
+        o = cyl(0.06, 2.10, (0.0, dy, dz), rot=(0, math.radians(90), dy * 0.4), mat=M['h_vanilla'], verts=8)
+        o.scale = (0.7, 1.0, 1.0)
+        ico(0.06, (1.06, dy + dy * 0.4, dz), subdiv=1, mat=M['h_vanilla'], scale=(1.6, 0.8, 0.6))           # 꼬부라진 끝
+    cyl(0.30, 0.10, (-0.30, 0.0, 0.12), rot=(0, math.radians(90), 0), mat=M['cord'], verts=14)
+    o = OBJS[-1]; o.scale = (0.5, 1.0, 1.0)
+    for sgn in (-1, 1):                                                                                     # 늘어진 끈 끝
+        box(0.36, 0.03, 0.02, (-0.46, sgn * 0.20, 0.05), rot=(0, 0, sgn * 0.6), mat=M['cord'])
+    for k in range(5):                                                                                       # 바닐라 꽃(연노랑 다섯 잎 · 나팔 입술)
+        a = k * 1.257
+        o = ico(0.16, (0.42 + math.cos(a) * 0.16, -0.62 + math.sin(a) * 0.16, 0.10), subdiv=2, mat=M['h_frank'], scale=(1.5, 0.5, 0.10), smooth=True)
+        o.rotation_euler = (0, 0, a)
+    ico(0.09, (0.42, -0.62, 0.16), subdiv=2, mat=M['h_disc'], scale=(1.0, 1.0, 0.8), smooth=True)
+    o = ico(0.24, (0.80, -0.56, 0.06), subdiv=2, mat=M['h_leaf'], scale=(1.0, 0.45, 0.05), smooth=True); o.rotation_euler = (0, 0, 0.3)
+
+
+def m_saffron():
+    """사프란(`saffron` — 향신료 갈래 · 꽃의 암술) — 연보라 **사프란 꽃** 둘(가운데 붉은 암술 셋)과 따 모은 **붉은 실** 한 줌."""
+    random.seed(1849)
+    for (x, y) in ((-0.30, 0.20), (0.24, 0.36)):
+        for k in range(6):                                                                                   # 꽃잎(컵꼴)
+            a = k * math.pi / 3
+            o = ico(0.16, (x + math.cos(a) * 0.10, y + math.sin(a) * 0.10, 0.20), subdiv=2, mat=M['h_crocus'], scale=(0.6, 0.45, 1.3), smooth=True)
+            o.rotation_euler = (math.sin(a) * 0.45, -math.cos(a) * 0.45, a)
+        for k in range(3):
+            a = k * 2.1
+            cyl(0.018, 0.30, (x + math.cos(a) * 0.05, y + math.sin(a) * 0.05, 0.36), rot=(math.sin(a) * 0.5, -math.cos(a) * 0.5, 0), mat=M['h_saffron'], verts=5)
+        cyl(0.03, 0.16, (x, y, 0.06), mat=M['h_stem'], verts=6)
+    for k in range(40):                                                                                      # 붉은 실 한 줌
+        a = random.uniform(0, math.tau); d = random.uniform(0, 0.30)
+        cyl(0.016, random.uniform(0.18, 0.30), (0.40 + math.cos(a) * d, -0.42 + math.sin(a) * d * 0.7, 0.03 + random.uniform(0, 0.08)),
+            rot=(0, math.radians(90), random.uniform(0, math.tau)), mat=M['h_saffron'], verts=5)
+
+
+def m_paprika():
+    """파프리카(`paprika` — 향신료 갈래) — 윤 나는 **붉은 단고추** 하나(꼭지 · 골진 몸)와 빻은 **붉은 가루** 둔덕."""
+    random.seed(1850)
+    for k in range(4):                                                                                       # 골진 몸 넷
+        a = k * math.pi / 2
+        ico(0.30, (-0.20 + math.cos(a) * 0.12, 0.10 + math.sin(a) * 0.12, 0.34), subdiv=3, mat=M['h_paprika'], scale=(0.85, 0.85, 1.15), smooth=True)
+    cyl(0.05, 0.20, (-0.20, 0.10, 0.74), mat=M['h_chiligreen'], verts=8)                                     # 꼭지
+    ico(0.12, (-0.20, 0.10, 0.66), subdiv=2, mat=M['h_chiligreen'], scale=(1.0, 1.0, 0.4), smooth=True)
+    o = cone(0.44, 0.06, 0.30, (0.42, -0.42, 0.15), mat=M['h_redpowder'], verts=32)                        # 가루 둔덕
+    ico(0.07, (0.42, -0.42, 0.29), subdiv=2, mat=M['h_redpowder'], scale=(1.0, 1.0, 0.4), smooth=True)
+
+
+def m_turmeric():
+    """강황(`turmeric` — 향신료 갈래 · 뿌리줄기) — 마디진 **뿌리줄기** 손가락 다발 · 하나는 잘라 샛노란 속이 보이고 앞에 노란 가루."""
+    random.seed(1851)
+    ico(0.20, (-0.20, 0.10, 0.18), subdiv=2, mat=M['h_turmskin'], scale=(1.6, 1.0, 0.9), jitter=0.06, smooth=True)
+    for k in range(5):                                                                                       # 손가락
+        a = -0.9 + k * 0.45
+        o = ico(0.11, (-0.20 + math.cos(a) * 0.40, 0.10 + math.sin(a) * 0.40, 0.14), subdiv=2, mat=M['h_turmskin'],
+                scale=(2.4, 1.0, 1.0), jitter=0.06, smooth=True)
+        o.rotation_euler = (0, 0, a)
+        for m in range(3):
+            _ring(0.11, 0.012, (-0.20 + math.cos(a) * (0.24 + m * 0.12), 0.10 + math.sin(a) * (0.24 + m * 0.12), 0.14), M['h_cassava'],
+                  rot=(0, math.radians(90), a), maj=12, mnr=4)
+    cyl(0.11, 0.02, (0.64, 0.30, 0.14), rot=(0, math.radians(90), 0.3), mat=M['h_turmeric'], verts=14)        # 자른 면
+    cone(0.36, 0.05, 0.22, (0.40, -0.46, 0.11), mat=M['h_turmeric'], verts=28)                               # 노란 가루
+
+
+def m_frankincense():
+    """유향(`frankincense` — 향신료 갈래 · 나무 진) — 우윳빛 **노란 진 방울** 무더기(눈물꼴로 굳었다)."""
+    def tear(x, y, z, a):
+        o = ico(0.12, (x, y, z), subdiv=2, mat=M['h_frank'], scale=(1.3, 1.0, 0.9), jitter=0.14, smooth=True); o.rotation_euler = (0, 0, a)
+    _mound(22, 0.62, 0.34, 0.08, 1852, tear)
+
+
+def m_myrrh():
+    """몰약(`myrrh` — 향신료 갈래 · 나무 진) — 모나고 윤 나는 **붉은 갈색 진 덩이** 무더기."""
+    def lump(x, y, z, a):
+        o = ico(0.15, (x, y, z), subdiv=1, mat=M['h_myrrh'], scale=(1.3, 1.0, 0.8), jitter=0.28, smooth=False); o.rotation_euler = (0, 0, a)
+    _mound(14, 0.60, 0.30, 0.10, 1853, lump)
+
+
+def m_musk():
+    """사향(`musk` — 향신료 갈래 · 사향노루 향주머니) — 털 덮인 둥근 **향주머니** 둘(가운데 구멍) · 꺼낸 검은 사향 알갱이."""
+    random.seed(1854)
+    for (x, y, r) in ((-0.18, 0.12, 0.40), (0.42, -0.24, 0.28)):
+        ico(r, (x, y, r * 0.7), subdiv=3, mat=M['g_furbrn'], scale=(1.1, 1.0, 0.72), jitter=0.04, smooth=True)
+        ico(r * 0.35, (x, y, r * 1.18), subdiv=2, mat=M['h_wildgin'], scale=(1.0, 1.0, 0.25), smooth=True)   # 털 없는 가운데
+        ico(r * 0.10, (x, y, r * 1.24), subdiv=1, mat=M['scorch'])
+        for k in range(14):                                                                                  # 털
+            a = k * 0.449; u = 0.75
+            cyl(0.012, r * 0.30, (x + math.cos(a) * r * u, y + math.sin(a) * r * u, r * 0.95), rot=(math.sin(a) * 0.8, -math.cos(a) * 0.8, 0), mat=M['g_furbrn'], verts=4)
+    for k in range(9):
+        ico(0.045, (0.66 + random.uniform(-0.12, 0.12), 0.40 + random.uniform(-0.10, 0.10), 0.04), subdiv=1, mat=M['h_pepper'], jitter=0.3)
+
+
+def m_apple():
+    """사과(`apple` — 농산물 갈래 · 열매) — 붉은 **사과** 하나(꼭지 · 잎)와 반으로 가른 쪽(흰 속살 · 씨)."""
+    random.seed(1855)
+    ico(0.44, (-0.18, 0.10, 0.42), subdiv=3, mat=M['h_apple'], scale=(1.0, 1.0, 0.92), smooth=True)
+    ico(0.30, (-0.10, -0.06, 0.40), subdiv=3, mat=M['h_appley'], scale=(1.0, 1.0, 1.0), smooth=True)        # 노란 볼
+    cyl(0.025, 0.20, (-0.18, 0.10, 0.88), rot=(0.3, 0, 0), mat=M['h_cassava'], verts=6)
+    o = ico(0.18, (-0.05, 0.18, 0.86), subdiv=2, mat=M['h_leaf'], scale=(1.0, 0.45, 0.06), smooth=True); o.rotation_euler = (0, -0.4, 0.6)
+    _half(0.50, -0.40, 0.36, (1.0, 1.0, 0.85), M['h_apple'], M['h_appleflesh'])
+    for k in range(5):                                                                                       # 씨방 별꼴 · 씨
+        a = k * 1.257
+        o = ico(0.035, (0.50 + math.cos(a) * 0.08, -0.40 + math.sin(a) * 0.08, 0.015), subdiv=1, mat=M['h_cocoabean'], scale=(1.6, 1.0, 0.5)); o.rotation_euler = (0, 0, a)
+
+
+def m_banana():
+    """바나나(`banana` — 농산물 갈래 · 열매) — 한 꼭지에 달린 **노란 바나나** 다섯(휜 몸 · 검은 끝)."""
+    random.seed(1856)
+    cyl(0.07, 0.30, (-0.70, 0.0, 0.30), rot=(0, math.radians(60), 0), mat=M['h_cassava'], verts=8)          # 꼭지
+    for i in range(5):
+        dy = (i - 2) * 0.17
+        for j in range(8):                                                                                   # 휜 몸(마디)
+            t = j / 7.0
+            x = -0.55 + t * 1.30
+            z = 0.22 + math.sin(t * math.pi) * 0.22 + (i % 2) * 0.08
+            o = ico(0.11 - abs(t - 0.45) * 0.06, (x, dy * (1 + t * 0.4), z), subdiv=2, mat=M['h_banana'], scale=(1.5, 1.0, 1.0), smooth=True)
+            o.rotation_euler = (0, -math.cos(t * math.pi) * 0.5, dy * 0.4)
+        ico(0.04, (0.78, dy * 1.4, 0.24 + (i % 2) * 0.08), subdiv=1, mat=M['h_cassava'])
+
+
+def m_cassava():
+    """카사바(`cassava` — 농산물 갈래 · 덩이뿌리) — 길쭉하고 끝이 가는 **갈색 덩이뿌리** 셋 · 하나는 잘라 흰 속이 보인다."""
+    random.seed(1857)
+    for (y, z, L, a) in ((-0.24, 0.16, 1.7, 0.10), (0.18, 0.16, 1.5, -0.12), (-0.02, 0.38, 1.6, 0.02)):
+        for j in range(7):
+            t = j / 6.0
+            r = 0.17 * (1 - abs(t - 0.4) * 1.1) + 0.03
+            ico(r, (-L / 2 + t * L, y + math.sin(a) * t, z), subdiv=2, mat=M['h_cassava'], scale=(1.4, 1.0, 1.0), jitter=0.04, smooth=True)
+    cyl(0.17, 0.02, (-0.05, -0.24, 0.16), rot=(0, math.radians(90), 0.1), mat=M['h_whiteflesh'], verts=16)   # 자른 면
+    _ring(0.16, 0.02, (-0.045, -0.24, 0.16), M['h_cassava'], rot=(0, math.radians(90), 0.1), maj=18, mnr=5)
+
+
+def m_chickpea():
+    """병아리콩(`chickpea` — 농산물 갈래 · 콩) — 부리 달린 **누런 콩** 무더기와 부푼 푸른 꼬투리 둘."""
+    def pea(x, y, z, a):
+        ico(0.10, (x, y, z), subdiv=2, mat=M['h_chickpea'], jitter=0.06, smooth=True)
+        ico(0.03, (x + math.cos(a) * 0.09, y + math.sin(a) * 0.09, z + 0.03), subdiv=1, mat=M['h_chickpea'])
+    _mound(26, 0.60, 0.30, 0.08, 1858, pea)
+    for (x, y, a) in ((0.70, -0.30, 0.5), (0.50, -0.62, -0.3)):
+        o = ico(0.16, (x, y, 0.10), subdiv=2, mat=M['h_pod'], scale=(1.5, 1.0, 0.85), smooth=True); o.rotation_euler = (0, 0, a)
+
+
+def m_chili():
+    """고추(`chili` — 농산물 갈래) — 가늘고 휜 **붉은 고추**와 풋고추 다섯(푸른 꼭지)이 부채꼴로 놓였다."""
+    random.seed(1859)
+    for i in range(5):
+        a = -0.7 + i * 0.35
+        mat = M['h_chiligreen'] if i in (1, 3) else M['h_paprika']
+        n = 16
+        for j in range(n):
+            t = j / (n - 1.0)
+            d = 0.15 + t * 1.10
+            curl = t * t * 0.35 * (1 if i % 2 else -1)
+            o = ico(0.11 * (1 - t * 0.78) + 0.018, (math.cos(a + curl) * d - 0.4, math.sin(a + curl) * d, 0.12), subdiv=2, mat=mat,
+                    scale=(1.6, 1.0, 1.0), smooth=True)
+            o.rotation_euler = (0, 0, a + curl)
+        cyl(0.03, 0.20, (math.cos(a) * 0.05 - 0.4, math.sin(a) * 0.05, 0.14), rot=(0, math.radians(90), a), mat=M['h_chiligreen'], verts=6)
+        ico(0.07, (math.cos(a) * 0.13 - 0.4, math.sin(a) * 0.13, 0.13), subdiv=2, mat=M['h_chiligreen'], scale=(0.8, 1.2, 1.2), smooth=True)
+
+
+def m_cocoa():
+    """카카오(`cocoa` — 농산물 갈래) — 골진 **주황 꼬투리** 하나와 반으로 가른 쪽(흰 과육에 줄지어 박힌 콩) · 꺼낸 콩 몇."""
+    random.seed(1860)
+    o = ico(0.32, (-0.30, 0.22, 0.32), subdiv=3, mat=M['h_cocoapod'], scale=(1.7, 1.0, 1.0), smooth=True); o.rotation_euler = (0, 0, 0.4)
+    _half(0.36, -0.26, 0.32, (1.7, 1.0, 0.9), M['h_cocoapod'], M['h_whiteflesh'], rz=0.4, k=0.86)
+    for k in range(9):
+        t = (k - 4) / 4.0
+        ico(0.06, (0.36 + math.cos(0.4) * t * 0.36 - math.sin(0.4) * ((k % 2) * 0.10 - 0.05), -0.26 + math.sin(0.4) * t * 0.36 + math.cos(0.4) * ((k % 2) * 0.10 - 0.05), 0.02),
+            subdiv=2, mat=M['h_cocoabean'], scale=(1.4, 1.0, 0.7), smooth=True)
+    for (x, y) in ((0.86, 0.12), (0.70, 0.34), (-0.74, -0.40)):
+        ico(0.07, (x, y, 0.05), subdiv=2, mat=M['h_cocoabean'], scale=(1.4, 1.0, 0.7), smooth=True)
+
+
+def m_coconut():
+    """코코넛(`coconut` — 농산물 갈래) — 섬유 결 **갈색 열매** 하나와 반으로 깬 쪽(흰 과육 · 고인 물)."""
+    random.seed(1861)
+    ico(0.48, (-0.24, 0.18, 0.46), subdiv=3, mat=M['h_husk'], scale=(1.0, 1.0, 0.95), jitter=0.03, smooth=True)
+    for k in range(3):                                                                                       # 세 눈
+        a = k * 2.094
+        ico(0.05, (-0.24 + math.cos(a) * 0.10, 0.18 + math.sin(a) * 0.10, 0.90), subdiv=1, mat=M['scorch'])
+    _half(0.50, -0.36, 0.42, (1.0, 1.0, 0.9), M['h_husk'], M['h_whiteflesh'], k=0.90)
+    cyl(0.26, 0.012, (0.50, -0.36, 0.012), mat=M['h_sap'], verts=28)                                         # 고인 물
+
+
+def m_coffee():
+    """커피(`coffee` — 농산물 갈래) — 가운데 골이 팬 **볶은 갈색 콩** 무더기와 붉게 익은 열매 달린 가지 하나."""
+    def bean(x, y, z, a):
+        o = ico(0.10, (x, y, z), subdiv=2, mat=M['h_coffee'], scale=(1.3, 1.0, 0.65), smooth=True); o.rotation_euler = (0, 0, a)
+        o = box(0.20, 0.016, 0.02, (x, y, z + 0.06), rot=(0, 0, a), mat=M['scorch'])
+    _mound(26, 0.58, 0.28, 0.06, 1862, bean)
+    cyl(0.02, 0.90, (0.56, -0.50, 0.10), rot=(0, math.radians(90), 0.6), mat=M['h_cassava'], verts=6)
+    for k in range(6):
+        t = (k - 2.5) / 2.5
+        ico(0.07, (0.56 + math.cos(0.6) * t * 0.36, -0.50 + math.sin(0.6) * t * 0.36 + 0.06 * (k % 2), 0.14), subdiv=2, mat=M['h_redberry'], smooth=True)
+    for (a, sgn) in ((0.6, 1), (0.6, -1)):
+        o = ico(0.20, (0.80 + 0.12 * sgn, -0.30 + 0.10, 0.10), subdiv=2, mat=M['h_leaf'], scale=(1.0, 0.42, 0.05), smooth=True); o.rotation_euler = (0, 0, a + sgn * 0.6)
+
+
+def m_corn():
+    """옥수수(`corn` — 농산물 갈래) — 껍질을 젖힌 **노란 옥수수** 두 자루(낟알 결)."""
+    random.seed(1863)
+    for (y, z, a) in ((-0.20, 0.20, 0.15), (0.24, 0.24, -0.10)):
+        cyl(0.20, 1.20, (0.10, y, z), rot=(0, math.radians(90), a), mat=M['h_corn'], verts=16)
+        ico(0.20, (0.70, y + math.sin(a) * 0.6, z), subdiv=2, mat=M['h_corn'], scale=(0.8, 1.0, 1.0), smooth=True)
+        for k in range(4):                                                                                   # 젖힌 껍질
+            b = k * math.pi / 2 + 0.4
+            o = ico(0.30, (-0.62, y + math.cos(b) * 0.20, z + math.sin(b) * 0.20), subdiv=2, mat=M['h_cornhusk'], scale=(1.6, 0.60, 0.08), smooth=True)
+            o.rotation_euler = (b, 0.2, a)
+        cyl(0.05, 0.30, (-1.00, y - math.sin(a) * 0.4, z), rot=(0, math.radians(90), a), mat=M['h_cornhusk'], verts=8)
+
+
+def m_cotton():
+    """면화(`cotton` — 농산물 갈래) — 마른 가지 끝에 터진 **흰 목화솜** 셋(갈색 꽃받침)."""
+    random.seed(1864)
+    cyl(0.03, 1.20, (-0.10, 0.0, 0.14), rot=(0, math.radians(90), 0.2), mat=M['h_cassava'], verts=6)
+    for (x, y, z) in ((0.40, -0.10, 0.32), (-0.10, 0.36, 0.30), (-0.40, -0.28, 0.26)):
+        for k in range(4):                                                                                   # 꽃받침
+            a = k * math.pi / 2 + 0.3
+            o = ico(0.16, (x + math.cos(a) * 0.14, y + math.sin(a) * 0.14, z - 0.12), subdiv=1, mat=M['h_bract'], scale=(1.4, 0.6, 0.12)); o.rotation_euler = (0, 0, a)
+        for k in range(4):                                                                                   # 솜 네 덩이
+            a = k * math.pi / 2
+            ico(0.16, (x + math.cos(a) * 0.10, y + math.sin(a) * 0.10, z), subdiv=2, mat=M['h_cotton'], jitter=0.12, smooth=True)
+        ico(0.14, (x, y, z + 0.10), subdiv=2, mat=M['h_cotton'], jitter=0.12, smooth=True)
+
+
+def m_dates():
+    """대추야자(`dates` — 농산물 갈래 · 열매) — 가는 줄기에 달린 윤 나는 **적갈색 열매** 송이 · 떨어진 몇 알."""
+    random.seed(1865)
+    for k in range(4):
+        a = -0.5 + k * 0.33
+        cyl(0.012, 1.0, (math.cos(a) * 0.40 - 0.3, math.sin(a) * 0.40, 0.30), rot=(0, math.radians(84), a), mat=M['h_cornhusk'], verts=5)
+        for j in range(4):
+            t = 0.25 + j * 0.22
+            o = ico(0.11, (-0.3 + math.cos(a) * (0.1 + t * 0.85), math.sin(a) * (0.1 + t * 0.85) + (j % 2) * 0.06, 0.30 - j * 0.02), subdiv=2,
+                    mat=M['h_date'], scale=(1.5, 1.0, 1.0), smooth=True)
+            o.rotation_euler = (0, 0.3, a)
+    for (x, y, a) in ((0.40, -0.50, 0.3), (0.62, -0.34, 1.2)):
+        o = ico(0.11, (x, y, 0.08), subdiv=2, mat=M['h_date'], scale=(1.5, 1.0, 1.0), smooth=True); o.rotation_euler = (0, 0, a)
+
+
+def m_fig():
+    """무화과(`fig` — 농산물 갈래 · 열매) — 검보라 **무화과** 둘(조롱박꼴)과 반으로 가른 쪽(붉은 씨 결 속)."""
+    random.seed(1866)
+    for (x, y) in ((-0.30, 0.20), (0.10, 0.40)):
+        ico(0.30, (x, y, 0.30), subdiv=3, mat=M['h_fig'], scale=(1.0, 1.0, 0.95), smooth=True)
+        o = ico(0.14, (x - 0.24, y + 0.10, 0.46), subdiv=2, mat=M['h_fig'], scale=(1.6, 1.0, 1.0), smooth=True); o.rotation_euler = (0, -0.5, 2.7)
+    _half(0.46, -0.36, 0.30, (1.3, 1.0, 0.9), M['h_fig'], M['h_figin'], rz=0.3, k=0.88)
+
+
+def m_flax():
+    """아마(`flax` — 농산물 갈래 · 섬유) — 세워 묶은 **가는 아마 줄기 한 단** · 끝에 하늘빛 꽃."""
+    random.seed(1867)
+    for i in range(24):
+        a = random.uniform(0, math.tau); d = random.uniform(0, 0.16)
+        tilt = d * 1.2
+        cyl(0.018, 1.60, (math.cos(a) * d, math.sin(a) * d, 0.80), rot=(math.sin(a) * -tilt * 0.4, math.cos(a) * tilt * 0.4, 0), mat=M['h_flax'], verts=5)
+    _ring(0.13, 0.035, (0, 0, 0.62), M['cord'])
+    for i in range(10):
+        a = i * 0.628; d = 0.10 + (i % 3) * 0.08
+        x, y, z = math.cos(a) * d * 1.6, math.sin(a) * d * 1.6, 1.62 + (i % 2) * 0.06
+        for k in range(5):
+            b = k * 1.257
+            o = ico(0.05, (x + math.cos(b) * 0.05, y + math.sin(b) * 0.05, z), subdiv=1, mat=M['h_flaxflower'], scale=(1.4, 0.8, 0.3)); o.rotation_euler = (0, 0, b)
+
+
+def _half(x, y, r, sc, skin, flesh, rz=0.0, k=0.94):
+    """반으로 가른 쪽 — 껍질 반구(아래)를 깎아 **자른 면이 위**로 오게 눕혔다 · 속살 면은 껍질보다 조금 안쪽."""
+    o = ico(r, (x, y, 0.0), subdiv=3, mat=skin, scale=sc, smooth=True)
+    for v in o.data.vertices:
+        if v.co.z > 0:
+            v.co.z = 0.0
+    o.rotation_euler = (0, 0, rz)
+    o = cyl(r * k, 0.012, (x, y, 0.004), mat=flesh, verts=32)
+    o.scale = (sc[0], sc[1], 1.0)
+    o.rotation_euler = (0, 0, rz)
+    return o
+
+
+def _leafy(x, y, z, L, W, a, mat, tilt=0.0):
+    """넓은 잎 한 장(납작한 타원)."""
+    o = ico(L * 0.5, (x, y, z), subdiv=2, mat=mat, scale=(1.0, W / L, 0.05), smooth=True)
+    o.rotation_euler = (0, tilt, a)
+    return o
+
+
+def m_lentil():
+    """렌즈콩(`lentil` — 농산물 갈래 · 콩) — 납작한 볼록렌즈꼴 **주황 알** 무더기와 마른 꼬투리 둘."""
+    _mound(60, 0.64, 0.30, 0.04, 1870, lambda x, y, z, a: ico(0.065, (x, y, z), subdiv=2, mat=M['h_lentil'], scale=(1.0, 1.0, 0.45), smooth=True))
+    for (x, y, a) in ((0.72, -0.30, 0.4), (0.56, -0.58, -0.4)):
+        o = ico(0.14, (x, y, 0.06), subdiv=2, mat=M['h_cornhusk'], scale=(1.6, 1.0, 0.5), smooth=True); o.rotation_euler = (0, 0, a)
+
+
+def m_mango():
+    """망고(`mango` — 농산물 갈래 · 열매) — 콩팥꼴로 익은 **노란 주황 망고** 하나(붉은 볼 · 꼭지 쪽 푸른 기)와 반으로 가른 쪽(진주황 속살 · 칼집)."""
+    random.seed(1871)
+    o = ico(0.42, (-0.24, 0.20, 0.34), subdiv=3, mat=M['h_mango'], scale=(1.35, 1.0, 0.85), smooth=True); o.rotation_euler = (0, 0, 0.5)
+    o = ico(0.30, (-0.10, 0.06, 0.38), subdiv=3, mat=M['h_mangored'], scale=(1.30, 0.95, 0.90), smooth=True); o.rotation_euler = (0, 0, 0.5)
+    o = ico(0.16, (-0.66, -0.02, 0.40), subdiv=2, mat=M['h_pod'], scale=(1.0, 1.0, 0.7), smooth=True)                     # 꼭지 쪽 푸른 기
+    cyl(0.02, 0.10, (-0.72, -0.05, 0.62), mat=M['h_cassava'], verts=5)
+    _half(0.46, -0.36, 0.36, (1.35, 1.0, 0.8), M['h_mango'], M['h_mangoflesh'], rz=0.5)
+    for k in range(4):                                                                                       # 칼집(고슴도치 썰기)
+        box(0.60, 0.012, 0.01, (0.46, -0.36 + (k - 1.5) * 0.10, 0.012), rot=(0, 0, 0.5), mat=M['h_mangored'])
+
+
+def m_mulberry():
+    """뽕나무 잎(`mulberry` — 농산물 갈래 · 누에 먹이) — 딴 **윤 나는 진초록 잎**(하트꼴 · 톱니) 한 다발을 가지째 놓았다."""
+    random.seed(1872)
+    cyl(0.03, 1.40, (-0.10, 0.0, 0.10), rot=(0, math.radians(90), 0.15), mat=M['h_cassava'], verts=6)
+    for (x, y, z, a, s_) in ((0.40, -0.26, 0.16, -0.8, 1.0), (0.44, 0.28, 0.20, 0.7, 0.95), (-0.10, -0.34, 0.14, -1.2, 0.9),
+                            (-0.12, 0.32, 0.18, 1.3, 0.9), (0.72, 0.0, 0.24, 0.0, 1.05), (-0.56, 0.0, 0.12, 3.0, 0.8)):
+        _leafy(x, y, z, 0.70 * s_, 0.56 * s_, a, M['h_mulleaf'], tilt=random.uniform(-0.1, 0.1))
+        box(0.66 * s_, 0.02, 0.012, (x, y, z + 0.03), rot=(0, 0, a), mat=M['h_pod'])                           # 잎맥
+
+
+def m_olive():
+    """올리브(`olive` — 농산물 갈래 · 열매) — 은빛 회록 **가는 잎** 가지에 달린 검보라 · 푸른 열매 · 떨어진 몇 알."""
+    random.seed(1873)
+    cyl(0.025, 1.60, (0.0, 0.0, 0.14), rot=(0, math.radians(90), 0.2), mat=M['h_cassava'], verts=6)
+    for k in range(9):
+        t = (k - 4) / 4.0
+        x, y = t * 0.70, t * 0.14
+        _leafy(x + 0.10, y + (0.18 if k % 2 else -0.18), 0.16, 0.42, 0.10, (0.5 if k % 2 else -0.5) + 0.2, M['h_oliveleaf'])
+    for (x, y, mat) in ((0.10, -0.06, 'h_olive'), (-0.24, 0.0, 'h_olivegreen'), (0.36, 0.10, 'h_olive'), (0.50, -0.50, 'h_olive'), (0.70, -0.30, 'h_olivegreen'), (0.30, -0.66, 'h_olive')):
+        o = ico(0.13, (x, y, 0.20 if y > -0.3 else 0.09), subdiv=2, mat=M[mat], scale=(1.35, 1.0, 1.0), smooth=True); o.rotation_euler = (0, 0, 0.6)
+
+
+def m_onion():
+    """양파(`onion` — 농산물 갈래) — 금갈색 **겉껍질 양파** 둘(뾰족한 목 · 뿌리 털)과 반으로 가른 쪽(흰 겹 테)."""
+    random.seed(1874)
+    for (x, y, r) in ((-0.30, 0.18, 0.38), (0.20, 0.42, 0.30)):
+        ico(r, (x, y, r * 0.95), subdiv=3, mat=M['h_onion'], scale=(1.0, 1.0, 0.92), smooth=True)
+        cone(r * 0.30, 0.02, r * 0.6, (x, y, r * 1.95), mat=M['h_onion'], verts=10)
+        for k in range(5):
+            a = k * 1.257
+            cyl(0.008, 0.12, (x + math.cos(a) * 0.05, y + math.sin(a) * 0.05, 0.03), rot=(math.sin(a) * 1.2, -math.cos(a) * 1.2, 0), mat=M['h_cornhusk'], verts=4)
+    _half(0.46, -0.36, 0.34, (1.0, 1.0, 0.9), M['h_onion'], M['h_onionin'], k=0.92)
+    for k in range(4):                                                                                       # 겹 테
+        _ring(0.07 + k * 0.065, 0.008, (0.46, -0.36, 0.014), M['h_cornhusk'], maj=28, mnr=4)
+
+
+def m_peanut():
+    """땅콩(`peanut` — 농산물 갈래) — 가운데가 잘록한 그물 결 **꼬투리** 무더기 · 까 놓은 붉은 속껍질 알 몇."""
+    def pod(x, y, z, a):
+        ca, sa = math.cos(a), math.sin(a)
+        for sgn in (-1, 1):
+            ico(0.13, (x + ca * sgn * 0.12, y + sa * sgn * 0.12, z), subdiv=2, mat=M['h_peanut'], scale=(1.05, 0.95, 0.95), smooth=True)
+        ico(0.09, (x, y, z), subdiv=2, mat=M['h_peanut'], scale=(1.0, 0.9, 0.9), smooth=True)                   # 잘록한 허리
+    _mound(10, 0.56, 0.30, 0.10, 1875, pod)
+    for (x, y) in ((0.62, -0.44), (0.82, -0.22), (0.44, -0.66)):
+        ico(0.08, (x, y, 0.05), subdiv=2, mat=M['h_peanutk'], scale=(1.3, 1.0, 0.9), smooth=True)
+
+
+def m_pineapple():
+    """파인애플(`pineapple` — 농산물 갈래 · 열매) — 마름모 눈이 덮인 **노란 갈색 몸**과 위로 뻗은 뾰족한 잎 다발."""
+    random.seed(1876)
+    ico(0.44, (0, 0, 0.56), subdiv=3, mat=M['h_pineapple'], scale=(1.0, 1.0, 1.30), smooth=True)
+    for k in range(16):                                                                                      # 잎 다발
+        a = k * 2.399; up = 0.5 + (k % 4) * 0.12; L = 0.36 + (k % 3) * 0.10
+        o = cone(0.07, 0.0, L, (math.cos(a) * 0.10, math.sin(a) * 0.10, 1.18 + L * 0.4), rot=(math.sin(a) * (1.4 - up), -math.cos(a) * (1.4 - up), 0), mat=M['h_pineleaf'], verts=4)
+        o.scale = (1.0, 0.35, 1.0)
+
+
+def m_potato():
+    """감자(`potato` — 농산물 갈래 · 덩이줄기) — 울퉁불퉁한 **누런 갈색 덩이** 셋(눈) · 하나는 갈라 연노랑 속이 보인다."""
+    random.seed(1877)
+    for (x, y, r) in ((-0.30, 0.20, 0.32), (0.18, 0.40, 0.26), (-0.50, -0.28, 0.24)):
+        ico(r, (x, y, r * 0.75), subdiv=3, mat=M['h_potato'], scale=(1.3, 1.0, 0.8), jitter=0.06, smooth=True)
+        for k in range(3):
+            a = k * 2.1 + x
+            ico(0.025, (x + math.cos(a) * r * 0.9, y + math.sin(a) * r * 0.7, r * 0.95), subdiv=1, mat=M['h_cassava'])
+    _half(0.42, -0.30, 0.30, (1.3, 1.0, 0.8), M['h_potato'], M['h_potatoin'], k=0.92)
+
+
+def m_pumpkin():
+    """호박(`pumpkin` — 농산물 갈래 · 늙은호박) — 골이 깊은 **주황 호박** 하나(굵은 꼭지)."""
+    random.seed(1878)
+    for k in range(10):                                                                                      # 골 열(둥근 쪽 열 개)
+        a = k * math.tau / 10
+        o = ico(0.36, (math.cos(a) * 0.36, math.sin(a) * 0.36, 0.44), subdiv=3, mat=M['h_pumpkin'], scale=(1.0, 0.70, 0.95), smooth=True)
+        o.rotation_euler = (0, 0, a)
+    ico(0.44, (0, 0, 0.46), subdiv=3, mat=M['h_pumpkin'], scale=(1.0, 1.0, 0.85), smooth=True)
+    cyl(0.08, 0.30, (0.02, 0.0, 0.92), rot=(0.25, 0.1, 0), mat=M['h_cassava'], verts=7)
+    o = _leafy(-0.40, 0.30, 0.86, 0.50, 0.42, 2.2, M['h_leaf'], tilt=0.3)
+
+
+def m_sugarbeet():
+    """사탕무(`sugarbeet` — 농산물 갈래 · 뿌리) — 끝이 가는 **흰 원뿔 뿌리** 둘과 위의 푸른 잎."""
+    random.seed(1879)
+    for (y, L) in ((-0.18, 1.10), (0.26, 0.90)):
+        for j in range(6):
+            t = j / 5.0
+            ico(0.26 * (1 - t * 0.85) + 0.02, (-0.30 + t * L, y + t * 0.1, 0.24 - t * 0.06), subdiv=2, mat=M['h_beet'], scale=(1.2, 1.0, 1.0), smooth=True)
+        for k in range(5):
+            a = math.pi + (k - 2) * 0.45
+            _leafy(-0.50 + math.cos(a) * 0.32, y + math.sin(a) * 0.32, 0.40, 0.56, 0.30, a, M['h_mulleaf'], tilt=-0.3)
+
+
+def m_sugarcane():
+    """사탕수수(`sugarcane` — 농산물 갈래) — 자줏빛 **마디진 줄기** 세 토막(누런 마디 테 · 벤 면) · 마른 잎 한 장."""
+    random.seed(1880)
+    for (y, z, L, rz) in ((-0.24, 0.14, 2.0, 0.0), (0.22, 0.14, 1.8, 0.06), (0.0, 0.40, 1.9, -0.04)):
+        cyl(0.14, L, (0.0, y, z), rot=(0, math.radians(90), rz), mat=M['h_cane'], verts=14)
+        for k in range(-2, 3):
+            cyl(0.148, 0.06, (k * 0.40 + 0.1, y, z), rot=(0, math.radians(90), rz), mat=M['h_canenode'], verts=14)
+        cyl(0.13, 0.02, (L / 2 + 0.005, y, z), rot=(0, math.radians(90), rz), mat=M['h_beet'], verts=14)        # 벤 면(흰 속)
+    o = _leafy(-0.40, -0.52, 0.10, 1.4, 0.16, 0.2, M['h_cornhusk'])
+
+
+def m_sweet_potato():
+    """고구마(`sweet_potato` — 농산물 갈래 · 덩이뿌리) — 양끝이 가는 **자홍 껍질** 고구마 둘 · 하나는 잘라 노란 주황 속."""
+    random.seed(1881)
+    for (y, z, L, a) in ((-0.10, 0.20, 1.40, 0.15), (0.34, 0.18, 1.20, -0.25)):
+        for j in range(7):
+            t = j / 6.0
+            r = 0.24 * math.sin(math.pi * (0.15 + t * 0.7)) + 0.03
+            ico(r, (-L / 2 + t * L, y + math.sin(a) * (t - 0.5) * L, z), subdiv=2, mat=M['h_sweetpot'], scale=(1.4, 1.0, 1.0), jitter=0.04, smooth=True)
+    _half(0.52, -0.46, 0.24, (1.6, 1.0, 0.9), M['h_sweetpot'], M['h_sweetin'], rz=0.4, k=0.90)
+
+
+def m_tobacco():
+    """담배(`tobacco` — 농산물 갈래 · 잎) — 꼭지를 한데 묶어 말린 **금갈색 큰 잎** 한 손."""
+    random.seed(1882)
+    for k in range(7):
+        a = (k - 3) * 0.16
+        o = ico(0.60, (math.cos(a) * 0.62 - 0.4, math.sin(a) * 0.62, 0.08 + k * 0.025), subdiv=2, mat=M['h_tobacco'], scale=(1.0, 0.36, 0.05), jitter=0.04, smooth=True)
+        o.rotation_euler = (0, 0, a)
+        box(1.10, 0.02, 0.012, (math.cos(a) * 0.62 - 0.4, math.sin(a) * 0.62, 0.12 + k * 0.025), rot=(0, 0, a), mat=M['h_cornhusk'])   # 잎맥
+    cyl(0.12, 0.16, (-0.48, 0.0, 0.18), rot=(0, math.radians(90), 0), mat=M['cord'], verts=12)
+    for k in range(5):
+        cyl(0.02, 0.24, (-0.66, (k - 2) * 0.04, 0.18), rot=(0, math.radians(90), (k - 2) * 0.15), mat=M['h_tobacco'], verts=5)
+
+
+def m_tomato():
+    """토마토(`tomato` — 농산물 갈래 · 열매) — 푸른 꽃받침을 쓴 **붉은 토마토** 둘과 반으로 가른 쪽(씨 박힌 속)."""
+    random.seed(1883)
+    for (x, y, r) in ((-0.30, 0.18, 0.36), (0.22, 0.42, 0.28)):
+        ico(r, (x, y, r * 0.85), subdiv=3, mat=M['h_tomato'], scale=(1.0, 1.0, 0.85), smooth=True)
+        for k in range(5):
+            a = k * 1.257
+            o = ico(0.08, (x + math.cos(a) * 0.08, y + math.sin(a) * 0.08, r * 1.66), subdiv=1, mat=M['h_chiligreen'], scale=(1.6, 0.45, 0.2)); o.rotation_euler = (0, 0, a)
+        cyl(0.02, 0.10, (x, y, r * 1.72), mat=M['h_chiligreen'], verts=5)
+    _half(0.46, -0.34, 0.32, (1.0, 1.0, 0.85), M['h_tomato'], M['h_tomatoin'], k=0.92)
+
+
+def _brilliant(x, y, z, r, mat, verts=8):
+    """둥근 깎음 — 위 관(넓은 평면 · 비스듬한 면)과 아래 뾰족한 정자리."""
+    cone(r, r * 0.58, r * 0.42, (x, y, z + r * 0.21), mat=mat, verts=verts)
+    cone(0.0, r, r * 0.86, (x, y, z - r * 0.43), mat=mat, verts=verts)
+
+
+def m_diamond():
+    """다이아몬드(`diamond` — 보석 갈래) — 둥글게 깎은 **맑은 흰 보석** 하나(넓은 평면 · 여덟 면)와 작은 알 둘."""
+    _brilliant(0.0, 0.0, 0.56, 0.52, M['h_diamond'], verts=8)
+    _brilliant(0.62, -0.42, 0.20, 0.18, M['h_diamond'], verts=8)
+    _brilliant(0.30, -0.64, 0.16, 0.13, M['h_diamond'], verts=8)
+
+
+def m_ruby():
+    """루비(`ruby` — 보석 갈래) — 타원으로 깎은 **붉은 보석** 하나와 작은 알 둘."""
+    _brilliant(0.0, 0.0, 0.50, 0.50, M['h_ruby'], verts=10)
+    for o in OBJS[-2:]:
+        o.scale = (1.25, 0.9, 1.0)
+    _brilliant(0.64, -0.40, 0.18, 0.16, M['h_ruby'], verts=10)
+    _brilliant(0.34, -0.66, 0.15, 0.12, M['h_ruby'], verts=10)
+
+
+def m_sapphire():
+    """사파이어(`sapphire` — 보석 갈래) — 네모 둥근 쿠션꼴로 깎은 **푸른 보석** 하나와 작은 알 둘."""
+    _brilliant(0.0, 0.0, 0.50, 0.52, M['h_sapphire'], verts=4)
+    for o in OBJS[-2:]:
+        o.rotation_euler = (0, 0, math.radians(45))
+    _brilliant(0.66, -0.36, 0.18, 0.17, M['h_sapphire'], verts=6)
+    _brilliant(0.36, -0.66, 0.15, 0.12, M['h_sapphire'], verts=6)
+
+
+def m_emerald():
+    """에메랄드(`emerald` — 보석 갈래) — **계단꼴로 깎은 네모 초록 보석**(모서리를 친 직사각) 하나와 육각 원석 기둥 하나."""
+    o = box(0.90, 0.64, 0.30, (0.0, 0.0, 0.30), mat=M['h_emerald'])
+    for v in o.data.vertices:
+        if v.co.z > 0:
+            v.co.x *= 0.78; v.co.y *= 0.70
+    o = box(0.90, 0.64, 0.30, (0.0, 0.0, 0.02), mat=M['h_emerald'])
+    for v in o.data.vertices:
+        if v.co.z < 0:
+            v.co.x *= 0.62; v.co.y *= 0.50
+    cyl(0.14, 0.50, (0.66, -0.44, 0.14), rot=(0, math.radians(90), 0.5), mat=M['h_emerald'], verts=6, smooth=False)
+
+
+def m_amethyst():
+    """자수정(`amethyst` — 보석 갈래 · 캔 것) — 회색 바탕돌에서 돋은 **보랏빛 육각 결정** 무리."""
+    random.seed(1884)
+    ico(0.50, (0, 0, 0.16), subdiv=2, mat=M['stone'], scale=(1.4, 1.1, 0.40), jitter=0.18)
+    for i in range(11):
+        a = random.uniform(0, math.tau); d = random.uniform(0.0, 0.40); L = random.uniform(0.34, 0.70); tilt = d * 1.3
+        rx, ry = math.sin(a) * -tilt, math.cos(a) * tilt
+        cyl(0.08, L, (math.cos(a) * d, math.sin(a) * d, 0.24 + L * 0.42), rot=(rx, ry, 0), mat=M['h_amethyst'], verts=6, smooth=False)
+        cone(0.08, 0.0, 0.14, (math.cos(a) * (d + math.sin(tilt) * L * 0.5), math.sin(a) * (d + math.sin(tilt) * L * 0.5), 0.24 + L * 0.42 + math.cos(tilt) * (L * 0.5 + 0.07)),
+             rot=(rx, ry, 0), mat=M['h_amethyst'], verts=6)
+
+
+def m_topaz():
+    """토파즈(`topaz` — 보석 갈래) — 물방울꼴로 깎은 **금빛 보석** 하나와 작은 알 둘."""
+    _brilliant(0.0, 0.0, 0.50, 0.50, M['h_topaz'], verts=10)
+    for o in OBJS[-2:]:
+        o.scale = (1.45, 0.85, 1.0)
+        for v in o.data.vertices:
+            if v.co.x > 0:
+                v.co.y *= max(0.2, 1 - v.co.x / 0.5 * 0.8)
+    _brilliant(0.66, -0.38, 0.18, 0.16, M['h_topaz'], verts=8)
+    _brilliant(0.36, -0.66, 0.15, 0.12, M['h_topaz'], verts=8)
+
+
+def m_turquoise():
+    """터키석(`turquoise` — 보석 갈래) — 검은 그물 결이 든 **하늘빛 돌**: 갈아 둥글린 알(돔꼴) 하나와 원석 덩이 둘."""
+    random.seed(1885)
+    ico(0.46, (0.0, 0.0, 0.0), subdiv=3, mat=M['h_turq'], scale=(1.25, 1.0, 0.70), smooth=True)
+    for (x, y, r) in ((0.62, -0.44, 0.22), (-0.62, -0.30, 0.18)):
+        ico(r, (x, y, r * 0.5), subdiv=1, mat=M['h_turq'], scale=(1.2, 1.0, 0.8), jitter=0.25)
+
+
+def m_jade_polished():
+    """옥 가공품(`jade_polished` — 보석 갈래) — 갈아 윤 낸 **굽은 옥**(곡옥 — 머리에 구멍 · C 자로 감긴 꼬리) 둘과 대롱옥 하나(청동기 한반도의 옥)."""
+    random.seed(1886)
+    _gogok(-0.24, 0.10, 1.0, 0.2)
+    _gogok(0.52, -0.30, 0.72, 2.6)
+    cyl(0.10, 0.50, (0.24, 0.60, 0.10), rot=(0, math.radians(90), 0.4), mat=M['h_jade'], verts=14)               # 대롱옥
+    cyl(0.04, 0.52, (0.24, 0.60, 0.10), rot=(0, math.radians(90), 0.4), mat=M['scorch'], verts=10)
+
+
+def m_amber_polished():
+    """호박 가공(`amber_polished` — 보석 갈래) — 갈아 윤 낸 **둥근 호박 구슬**을 끈에 꿴 한 줄."""
+    random.seed(1887)
+    for k in range(9):
+        t = k / 8.0
+        a = math.pi * (0.15 + t * 0.9)
+        x, y = math.cos(a) * 0.70, math.sin(a) * 0.55 - 0.20
+        ico(0.15 + 0.03 * math.sin(t * math.pi), (x, y, 0.15), subdiv=3, mat=M['h_amber'], smooth=True)
+    for k in range(10):
+        t = (k + 0.5) / 9.0
+        a = math.pi * (0.15 + t * 0.9 - 0.05)
+        cyl(0.012, 0.16, (math.cos(a) * 0.70, math.sin(a) * 0.55 - 0.20, 0.15), rot=(0, math.radians(90), a + math.pi / 2), mat=M['cord'], verts=5)
+    for sgn in (-1, 1):                                                                                          # 끈 끝
+        cyl(0.012, 0.40, (sgn * 0.74, -0.42, 0.10), rot=(0, math.radians(90), sgn * 1.2), mat=M['cord'], verts=5)
+
+
+def _coins(x, y, n, r, mat, seed):
+    """주화 더미 — 쌓은 것 n 닢(조금씩 어긋남) · 테를 두른 둥근 돈."""
+    random.seed(seed)
+    for k in range(n):
+        dx, dy = random.uniform(-0.03, 0.03), random.uniform(-0.03, 0.03)
+        cyl(r, 0.07, (x + dx, y + dy, 0.035 + k * 0.075), mat=mat, verts=28)
+        _ring(r * 0.88, 0.012, (x + dx, y + dy, 0.072 + k * 0.075), mat, maj=28, mnr=4)
+
+
+def m_gold_coin():
+    """금화(`gold_coin` — 보석 갈래 · 위세 재화) — 쌓은 **금빛 주화** 두 더미와 기대 세운 한 닢."""
+    _coins(-0.20, 0.10, 6, 0.32, M['h_goldmet'], 1888)
+    _coins(0.38, 0.34, 3, 0.30, M['h_goldmet'], 18881)
+    cyl(0.30, 0.07, (0.42, -0.42, 0.24), rot=(math.radians(70), 0, 0.4), mat=M['h_goldmet'], verts=28)
+
+
+def m_silver_coin():
+    """은화(`silver_coin` — 보석 갈래 · 위세 재화) — 쌓은 **은빛 주화** 두 더미와 기대 세운 한 닢."""
+    _coins(-0.20, 0.10, 6, 0.32, M['h_silvmet'], 1889)
+    _coins(0.38, 0.34, 3, 0.30, M['h_silvmet'], 18891)
+    cyl(0.30, 0.07, (0.42, -0.42, 0.24), rot=(math.radians(70), 0, 0.4), mat=M['h_silvmet'], verts=28)
+
+
+def m_relic():
+    """유물(`relic` — 보석 갈래 · 줍는 위세품) — 푸른 녹이 앉은 **잔무늬 청동 거울**(가는 동심 무늬 · 가운데 꼭지 둘에 꿴 끈)을 비스듬히 세웠다 — 청동기 한반도 최고의 보물."""
+    random.seed(1890)
+    n0 = len(OBJS)
+    cyl(0.70, 0.08, (0, 0, 0.04), mat=M['h_bronzemet'], verts=40)
+    _ring(0.69, 0.045, (0, 0, 0.08), M['h_bronzemet'], maj=48, mnr=6)
+    for k in range(5):                                                                                        # 잔무늬 테(녹)
+        _ring(0.16 + k * 0.10, 0.016, (0, 0, 0.085), M['h_patina'], maj=40, mnr=4)
+    for sgn in (-1, 1):                                                                                       # 꼭지 둘
+        ico(0.08, (sgn * 0.10, 0.0, 0.12), subdiv=2, mat=M['h_bronzemet'], scale=(1.0, 0.6, 0.8), smooth=True)
+    for k in range(10):                                                                                       # 녹 얼룩
+        a = random.uniform(0, math.tau); d = random.uniform(0.15, 0.62)
+        ico(random.uniform(0.08, 0.14), (math.cos(a) * d, math.sin(a) * d, 0.09), subdiv=1, mat=M['h_patina'], scale=(1.5, 1.0, 0.2), jitter=0.3)
+    _ring(0.10, 0.02, (0.0, 0.0, 0.16), M['h_redcord'], rot=(math.radians(90), 0, 0), maj=16, mnr=5)          # 꼭지에 꿴 끈
+    _tilt(n0, math.radians(40), 'X')                                                                          # 뒷면 무늬가 보는 쪽으로 오게 세운다
+
+
+def m_iron_relic():
+    """철제 위세품(`iron_relic` — 위세 갈래 · 철기 대금) — 고리자루에 금테를 두른 **쇠 큰칼**(위세 칼)을 칼집 없이 눕혔다."""
+    random.seed(1891)
+    box(1.70, 0.16, 0.04, (0.30, 0.0, 0.06), mat=M['h_ironmet'])                                             # 날
+    o = box(0.30, 0.16, 0.04, (1.24, 0.0, 0.06), rot=(0, 0, 0), mat=M['h_ironmet'])                            # 칼끝
+    for v in o.data.vertices:
+        if v.co.x > 0:
+            v.co.y *= 0.05
+    box(0.42, 0.10, 0.08, (-0.78, 0.0, 0.06), mat=M['haft'])                                                 # 자루
+    for k in range(4):
+        cyl(0.065, 0.03, (-0.92 + k * 0.10, 0.0, 0.06), rot=(0, math.radians(90), 0), mat=M['h_goldmet'], verts=10)   # 금테
+    _ring(0.16, 0.04, (-1.14, 0.0, 0.06), M['h_goldmet'], rot=(math.radians(90), 0, 0), maj=24, mnr=8)          # 고리
+    box(0.06, 0.28, 0.10, (-0.54, 0.0, 0.06), mat=M['h_goldmet'])                                            # 코등이
+
+
+def m_scroll():
+    """두루마리(`scroll` — 보석 갈래 · 위세 기록) — 붉은 끈으로 묶은 **말린 두루마리** 하나와 반쯤 펼친 하나(먹 글줄 · 나무 축)."""
+    random.seed(1892)
+    cyl(0.18, 1.30, (-0.10, 0.30, 0.18), rot=(0, math.radians(90), 0.2), mat=M['h_paper'], verts=20)
+    for sgn in (-1, 1):
+        cyl(0.05, 0.14, (-0.10 + sgn * 0.70, 0.30 + sgn * 0.14, 0.18), rot=(0, math.radians(90), 0.2), mat=M['haft'], verts=10)
+    _ring(0.185, 0.02, (-0.10, 0.30, 0.18), M['h_redcord'], rot=(0, math.radians(90), 0.2), maj=20, mnr=5)
+    box(1.10, 0.80, 0.015, (0.20, -0.40, 0.01), rot=(0, 0, 0.2), mat=M['h_paper'])                          # 펼친 종이
+    cyl(0.12, 1.00, (0.28, -0.84, 0.12), rot=(0, math.radians(90), 0.2), mat=M['h_paper'], verts=18)          # 말린 쪽
+    for k in range(5):                                                                                        # 먹 글줄
+        box(0.03, 0.62, 0.01, (-0.18 + k * 0.16, -0.36 + k * 0.03, 0.022), rot=(0, 0, 0.2), mat=M['h_ink'])
+
+
+def _gogok(x, y, s_, rz):
+    """굽은 옥(곡옥) — 둥근 머리(구멍)에서 꼬리가 C 자로 감겨 가늘어진다(눕힌 것)."""
+    ico(0.30 * s_, (x, y, 0.16 * s_), subdiv=3, mat=M['h_jade'], scale=(1.0, 1.0, 0.55), smooth=True)
+    for j in range(16):
+        t = (j + 1) / 16.0
+        a = rz + t * 2.6
+        cx, cy = x + math.cos(rz) * 0.30 * s_, y + math.sin(rz) * 0.30 * s_
+        ico((0.27 - t * 0.17) * s_, (cx + math.cos(a + math.pi) * 0.30 * s_, cy + math.sin(a + math.pi) * 0.30 * s_, 0.14 * s_), subdiv=2,
+            mat=M['h_jade'], scale=(1.0, 1.0, 0.55), smooth=True)
+    cyl(0.08 * s_, 0.02, (x, y, 0.255 * s_), mat=M['scorch'], verts=14)                                       # 구멍
+
+
+def _tilt(n0, ang, axis='X'):
+    """`n0` 번째 뒤로 지은 오브젝트를 원점 둘레로 세계 축 `axis` 만큼 기울인다(회전 행렬을 앞에 곱한다 — `_spin` 과 같은 문법)."""
+    from mathutils import Matrix
+    R = Matrix.Rotation(ang, 3, axis)
+    for o in OBJS[n0:]:
+        o.location = R @ o.location
+        o.rotation_euler = (R @ o.rotation_euler.to_matrix()).to_euler('XYZ')
+
+
+def _jar(x, y, R, H, mat, neck=0.55, lip=0.62):
+    """항아리 — 배부른 몸 · 좁은 목 · 벌어진 아가리(옹기 · 토기)."""
+    ico(R, (x, y, H * 0.45), subdiv=3, mat=mat, scale=(1.0, 1.0, H / (2 * R) * 1.05), smooth=True)
+    cyl(R * neck, H * 0.20, (x, y, H * 0.90), mat=mat, verts=24)
+    _ring(R * lip, R * 0.08, (x, y, H * 1.0), mat, maj=28, mnr=8)
+
+
+def m_beer():
+    """맥주(`beer` — 공예품 갈래) — 넓은 토기 잔에 찰랑이는 **호박빛 맥주** · 가장자리를 두른 흰 거품 띠와 떠 있는 거품."""
+    random.seed(1900)
+    _bowl(0.58, 0.56, M['h_bowl'], base=0.70)
+    cyl(0.55, 0.03, (0, 0, 0.565), mat=M['h_beer'], verts=28)
+    _ring(0.47, 0.07, (0, 0, 0.59), M['h_foam'], maj=36, mnr=10)                                             # 거품 띠
+    for k in range(5):                                                                                        # 떠 있는 거품
+        a = k * 1.3 + 0.3; d = random.uniform(0.05, 0.28)
+        ico(random.uniform(0.07, 0.12), (math.cos(a) * d, math.sin(a) * d, 0.585), subdiv=2, mat=M['h_foam'], scale=(1.0, 1.0, 0.45), smooth=True)
+    _ring(0.18, 0.05, (0.62, 0.0, 0.30), M['h_bowl'], rot=(math.radians(90), 0, 0), maj=18, mnr=8)          # 손잡이
+
+
+def m_wine():
+    """와인(`wine` — 공예품 갈래) — 두 귀 달린 **목 긴 토기 병**과 앞에 따른 **검붉은 포도주** 한 잔."""
+    random.seed(1901)
+    _jar(-0.26, 0.20, 0.36, 1.30, M['h_bowl'], neck=0.40, lip=0.46)
+    for sgn in (-1, 1):
+        _ring(0.12, 0.035, (-0.26 + sgn * 0.20, 0.20, 1.06), M['h_bowl'], rot=(math.radians(90), 0, 0), maj=16, mnr=6)
+    n0 = len(OBJS)
+    _bowl(0.30, 0.22, M['h_bowl'], base=0.55)
+    cyl(0.28, 0.02, (0, 0, 0.225), mat=M['h_wine'], verts=24)
+    for o in OBJS[n0:]:
+        o.location.x += 0.40; o.location.y -= 0.40
+
+
+def m_soy_sauce():
+    """간장(`soy_sauce` — 공예품 갈래) — 윤 낸 검붉은 **옹기**에 담긴 검은 장(뚜껑을 비켜 놓았다)과 작은 종지 하나."""
+    random.seed(1902)
+    _jar(-0.20, 0.16, 0.52, 1.10, M['h_onggi'], neck=0.70, lip=0.74)
+    cyl(0.36, 0.02, (-0.20, 0.16, 1.07), mat=M['h_soy'], verts=28)
+    o = cyl(0.44, 0.06, (0.36, 0.40, 0.08), rot=(math.radians(-14), 0, 0), mat=M['h_onggi'], verts=28)       # 비켜 놓은 뚜껑
+    ico(0.06, (0.36, 0.40, 0.14), subdiv=1, mat=M['h_onggi'])
+    n0 = len(OBJS)
+    _bowl(0.22, 0.14, M['h_onggi'], base=0.6)
+    cyl(0.20, 0.02, (0, 0, 0.145), mat=M['h_soy'], verts=20)
+    for o in OBJS[n0:]:
+        o.location.x += 0.46; o.location.y -= 0.46
+
+
+def m_kimchi():
+    """김치(`kimchi` — 공예품 갈래) — 바리에 담은 고춧물 든 **배추 포기**(겹겹의 잎 · 흰 줄기) 둘."""
+    random.seed(1903)
+    _bowl(0.66, 0.36, M['h_onggi'], base=0.6)
+    for (x, y, a) in ((-0.14, 0.10, 0.5), (0.20, -0.18, 0.3)):
+        for k in range(5):                                                                                     # 겹잎
+            o = ico(0.30 - k * 0.03, (x, y + (k - 2) * 0.05, 0.42 + k * 0.03), subdiv=2, mat=(M['h_kimchi'] if k % 2 == 0 else M['h_cabbage']),
+                    scale=(1.9, 0.50, 0.40), jitter=0.06, smooth=True)
+            o.rotation_euler = (0, 0, a)
+    for k in range(10):                                                                                        # 고춧가루 · 실파
+        a = random.uniform(0, math.tau); d = random.uniform(0.1, 0.5)
+        ico(0.03, (math.cos(a) * d, math.sin(a) * d, 0.52), subdiv=1, mat=M['h_paprika'])
+
+
+def m_bread():
+    """빵(`bread` — 공예품 갈래) — 칼집 낸 껍질이 터진 **둥근 빵** 한 덩이와 썰어 낸 한 조각."""
+    random.seed(1904)
+    ico(0.56, (-0.12, 0.10, 0.30), subdiv=3, mat=M['h_crust'], scale=(1.30, 1.0, 0.58), jitter=0.02, smooth=True)
+    for k in range(3):                                                                                         # 칼집(터진 속)
+        o = ico(0.30, (-0.40 + k * 0.28, 0.10, 0.60), subdiv=2, mat=M['h_crumb'], scale=(0.25, 1.4, 0.10), smooth=True)
+        o.rotation_euler = (0, 0, 0.25)
+    o = box(0.16, 0.70, 0.46, (0.66, -0.36, 0.23), rot=(0, 0, 0.3), mat=M['h_crust'])                          # 조각(껍질)
+    box(0.17, 0.62, 0.38, (0.66, -0.36, 0.22), rot=(0, 0, 0.3), mat=M['h_crumb'])                              # 조각 속
+
+
+def m_bow():
+    """활(`bow` — 공예품 갈래) — 양끝이 뒤로 젖혀진 **짧은 각궁**(검은 몸 · 줌통 감은 끈)에 시위를 메웠다."""
+    random.seed(1905)
+    pts = []
+    for j in range(15):
+        t = (j / 14.0) * 2 - 1                                                                                 # −1 … 1
+        x = t * 1.10
+        y = 0.38 * (1 - t * t) - 0.30 * (abs(t) ** 6) * 1.6                                                   # 활 몸 굽이 + 끝 젖힘
+        pts.append((x, y))
+    for j in range(14):
+        (x0, y0), (x1, y1) = pts[j], pts[j + 1]
+        L = math.hypot(x1 - x0, y1 - y0); a = math.atan2(y1 - y0, x1 - x0)
+        cyl(0.05 - abs(j - 6.5) * 0.002, L * 1.08, ((x0 + x1) / 2, (y0 + y1) / 2, 0.06), rot=(0, math.radians(90), a), mat=M['h_bowwood'], verts=8)
+    cyl(0.07, 0.30, (0.0, 0.38, 0.06), rot=(0, math.radians(90), 0), mat=M['cord'], verts=10)                 # 줌통
+    xA, yA = pts[1]; xB, yB = pts[-2]
+    cyl(0.012, math.hypot(xB - xA, yB - yA), ((xA + xB) / 2, (yA + yB) / 2, 0.06), rot=(0, math.radians(90), math.atan2(yB - yA, xB - xA)), mat=M['h_petal'], verts=5)   # 시위
+
+
+def m_brush():
+    """붓(`brush` — 공예품 갈래) — 대나무 붓대에 **먹 머금은 검은 털**이 달린 붓 둘(하나는 붓걸이에 기댔다)."""
+    random.seed(1906)
+    for (y, z, ry) in ((-0.16, 0.06, 0.0), (0.22, 0.30, -0.20)):
+        cyl(0.05, 1.40, (-0.10, y, z), rot=(0, math.radians(90) + ry, 0.1), mat=M['h_bamboo'], verts=10)
+        cyl(0.06, 0.08, (0.58, y + 0.07, z - 0.13 * (1 if ry else 0)), rot=(0, math.radians(90) + ry, 0.1), mat=M['h_bambnode'], verts=10)
+        o = cone(0.075, 0.0, 0.42, (0.82, y + 0.09, z - 0.18 * (1 if ry else 0)), rot=(0, math.radians(90) + ry, 0.1), mat=M['h_brushhair'], verts=12)
+    box(0.12, 0.70, 0.30, (-0.60, 0.10, 0.15), mat=M['haft'])                                                   # 붓걸이
+
+
+def m_ink():
+    """먹(`ink` — 공예품 갈래) — 검은 **먹 막대** 하나(금빛 글자 자리)와 먹을 간 **벼루**(검은 먹물 못)."""
+    random.seed(1907)
+    box(1.10, 0.70, 0.16, (0.0, 0.10, 0.08), mat=M['h_inkstone'])                                               # 벼루
+    box(0.70, 0.46, 0.02, (0.10, 0.10, 0.165), mat=M['h_soy'])                                                  # 먹물 못
+    box(0.22, 0.46, 0.04, (-0.40, 0.10, 0.17), mat=M['h_inkstone'])                                             # 연지 둑
+    box(0.90, 0.20, 0.12, (0.20, -0.56, 0.06), rot=(0, 0, 0.35), mat=M['h_ink'])                                # 먹 막대
+    box(0.40, 0.10, 0.01, (0.20, -0.56, 0.125), rot=(0, 0, 0.35), mat=M['h_goldmet'])                           # 금빛 글자 자리
+
+
+def m_paper():
+    """종이(`paper` — 공예품 갈래) — 가지런히 쌓은 **미색 종이** 한 묶음(겹이 보이는 옆면 · 맨 위 한 장은 비스듬)과 묶은 끈."""
+    random.seed(1908)
+    for k in range(10):
+        box(1.20, 0.86, 0.022, (random.uniform(-0.02, 0.02), random.uniform(-0.02, 0.02), 0.012 + k * 0.026), rot=(0, 0, random.uniform(-0.02, 0.02)), mat=M['h_paper'])
+    box(1.20, 0.86, 0.02, (0.16, -0.12, 0.30), rot=(0, 0, 0.35), mat=M['h_paper'])
+    for sgn in (-1, 1):
+        box(1.24, 0.04, 0.30, (0.0, sgn * 0.22, 0.14), mat=M['cord'])
+
+
+def _bricks(mat, seed, chip=0.0):
+    """벽돌 쌓기 — 아래 셋 · 위 둘 엇쌓기 · 옆에 하나."""
+    random.seed(seed)
+    for (x, y, z, rz) in ((0.0, -0.36, 0.13, 0.0), (0.0, 0.0, 0.13, 0.0), (0.0, 0.36, 0.13, 0.0), (0.06, -0.18, 0.39, 0.0), (0.06, 0.18, 0.39, 0.0), (0.84, -0.30, 0.13, 0.5)):
+        o = box(0.80, 0.34, 0.25, (x, y, z), rot=(0, 0, rz), mat=mat)
+        if chip:
+            for v in o.data.vertices:
+                v.co.x *= 1 + random.uniform(-chip, chip); v.co.y *= 1 + random.uniform(-chip, chip)
+
+
+def m_clay_brick():
+    """진흙 벽돌(`clay_brick` — 공예품 갈래) — 햇볕에 말린 **누런 갈색 흙벽돌** 엇쌓기(모서리가 무르다)."""
+    _bricks(M['h_mudbrick'], 1909, chip=0.06)
+
+
+def m_stone_brick():
+    """석재 벽돌(`stone_brick` — 공예품 갈래) — 정으로 다듬은 **회색 돌 벽돌** 엇쌓기(반듯한 모서리)."""
+    _bricks(M['h_cutstone'], 1910)
+
+
+def m_dye_indigo():
+    """인디고(`dye_indigo` — 공예품 갈래 · 쪽 염료) — 짙은 **쪽빛 물**이 담긴 바리와 앞에 굳힌 쪽빛 덩이 셋."""
+    random.seed(1911)
+    _bowl(0.56, 0.40, M['h_bowl'], base=0.6)
+    cyl(0.53, 0.02, (0, 0, 0.405), mat=M['h_indigo'], verts=28)
+    for (x, y, r) in ((0.62, -0.46, 0.15), (0.40, -0.70, 0.12), (0.82, -0.20, 0.11)):
+        ico(r, (x, y, r * 0.8), subdiv=1, mat=M['h_indigocake'], scale=(1.2, 1.0, 0.9), jitter=0.2)
+
+
+def m_dye_purple():
+    """자색 염료(`dye_purple` — 공예품 갈래 · 고둥 염료) — **자줏빛 물**이 담긴 바리와 그 물에 들인 자색 실 타래."""
+    random.seed(1912)
+    _bowl(0.56, 0.40, M['h_bowl'], base=0.6)
+    cyl(0.53, 0.02, (0, 0, 0.405), mat=M['h_purple'], verts=28)
+    for k in range(4):
+        o = _ring(0.40, 0.05, (0.56 + k * 0.01, -0.50, 0.05 + k * 0.03), M['h_purpleyarn'], maj=36, mnr=8)
+        o.scale = (1.0, 0.45, 1.0)
+
+
+def m_glass():
+    """유리(`glass` — 공예품 갈래) — 푸른 물빛 **유리 병** 하나와 유리 구슬 몇(청동기 · 철기 한반도의 유리 구슬)."""
+    random.seed(1913)
+    ico(0.40, (-0.20, 0.16, 0.40), subdiv=3, mat=M['h_glass'], scale=(1.0, 1.0, 1.0), smooth=True)
+    cyl(0.12, 0.40, (-0.20, 0.16, 0.92), mat=M['h_glass'], verts=20)
+    _ring(0.14, 0.035, (-0.20, 0.16, 1.12), M['h_glass'], maj=20, mnr=6)
+    for (x, y) in ((0.40, -0.36), (0.62, -0.10), (0.20, -0.62), (0.56, -0.62), (0.80, -0.40)):
+        ico(0.10, (x, y, 0.09), subdiv=2, mat=M['h_glass'], scale=(1.0, 1.0, 0.85), smooth=True)
+        cyl(0.03, 0.02, (x, y, 0.18), mat=M['scorch'], verts=8)
+
+
+def m_perfume():
+    """향수(`perfume` — 공예품 갈래) — 배부른 **분홍 유리 병**(금빛 마개 · 목 테)과 옆에 놓인 꽃 한 송이."""
+    random.seed(1914)
+    ico(0.38, (0, 0, 0.38), subdiv=3, mat=M['h_perfume'], scale=(1.0, 1.0, 0.95), smooth=True)
+    cyl(0.10, 0.26, (0, 0, 0.82), mat=M['h_perfume'], verts=16)
+    _ring(0.12, 0.03, (0, 0, 0.92), M['h_goldmet'], maj=18, mnr=6)
+    ico(0.13, (0, 0, 1.04), subdiv=2, mat=M['h_goldmet'], scale=(1.0, 1.0, 1.3), smooth=True)
+    for k in range(5):
+        a = k * 1.257
+        o = ico(0.10, (0.56 + math.cos(a) * 0.09, -0.40 + math.sin(a) * 0.09, 0.06), subdiv=2, mat=M['h_crocus'], scale=(1.3, 0.8, 0.25), smooth=True)
+        o.rotation_euler = (0, 0, a)
+    ico(0.05, (0.56, -0.40, 0.10), subdiv=1, mat=M['h_disc'])
+    cyl(0.015, 0.50, (0.86, -0.22, 0.04), rot=(0, math.radians(90), 0.6), mat=M['h_stem'], verts=5)
+
+
+def m_pottery():
+    """도자기(`pottery` — 공예품 갈래) — 어깨가 넓고 목이 짧은 **유약 입힌 병**(비색 유약 · 굽) — 흙빛 토기 항아리들과 빛으로 갈린다."""
+    random.seed(1915)
+    ico(0.48, (0, 0, 0.62), subdiv=3, mat=M['h_celadon'], scale=(1.0, 1.0, 1.10), smooth=True)              # 넓은 어깨
+    cone(0.24, 0.40, 0.40, (0, 0, 0.20), mat=M['h_celadon'], verts=28)                                      # 아래로 좁아지는 몸
+    cyl(0.12, 0.18, (0, 0, 1.18), mat=M['h_celadon'], verts=20)                                             # 짧은 목
+    _ring(0.13, 0.04, (0, 0, 1.27), M['h_celadon'], maj=20, mnr=6)
+    _ring(0.25, 0.03, (0, 0, 0.02), M['h_celadon'], maj=24, mnr=6)                                          # 굽
+    for k in range(3):                                                                                        # 상감 무늬 띠
+        _ring(0.47 - abs(k - 1) * 0.04, 0.012, (0, 0, 0.66 + (k - 1) * 0.14), M['h_petal'], maj=36, mnr=4)
+
+
+def m_silk_cloth():
+    """비단(`silk_cloth` — 공예품 갈래) — 윤 나는 **진홍 비단** 한 필: 말린 두루마리와 앞으로 흘러내린 자락(금빛 단)."""
+    random.seed(1916)
+    cyl(0.26, 1.30, (-0.10, 0.20, 0.26), rot=(0, math.radians(90), 0.25), mat=M['h_silk'], verts=24)
+    for k in range(6):                                                                                        # 흘러내린 자락(물결)
+        t = k / 5.0
+        box(0.80, 0.26, 0.02, (0.10 + math.cos(0.25) * (t - 0.5) * 0.10, -0.12 - t * 0.56, 0.20 - t * 0.16 + math.sin(t * 6) * 0.03),
+            rot=(math.radians(-24) + math.sin(t * 6) * 0.2, 0, 0.25), mat=M['h_silk'])
+    box(0.80, 0.04, 0.025, (0.16, -0.72, 0.03), rot=(0, 0, 0.25), mat=M['h_goldmet'])                       # 금빛 단
+
+
+def m_beef_tallow():
+    """소기름(`beef_tallow` — 가축 산물) — 녹였다 굳힌 **흰 기름 덩이** 둘(매끈한 윗면)과 토기 종지에 담긴 녹은 기름."""
+    random.seed(1917)
+    o = box(0.70, 0.50, 0.34, (-0.16, 0.14, 0.17), rot=(0, 0, 0.2), mat=M['h_tallow'])
+    for v in o.data.vertices:
+        v.co.x *= 1 + random.uniform(-0.05, 0.05); v.co.y *= 1 + random.uniform(-0.05, 0.05)
+    o = box(0.46, 0.40, 0.26, (0.42, 0.36, 0.13), rot=(0, 0, -0.3), mat=M['h_tallow'])
+    n0 = len(OBJS)
+    _bowl(0.26, 0.16, M['h_bowl'], base=0.6)
+    cyl(0.24, 0.02, (0, 0, 0.165), mat=M['h_beer'], verts=20)
+    for o in OBJS[n0:]:
+        o.location.x += 0.46; o.location.y -= 0.40
+
+
+def m_cheese():
+    """치즈(`cheese` — 가축 산물) — 쐐기 하나를 잘라 낸 **둥근 치즈**(누런 껍질 · 구멍 난 속)와 그 쐐기."""
+    random.seed(1918)
+    n = 28
+    cyl(0.62, 0.40, (0, 0, 0.20), mat=M['h_rind'], verts=n)
+    o = OBJS[-1]
+    for v in o.data.vertices:                                                                                 # 쐐기 자리(앞쪽 60°)를 안쪽으로 접는다
+        a = math.atan2(v.co.y, v.co.x)
+        if -0.9 < a < 0.15:
+            v.co.x *= 0.02; v.co.y *= 0.02
+    for sgn, a in ((1, -0.9), (-1, 0.15)):                                                                    # 자른 면(속)
+        box(0.60, 0.012, 0.38, (math.cos(a) * 0.30, math.sin(a) * 0.30, 0.20), rot=(0, 0, a), mat=M['h_cheese'])
+    for k in range(4):                                                                                        # 구멍
+        a = random.uniform(-0.8, 0.1)
+        cyl(0.04, 0.02, (math.cos(a) * 0.30, math.sin(a) * 0.30, 0.10 + k * 0.07), rot=(math.radians(90), 0, a), mat=M['h_rind'], verts=10)
+    o = cone(0.0, 0.0, 0.0, (0, 0, 0), mat=M['h_cheese'], verts=3)                                             # (자리 표 · 크기 0)
+    o.scale = (0, 0, 0)
+    for (x, y) in ((0.80, -0.40),):                                                                           # 잘라 낸 쐐기
+        o = cyl(0.50, 0.36, (x, y, 0.18), mat=M['h_cheese'], verts=3)
+        o.rotation_euler = (0, 0, 0.6)
+
+
+def m_duck_meat():
+    """오리고기(`duck_meat` — 가축 산물) — **두툼한 흰 기름 껍질**을 인 검붉은 오리 가슴살 둘(껍질에 칼집) · 다리 하나."""
+    random.seed(1919)
+    for (x, y, a) in ((-0.20, 0.14, 0.3), (0.30, -0.20, 0.5)):
+        o = ico(0.40, (x, y, 0.14), subdiv=3, mat=M['h_duck'], scale=(1.4, 0.80, 0.36), smooth=True); o.rotation_euler = (0, 0, a)
+        o = ico(0.38, (x, y, 0.22), subdiv=3, mat=M['h_duckskin'], scale=(1.4, 0.78, 0.22), smooth=True); o.rotation_euler = (0, 0, a)
+        for k in range(4):
+            box(0.70, 0.015, 0.012, (x, y + (k - 1.5) * 0.10, 0.31), rot=(0, 0, a + 0.7), mat=M['h_duck'])
+    o = ico(0.20, (0.62, 0.40, 0.14), subdiv=2, mat=M['h_duckskin'], scale=(1.5, 1.0, 0.8), smooth=True); o.rotation_euler = (0, 0, 2.2)
+    cyl(0.05, 0.36, (0.40, 0.66, 0.12), rot=(0, math.radians(90), 2.2), mat=M['g_bone'], verts=8)
+
+
+def m_goat_milk():
+    """염소젖(`goat_milk` — 가축 산물) — 아가리를 묶은 **가죽 젖 부대**에서 흰 젖이 비치고, 앞에 젖을 따른 작은 종지."""
+    random.seed(1920)
+    ico(0.52, (-0.16, 0.10, 0.44), subdiv=3, mat=M['g_leather'], scale=(1.15, 0.95, 0.85), jitter=0.04, smooth=True)
+    for (x, y) in ((-0.62, -0.20), (-0.58, 0.44)):                                                            # 다리 자리 매듭
+        ico(0.10, (x, y, 0.20), subdiv=2, mat=M['g_leather'], scale=(1.0, 1.0, 1.4), smooth=True)
+    cyl(0.12, 0.26, (0.30, -0.06, 0.86), rot=(0.0, math.radians(35), 0), mat=M['g_leather'], verts=12)
+    _ring(0.12, 0.03, (0.36, -0.06, 0.92), M['cord'], rot=(0, math.radians(35), 0), maj=16, mnr=6)
+    cyl(0.09, 0.02, (0.44, -0.06, 1.0), rot=(0, math.radians(35), 0), mat=M['h_milk'], verts=12)
+    n0 = len(OBJS)
+    _bowl(0.26, 0.16, M['h_bowl'], base=0.6)
+    cyl(0.24, 0.02, (0, 0, 0.165), mat=M['h_milk'], verts=20)
+    for o in OBJS[n0:]:
+        o.location.x += 0.52; o.location.y -= 0.50
+
+
+def m_milk():
+    """우유(`milk` — 가축 산물) — 나무 테를 두른 **나무 들통**에 가득 찬 흰 젖(손잡이)."""
+    random.seed(1921)
+    cone(0.46, 0.56, 0.80, (0, 0, 0.40), mat=M['plank'], verts=20)
+    for z in (0.18, 0.62):
+        _ring(0.52 + (z - 0.4) * 0.12, 0.03, (0, 0, z), M['g_leather'], maj=28, mnr=6)
+    cyl(0.53, 0.03, (0, 0, 0.79), mat=M['h_milk'], verts=24)
+    o = _ring(0.56, 0.025, (0, 0, 0.80), M['haft'], rot=(math.radians(90), 0, 0), maj=28, mnr=6)              # 손잡이(반원)
+    o.scale = (1.0, 0.75, 1.0)
+
+
+def m_ivory():
+    """상아(`ivory` — 가축 산물) — 끝으로 갈수록 가늘게 휜 **미색 엄니** 하나(결 · 뿌리 쪽 단면)."""
+    random.seed(1922)
+    n = 16
+    for j in range(n):
+        t = j / (n - 1.0)
+        a = t * 1.5
+        x, z = -0.90 + math.sin(a) * 1.2 * 0.9, 0.12 + (1 - math.cos(a)) * 0.55
+        r = 0.20 * (1 - t * 0.85) + 0.02
+        ico(r, (x, -0.10 + t * 0.20, z), subdiv=2, mat=M['h_ivory'], scale=(1.3, 1.0, 1.0), smooth=True)
+    cyl(0.19, 0.02, (-0.97, -0.10, 0.12), rot=(0, math.radians(90), 0), mat=M['h_tallow'], verts=20)           # 뿌리 쪽 단면
+
+
+def m_linen():
+    """리넨(`linen` — 가축 산물 갈래 · 아마 천) — 거친 회베이지 **아마 천** 한 필: 말린 두루마리와 앞으로 갠 자락 · 실 타래 하나."""
+    random.seed(1923)
+    cyl(0.26, 1.20, (-0.10, 0.24, 0.26), rot=(0, math.radians(90), 0.25), mat=M['h_linen'], verts=24)
+    for k in range(3):
+        box(0.90, 0.56, 0.035, (0.14 + k * 0.02, -0.34, 0.02 + k * 0.04), rot=(0, 0, 0.25), mat=M['h_linen'])
+    o = _ring(0.16, 0.05, (0.66, -0.62, 0.06), M['h_flax'], maj=24, mnr=8)
+
+
+def m_meat_beef():
+    """쇠고기(`meat_beef` — 가축 산물) — 흰 결이 촘촘히 박힌 **검붉은 등심** 한 덩이(갈비뼈 하나 · 기름 테)."""
+    random.seed(1924)
+    o = ico(0.56, (0, 0, 0.18), subdiv=3, mat=M['h_beef'], scale=(1.30, 0.95, 0.36), jitter=0.03, smooth=True)
+    o = ico(0.56, (-0.04, 0.06, 0.15), subdiv=3, mat=M['h_tallow'], scale=(1.36, 1.02, 0.30), smooth=True)   # 기름 테
+    cyl(0.07, 1.10, (0.10, 0.58, 0.14), rot=(0, math.radians(90), -0.15), mat=M['g_bone'], verts=10)         # 갈비뼈
+    ico(0.09, (0.68, 0.50, 0.14), subdiv=2, mat=M['g_bone'], smooth=True)
+
+
+def m_meat_mutton():
+    """양고기(`meat_mutton` — 가축 산물) — 뼈가 길게 나온 **양갈비** 셋(분홍 살 · 흰 기름 테)을 나란히 놓았다."""
+    random.seed(1925)
+    for k in range(3):
+        y = (k - 1) * 0.34
+        o = ico(0.30, (-0.10, y, 0.14), subdiv=3, mat=M['h_mutton'], scale=(1.20, 0.55, 0.40), smooth=True)
+        o = ico(0.32, (-0.14, y, 0.12), subdiv=3, mat=M['h_tallow'], scale=(1.22, 0.60, 0.34), smooth=True)
+        cyl(0.05, 0.70, (0.50, y + 0.04, 0.16), rot=(0, math.radians(90), 0.05), mat=M['g_bone'], verts=10)
+        ico(0.06, (0.86, y + 0.06, 0.16), subdiv=2, mat=M['g_bone'], smooth=True)
+
+
+def m_meat_pork():
+    """돼지고기(`meat_pork` — 가축 산물) — 분홍 살과 흰 비계가 **켜켜이 쌓인** 삼겹 덩이(위에 껍질) 하나와 썬 조각 둘."""
+    random.seed(1926)
+    layers = (('h_porkskin', 0.06), ('h_porkfat', 0.08), ('h_porklean', 0.10), ('h_porkfat', 0.05), ('h_porklean', 0.10), ('h_porkfat', 0.07))
+    z = 0.0
+    for (m, h) in layers[::-1]:
+        box(1.20, 0.62, h, (-0.10, 0.12, z + h / 2), rot=(0, 0, 0.2), mat=M[m])
+        z += h
+    for k in range(2):
+        z = 0.0
+        for (m, h) in layers[::-1]:
+            box(0.12, 0.50, h, (0.68 + k * 0.18, -0.46 + k * 0.04, z + h / 2), rot=(0, math.radians(8), 0.2), mat=M[m])
+            z += h
+
+
+def m_silk_raw():
+    """비단 원사(`silk_raw` — 가축 산물 · 누에고치에서 켠 실) — 흰 **누에고치** 무더기와 켜 낸 윤 나는 **생사 타래**."""
+    random.seed(1927)
+    for k in range(7):
+        a = k * 0.9; d = 0.10 + (k % 3) * 0.12
+        o = ico(0.14, (-0.30 + math.cos(a) * d, 0.24 + math.sin(a) * d, 0.12 + (k % 2) * 0.08), subdiv=2, mat=M['h_cocoon'], scale=(1.5, 1.0, 1.0), smooth=True)
+        o.rotation_euler = (0, 0, a)
+    for k in range(6):
+        o = _ring(0.34 + k * 0.012, 0.04, (0.36, -0.30, 0.05 + k * 0.025), M['h_silkthread'], maj=40, mnr=6)
+        o.scale = (1.0, 0.50, 1.0)
+
+
+def m_silkworm():
+    """누에(`silkworm` — 가축 산물) — 뽕잎 위에 올라 앉은 **흰 누에** 셋(마디진 몸)."""
+    random.seed(1928)
+    for (x, y, a) in ((-0.10, 0.10, 0.3), (0.30, 0.20, 1.6), (-0.30, -0.10, -0.4)):
+        _leafy(x, y, 0.04, 0.80, 0.62, a, M['h_mulleaf'])
+    for (x, y, a) in ((-0.20, 0.10, 0.4), (0.24, 0.22, 1.9), (-0.06, -0.24, -0.5)):
+        for j in range(9):
+            t = j / 8.0
+            r = 0.075 * (1 - abs(t - 0.4) * 0.8) + 0.02
+            ico(r, (x + math.cos(a) * (t - 0.5) * 0.56, y + math.sin(a) * (t - 0.5) * 0.56 + math.sin(t * 5) * 0.03, 0.12 + r * 0.4), subdiv=2,
+                mat=M['h_silkworm'], smooth=True)
+        ico(0.05, (x + math.cos(a) * 0.30, y + math.sin(a) * 0.30, 0.13), subdiv=1, mat=M['h_cassava'])
+
+
+def m_wool():
+    """양털(`wool` — 가축 산물) — 깎아 낸 **보송한 미색 털 뭉치**와 자아 감은 털실 공 하나."""
+    random.seed(1929)
+    for k in range(14):
+        a = k * 2.399; d = math.sqrt(k / 14.0) * 0.55
+        ico(random.uniform(0.18, 0.26), (math.cos(a) * d - 0.12, math.sin(a) * d + 0.08, 0.20 + (0.55 - d) * 0.40), subdiv=2, mat=M['h_wool'],
+            jitter=0.22, smooth=True)
+    ico(0.22, (0.58, -0.50, 0.22), subdiv=3, mat=M['h_wool'], smooth=True)
+    for k in range(5):
+        _ring(0.225, 0.018, (0.58, -0.50, 0.22), M['h_wool'], rot=(k * 0.7, k * 0.45, 0), maj=28, mnr=4)
+    cyl(0.018, 0.50, (0.86, -0.70, 0.04), rot=(0, math.radians(90), -0.5), mat=M['h_wool'], verts=5)          # 풀린 실
+
+
+def m_lobster():
+    """바닷가재(`lobster` — 바다 갈래) — 검푸른 껍데기에 주황 마디 · **큰 집게 둘**과 마디진 꼬리 · 긴 더듬이."""
+    random.seed(1930)
+    ico(0.24, (0.10, 0.0, 0.18), subdiv=3, mat=M['h_lobster'], scale=(1.6, 1.0, 0.85), smooth=True)          # 머리가슴
+    for j in range(6):                                                                                         # 꼬리 마디
+        t = j / 5.0
+        ico(0.17 - t * 0.04, (-0.30 - t * 0.56, 0.0, 0.14 - t * 0.03), subdiv=2, mat=(M['h_lobster'] if j % 2 == 0 else M['h_lobsterj']),
+            scale=(0.9, 1.2, 0.7), smooth=True)
+    for sgn in (-1, 1):
+        o = ico(0.10, (0.42, sgn * 0.20, 0.16), subdiv=2, mat=M['h_lobsterj'], scale=(1.8, 0.7, 0.7), smooth=True); o.rotation_euler = (0, 0, sgn * 0.6)
+        o = ico(0.20, (0.72, sgn * 0.42, 0.16), subdiv=3, mat=M['h_lobster'], scale=(1.8, 0.95, 0.65), smooth=True); o.rotation_euler = (0, 0, sgn * 0.3)   # 집게
+        for k in (-1, 1):
+            o = ico(0.08, (0.98, sgn * 0.48 + k * 0.05, 0.16), subdiv=2, mat=M['h_lobsterj'], scale=(1.8, 0.6, 0.6), smooth=True); o.rotation_euler = (0, 0, sgn * 0.3 + k * 0.2)
+        cyl(0.012, 1.1, (0.80, sgn * 0.14, 0.26), rot=(0, math.radians(82), sgn * 0.25), mat=M['h_lobsterj'], verts=4)   # 더듬이
+        for k in range(3):                                                                                     # 다리
+            cyl(0.02, 0.30, (0.10 - k * 0.12, sgn * 0.26, 0.10), rot=(math.radians(90) * sgn * -1 + sgn * 0.4, 0, 0), mat=M['h_lobsterj'], verts=5)
+    o = ico(0.18, (-1.02, 0.0, 0.10), subdiv=2, mat=M['h_lobsterj'], scale=(0.6, 1.5, 0.3), smooth=True)        # 꼬리 부채
+
+
+def m_murex_shell():
+    """자색고둥(`murex_shell` — 바다 갈래 · 자색 염료의 고둥) — 가시가 돋은 **방추꼴 고둥**(긴 수관) · 아가리 안쪽이 자줏빛."""
+    random.seed(1931)
+    for j in range(7):                                                                                         # 나선 층
+        t = j / 6.0
+        ico(0.34 * (1 - t * 0.75) + 0.04, (-0.10 + t * 0.70, 0.0, 0.26 + t * 0.06), subdiv=2, mat=M['h_murex'], scale=(0.9, 1.0, 0.9), smooth=True)
+        for k in range(5):                                                                                     # 가시
+            a = k * 1.257 + j * 0.6
+            r = 0.34 * (1 - t * 0.75) + 0.04
+            cone(0.035, 0.0, 0.16, (-0.10 + t * 0.70, math.cos(a) * r, 0.26 + math.sin(a) * r * 0.9), rot=(-a + math.pi / 2, 0, 0), mat=M['h_murex'], verts=5)
+    cyl(0.06, 0.70, (-0.70, 0.0, 0.22), rot=(0, math.radians(84), 0), mat=M['h_murex'], verts=8)              # 긴 수관
+    o = ico(0.18, (-0.16, -0.20, 0.30), subdiv=2, mat=M['h_purple'], scale=(1.6, 0.4, 0.9), smooth=True)       # 아가리 안(자줏빛)
+
+
+def m_grain_sheaf():
+    """볏단(`grain_sheaf` — 주민이 벤 곡식 다발 · 무게 표) — 밑동을 세워 묶은 **누런 곡식 한 단** · 고개 숙인 이삭이 위로 퍼졌다."""
+    random.seed(1932)
+    for i in range(26):
+        a = random.uniform(0, math.tau); d = random.uniform(0, 0.20); tilt = d * 1.1
+        cyl(0.022, 1.30, (math.cos(a) * d, math.sin(a) * d, 0.65), rot=(math.sin(a) * -tilt * 0.6, math.cos(a) * tilt * 0.6, 0), mat=M['straw'], verts=5)
+    _ring(0.17, 0.045, (0, 0, 0.55), M['cord'])
+    for i in range(16):                                                                                        # 고개 숙인 이삭
+        a = i * 0.393; d = 0.22 + (i % 3) * 0.06
+        o = ico(0.06, (math.cos(a) * d, math.sin(a) * d, 1.28 - (i % 2) * 0.06), subdiv=2, mat=M['h_kern1'], scale=(1.0, 1.0, 2.4), smooth=True)
+        o.rotation_euler = (math.sin(a) * 0.9, -math.cos(a) * 0.9, 0)
+
+
+def m_bronze_tool():
+    """청동 도구(`bronze_tool` — econ 칸 '청동 도구') — 부채꼴 날의 **청동 도끼**(선형동부 — 청동기 한반도의 표지 청동기)를 나무 자루에 물렸다 · 녹이 앉았다."""
+    random.seed(1933)
+    cyl(0.07, 1.50, (-0.24, 0.0, 0.16), rot=(0, math.radians(86), 0), mat=M['haft'], verts=9)                  # 자루
+    o = box(0.34, 0.20, 0.30, (0.58, 0.0, 0.24), mat=M['h_bronzemet'])                                        # 투겁(자루 끼우는 몸)
+    o = box(0.30, 0.10, 0.60, (0.86, 0.0, 0.24), mat=M['h_bronzemet'])                                        # 부채꼴 날
+    for v in o.data.vertices:
+        if v.co.x > 0:
+            v.co.z *= 1.35
+    for k in range(4):
+        ico(0.06, (0.62 + k * 0.08, -0.10, 0.20 + (k % 2) * 0.14), subdiv=1, mat=M['h_patina'], scale=(1.4, 0.3, 1.0), jitter=0.2)
+    _lash(0.44, 0.0, 0.18, (0, math.radians(90), 0), r=0.035, ln=0.14, n=1)
+
+
+def m_iron_tool():
+    """철 도구(`iron_tool` — econ 칸 '철 도구') — 반달처럼 휜 **쇠 낫**(나무 자루 · 날 끝이 뾰족)."""
+    random.seed(1934)
+    cyl(0.07, 1.10, (-0.50, 0.0, 0.14), rot=(0, math.radians(88), 0.2), mat=M['haft'], verts=9)                # 자루
+    for j in range(12):                                                                                        # 휜 날
+        t = j / 11.0
+        a = math.pi * 0.95 * t
+        x, y = 0.10 + math.sin(a) * 0.62, 0.62 - math.cos(a) * 0.62
+        o = box(0.20, 0.10 - t * 0.06, 0.04, (x, y - 0.62, 0.14), rot=(0, 0, a), mat=M['h_ironmet'])
+    box(0.20, 0.08, 0.06, (0.02, 0.0, 0.14), rot=(0, 0, 0.2), mat=M['h_ironmet'])                              # 슴베
+
+
 # ★표 — 아이콘 키 = 서버 품목 키. 세계 렌더는 아직 없다(`world` 빈 칸) — 붙일 때 같은 모델을 쓴다.
 ITEMS = [
     ('crude_axe', m_crude_axe), ('crude_pick', m_crude_pick), ('crude_blade', m_crude_blade),
@@ -1668,6 +3536,45 @@ ITEMS_T1067 = [
     ('obsidian', m_obsidian), ('sulfur', m_sulfur),
 ]
 ITEMS += ITEMS_T1067
+# ★[T1088] 그림 없는 품목 이어서 — 차례 = 첫 1시간 제작창 음식 칸 → 곳간 · 거래 · 게시판 빈도(보고/T1088 §1) → 빌린 그림이 다른 물건으로 보이는 것.
+#   키는 서버 정본 그대로(무게 표 · 요리 표 `tidal.cookMap` · 곳간 묶음 `villages.PV_INV_GROUPS`) — `test-icons ⑬` 이 그 대조를 잰다.
+ITEMS_T1088 = [
+    ('food_cooked', m_food_cooked), ('clam_stew', m_clam_stew), ('seaweed_soup', m_seaweed_soup), ('food', m_food),
+    ('bronze', m_bronze), ('ramie', m_ramie), ('hemp', m_hemp), ('clothes', m_clothes), ('resin', m_resin),
+    ('cooked_food', m_cooked_food), ('clay', m_clay), ('tigerhide', m_tigerhide),
+    # ── ② 빌린 그림이 다른 물건으로 보이던 것 — 숲(서 있는 나무 그림) · 광물(광석 그림) ──
+    ('amber_resin', m_amber_resin), ('bamboo', m_bamboo), ('beeswax', m_beeswax), ('birch_sap', m_birch_sap),
+    ('chamomile', m_chamomile), ('cork', m_cork), ('fruit_berries', m_fruit_berries), ('ginseng', m_ginseng),
+    ('wild_ginseng', m_wild_ginseng), ('latex', m_latex), ('rubber', m_rubber), ('nuts', m_nuts),
+    ('paper_mulberry', m_paper_mulberry), ('truffle', m_truffle),
+    ('amber_raw', m_amber_raw), ('coal', m_coal), ('kaolin', m_kaolin), ('mercury', m_mercury),
+    ('nitrate', m_nitrate), ('sand', m_sand), ('soda_ash', m_soda_ash),
+    # ── ② 향신료(약초 풀 그림) · 농산물(곡물 밭 그림) ──
+    ('black_pepper', m_black_pepper), ('cumin', m_cumin), ('cardamom', m_cardamom), ('clove', m_clove), ('nutmeg', m_nutmeg),
+    ('star_anise', m_star_anise), ('cinnamon', m_cinnamon), ('vanilla', m_vanilla), ('saffron', m_saffron), ('paprika', m_paprika),
+    ('turmeric', m_turmeric), ('frankincense', m_frankincense), ('myrrh', m_myrrh), ('musk', m_musk),
+    ('apple', m_apple), ('banana', m_banana), ('cassava', m_cassava), ('chickpea', m_chickpea), ('chili', m_chili),
+    ('cocoa', m_cocoa), ('coconut', m_coconut), ('coffee', m_coffee), ('corn', m_corn), ('cotton', m_cotton),
+    ('dates', m_dates), ('fig', m_fig), ('flax', m_flax), ('lentil', m_lentil), ('mango', m_mango), ('mulberry', m_mulberry),
+    ('olive', m_olive), ('onion', m_onion), ('peanut', m_peanut), ('pineapple', m_pineapple), ('potato', m_potato),
+    ('pumpkin', m_pumpkin), ('sugarbeet', m_sugarbeet), ('sugarcane', m_sugarcane), ('sweet_potato', m_sweet_potato),
+    ('tobacco', m_tobacco), ('tomato', m_tomato),
+    # ── ① 남은 점선 — 보석 · 주화 · 위세품(곳간 · 거래 0회 — 갈래 차례) ──
+    ('diamond', m_diamond), ('ruby', m_ruby), ('sapphire', m_sapphire), ('emerald', m_emerald), ('amethyst', m_amethyst),
+    ('topaz', m_topaz), ('turquoise', m_turquoise), ('jade_polished', m_jade_polished), ('amber_polished', m_amber_polished),
+    ('gold_coin', m_gold_coin), ('silver_coin', m_silver_coin), ('relic', m_relic), ('iron_relic', m_iron_relic), ('scroll', m_scroll),
+    # ── ① 남은 점선 — 공예품 · 가축 산물 · 바다 · 그 밖 ──
+    ('beer', m_beer), ('wine', m_wine), ('soy_sauce', m_soy_sauce), ('kimchi', m_kimchi), ('bread', m_bread), ('bow', m_bow),
+    ('brush', m_brush), ('ink', m_ink), ('paper', m_paper), ('clay_brick', m_clay_brick), ('stone_brick', m_stone_brick),
+    ('dye_indigo', m_dye_indigo), ('dye_purple', m_dye_purple), ('glass', m_glass), ('perfume', m_perfume), ('pottery', m_pottery),
+    ('silk_cloth', m_silk_cloth),
+    ('beef_tallow', m_beef_tallow), ('cheese', m_cheese), ('duck_meat', m_duck_meat), ('goat_milk', m_goat_milk), ('milk', m_milk),
+    ('ivory', m_ivory), ('linen', m_linen), ('meat_beef', m_meat_beef), ('meat_mutton', m_meat_mutton), ('meat_pork', m_meat_pork),
+    ('silk_raw', m_silk_raw), ('silkworm', m_silkworm), ('wool', m_wool),
+    ('lobster', m_lobster), ('murex_shell', m_murex_shell),
+    ('grain_sheaf', m_grain_sheaf), ('bronze_tool', m_bronze_tool), ('iron_tool', m_iron_tool),
+]
+ITEMS += ITEMS_T1088
 # ★원물 → 보존식 계보(하네스가 실루엣 상관으로 검사한다). `spoil.PRESERVE` 가 정본이고 여기는 **이 파일이 가진 짝**만 적는다.
 # ★[T95] 옷 여섯 — 재질마다 다른 물건이다(갖옷과 삼베옷은 같은 그림일 수 없다).
 #   키는 `clothes_<mat>` · 순서는 `server/clothes.js` 표 순서(계약).

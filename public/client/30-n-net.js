@@ -826,12 +826,25 @@
     ws.onclose = (ev) => {
       if (conns.get(zoneId) === c) conns.delete(zoneId);
       _lastCloseAt.set(zoneId, performance.now()); // cooldown 기록
+      // ★[T1077] 넘김 실패를 본다 — ⓐ 넘겨받을 존 소켓이 welcome(`c.meta`) 전에 닫혔다(그 주소에 못 붙음 · 재시도도 같은 문) ·
+      //   ⓑ 보낸 존이 먼저 닫았는데(ACK 3초 시한 — 몸을 지웠다) 받을 존은 아직 welcome 전이다(주소가 막혀 열리지도 닫히지도 않는 판).
+      if (_hoTo && ((zoneId === _hoTo && !c.meta) || (zoneId === _hoFrom && !(conns.get(_hoTo) && conns.get(_hoTo).meta)))) _t1077HoFail(_hoTo);
       // Phase 5-G trace: close 이유 진단
       console.warn('[ws] close', zoneId, 'role=' + role, 'code=' + ev.code, 'reason=' + (ev.reason || '(empty)'), 'wasClean=' + ev.wasClean);
     };
     ws.onerror = (ev) => {
       console.warn('[ws] error', zoneId, 'role=' + role);
     };
+  }
+
+  // ★[T1077] 넘겨받을 존에 못 붙었다 — 화면에 까닭 한 줄(하십시오체 · 존 이름은 표시 이름 — 서버 T564 알림과 같은 자리)
+  function _t1077HoFail(zid) {
+    const nm = (zonesMeta[zid] && zonesMeta[zid].displayName) || zid;
+    const t = `${nm} 서버에 연결하지 못했습니다`;
+    if (_hoFail === t) return;
+    _hoFail = t;
+    console.warn('[handoff] 받을 존 접속 실패', zid);
+    paintConnBanner();
   }
 
   // Phase 5-G: observer 연결 fail 시 cooldown — 매 frame retry storm 방지
@@ -908,7 +921,7 @@
       } else if (msg.hardcodedTerrain) {
         console.warn('[terrain] hardcoded received but skipped — zid=' + _zid + ' Terrain=' + !!window.Terrain + ' setHardcoded=' + !!(window.Terrain && window.Terrain.setHardcoded));
       }
-      if (msg.promoted) {
+      if (msg.promoted || msg.back) {   // ★[T1092] `back` = 넘기 실패 되돌림 welcome(넘긴 존 소켓 그대로 — 승격과 같은 꼴 · 게스트 열쇠는 안 건드린다)
         // Phase 5-K4: observer ws 재사용 promote — resources/claims/buildings/mobs 전부
         // observer로 이미 받아 실시간 갱신(tick) 중이므로 그대로 유지. clear/rebuild 안 함 → 끊김 0.
       } else {
@@ -1054,6 +1067,7 @@
       }
       // ★[접속 진단] 여기까지 왔으면 **들어간 것**이다. 배너를 걷고 시도 횟수를 0으로.
       if (c.role === 'primary') { connEverReady = true; connAttempts = 0; connHelloAt = 0; connOutageAt = 0;
+        _hoTo = null; _hoFrom = null; _hoFail = '';   // ★[T1077] 주 존에 들어갔다 — 넘김 끝(실패 까닭도 걷는다)
         _reconnAt = 0;   // ★백오프 시계도 푼다 — 다음 끊김은 곧바로 한 번 시도한다(★[T1024] 켬이면 끊김을 본 순간부터 첫 간격 1초 뒤 · 33-m-conn)
         connMark('ready', { reason: '', stage: '', ref: '' }); }
       if (c.role === 'primary' && _ld.rx) _ldMark('welcomeDone');   // ★[T920] 첫 welcome 처리 끝
@@ -1290,6 +1304,9 @@
       if (c.simVillages && msg.bnd) for (const v of c.simVillages) { const nb = msg.bnd[v.id]; if (Array.isArray(nb) && nb.length) { v.b = nb; delete v.approx; } }
       if (msg.jobs) for (const [pid, job] of Object.entries(msg.jobs)) { const o = c.others.get(pid); if (o) o.simJob = job; }
       if (_wxIngest(c, msg.wx)) needsRedraw = true;   // ★[날씨 축] — 방송과 하네스가 같은 입구
+    } else if (msg.type === 'village_jobs') {
+      // ★[T1085] 촌장이 맡긴 일 — 바뀐 몸의 직업(하루 방송 `jobs` 와 같은 꼴 · 같은 칸)
+      if (msg.jobs) for (const [pid, job] of Object.entries(msg.jobs)) { const o = c.others.get(pid); if (o) o.simJob = job; }
     } else if (msg.type === 'bandit_camps') {
       // §11 도적: 소굴·야영 마커 갱신(서버가 변경 시에만 방송)
       c.banditCamps = (msg.camps && msg.camps.length) ? msg.camps : null;
@@ -1598,7 +1615,7 @@
       //     그리기는 `47-s-board.js` 하나다. 여기서는 넘기기만 한다(연대기와 같은 접점 문법).
       boardOnMessage(bd);
     } else if (msg.type === 'village_view') {
-      villageViewOnMessage(msg.view);   // ★[T1070] 마을 화면 자료(T1072 `villageView` — 이름은 T1072 가 정한다 · 그리기는 52-v-village-view.js)
+      villageViewOnMessage(msg);   // ★[T1070 · T1103] 마을 화면 자료(T1072 `villageView` — 통째 `view` · 바뀐 칸만 `slots` 둘 다 메시지째 넘긴다 · 그리기는 52-v-village-view.js)
     } else if (msg.type === 'onboarding_state' || msg.type === 'onboarding_quest' || msg.type === 'onboarding_fx' || msg.type === 'onboarding_day') {
       onbOnMessage(msg);   // ★[온보딩 v2] 대본 상태·첫 의뢰·곳간 이펙트·하루 정산 — 그리기는 `70-lobby.js`
     } else if (msg.type === 'pvp_state') {
@@ -1616,6 +1633,7 @@
       console.log('[handoff]', primaryZoneId, '→', target, 'token=', token.slice(0,8));
       const oldPrimary = primaryZoneId;
       primaryZoneId = target;
+      _hoTo = target; _hoFrom = oldPrimary; _hoFail = '';   // ★[T1077] 넘김의 두 끝 — welcome 이 걷는다 · 그 전에 받을 존 소켓이 닫히면 까닭 한 줄
 
       // ★ observer로 미리 연결된 ws가 있으면 promote만 — 새 ws 안 만듦 → 끊김 ~0
       const existingTarget = conns.get(target);
@@ -1640,8 +1658,18 @@
       }
       // 옛 primary observer로 demote — broadcast 갭 줄임
       const oldConn = conns.get(oldPrimary);
-      if (oldConn) oldConn.role = 'observer';
+      if (oldConn) { oldConn.role = 'observer'; oldConn._t1092Until = (+msg.back > 0) ? performance.now() + (+msg.back) : 0; }   // ★[T1092] 넘긴 존의 약속(못 붙으면 돌려놓는다) — 그 시한까지 받는 존에 따로 안 붙는다(33-m-conn `_t1092Wait`)
       showNotice(zonesMeta[target].displayName);
+    } else if (msg.type === 'handoff_back') {
+      // ★★[T1092] 넘기 실패 — 넘긴 존(이 소켓)이 몸을 넘기 전 자리로 돌려놓았다(서버 손잡이 `T1092_HANDOFF_BACK`). 이 소켓을 다시 주 소켓으로 쓰고
+      //   받을 존 시도(못 열린 · 열리는 중인 소켓)는 접는다. 뒤따르는 welcome(`back`)이 내 pid · 자리 · 접속 상태를 다시 세운다 · 까닭 한 줄은 서버 알림.
+      const was = primaryZoneId;
+      if (was && was !== zoneId && conns.has(was)) closeConnection(was);
+      primaryZoneId = zoneId;
+      c.role = 'primary';
+      c._t1092Until = 0;
+      c.lastPongAt = 0; c.firstPingAt = 0;   // 승격과 같은 상태로(T439 — 넘기 전 pong 기록이 좀비 판정을 하지 않게)
+      console.warn('[handoff] 넘기 실패 — 넘긴 존으로 돌아간다', was, '→', zoneId);
     } else if (msg.type === 'kicked') {
       // 다른 곳에서 로그인되어 강제 종료
       kicked = true;

@@ -3933,6 +3933,49 @@ function briefLine(ev) {
   const f = LINES[ev.type];
   return f ? f(ev) : '';
 }
+// ★[T1103 2026-11-03 · PM 카드 ③] 마을 화면 "마을 소식" · "끝낸 일" 한 줄 — 같은 사건을 **하십시오체**로(촌장 말 `LINES` 는 하게체 그대로).
+//   T1069 회부 3("소식 칸이 촌장 말 함수를 쓰면 시안과 말투가 다르다") — 화면 칸은 이 표를 읽는다(`server/village-view.js`). 게시판 · 브리핑 · 연대기는 `briefLine` 그대로(동작 무변).
+//   ⚠`LINES` 와 같은 계약 — 다섯 필드(+ 철 바뀜의 `meta.season` · `LINES` 와 같은 칸)로만 · 수치를 읊지 않는다. 종류는 `LINES` 와 같은 집합이다(`test-village-view` ⑦ 이 맞춰 본다).
+const NEWS_LINES = {
+  STOCK_SHORTAGE: (ev) => { const n = koRes(ev.item); return `${n}${josa(n, '이', '가')} 모자랍니다.`; },
+  STOCK_GLUT: (ev) => { const n = koRes(ev.item); return `${n}${josa(n, '은', '는')} 곳간에 남아돕니다.`; },
+  PRICE_SPIKE: (ev) => `${koRes(ev.item)} 값이 올랐습니다.`,
+  PRICE_DROP: (ev) => `${koRes(ev.item)} 값이 내렸습니다.`,
+  CARAVAN_LATE: () => '행상이 아직 오지 않았습니다.',
+  SEASON_CHANGE: (ev) => {
+    const s = ev.meta && ev.meta.season;
+    return s === 'spring' ? '봄이 왔습니다.' : s === 'summer' ? '여름이 왔습니다.' : s === 'autumn' ? '가을이 왔습니다.' : '겨울이 왔습니다.';
+  },
+  HARVEST_BOON: () => '올해는 거둘 것이 많습니다.',
+  HARVEST_BLIGHT: () => '올해는 소출이 적습니다.',
+  WEATHER: (ev) => {
+    const k = String(ev.item || '');
+    if (k.indexOf('가뭄') >= 0) return '비가 오지 않아 밭이 마릅니다.';
+    if (k.indexOf('폭풍') >= 0) return '바람이 거셉니다.';
+    if (k.indexOf('풍요') >= 0) return '들에 거둘 것이 많습니다.';
+    if (k.indexOf('안개') >= 0) return '안개가 짙어 사냥이 어렵습니다.';
+    return '날씨가 심상치 않습니다.';
+  },
+  POP_COLLAPSE: () => '사람이 자꾸 줄고 있습니다.',
+  CARAVAN_RAIDED: () => '행상이 길에서 털렸습니다.',
+  TRADER_KILLED: () => '고갯길에서 행상이 목숨을 잃었습니다.',
+  BUILT: (ev) => ((ev.item === 'granary') ? '곳간 한 채가 올라갔습니다.' : '움집 한 채가 올라갔습니다.'),
+  FIRST_GOODS: (ev) => { const n = koRes(ev.item); return `${n}${josa(n, '이', '가')} 이 마을에 처음 들어왔습니다.`; },
+  WINTER_KEPT: (ev) => { const n = koRes(ev.item); return `올겨울 ${n}${josa(n, '은', '는')} 넉넉했습니다.`; },
+  WINTER_SHORT: (ev) => { const n = koRes(ev.item); return `올겨울 ${n}${josa(n, '은', '는')} 넉넉하지 않았습니다.`; },
+  DISSOLVED: () => '굶주림 끝에 남은 사람들이 마을을 버리고 도적이 되었습니다.',
+  EMPTIED: () => '마을에 사람이 하나도 남지 않았습니다.',
+  STARVED: () => '굶어 죽은 사람이 나왔습니다.',
+  RESCUED: (ev) => {
+    const who = String(ev.item || '');
+    if (!who || who === 'village') return '쓰러진 사람을 마을 사람들이 쉼터로 옮겼습니다.';
+    return `${who}${josa(who, '이', '가')} 쓰러진 사람을 일으켰습니다.`;
+  },
+};
+function newsLine(ev) {
+  const f = ev && NEWS_LINES[ev.type];
+  return f ? f(ev) : '';
+}
 // 게시판 한 줄 — "무엇을 얼마 가져오면 무엇으로 갚는다"
 function boardLine(req) {
   const remain = (req.remain != null ? req.remain : (req.qty - req.filled));
@@ -4013,7 +4056,7 @@ function deliverToVillage(a) {
     rew: rewPaid, rewRes, rewItem: rewPlayerItem, done: c.done, req: c.req };
 }
 
-module.exports = { createLedger, CFG, TYPES, DEED_TYPES, DEED_FOREIGN, briefLine, boardLine, koRes, josa, seasonOf, KO_SEASON,
+module.exports = { createLedger, CFG, TYPES, DEED_TYPES, DEED_FOREIGN, briefLine, boardLine, newsLine, LINE_TYPES: Object.keys(LINES), NEWS_LINE_TYPES: Object.keys(NEWS_LINES), koRes, josa, seasonOf, KO_SEASON,
   blurMag,   // ★[T127] 뭉갬 정본 — 하네스·계측기가 **이 함수**를 부른다(사본 금지)
   yearDaysOf, seasonStartOf, calendarOf, yearOf, yearSpanOf, springYearOf,
   buildDeliverable, deliverToVillage, pricesOf, pricesFresh, payableQty };
@@ -10267,6 +10310,63 @@ const T815_DRAFT_FAMINE = (typeof process !== 'undefined' && process.env && proc
 //   켜면 그 갈래에서 출생 쪽 거울(자리가 없으면 `Math.min(_dPAccum, 0.9)`)처럼 `Math.max(_dPAccum, −0.9)` — 못 치른 몫을 다음 날로 넘기지 않는다
 //   (새 수 0 — 0.9 는 출생 줄의 그 수 · 셈만 느는 죽음은 `T815_DRAFT_FAMINE` 몫 — 이 손잡이가 켜지면 빚이 −1 아래에 쌓여 있지 않아 그날 압력이 −1 을 넘긴 날만 센다).
 const T924_DEBT_CAP = !(typeof process !== 'undefined' && process.env && process.env.T924_DEBT_CAP === '0');   // ★[T960 · T935 · PM 10-26 · T924 회부 1] 켬 기본 · 되돌림 `=0`
+// ★★[T1074 2026-11-02 · ★재민 11-02] **굶주림 = 사람마다 식량 빚 · 적응 · 14일** — 손잡이 `T1074_FOOD_DEBT`(**기본 끔** · `=1` 만 켬 · 끔 = 종전 바이트).
+//   재민 11-02: "14일로 하고, 그 이후에도 적자가 지속되면 매일 한 명씩 죽도록 · 식량 1이 생겼다고 타이머가 리셋되면 어색하니
+//   굶은 만큼 '식량 빚'을 · 채운 만큼 메워지게" · 고증(미네소타 기아 실험 · Dulloo 재분석) → 갚기는 열량 1:1 · 덤은 적응에서.
+//   칸(econ NPC 항목 · plain number · 저장 줄이 그대로 싣는다) — 켠 판에서만 선다(끔 = 칸 없음):
+//     `npc._fd`  식량 빚(하루치 열량 단위 · `DAILY_FOOD_CONSUMPTION` = `DAY_KCAL` 하나가 1)
+//     `npc._fdA` 적응(하루 필요량에서 덜어 낸 몫 · 0 ~ `FD_ADAPT_MAX`) — 그날 필요량 = 1 × (1 − _fdA)
+//     `npc._fdS` 그날 모자란 몫(죽음 조건 "그날도 적자" · 하루 머리에 다시 씀)
+//   읽는 함수 하나(T1075 행복 평형이 읽는다 · 사본 0): `foodDebtOf(v)` → { n, mean, max, starving }
+//   수(출처는 보고 `보고/T1074_2026-11-02.md` §2):
+//     · FD_ADAPT_MAX 0.40 — Keys 1950(미네소타 · 24주 반기아 · 기초대사 1인 평균 −40%) · 카드 "최대 −40%"
+//     · FD_ADAPT_DOWN_DAYS 168 — 그 −40% 에 닿은 기간(반기아 24주) · 빚이 있는 날마다 0.40/168 씩 내린다(곧은 꼴 · 앞이 더 가파르다는 갈래는 회부)
+//     · FD_ADAPT_UP_DAYS 140 — 재활 R20(20주)에 기초대사가 대조값으로 돌아왔다(R12 에 35~70% · 곧은 꼴이면 R12 = 60% 로 그 안) · 빚이 0 인 날마다 0.40/140 씩 올린다
+//     · FD_DEATH_DAYS 14 — 카드(★재민) · 빚 > 14 **이고** 그날도 적자인 사람 가운데 가장 늙은 1명/일
+//   갚기 하루 상한은 출처 수를 못 찾아 두지 않았다(그날 남은 식량이 갚을 수 있는 만큼 · 회부) — 빚은 곳간이 빈 날에만 생기므로 갚는 몫은 그 뒤 들어온 식량이다.
+const T1074_FOOD_DEBT = (typeof process !== 'undefined' && process.env && process.env.T1074_FOOD_DEBT === '1');
+const FD_ADAPT_MAX = 0.40, FD_ADAPT_DOWN_DAYS = 24 * 7, FD_ADAPT_UP_DAYS = 20 * 7, FD_DEATH_DAYS = 14;
+// 그날 먹을 사람(원정 중 제 짐을 먹는 병사는 빠진다 — `_t423EatN` 과 같은 잣대 · 그들의 빚은 제 짐이 정한다)
+function _fdEaters(v) { return v.npcs.filter((p) => !(p._warPack && p._warDraft)); }
+// 하루 몫 — 그날 필요량(적응만큼 덜) · 갚을 빚 합
+function _fdNeed(eaters) {
+  let need = 0, debt = 0;
+  for (const p of eaters) { need += DAILY_FOOD_CONSUMPTION * (1 - (p._fdA || 0)); debt += (p._fd || 0); }
+  return { need, debt };
+}
+// 먹은 몫을 나눈다 — 하루 몫 먼저(모자라면 모두 같은 비율로 · 부분 식사는 부분만 빚) · 남은 것만 빚을 갚는다(열량 1:1 · 빚 비례) · 적응을 한 걸음
+function _fdSettle(eaters, need, debt, eaten) {
+  const ration = Math.min(eaten, need), spare = Math.max(0, eaten - need);
+  const shortFrac = need > 0 ? Math.max(0, (need - ration) / need) : 0;
+  const payFrac = debt > 0 ? Math.min(1, spare / debt) : 0;
+  for (const p of eaters) {
+    const n = DAILY_FOOD_CONSUMPTION * (1 - (p._fdA || 0));
+    const short = n * shortFrac;
+    let d = (p._fd || 0);
+    d = d - d * payFrac + short;
+    p._fd = d > 1e-9 ? d : 0;
+    p._fdS = short;
+    p._fdA = p._fd > 0 ? Math.min(FD_ADAPT_MAX, (p._fdA || 0) + FD_ADAPT_MAX / FD_ADAPT_DOWN_DAYS)
+                       : Math.max(0, (p._fdA || 0) - FD_ADAPT_MAX / FD_ADAPT_UP_DAYS);
+  }
+  return { shortTotal: need - ration, paid: Math.min(spare, debt) };
+}
+// 빚 > 14 이고 그날도 적자인 사람 가운데 가장 늙은 사람(징발 중 제외 — 원정 나간 사람의 죽음은 전쟁 정산이 소유한다 · T295 ①) · 없으면 −1
+function _fdDeathIdx(v) {
+  let k = -1;
+  for (let i = 0; i < v.npcs.length; i++) {
+    const p = v.npcs[i];
+    if (p._warDraft || !((p._fd || 0) > FD_DEATH_DAYS) || !((p._fdS || 0) > 0)) continue;
+    if (k < 0 || p.age > v.npcs[k].age) k = i;
+  }
+  return k;
+}
+// ★읽는 함수 하나(T1075 · 진단 · UI) — 마을 사람들의 빚(징발 중 포함 · 제 짐 빚도 그 사람 칸이다)
+function foodDebtOf(v) {
+  const a = (v && v.npcs) || []; let sum = 0, max = 0, starving = 0;
+  for (const p of a) { const d = p._fd || 0; sum += d; if (d > max) max = d; if (d > FD_DEATH_DAYS) starving++; }
+  return { n: a.length, mean: a.length ? sum / a.length : 0, max, starving };
+}
 // ★★[T931 2026-10-26 · T924 회부 2-ⓐ · 재민 10-24 "창고에 식량이 있는데 자유민이 그렇게 빨리 죽어?"]
 //   **식량 자리 K 에도 신뢰 관성** — 손잡이 `T931_SLOTK_EMA`(★[T943] **켬 기본 = `'season'`** · 되돌림 `'0'` = 끔 = 종전 바이트 · `'1'` = 값 전체 · 그 밖 · 미설정 = `'season'` · 브라우저 랩 = `'season'`).
 //   ★[T943 2026-10-27 · PM 결정 — T931 회부 1 = `'season'`(카드 글자 "계절 배수에"의 꼴 · 서버 띠 그날 굶주림 0 인 죽음 −45% · 랩 −23%)] T931 보고 §7 · T943 보고.
@@ -11621,6 +11721,39 @@ function switchNPCJob(npc, newJob, day, v) {
   }
   npc.currentJob = newJob;
   npc.lastJobChangeDay = day;
+}
+
+// ★[T1085 · 재민 11-02] 개인 전환 쿨다운 — 자율 전환 두 자리(무장불가 전사 동원해제 · 잉여 직군 차출)가 쓰던 `30` 그대로를 한 이름으로(값 무변).
+//   촌장 지정(`assignNPCJob`)도 같은 수를 읽는다 — 지정한 사람은 이 기간 자율 전환에서 빠진다(바뀐 날 = `lastJobChangeDay`).
+const JOB_SWITCH_COOLDOWN = 30;
+// ★[T1085] 굶을 때 = 식량 등가가 N × 30 일치 밑(직업 전환 가속 · 피커 기근 문과 같은 문턱 · 새 수 0).
+//   그때 자율 식량 전환은 지정보다 앞선다(배고픈 사람은 밭으로) — 지정 쿨다운이 그 전환만 막지 못한다.
+const _T1085_FOOD = { farmer: 1, fisher: 1, hunter: 1, forager: 1 };   // 피커 `foodOpts` 넷 그대로
+function _t1085Hungry(v) { return totalFoodEquivalent(v) < (v.npcs.length || 1) * 30; }
+// ★[T1085] 촌장 지정 — 자율 전환과 **같은 규칙**만 묻는다(새 규칙 0): 징발(마을에 없다) · 포로 무기 직 금지 · 개인 쿨다운 ·
+//   자리(`hasSlot` × `jobCapacity`) · 전사 = 무기 하나에 한 사람(무장불가 전사 동원해제 문과 같은 비교). 통과하면 `switchNPCJob` 그대로.
+//   반환 { ok } | { ok:false, why, left? } — 이유 글자는 부르는 쪽(서버)이 쓴다(econ 은 글자 0).
+//   ⚠econ 은 지정 표지(`npc._chiefAssignDay`)를 자율 전환에서만 읽는다 — 표지가 없으면 종전 비트 그대로.
+function assignNPCJob(v, npc, job, day) {
+  if (!v || !npc || !Array.isArray(v.npcs) || v.npcs.indexOf(npc) < 0) return { ok: false, why: 'member' };
+  if (!JOBS[job]) return { ok: false, why: 'job' };
+  if (npc._warDraft) return { ok: false, why: 'draft' };
+  if (npc.currentJob === job) return { ok: false, why: 'same' };
+  if (npc.captive && CAPTIVE_JOB_BAN[job]) return { ok: false, why: 'captive' };
+  const since = day - (npc.lastJobChangeDay == null ? -999 : npc.lastJobChangeDay);
+  if (since < JOB_SWITCH_COOLDOWN) return { ok: false, why: 'cool', left: JOB_SWITCH_COOLDOWN - since };
+  const counts = jobCounts(v);
+  if (!hasSlot(v, job, jobCapacity(v), counts)) return { ok: false, why: 'slot' };
+  if (job === 'warrior' && (counts.warrior || 0) >= Math.floor((v.storage && v.storage.weapon) || 0)) return { ok: false, why: 'weapon' };
+  switchNPCJob(npc, job, day, v);
+  npc._chiefAssignDay = day;
+  return { ok: true };
+}
+// ★[T1085] 촌장 화면이 고를 직업 — 이 땅에 자리가 하나라도 있는 직업(`jobCapacity` > 0)과 지금 빈자리 여부. 읽기 전용.
+function assignableJobs(v) {
+  const cap = jobCapacity(v), counts = jobCounts(v), out = [];
+  for (const j of JOB_NAMES) if ((cap[j] || 0) > 0) out.push({ job: j, open: hasSlot(v, j, cap, counts) });
+  return out;
 }
 
 // NPC 기회비용 — ★시장가치(한계생산 × 그림자가격). 픽커 한계가치와 *동일 척도*라
@@ -13025,8 +13158,12 @@ if (_hwW > 0 && v.lastStats && typeof v.lastStats.happiness === 'number') {
   // ★★[T423 2026-09-26 · 군량 = 행위 ⓐ] 원정군은 **제 짐을 먹는다** — 마을 식사 명부에서 빠진다(T295 "징발자는 생산에서
   //   빠진다"의 소비판 · 이중 계산 닫힘: 종전엔 팩 1 + 마을 1 = 1인 하루 2단위). 표식 `_warPack` 은 war-core 가 **손잡이 켤 때만**
   //   공격 징발에 붙인다(방어 소집은 안 붙는다 — 제 마을 곳간을 먹는다) ⇒ 끔이면 이 줄은 `N` 그대로 = 비트 동일.
-  const foodNeed = _t423EatN(v, N) * DAILY_FOOD_CONSUMPTION;
-  const foodGap = consumeFood(v, foodNeed);  // 남으면 굶주림
+  // ★[T1074] 켬 = 하루 몫은 사람마다(적응만큼 덜) + 남은 식량으로 갚을 빚 — 한 번의 섭식 정본 호출(식단 기록 한 번) · 먹은 몫을 사람마다 나눈다
+  const _fdE = T1074_FOOD_DEBT ? _fdEaters(v) : null, _fdN = _fdE ? _fdNeed(_fdE) : null;
+  const foodNeed = _fdN ? _fdN.need : _t423EatN(v, N) * DAILY_FOOD_CONSUMPTION;
+  const _fdGap = _fdN ? consumeFood(v, _fdN.need + _fdN.debt) : 0;
+  const _fdDay = _fdN ? _fdSettle(_fdE, _fdN.need, _fdN.debt, Math.max(0, _fdN.need + _fdN.debt - _fdGap)) : null;
+  const foodGap = _fdDay ? _fdDay.shortTotal : consumeFood(v, foodNeed);  // 남으면 굶주림
   // 도구 마모 — tool dependent NPC만
   // ★★★[T180 2026-09-12 · 이 파일의 유일한 접점] **도구 수명을 밖에서 물어본다.**
   //   T163(②)·T173(①)이 서로 다른 방향에서 같은 곳을 가리켰다 — 움직이는 것은 `도구≈0` 일수다.
@@ -13388,13 +13525,22 @@ if (_hwW > 0 && v.lastStats && typeof v.lastStats.happiness === 'number') {
 
   // 5) 인구 θ-로지스틱 갱신 — dP = r·N·(1−(N/K)^θ). θ>1: K의 ~80%까지 빠르고 이후 급감(S곡선의 상단을 압축)
   const ratio = N / Math.max(1, K);
-  const _logiTerm = POP_GROWTH_RATE * N * (1 - Math.pow(ratio, LOGISTIC_THETA));
+  let _logiTerm = POP_GROWTH_RATE * N * (1 - Math.pow(ratio, LOGISTIC_THETA));
+  // ★[T1074 ⑤] 켬 = 굶어 죽는 길 하나 — K 의 식량 흐름 몫(prodK)이 K 를 정해 N 을 넘긴 날, 그 넘김 몫(로지스틱 음수)은 굶주림이다 →
+  //   식량 빚이 사람마다 치른다(아래 기아 사망 고리로 따로 죽이지 않는다). 출생 쪽(양수)은 그대로 prodK 가 막는다.
+  //   음수는 식량 밖 K(자리 slotK · 땔감 fuelK)를 넘긴 몫만 남는다 — 그건 식량이 아니라 자리 · 연료의 일이다.
+  if (T1074_FOOD_DEBT && _logiTerm < 0) {
+    const _Knf = Math.max(POP_MIN, Math.min(slotK, fuelK));
+    _logiTerm = Math.min(0, POP_GROWTH_RATE * N * (1 - Math.pow(N / Math.max(1, _Knf), LOGISTIC_THETA)));
+  }
   let dP = _logiTerm;
   // 굶주림: 흐름 음수 + 창고 식량_equiv 부족
   let _hungerTerm = 0;
+  if (!T1074_FOOD_DEBT) {   // ★[T1074 ⑤] 켬 = 옛 굶주림 두 줄을 걷는다(죽음은 사람마다 빚이 정한다)
   if (v.surplusEMA.food < 0 && totalFoodEquivalent(v) < N * 3) _hungerTerm -= 0.3 * Math.abs(v.surplusEMA.food);
   // 굶주림 직격: foodGap이 있으면 그만큼 인구 추가 압박
   if (foodGap > 0) _hungerTerm -= 0.5 * foodGap;
+  }
   dP += _hungerTerm;
   // Phase 5-5-econ-d: 마을 stat 기반 인구·이주 보정
   const stats = _computeVillageStats(v, N);
@@ -13489,6 +13635,19 @@ if (_hwW > 0 && v.lastStats && typeof v.lastStats.happiness === 'number') {
   }
   // ★[T924] 켬 = 고리가 몸이 없어 멈춘 날(빚이 −1 아래로 남았는데 사람은 있다 = 남은 사람이 다 징발 중) 못 치른 몫을 넘기지 않는다 — 출생 줄의 `0.9` 거울(끔 = 종전 바이트)
   if (T924_DEBT_CAP && v._dPAccum <= -1 && v.npcs.length > POP_MIN) v._dPAccum = Math.max(v._dPAccum, -0.9);
+  // ★★[T1074 ④] 켬 = 식량 빚 죽음 — 빚 > 14(하루치) **이고** 그날도 적자인 사람 가운데 가장 늙은 1명/일(그날 제 몫을 다 먹으면 안 죽는다).
+  //   보호막(첫 365일 · NPC 마을)이 선 날은 위 고리와 같이 이 죽음도 막는다(`_fdShield` 에 센다 — ⑦ 보호막 켬 ↔ 끔 표의 자).
+  if (T1074_FOOD_DEBT && v.npcs.length > POP_MIN) {
+    const _fdk = _fdDeathIdx(v);
+    if (_fdk >= 0) {
+      if (!v.founder && _shieldT < SHIELD_DAYS) { v._fdShield = (v._fdShield || 0) + 1; }
+      else {
+        const dead = v.npcs.splice(_fdk, 1)[0];
+        v.counts[dead.currentJob] = (v.counts[dead.currentJob] || 0) - 1;
+        v._deathsToday++; v._deadTot = (v._deadTot || 0) + 1; v._fdDeadTot = (v._fdDeadTot || 0) + 1;
+      }
+    }
+  }
 
   // 7) 직업 자율 전환 — 평소 21일 1명. 식량 위기면 빈도 ↑ + 다수 전환.
   //    foodEquiv < N*30 = 위기. picker가 farmer 강제. 매 5일 1명 (4배 빠름).
@@ -14423,7 +14582,7 @@ function autoSwitchJob(v, day, world) {
     if ((counts.warrior || 0) > armed) {
       for (const n of v.npcs) {
         if (n.currentJob !== 'warrior') continue;
-        if (day - n.lastJobChangeDay < 30) continue;
+        if (day - n.lastJobChangeDay < JOB_SWITCH_COOLDOWN) continue;
         const opts = [['farmer', v.land.fertility * 1.5], ['fisher', v.land.water * 1.2], ['hunter', v.land.game * 0.7], ['forager', 0.3]];
         opts.sort((a, b) => b[1] - a[1]);
         switchNPCJob(n, opts[0][0], day, v);
@@ -14441,11 +14600,16 @@ function autoSwitchJob(v, day, world) {
   const priceTbl = (world && typeof world.priceFn === 'function') ? world.priceFn(v) : null;
   const w = priceTbl ? (r => Math.max(0.05, Math.min(200, (priceTbl[r] || 1) / 1.0))) : (_ => 1.0);
   let bestIdx = -1, bestCost = Infinity;
+  //   ★[T1085 ②] 굶는 날의 식량직 전환은 촌장 지정 쿨다운을 넘는다(지정 표지가 마지막 전환일 때만 — 표지 없는 세계 = 종전 비트).
+  let _t1085Hunger = null;
   for (let i = 0; i < v.npcs.length; i++) {
     const n = v.npcs[i];
     if (n.currentJob === need) continue;
     if (n.captive && CAPTIVE_JOB_BAN[need]) continue;   // ★[포로 게이트] 포로에게 전사·사냥꾼(무기 직) 배정 금지 — captive 없으면 무해(항상 통과)
-    if (day - n.lastJobChangeDay < 30) continue;  // 쿨다운(개인 단위 churn 억제)
+    if (day - n.lastJobChangeDay < JOB_SWITCH_COOLDOWN) {  // 쿨다운(개인 단위 churn 억제)
+      if (!(n._chiefAssignDay != null && n._chiefAssignDay === n.lastJobChangeDay && _T1085_FOOD[need]
+        && (_t1085Hunger === null ? (_t1085Hunger = _t1085Hungry(v)) : _t1085Hunger))) continue;
+    }
     const cost = opportunityCost(n, v, w);
     if (cost < bestCost) { bestCost = cost; bestIdx = i; }
   }
@@ -15165,6 +15329,10 @@ function computeVillagePrices(v) {
 }
 
 module.exports = {
+  assignNPCJob, assignableJobs, JOB_SWITCH_COOLDOWN,   // ★[T1085] 촌장 지정 — 서버 동사 `assign_job` 이 부른다(규칙 사본 0)
+  _autoSwitchJobForTest: autoSwitchJob, _switchNPCJobForTest: switchNPCJob,   // ★[T1085] 하네스가 자율 전환 그 함수를 부른다(시험 이름 · 사본 0)
+  foodDebtOf, T1074_FOOD_DEBT,   // ★[T1074] 식량 빚 읽는 함수 하나(T1075 가 읽는다)
+  __t1074: { _fdEaters, _fdNeed, _fdSettle, _fdDeathIdx, FD_ADAPT_MAX, FD_ADAPT_DOWN_DAYS, FD_ADAPT_UP_DAYS, FD_DEATH_DAYS },   // 하네스 훅(test-t1074-food-debt)
   T860_ON, CATCH_FROM, PRESERVE_FROM, _preserveSurplus, _t860Begin, _t860Dry, T877_ON, _t860Unit, PRESERVED_FOODS, PRESERVE_YIELD, PRESERVE_FOOD_FACTOR, FORAGE_FOOD_FACTOR,   // ★[T860] 잡은 날 말리기 — 손잡이 · 잡은 칸 표(하네스가 spoil 정본과 대조한다 · 사본 0) · 갈무리 한 걸음
   STONE_NET_STOCK,   // ★[T180] STONE_NET 1차 문턱 — v2 수출 게이트가 읽는다(사본 0)
   STONE_FLOOR_LAND,   // ★[T1049] 돌 바닥(livelihood FLOOR.stone) — v2 수출 게이트가 읽는다(사본 0)
@@ -16638,8 +16806,12 @@ function raidKills(c, escort, wReady, aReady, srand) {
 // ★[de-abstract] 약탈 = per-entity 실전투(주사위 제거). 호위 전사 + 상인 vs 도적 갱 — hp100·atk=10+무기×0.2·Lanchester.
 //   조우 여부는 호스트 banditGang(기하: 길목 실재 갱)이 정하고, 결과는 이 엔티티 대결이 정한다. 랜덤은 표적선정뿐(승패 아님).
 function _escAtk(v) { return 10 + Math.round((((v && v._weapQ) || 0.42)) * 20); }   // 마을 무기품질 → 호위 근접 atk
-function _raidScrum(escN, escAtk, gangN) {
+// ★★[T1079 ⑤ · 문 4-b = PM ㄱ "약탈 전투가 무기를 읽는다"] `gangArmed` = 단이 손에 든 무기 수(호스트 `world.banditArmed` — 단의 무기 짐 · 한 사람 한 자루 · 없으면 null).
+//   null(호스트가 안 주는 판 — 랩 · 서버 손잡이 끔) = 종전 글자(도적 atk 19 고정). 주면 도적 per-entity atk = 호위와 같은 식(`atk = 10 + 무기 × 0.2` = `_escAtk`):
+//   든 사람(앞에서부터 무기 수만큼 — 정수 자루) = `_escAtk` · 맨손 = 무기 0 → 10(상인 맨손 그 수). 단 무기의 품질 기록이 없어 `_escAtk` 의 품질 0.42 를 탄다(회부). 새 수 0 · 주사위 차례 같음.
+function _raidScrum(escN, escAtk, gangN, gangArmed) {
   const FLEE = 0.35, bA = 19, A = [], B = [];   // ★FLEE=이탈 문턱: 시작 인원 35% 밑으로 떨어진 측은 전멸 전 도주(궤주 효과 — battle-core 없이 per-entity). bA=도적 스킬3 atk
+  const bArmed = gangArmed == null ? -1 : Math.floor(gangArmed), bAw = gangArmed == null ? bA : _escAtk(null);   // ★[T1079] null = 종전(아래 줄이 bA 그대로)
   for (let i = 0; i < Math.max(0, escN | 0); i++) A.push({ h: 100, w: true });   // 호위 전사
   A.push({ h: 100, w: false });   // 상인 1(마지막 원소)
   for (let i = 0; i < Math.max(1, gangN | 0); i++) B.push(100);   // 갱원
@@ -16653,7 +16825,7 @@ function _raidScrum(escN, escAtk, gangN) {
     if (bL.length <= startB * FLEE) { banBroke = true; break; }   // 도적 붕괴 → 도주
     const dA = A.map(() => 0), dB = B.map(() => 0);
     for (const i of aL) dB[bL[(v1.srand() * bL.length) | 0]] += (A[i].w ? escAtk : 10);
-    for (const i of bL) dA[aL[(v1.srand() * aL.length) | 0]] += bA;
+    for (const i of bL) dA[aL[(v1.srand() * aL.length) | 0]] += (bArmed < 0 ? bA : (i < bArmed ? bAw : 10));   // ★[T1079] 종전 = bA · 켬 = 든 사람 `_escAtk` · 맨손 10
     for (let i = 0; i < A.length; i++) if (A[i].h > 0) A[i].h -= dA[i];
     for (let i = 0; i < B.length; i++) if (B[i] > 0) B[i] -= dB[i];
   }
@@ -16699,7 +16871,7 @@ function _caravanArrive(world, c, day) {
     const gangO = world.banditGang ? world.banditGang(c.from, c.to) : null;
     let outboundLoss = 0;
     if (gangO && gangO.n > 0) {
-      const R = _raidScrum(c.escort, _escAtk(c.from), gangO.n);
+      const R = _raidScrum(c.escort, _escAtk(c.from), gangO.n, world.banditArmed ? world.banditArmed(gangO) : null);   // ★[T1079] 단 무기 짐(호스트가 줄 때만)
       gangO.n = Math.max(0, gangO.n - R.banditsKilled);   // 도적 사상 반영(엔티티 대결 결과)
       if (R.escKilled > 0) _xzKillW(c, c.from, R.escKilled);   // 죽은 호위만 마을 전사 감소(도주 생존 제외)
       if (!R.repel) {   // 호위 붕괴
@@ -17020,7 +17192,7 @@ function tickCaravansV2(world, day) {
       const gangI = world.banditGang ? world.banditGang(c.from, c.to) : null;
       let inboundLoss = 0;
       if (gangI && gangI.n > 0) {
-        const R = _raidScrum(c.escort, _escAtk(c.from), gangI.n);
+        const R = _raidScrum(c.escort, _escAtk(c.from), gangI.n, world.banditArmed ? world.banditArmed(gangI) : null);   // ★[T1079] 단 무기 짐(호스트가 줄 때만)
         gangI.n = Math.max(0, gangI.n - R.banditsKilled);
         if (R.escKilled > 0) _killWarriors(c.from, R.escKilled);   // 죽은 호위만 감소
         if (!R.repel) {   // 호위 붕괴
@@ -17814,6 +17986,7 @@ module.exports = {
   xzoneBounce: _xzBounce, xzoneLeg: _xzLeg,   // ★[T533] 서버 호스트가 부르는 둘 — 이웃 존이 안 받은 넘김을 경계에서 되돌림 · 제 존 몫 일수(몸이 되짚을 때) — 사본 0
   _xzProbe: { handOff: _xzHandOff, arrive: _xzArrive, arriveLoop: _xzArriveLoop, handBack: _xzHandBack, ret: _xzReturn },   // ★[T748] 존 경계 짐 레코드 — 하네스가 **이 함수들**을 그대로 부른다(사본 0 · 값 무변)
   setLotHook,   // ★[T732] 곳간 로트 장부 훅(서버 켬일 때만 꽂는다 · 랩·CLI 는 안 꽂는다 = 무동작)
+  _t1079Probe: { raidScrum: _raidScrum, escAtk: _escAtk },   // ★[T1079 ⑤] 약탈 실전투 — 하네스 `test-bandit-camp` 가 이 함수를 그대로 부른다(사본 0)
   T784_CARGO_AGE, _t784Probe: { F: _t784F, arrive: _t784Arrive },
   T1049_FLOOR_STONE,   // ★[T1049] 돌 바닥 마을은 제 돌을 안 판다(하네스 `test-floor-stone` 가 읽는다)
   T812_CARGO_TEMP, _t812Probe: { exp: _t812Exp },
