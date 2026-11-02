@@ -27,6 +27,10 @@ var BattleCore = (typeof module !== 'undefined' && module.exports && typeof requ
 var Equilibrium = (typeof module !== 'undefined' && module.exports && typeof require === 'function')
   ? require('./equilibrium.js')
   : root.Equilibrium;
+// ★[T1100] 원정 사기 식은 sim/army-morale.js 한 곳(전투실험실도 같은 파일을 인라인해 부른다 · 사본 0)
+var ArmyMorale = (typeof module !== 'undefined' && module.exports && typeof require === 'function')
+  ? require('./army-morale.js')
+  : root.ArmyMorale;
 // ★★[T1076 2026-11-02 · ★재민 11-02 문 2-b] **원정 사기 = 평형 회귀** — 손잡이 `T1076_ARMY_MORALE`(`=== '1'` 켬 · 끔 기본 = 아래 칸이 안 선다 · 종전 바이트).
 //   원정 하나에 사기 칸 `w._mrl`(0~1 · 선포 때 1). 하루마다(호스트가 몸이 제 짐에서 먹는 자리 `_warRationEat` 에서 부른다):
 //     평형 = min(짐 비율 r, 1 − 빚 깊이 ÷ 14) — r = 먹고 남은 짐 ÷ 오늘 몫(0~1 · 호스트의 그 칸 그대로) · 빚 = 몸마다 못 먹은 몫(하루치 단위)의 평균.
@@ -36,7 +40,7 @@ var Equilibrium = (typeof module !== 'undefined' && module.exports && typeof req
 //     battle-core 사기 목표에 곱한다(낮은 사기 = 낮은 목표 = 먼저 흔들린다 · 칸이 없으면 무변 — 랩 · 헤드리스는 종전 그대로).
 //   새 수 0 — 14(재민) · M_KABS · M_BREAK(battle-core) 뿐. 빚의 갚기 · 죽음 규칙(T1074)은 그 카드 몫이다(여기선 쌓기만 — 회부).
 function _t1076On() { return typeof process !== 'undefined' && !!process.env && process.env.T1076_ARMY_MORALE === '1'; }
-const T1076_DEBT_DAYS = 14;   // ★재민 11-02(T1074 카드 "14일") — 빚 깊이의 자 · 사기 반감기
+const T1076_DEBT_DAYS = ArmyMorale.DEBT_DAYS;   // ★재민 11-02(T1074 카드 "14일") — 빚 깊이의 자 · 사기 반감기(★[T1100] 정본 = sim/army-morale.js)
 
 // ═══════════ 결정론 RNG (lab _muRng/_warCapRng 와 동형 xorshift32) ═══════════
 function makeRng(seed) { let s = (seed >>> 0) || 1; return function () { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
@@ -1128,16 +1132,14 @@ function createWar(opts) {
   // ★[T1076] 원정 사기 하루 — 호스트가 몸이 먹은 뒤 부른다(r = 짐 비율 0~1 · debt = 몸 평균 빚 · 하루치 단위). 반환 = 새 사기(끔 · 칸 없음 = null)
   function armyMoraleDay(w, r, debt) {
     if (!w || w._mrl == null || !_t1076On()) return null;
-    const rr = Math.max(0, Math.min(1, +r || 0)), dd = Math.max(0, Math.min(1, (+debt || 0) / T1076_DEBT_DAYS));
-    const target = Math.min(rr, 1 - dd);
-    w._mrlEq = target;
-    w._mrl = Equilibrium.step(w._mrl, target, T1076_DEBT_DAYS, 1);
+    w._mrlEq = ArmyMorale.target(r, debt);   // ★[T1100] 식 = sim/army-morale.js(같은 셈 · 같은 값)
+    w._mrl = ArmyMorale.day(w._mrl, r, debt);
     return w._mrl;
   }
   // ★[T1076] 원정 몸이 죽었다(교전 공격 사상 · 굶어 죽음) — 계단: 죽은 몫 × battle-core 제 사상 계수
   function armyMoraleLoss(w, dead) {
     if (!w || w._mrl == null || !_t1076On() || !(dead > 0)) return null;
-    w._mrl = Equilibrium.drop(w._mrl, BattleCore.M_KABS * dead / (w._mrlForce || Math.max(1, w.force || 1)));
+    w._mrl = ArmyMorale.loss(w._mrl, dead, (w._mrlForce || Math.max(1, w.force || 1)));   // ★[T1100] 식 = sim/army-morale.js
     w._mrlDead = (w._mrlDead || 0) + dead;
     return w._mrl;
   }
