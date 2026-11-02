@@ -185,6 +185,28 @@ world.villages.forEach((v, i) => { if (v.land && v.land.coastal) coastal.add(i);
   const d = seeds.map((s) => s.lp && s.lp._seaDistPx).filter((x) => x != null).sort((a, b) => a - b);
   console.log(`  해안(land.coastal) ${coastal.size}곳 · 바다까지 px — 최소 ${d[0]} · 중앙 ${d[Math.floor(d.length / 2)]} · 최대 ${d[d.length - 1]}`);
 }
+// ★[T1088 · 계측 전용 · **env 가 없으면 한 글자도 안 바뀐다**] 품목 빈도 — 곳간 · 거래 · 게시판.
+//   `T17_ITEMFREQ=<파일>` 이면 하루마다 ⓐ 마을 곳간 실키(곳간 창 `villages.playerVillageInventory` 와 같은 문턱 0.005 · `_` 내부 칸 빼고)를
+//   마을·날로 세고 ⓑ 그날 새로 붙은 캐러밴 장부 줄(`world.tradeLog` — 5000 줄에서 잘리니 끝에 몰아 세지 않는다)의 보낸 것 · 받아 온 것과
+//   ⓒ 게시판 의뢰(`onRequest` 'open')의 구하는 것 · 보상을 센다. 첫 1시간 = 게임일 0~2(하루 24실분 · 1시간 = 2.5일 · `server/zone-config.js:543`).
+//   판정 0 — 수만 낸다(그림 굽는 차례의 자 · 보고/T1088).
+const _T1088 = process.env.T17_ITEMFREQ ? { store: {}, trade: {}, req: {}, rew: {}, seen: new WeakSet(), d: 0 } : null;
+function _t1088Bump(tab, k, h1) { if (!k) return; const o = tab[k] || (tab[k] = { n: 0, n1h: 0 }); o.n++; if (h1) o.n1h++; }
+function _t1088Req(q) { if (!_T1088 || !q) return; const h1 = _T1088.d < 3; _t1088Bump(_T1088.req, q.item, h1); _t1088Bump(_T1088.rew, q.rewItem, h1); }
+function _t1088Day(d) {
+  if (!_T1088) return;
+  const h1 = d < 3;
+  for (const v of world.villages) {
+    const st = v.storage || {};
+    for (const r of Object.keys(st)) { if (r.charCodeAt(0) === 95) continue; if (+(st[r] || 0) > 0.005) _t1088Bump(_T1088.store, r, h1); }
+  }
+  const TL = world.tradeLog || [];
+  for (let i = TL.length - 1; i >= 0 && !_T1088.seen.has(TL[i]); i--) {
+    const t = TL[i]; _T1088.seen.add(t);
+    for (const x of [t.sent, t.bought, t.aGave, t.bGave]) if (x && x.res) _t1088Bump(_T1088.trade, x.res, h1);
+  }
+  _T1088.d = d + 1;
+}
 const depositMap = Villages.playerVillageDepositMap();
 const shortByItem = new Map(), glutByItem = new Map(), reqByItem = new Map();
 const L = Events.createLedger({
@@ -200,6 +222,7 @@ const L = Events.createLedger({
     if (e.type === 'STOCK_SHORTAGE') shortByItem.set(e.item, (shortByItem.get(e.item) || 0) + 1);
     else if (e.type === 'STOCK_GLUT') glutByItem.set(e.item, (glutByItem.get(e.item) || 0) + 1);
   },
+  ...(process.env.T17_ITEMFREQ ? { onRequest: (q, w) => { if (w === 'open') _t1088Req(q); } } : {}),
 });
 L.prime(world);
 
@@ -217,6 +240,7 @@ const floorTrace = floorIdx.map(([v]) => ({ name: v.name, land: +(v.land.stone |
 const _log = console.log; console.log = () => {};
 for (let d = 0; d < DAYS; d++) {
   econV2.tickWorldV2(world); L.scanDay(world, world.day, {});
+  if (_T1088) _t1088Day(d);                                      // ★[T1088] 품목 빈도(env 있을 때만)
   if (_CLEAR) P._clearProbe.tickDay(_clearVils);                 // [T100 4판] 개간 관측
   for (let k = 0; k < floorIdx.length; k++) {                    // ★[T152] 석재 바닥 마을 표본
     const v = floorIdx[k][0], t = floorTrace[k];
@@ -233,6 +257,11 @@ for (let d = 0; d < DAYS; d++) {
 }
 if (_CLEAR) console.log(`  [T100] 개간 관측 — 끝 밭 ${_clearVils.reduce((a, v) => a + v._farmSet.size, 0)}칸 · 마을당 중앙 ${_clearVils.map((v) => v._farmSet.size).sort((a, b) => a - b)[Math.floor(_clearVils.length / 2)]}칸`);
 console.log = _log;
+if (_T1088) {   // ★[T1088] 품목 빈도 JSON(env 있을 때만 · 단위: 곳간 = 마을·날 · 거래 = 장부 줄 칸 · 게시판 = 연 의뢰)
+  fs.writeFileSync(process.env.T17_ITEMFREQ, JSON.stringify({ card: 'T1088', zone: Z, seed: SEED, days: DAYS, villages: world.villages.length, firstHourDays: 3,
+    store: _T1088.store, trade: _T1088.trade, req: _T1088.req, rew: _T1088.rew }, null, 1));
+  console.log(`  [T1088] 품목 빈도: ${process.env.T17_ITEMFREQ}`);
+}
 
 // ── ⓐ 기준선 ────────────────────────────────────────────────────────────────
 let pop = 0, dead = 0, ever = 0, weapQ = 0, expand = 0;
