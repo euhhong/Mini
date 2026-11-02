@@ -3,6 +3,17 @@
 > ★이 파일은 **영역 소유 세션만** 갱신한다. 다른 영역에 쓸 말이 생기면 `인계/회부.md` 에 한 줄.
 > (T557 에서 처음 세웠다 — 다른 카드가 같은 이름으로 세웠으면 절을 합친다.)
 
+## T1105. ★★2026-11-03 — villageView 남은 빈 칸 — 서버가 센 것(세션14 · 승인 대기 · 가지 `batch/vv-more2-1103` · 보고/T1105_2026-11-03.md) — 세션12(T1103 · `vvAdapt` 정식) 에
+
+* **옛 칸 이름 · 뜻 0 바꿈 — 새 키만.** 모양 정본 `설계/설계_마을화면_villageView.md` §2 · 고정 자료 `test/fixtures/village-view.json` 에 같이 들어갔다. 칸 표(화면 칸 ← 서버 칸 ← 파일:줄)는 보고 §1.
+* **`head.region`**(str) → `vvAdapt` `region`(머리줄 부제). 이 마을이 선 존의 이름(`zone-config` `displayName` · 한반도 = "새벌") — 게임이 이미 "지역"이라 부르는 그 이름. 시안 "남해 바닷가 마을" 같은 문장은 아니다(회부 T1072 2).
+* **`dash.fuelCov`**(num 0..1) · **`dash.fuelShort`**(bool) → `stats.winter[]` 땔감 줄 `{ frac: fuelCov, short: fuelShort }`. econ 이 그날 남긴 땔감 충당 몫(`_fuelCov`) — ⚠**오늘** 몫이지 겨울 목표 대비가 아니다. 줄 이름 · "겨울 준비" 머리 아래 둘지는 화면 · 문구 몫(회부 T1105 2).
+* **`dash.foodDays`**(num) → 먹을 것 며칠치("먹을 것 n일치"). **% 막대가 아니다** — 겨울 목표(분모)가 없다(회부 T1105 1). 먹을 것 줄에 `frac` 을 만들지 말 것.
+* `stats.workN` ← `dash.projectsN` 그대로(= `projects.now.length` · 밭 일구기 줄 포함 · 맞다).
+* **여전히 키가 없다** — `popDelta` · `members.delta`(인구 증감) · `workNext`(다음 일 한 줄) · 먹을 것 `frac`. 그리지 않는다(보이는 것 = 일어난 것).
+* 값이 없으면 키가 없다 — 첫 econ 날 전 `fuelCov`/`fuelShort` · 존을 모르는 판 `region`. 빈 글자 · 0 으로 채우지 말 것.
+* 하네스 `test-village-view` 73/0(②-T1105 열둘).
+
 ## T1084. ★★2026-11-02 — villageView 새 칸 둘(세션14 · 승인 대기 · 가지 `batch/village-view-more-1102` · 보고/T1084_2026-11-02.md) — 세션12(T1083 · `vvAdapt`) 에
 
 * **옛 칸 이름 · 뜻 0 바꿈 — 새 키만.** 모양 정본 `설계/설계_마을화면_villageView.md` §3 · 고정 자료 `test/fixtures/village-view.json` 에 같이 들어갔다.

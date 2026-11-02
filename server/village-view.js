@@ -14,12 +14,16 @@
 // ★제5 규약 — 가입 계량기는 하나(`onboarding.contrib` — `membership.publicState` 가 `contribOf` 로 읽는 그 값).
 //
 // ★[T1084] 없던 29칸 중 지금 세계에서 셀 수 있는 둘을 더했다 — 집터 줄 `bedsGain` · 공사 줄 `kind:'clear'`(새 칸만 · 옛 이름 무변 · `보고/T1084_2026-11-02.md`).
+// ★[T1105] PM 임시 `vvAdapt` 가 비워 둔 칸 중 셀 수 있는 셋을 더했다 — 지역 이름 `head.region`(그 존의 `displayName`) ·
+//   먹을 것 며칠치 `dash.foodDays`(곳간 스냅숏 정본 값) · 땔감 충당 몫 `dash.fuelCov` · `dash.fuelShort`(econ 이 그날 남긴 `_fuelCov`).
+//   새 칸만 · 옛 이름 무변 · 새 수 0. 겨울 준비 %(겨울 목표) · 인구 증감 · 다음 일 한 줄은 여전히 키가 없다(`보고/T1105_2026-11-03.md`).
 //
 // 보내는 때: 열 때 칸 전부(`full:true`) · 열려 있는 동안 **JSON 이 바뀐 칸만**(`full:false`) — 존의 5초 박자(아래 `TICK_MS`) +
 //   마을 장부 메시지(납품 · 교환 · 기부 · 꺼내기 …) 직후 한 번. 닫거나 끊기면 표지를 지운다.
 
 const Events = require('./events');
 const HutStages = require('./hut-stages');
+const ZoneConfig = require('./zone-config');
 
 // ── 뭉뚱그린 재화 — 캐논 §1 의 "카테고리"(food/ore/forage/cooked/fish/meat) + 연장 · 무장(연장 · 무기 · 갑옷 — 시안은 "돌도끼"처럼 그 물건을 쓴다).
 //   ⚠목록 하나는 여기뿐이다(하네스도 이것을 읽는다). 정본 목록이 서버에 따로 없어 회부에 올렸다(T1072 ④).
@@ -60,6 +64,11 @@ function _head(src, vil) {
   const day = src.day, c = Events.calendarOf(day);
   const out = { vid: vil.dbId | 0, name: vil.name, day,
     cal: { label: c.label, season: c.season, seasonKo: c.seasonKo, dayOfSeason: c.dayOfSeason, seasonDays: c.seasonDays, year: c.year } };
+  // ★[T1105] 지역 이름 — 이 마을이 선 존의 이름(`zone-config.js` `ZONES[id].displayName` · 한반도 존 = "새벌"). 게임이 이미 "지역"으로 부르는
+  //   그 이름이다(존 고르기 · 존이 가득 찼을 때 "다른 지역을 고르십시오" — `public/client/30-n-net.js` · 다른 곳에 있는 사람 `zone.js _elsewhereLine`).
+  //   존을 모르는 판(헤드리스)이면 키가 없다.
+  const zc = src.zoneId && ZoneConfig.ZONES ? ZoneConfig.ZONES[src.zoneId] : null;
+  if (zc && zc.displayName) out.region = zc.displayName;
   if (Number.isFinite(vil.econ.foundedDay)) out.age = day - (vil.econ.foundedDay | 0);
   let ch = null; try { ch = H.VillageKin && H.VillageKin.chiefOf ? H.VillageKin.chiefOf(vil) : null; } catch (e) { ch = null; }
   out.chief = ch ? { name: ch.name || null, npc: !!ch.npc } : null;
@@ -153,8 +162,21 @@ function _members(vil, chiefId) {
   const byJob = [...tally].map(([job, n]) => ({ job, ko: (H.jobKo && H.jobKo[job]) || null, n })).sort((a, b) => (b.n - a.n) || (a.job < b.job ? -1 : 1));
   return { n: people.length, byJob, people };
 }
-function _store(src, vil) {
-  const inv = H.SimVillages.playerVillageInventory ? H.SimVillages.playerVillageInventory(vil) : null;
+// 대시보드 — 옛 셋(`pop` · `toWinter` · `projectsN`) 그대로 + [T1105] 서버에 이미 있는 두 값(값이 없으면 키가 없다).
+//   `foodDays` = 곳간 스냅숏 정본(`villages.js playerVillageInventory().foodDays` = econ `totalFoodEquivalent ÷ 인구` — 한 사람 하루 1 이라 "며칠치")
+//     그대로. 새로 오는 사람 문(`newcomers.js` "자립 n일")과 같은 함수다. ⚠겨울 준비 **%** 가 아니다 — 분모(겨울 목표)가 없다(T779 가 걷었다 · 회부).
+//   `fuelCov` = econ 이 그날 연료 단계에서 남긴 땔감 충당 몫(`sim/economy-sim.js` `_fuelCov` = (짚 + 잔가지·껍질 + 땔나무) ÷ 그날 땔감 수요 · 0..1 ·
+//     겨울엔 추위만큼 수요가 커진다). econ 이 이 값으로 건강을 깎는다(`stats.fuelCov`). 소수 둘째 자리(이 파일 `_r` 관례) ·
+//     `fuelShort` = 그 값이 1 아래(오늘 쓸 땔감을 다 못 땠다). 첫 econ 날 전엔 둘 다 키가 없다.
+//     ⚠이것도 "겨울 대비" 가 아니라 **오늘** 몫이다 — 겨울 목표는 위와 같이 회부.
+function _dash(src, vil, projects, inv) {
+  const out = { pop: vil.econ.npcs.length, toWinter: toWinter(src.day), projectsN: projects.now.length };
+  if (inv && Number.isFinite(inv.foodDays)) out.foodDays = inv.foodDays;
+  const fc = vil.econ._fuelCov;
+  if (Number.isFinite(fc)) { out.fuelCov = _r(fc, 2); out.fuelShort = out.fuelCov < 1; }
+  return out;
+}
+function _store(src, vil, inv) {
   const L = src.ledger, ema = vil.econ._consEMA || {};
   const rows = []; let withheld = 0;
   for (const g of (inv && inv.groups) || []) for (const it of g.items || []) {
@@ -198,15 +220,16 @@ function build(player, vid, numeraire, memo) {
   const vil = src.vil;
   const hd = _head(src, vil);
   const projects = _projects(src, vil, V.villageChronicle ? V.villageChronicle(vid | 0, player.x, player.y) : null);
+  const inv = V.playerVillageInventory ? V.playerVillageInventory(vil) : null;   // 곳간 스냅숏 정본 — 창고 칸 · 먹을 것 며칠치가 같은 한 번을 읽는다
   const view = {
     head: hd.slot,
     me: _me(player, vil),
-    dash: { pop: vil.econ.npcs.length, toWinter: toWinter(src.day), projectsN: projects.now.length },
+    dash: _dash(src, vil, projects, inv),
     requests: _requests(board),
     news: _news(board, src.day),
     projects,
     members: _members(vil, hd.chiefId),
-    store: _store(src, vil),
+    store: _store(src, vil, inv),
     prices: null,
     gate: { near: true },
   };
