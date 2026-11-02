@@ -1,0 +1,1200 @@
+{
+ "card": "T1080",
+ "made": "2026-11-02",
+ "world": "main 54d20ebf + T1080",
+ "harness": "t577-server-run.js <days> <seed> · T577_CAND_WALK=1 · T577_PAR=1 · preload scripts/t1080-observe.js",
+ "arms": {
+  "L": "T577_CAND_WALK=1",
+  "O": "+ T1080_ROAD_LIFE=0",
+  "LS": "+ T858_NO_SHIELD=1",
+  "OS": "+ T1080_ROAD_LIFE=0 T858_NO_SHIELD=1",
+  "LG": "+ BANDIT_FIXTURE=dissolve BANDIT_MINDAY=1 T577_RAMP=0 (150일)",
+  "OG": "+ T1080_ROAD_LIFE=0 BANDIT_FIXTURE=dissolve BANDIT_MINDAY=1 T577_RAMP=0 (150일)"
+ },
+ "runs": {
+  "L-1020": {
+   "observe": {
+    "knob": {
+     "T577_CAND_WALK": "1",
+     "T1080_ROAD_LIFE": null,
+     "T858_NO_SHIELD": null
+    },
+    "t1080": {
+     "on": true,
+     "road": 0,
+     "dead": 0,
+     "reroute": 0,
+     "roadDays": 0,
+     "host": {
+      "pick": 0,
+      "pickMatrix": 0,
+      "pickLine": 0,
+      "unreach": 0,
+      "packed": 0,
+      "packFE": 0,
+      "packKg": 0,
+      "packCut": 0,
+      "roadDays": 0,
+      "hungryDays": 0,
+      "minH": 100,
+      "dead": 0,
+      "deadBody": 0,
+      "reroute": 0,
+      "rerouteNone": 0,
+      "arriveFE": 0,
+      "deadRows": [],
+      "rerouteRows": []
+     }
+    },
+    "t765": {
+     "on": true,
+     "road": 0,
+     "rows": []
+    },
+    "stats": {
+     "gangs": 1,
+     "members": 5,
+     "peak": 3,
+     "conv": 0,
+     "exo": 2,
+     "loot": 39,
+     "lootAmt": 2258.5487830455804,
+     "sup": 0,
+     "supDead": 0,
+     "starve": 22,
+     "disband": 24,
+     "dens": 3,
+     "denOcc": 1,
+     "denForm": 25,
+     "denClear": 0
+    },
+    "bodyExit": {
+     "died": {
+      "starve": 0,
+      "old": 0
+     },
+     "walk": {
+      "bandit": 0,
+      "desert": 0,
+      "move": 0
+     },
+     "other": {
+      "expedition": 0,
+      "road": 0,
+      "unknown": 0
+     },
+     "rot": 0,
+     "arrive": 0,
+     "straight": 0,
+     "lost": 0,
+     "vanish": 0,
+     "noted": 1261,
+     "trimmed": 1261,
+     "lying": 0,
+     "walking": 0
+    },
+    "t765Body": {
+     "depart": 0,
+     "bodied": 0,
+     "bodyless": 0,
+     "joined": 0,
+     "noBody": 0,
+     "groups": []
+    }
+   },
+   "days": 800,
+   "runOut": [
+    "  ✓ 시드 1020 — 존이 떴다",
+    "  ✓ 시드 1020 — **800일을 끝까지 돌았다**(판 JSON)  800일 · 1923초",
+    "  ✓ 시드 1020 — 시딩이 섰다(마을마다 첫날 사람이 있다)  51곳 · 첫날 8~8명",
+    "| 판 | 시드 | 일 | 인구 | 소멸 | 무기Q | 확장셀 | 게시 | 도구Q | 보존식 | 생곡 | 해체 | 빈 마을 | 첫 빈 날 | 해체 day≤400 | 죽음 누계 | 행상 피살 | 도적 전환 | 절망 이탈 | 서울 빈 11 중 빈 곳 |",
+    "| WALK=1 | 1020 | 800 | 5090 | 0/51 | 773 | 2892 | 1603 | 8518.8 | 734.9 | 32664.8 | 0 | 0 | — | 0 | 1224 | 35 | 0 | 2 | 0 |",
+    "| 판 | 시드 | 몸 상한 | 줄어든 몸 | 그 자리 죽음(굶음·늙음) | 걸어 나감(도적·이탈·이주) | 그 밖(원정·행상·모름) | 순간 소멸 | 누운 채 · 걷는 중(끝 날) | 다 누움 · 다 걸음 | 직선 폴백 | 버린 까닭 |",
+    "| CAND_WALK=1 | 1020 | 1 | 0 | 0 (— · 0·0) | 0 (— · 0·0·0) | 0 (— · 0·0·0) | 0 | 0 · 0 | 0 · 0 | 0 | 1261 |"
+   ]
+  },
+  "O-1020": {
+   "observe": {
+    "knob": {
+     "T577_CAND_WALK": "1",
+     "T1080_ROAD_LIFE": "0",
+     "T858_NO_SHIELD": null
+    },
+    "t1080": {
+     "on": false,
+     "road": 0,
+     "dead": 0,
+     "reroute": 0,
+     "roadDays": 0,
+     "host": {
+      "pick": 0,
+      "pickMatrix": 0,
+      "pickLine": 0,
+      "unreach": 0,
+      "packed": 0,
+      "packFE": 0,
+      "packKg": 0,
+      "packCut": 0,
+      "roadDays": 0,
+      "hungryDays": 0,
+      "minH": 100,
+      "dead": 0,
+      "deadBody": 0,
+      "reroute": 0,
+      "rerouteNone": 0,
+      "arriveFE": 0,
+      "deadRows": [],
+      "rerouteRows": []
+     }
+    },
+    "t765": {
+     "on": true,
+     "road": 0,
+     "rows": []
+    },
+    "stats": {
+     "gangs": 1,
+     "members": 5,
+     "peak": 3,
+     "conv": 0,
+     "exo": 2,
+     "loot": 39,
+     "lootAmt": 2258.5487830455804,
+     "sup": 0,
+     "supDead": 0,
+     "starve": 22,
+     "disband": 24,
+     "dens": 3,
+     "denOcc": 1,
+     "denForm": 25,
+     "denClear": 0
+    },
+    "bodyExit": {
+     "died": {
+      "starve": 0,
+      "old": 0
+     },
+     "walk": {
+      "bandit": 0,
+      "desert": 0,
+      "move": 0
+     },
+     "other": {
+      "expedition": 0,
+      "road": 0,
+      "unknown": 0
+     },
+     "rot": 0,
+     "arrive": 0,
+     "straight": 0,
+     "lost": 0,
+     "vanish": 0,
+     "noted": 1261,
+     "trimmed": 1261,
+     "lying": 0,
+     "walking": 0
+    },
+    "t765Body": {
+     "depart": 0,
+     "bodied": 0,
+     "bodyless": 0,
+     "joined": 0,
+     "noBody": 0,
+     "groups": []
+    }
+   },
+   "days": 800,
+   "runOut": [
+    "  ✓ 시드 1020 — 존이 떴다",
+    "  ✓ 시드 1020 — **800일을 끝까지 돌았다**(판 JSON)  800일 · 1914초",
+    "  ✓ 시드 1020 — 시딩이 섰다(마을마다 첫날 사람이 있다)  51곳 · 첫날 8~8명",
+    "| 판 | 시드 | 일 | 인구 | 소멸 | 무기Q | 확장셀 | 게시 | 도구Q | 보존식 | 생곡 | 해체 | 빈 마을 | 첫 빈 날 | 해체 day≤400 | 죽음 누계 | 행상 피살 | 도적 전환 | 절망 이탈 | 서울 빈 11 중 빈 곳 |",
+    "| WALK=1 | 1020 | 800 | 5090 | 0/51 | 773 | 2892 | 1603 | 8518.8 | 734.9 | 32664.8 | 0 | 0 | — | 0 | 1224 | 35 | 0 | 2 | 0 |",
+    "| 판 | 시드 | 몸 상한 | 줄어든 몸 | 그 자리 죽음(굶음·늙음) | 걸어 나감(도적·이탈·이주) | 그 밖(원정·행상·모름) | 순간 소멸 | 누운 채 · 걷는 중(끝 날) | 다 누움 · 다 걸음 | 직선 폴백 | 버린 까닭 |",
+    "| CAND_WALK=1 | 1020 | 1 | 0 | 0 (— · 0·0) | 0 (— · 0·0·0) | 0 (— · 0·0·0) | 0 | 0 · 0 | 0 · 0 | 0 | 1261 |"
+   ]
+  },
+  "LS-1020": {
+   "observe": {
+    "knob": {
+     "T577_CAND_WALK": "1",
+     "T1080_ROAD_LIFE": null,
+     "T858_NO_SHIELD": "1"
+    },
+    "t1080": {
+     "on": true,
+     "road": 0,
+     "dead": 0,
+     "reroute": 0,
+     "roadDays": 0,
+     "host": {
+      "pick": 0,
+      "pickMatrix": 0,
+      "pickLine": 0,
+      "unreach": 0,
+      "packed": 0,
+      "packFE": 0,
+      "packKg": 0,
+      "packCut": 0,
+      "roadDays": 0,
+      "hungryDays": 0,
+      "minH": 100,
+      "dead": 0,
+      "deadBody": 0,
+      "reroute": 0,
+      "rerouteNone": 0,
+      "arriveFE": 0,
+      "deadRows": [],
+      "rerouteRows": []
+     }
+    },
+    "t765": {
+     "on": true,
+     "road": 0,
+     "rows": []
+    },
+    "stats": {
+     "gangs": 0,
+     "members": 0,
+     "peak": 3,
+     "conv": 0,
+     "exo": 12,
+     "loot": 49,
+     "lootAmt": 3114.930028068757,
+     "sup": 0,
+     "supDead": 0,
+     "starve": 32,
+     "disband": 23,
+     "dens": 3,
+     "denOcc": 0,
+     "denForm": 23,
+     "denClear": 0
+    },
+    "bodyExit": {
+     "died": {
+      "starve": 0,
+      "old": 0
+     },
+     "walk": {
+      "bandit": 0,
+      "desert": 0,
+      "move": 0
+     },
+     "other": {
+      "expedition": 0,
+      "road": 0,
+      "unknown": 0
+     },
+     "rot": 0,
+     "arrive": 0,
+     "straight": 0,
+     "lost": 0,
+     "vanish": 0,
+     "noted": 1352,
+     "trimmed": 1352,
+     "lying": 0,
+     "walking": 0
+    },
+    "t765Body": {
+     "depart": 0,
+     "bodied": 0,
+     "bodyless": 0,
+     "joined": 0,
+     "noBody": 0,
+     "groups": []
+    }
+   },
+   "days": 800,
+   "runOut": [
+    "  ✓ 시드 1020 — 존이 떴다",
+    "  ✓ 시드 1020 — **800일을 끝까지 돌았다**(판 JSON)  800일 · 1634초",
+    "  ✓ 시드 1020 — 시딩이 섰다(마을마다 첫날 사람이 있다)  51곳 · 첫날 8~8명",
+    "| 판 | 시드 | 일 | 인구 | 소멸 | 무기Q | 확장셀 | 게시 | 도구Q | 보존식 | 생곡 | 해체 | 빈 마을 | 첫 빈 날 | 해체 day≤400 | 죽음 누계 | 행상 피살 | 도적 전환 | 절망 이탈 | 서울 빈 11 중 빈 곳 |",
+    "| WALK=1 | 1020 | 800 | 4764 | 0/51 | 620 | 3436 | 1544 | 7234.8 | 296.1 | 31283.1 | 0 | 0 | — | 0 | 1298 | 42 | 0 | 12 | 0 |",
+    "| 판 | 시드 | 몸 상한 | 줄어든 몸 | 그 자리 죽음(굶음·늙음) | 걸어 나감(도적·이탈·이주) | 그 밖(원정·행상·모름) | 순간 소멸 | 누운 채 · 걷는 중(끝 날) | 다 누움 · 다 걸음 | 직선 폴백 | 버린 까닭 |",
+    "| CAND_WALK=1 | 1020 | 1 | 0 | 0 (— · 0·0) | 0 (— · 0·0·0) | 0 (— · 0·0·0) | 0 | 0 · 0 | 0 · 0 | 0 | 1352 |"
+   ]
+  },
+  "OS-1020": {
+   "observe": {
+    "knob": {
+     "T577_CAND_WALK": "1",
+     "T1080_ROAD_LIFE": "0",
+     "T858_NO_SHIELD": "1"
+    },
+    "t1080": {
+     "on": false,
+     "road": 0,
+     "dead": 0,
+     "reroute": 0,
+     "roadDays": 0,
+     "host": {
+      "pick": 0,
+      "pickMatrix": 0,
+      "pickLine": 0,
+      "unreach": 0,
+      "packed": 0,
+      "packFE": 0,
+      "packKg": 0,
+      "packCut": 0,
+      "roadDays": 0,
+      "hungryDays": 0,
+      "minH": 100,
+      "dead": 0,
+      "deadBody": 0,
+      "reroute": 0,
+      "rerouteNone": 0,
+      "arriveFE": 0,
+      "deadRows": [],
+      "rerouteRows": []
+     }
+    },
+    "t765": {
+     "on": true,
+     "road": 0,
+     "rows": []
+    },
+    "stats": {
+     "gangs": 0,
+     "members": 0,
+     "peak": 3,
+     "conv": 0,
+     "exo": 12,
+     "loot": 49,
+     "lootAmt": 3114.930028068757,
+     "sup": 0,
+     "supDead": 0,
+     "starve": 32,
+     "disband": 23,
+     "dens": 3,
+     "denOcc": 0,
+     "denForm": 23,
+     "denClear": 0
+    },
+    "bodyExit": {
+     "died": {
+      "starve": 0,
+      "old": 0
+     },
+     "walk": {
+      "bandit": 0,
+      "desert": 0,
+      "move": 0
+     },
+     "other": {
+      "expedition": 0,
+      "road": 0,
+      "unknown": 0
+     },
+     "rot": 0,
+     "arrive": 0,
+     "straight": 0,
+     "lost": 0,
+     "vanish": 0,
+     "noted": 1352,
+     "trimmed": 1352,
+     "lying": 0,
+     "walking": 0
+    },
+    "t765Body": {
+     "depart": 0,
+     "bodied": 0,
+     "bodyless": 0,
+     "joined": 0,
+     "noBody": 0,
+     "groups": []
+    }
+   },
+   "days": 800,
+   "runOut": [
+    "  ✓ 시드 1020 — 존이 떴다",
+    "  ✓ 시드 1020 — **800일을 끝까지 돌았다**(판 JSON)  800일 · 1665초",
+    "  ✓ 시드 1020 — 시딩이 섰다(마을마다 첫날 사람이 있다)  51곳 · 첫날 8~8명",
+    "| 판 | 시드 | 일 | 인구 | 소멸 | 무기Q | 확장셀 | 게시 | 도구Q | 보존식 | 생곡 | 해체 | 빈 마을 | 첫 빈 날 | 해체 day≤400 | 죽음 누계 | 행상 피살 | 도적 전환 | 절망 이탈 | 서울 빈 11 중 빈 곳 |",
+    "| WALK=1 | 1020 | 800 | 4764 | 0/51 | 620 | 3436 | 1544 | 7234.8 | 296.1 | 31283.1 | 0 | 0 | — | 0 | 1298 | 42 | 0 | 12 | 0 |",
+    "| 판 | 시드 | 몸 상한 | 줄어든 몸 | 그 자리 죽음(굶음·늙음) | 걸어 나감(도적·이탈·이주) | 그 밖(원정·행상·모름) | 순간 소멸 | 누운 채 · 걷는 중(끝 날) | 다 누움 · 다 걸음 | 직선 폴백 | 버린 까닭 |",
+    "| CAND_WALK=1 | 1020 | 1 | 0 | 0 (— · 0·0) | 0 (— · 0·0·0) | 0 (— · 0·0·0) | 0 | 0 · 0 | 0 · 0 | 0 | 1352 |"
+   ]
+  },
+  "LG-1020": {
+   "observe": {
+    "knob": {
+     "T577_CAND_WALK": "1",
+     "T1080_ROAD_LIFE": null,
+     "T858_NO_SHIELD": null
+    },
+    "t1080": {
+     "on": true,
+     "road": 0,
+     "dead": 0,
+     "reroute": 0,
+     "roadDays": 5,
+     "host": {
+      "pick": 1,
+      "pickMatrix": 1,
+      "pickLine": 0,
+      "unreach": 0,
+      "packed": 5,
+      "packFE": 0,
+      "packKg": 0,
+      "packCut": 0,
+      "roadDays": 5,
+      "hungryDays": 5,
+      "minH": 32.69928303820554,
+      "dead": 0,
+      "deadBody": 0,
+      "reroute": 0,
+      "rerouteNone": 0,
+      "arriveFE": 0,
+      "deadRows": [],
+      "rerouteRows": []
+     }
+    },
+    "t765": {
+     "on": true,
+     "road": 0,
+     "rows": [
+      {
+       "d0": 1,
+       "from": "광산1",
+       "fromId": 1,
+       "to": "임업3",
+       "toId": 12,
+       "n": 5,
+       "bodied": 0,
+       "cells": 387,
+       "routeCells": 419,
+       "eta": 2,
+       "why": "dissolve",
+       "packFE": 0,
+       "packKg": 0,
+       "arrived": 5,
+       "joined": 0,
+       "day1": 2
+      }
+     ]
+    },
+    "stats": {
+     "gangs": 1,
+     "members": 4,
+     "peak": 3,
+     "conv": 3,
+     "exo": 11,
+     "loot": 12,
+     "lootAmt": 391.6067494151126,
+     "sup": 1,
+     "supDead": 0,
+     "starve": 18,
+     "disband": 3,
+     "dens": 3,
+     "denOcc": 1,
+     "denForm": 3,
+     "denClear": 0,
+     "t577Walk": 5,
+     "t1080RoadDays": 5,
+     "t765Arrive": 5
+    },
+    "bodyExit": {
+     "died": {
+      "starve": 0,
+      "old": 0
+     },
+     "walk": {
+      "bandit": 1,
+      "desert": 0,
+      "move": 0
+     },
+     "other": {
+      "expedition": 0,
+      "road": 0,
+      "unknown": 0
+     },
+     "rot": 0,
+     "arrive": 0,
+     "straight": 0,
+     "lost": 0,
+     "vanish": 0,
+     "noted": 26,
+     "trimmed": 25,
+     "lying": 0,
+     "walking": 1
+    },
+    "t765Body": {
+     "depart": 5,
+     "bodied": 0,
+     "bodyless": 5,
+     "joined": 0,
+     "noBody": 5,
+     "groups": [
+      {
+       "day": 1,
+       "from": "광산1",
+       "to": "임업3",
+       "n": 5,
+       "bodied": 0,
+       "queued": 3,
+       "routePx": 13403,
+       "ppd": 92160
+      }
+     ]
+    }
+   },
+   "days": 150,
+   "runOut": [
+    "  ✓ 시드 1020 — 존이 떴다",
+    "  ✓ 시드 1020 — **150일을 끝까지 돌았다**(판 JSON)  150일 · 496초",
+    "  ✗ 시드 1020 — 시딩이 섰다(마을마다 첫날 사람이 있다)  51곳 · 첫날 0~8명",
+    "| 판 | 시드 | 일 | 인구 | 소멸 | 무기Q | 확장셀 | 게시 | 도구Q | 보존식 | 생곡 | 해체 | 빈 마을 | 첫 빈 날 | 해체 day≤400 | 죽음 누계 | 행상 피살 | 도적 전환 | 절망 이탈 | 서울 빈 11 중 빈 곳 |",
+    "| WALK=1 RAMP=0 | 1020 | 150 | 2038 | 1/51 | 75 | 0 | 374 | 1818.7 | 0 | 7157 | 1 | 1 | — | 1 | 0 | 12 | 3 | 11 | 0 |",
+    "| 판 | 시드 | 몸 상한 | 줄어든 몸 | 그 자리 죽음(굶음·늙음) | 걸어 나감(도적·이탈·이주) | 그 밖(원정·행상·모름) | 순간 소멸 | 누운 채 · 걷는 중(끝 날) | 다 누움 · 다 걸음 | 직선 폴백 | 버린 까닭 |",
+    "| CAND_WALK=1 RAMP=0 | 1020 | 1 | 1 | 0 (0.0% · 0·0) | 1 (100.0% · 1·0·0) | 0 (0.0% · 0·0·0) | 0 | 0 · 1 | 0 · 0 | 0 | 25 |"
+   ]
+  },
+  "OG-1020": {
+   "observe": {
+    "knob": {
+     "T577_CAND_WALK": "1",
+     "T1080_ROAD_LIFE": "0",
+     "T858_NO_SHIELD": null
+    },
+    "t1080": {
+     "on": false,
+     "road": 5,
+     "dead": 0,
+     "reroute": 0,
+     "roadDays": 0,
+     "host": {
+      "pick": 0,
+      "pickMatrix": 0,
+      "pickLine": 0,
+      "unreach": 0,
+      "packed": 0,
+      "packFE": 0,
+      "packKg": 0,
+      "packCut": 0,
+      "roadDays": 0,
+      "hungryDays": 0,
+      "minH": 100,
+      "dead": 0,
+      "deadBody": 0,
+      "reroute": 0,
+      "rerouteNone": 0,
+      "arriveFE": 0,
+      "deadRows": [],
+      "rerouteRows": []
+     }
+    },
+    "t765": {
+     "on": true,
+     "road": 5,
+     "rows": [
+      {
+       "d0": 1,
+       "from": "광산1",
+       "fromId": 1,
+       "to": "임업3",
+       "toId": 12,
+       "n": 5,
+       "bodied": 0,
+       "cells": 387,
+       "routeCells": 419,
+       "eta": 839
+      }
+     ]
+    },
+    "stats": {
+     "gangs": 1,
+     "members": 7,
+     "peak": 3,
+     "conv": 3,
+     "exo": 15,
+     "loot": 6,
+     "lootAmt": 170.01119163296133,
+     "sup": 1,
+     "supDead": 0,
+     "starve": 19,
+     "disband": 3,
+     "dens": 3,
+     "denOcc": 1,
+     "denForm": 3,
+     "denClear": 0,
+     "t577Walk": 5
+    },
+    "bodyExit": {
+     "died": {
+      "starve": 0,
+      "old": 0
+     },
+     "walk": {
+      "bandit": 1,
+      "desert": 0,
+      "move": 0
+     },
+     "other": {
+      "expedition": 0,
+      "road": 0,
+      "unknown": 0
+     },
+     "rot": 0,
+     "arrive": 0,
+     "straight": 0,
+     "lost": 0,
+     "vanish": 0,
+     "noted": 24,
+     "trimmed": 23,
+     "lying": 0,
+     "walking": 1
+    },
+    "t765Body": {
+     "depart": 5,
+     "bodied": 0,
+     "bodyless": 5,
+     "joined": 0,
+     "noBody": 0,
+     "groups": [
+      {
+       "day": 1,
+       "from": "광산1",
+       "to": "임업3",
+       "n": 5,
+       "bodied": 0,
+       "queued": 3,
+       "routePx": 13403,
+       "ppd": 16
+      }
+     ]
+    }
+   },
+   "days": 150,
+   "runOut": [
+    "  ✓ 시드 1020 — 존이 떴다",
+    "  ✓ 시드 1020 — **150일을 끝까지 돌았다**(판 JSON)  150일 · 409초",
+    "  ✗ 시드 1020 — 시딩이 섰다(마을마다 첫날 사람이 있다)  51곳 · 첫날 0~8명",
+    "| 판 | 시드 | 일 | 인구 | 소멸 | 무기Q | 확장셀 | 게시 | 도구Q | 보존식 | 생곡 | 해체 | 빈 마을 | 첫 빈 날 | 해체 day≤400 | 죽음 누계 | 행상 피살 | 도적 전환 | 절망 이탈 | 서울 빈 11 중 빈 곳 |",
+    "| WALK=1 RAMP=0 | 1020 | 150 | 1925 | 1/51 | 73 | 0 | 384 | 1900.8 | 0 | 6629 | 1 | 1 | — | 1 | 0 | 6 | 3 | 15 | 0 |",
+    "| 판 | 시드 | 몸 상한 | 줄어든 몸 | 그 자리 죽음(굶음·늙음) | 걸어 나감(도적·이탈·이주) | 그 밖(원정·행상·모름) | 순간 소멸 | 누운 채 · 걷는 중(끝 날) | 다 누움 · 다 걸음 | 직선 폴백 | 버린 까닭 |",
+    "| CAND_WALK=1 RAMP=0 | 1020 | 1 | 1 | 0 (0.0% · 0·0) | 1 (100.0% · 1·0·0) | 0 (0.0% · 0·0·0) | 0 | 0 · 1 | 0 · 0 | 0 | 23 |"
+   ]
+  },
+  "LG-7": {
+   "observe": {
+    "knob": {
+     "T577_CAND_WALK": "1",
+     "T1080_ROAD_LIFE": null,
+     "T858_NO_SHIELD": null
+    },
+    "t1080": {
+     "on": true,
+     "road": 0,
+     "dead": 0,
+     "reroute": 0,
+     "roadDays": 5,
+     "host": {
+      "pick": 1,
+      "pickMatrix": 1,
+      "pickLine": 0,
+      "unreach": 0,
+      "packed": 5,
+      "packFE": 0,
+      "packKg": 0,
+      "packCut": 0,
+      "roadDays": 5,
+      "hungryDays": 5,
+      "minH": 32.69928303820554,
+      "dead": 0,
+      "deadBody": 0,
+      "reroute": 0,
+      "rerouteNone": 0,
+      "arriveFE": 0,
+      "deadRows": [],
+      "rerouteRows": []
+     }
+    },
+    "t765": {
+     "on": true,
+     "road": 0,
+     "rows": [
+      {
+       "d0": 1,
+       "from": "광산1",
+       "fromId": 1,
+       "to": "임업3",
+       "toId": 12,
+       "n": 5,
+       "bodied": 0,
+       "cells": 387,
+       "routeCells": 419,
+       "eta": 2,
+       "why": "dissolve",
+       "packFE": 0,
+       "packKg": 0,
+       "arrived": 5,
+       "joined": 0,
+       "day1": 2
+      }
+     ]
+    },
+    "stats": {
+     "gangs": 0,
+     "members": 0,
+     "peak": 3,
+     "conv": 3,
+     "exo": 10,
+     "loot": 8,
+     "lootAmt": 252.41135749980776,
+     "sup": 1,
+     "supDead": 0,
+     "starve": 19,
+     "disband": 4,
+     "dens": 3,
+     "denOcc": 0,
+     "denForm": 3,
+     "denClear": 0,
+     "t577Walk": 5,
+     "t1080RoadDays": 5,
+     "t765Arrive": 5
+    },
+    "bodyExit": {
+     "died": {
+      "starve": 0,
+      "old": 0
+     },
+     "walk": {
+      "bandit": 1,
+      "desert": 0,
+      "move": 0
+     },
+     "other": {
+      "expedition": 0,
+      "road": 0,
+      "unknown": 0
+     },
+     "rot": 0,
+     "arrive": 0,
+     "straight": 0,
+     "lost": 0,
+     "vanish": 0,
+     "noted": 21,
+     "trimmed": 20,
+     "lying": 0,
+     "walking": 1
+    },
+    "t765Body": {
+     "depart": 5,
+     "bodied": 0,
+     "bodyless": 5,
+     "joined": 0,
+     "noBody": 5,
+     "groups": [
+      {
+       "day": 1,
+       "from": "광산1",
+       "to": "임업3",
+       "n": 5,
+       "bodied": 0,
+       "queued": 3,
+       "routePx": 13403,
+       "ppd": 92160
+      }
+     ]
+    }
+   },
+   "days": 150,
+   "runOut": [
+    "  ✓ 시드 7 — 존이 떴다",
+    "  ✓ 시드 7 — **150일을 끝까지 돌았다**(판 JSON)  150일 · 471초",
+    "  ✗ 시드 7 — 시딩이 섰다(마을마다 첫날 사람이 있다)  51곳 · 첫날 0~8명",
+    "| 판 | 시드 | 일 | 인구 | 소멸 | 무기Q | 확장셀 | 게시 | 도구Q | 보존식 | 생곡 | 해체 | 빈 마을 | 첫 빈 날 | 해체 day≤400 | 죽음 누계 | 행상 피살 | 도적 전환 | 절망 이탈 | 서울 빈 11 중 빈 곳 |",
+    "| WALK=1 RAMP=0 | 7 | 150 | 1900 | 1/51 | 69 | 0 | 308 | 1954 | 0 | 8193 | 1 | 1 | — | 1 | 0 | 8 | 3 | 10 | 0 |",
+    "| 판 | 시드 | 몸 상한 | 줄어든 몸 | 그 자리 죽음(굶음·늙음) | 걸어 나감(도적·이탈·이주) | 그 밖(원정·행상·모름) | 순간 소멸 | 누운 채 · 걷는 중(끝 날) | 다 누움 · 다 걸음 | 직선 폴백 | 버린 까닭 |",
+    "| CAND_WALK=1 RAMP=0 | 7 | 1 | 1 | 0 (0.0% · 0·0) | 1 (100.0% · 1·0·0) | 0 (0.0% · 0·0·0) | 0 | 0 · 1 | 0 · 0 | 0 | 20 |"
+   ]
+  },
+  "OG-7": {
+   "observe": {
+    "knob": {
+     "T577_CAND_WALK": "1",
+     "T1080_ROAD_LIFE": "0",
+     "T858_NO_SHIELD": null
+    },
+    "t1080": {
+     "on": false,
+     "road": 5,
+     "dead": 0,
+     "reroute": 0,
+     "roadDays": 0,
+     "host": {
+      "pick": 0,
+      "pickMatrix": 0,
+      "pickLine": 0,
+      "unreach": 0,
+      "packed": 0,
+      "packFE": 0,
+      "packKg": 0,
+      "packCut": 0,
+      "roadDays": 0,
+      "hungryDays": 0,
+      "minH": 100,
+      "dead": 0,
+      "deadBody": 0,
+      "reroute": 0,
+      "rerouteNone": 0,
+      "arriveFE": 0,
+      "deadRows": [],
+      "rerouteRows": []
+     }
+    },
+    "t765": {
+     "on": true,
+     "road": 5,
+     "rows": [
+      {
+       "d0": 1,
+       "from": "광산1",
+       "fromId": 1,
+       "to": "임업3",
+       "toId": 12,
+       "n": 5,
+       "bodied": 0,
+       "cells": 387,
+       "routeCells": 419,
+       "eta": 839
+      }
+     ]
+    },
+    "stats": {
+     "gangs": 1,
+     "members": 5,
+     "peak": 3,
+     "conv": 3,
+     "exo": 14,
+     "loot": 10,
+     "lootAmt": 286.88326779378275,
+     "sup": 1,
+     "supDead": 0,
+     "starve": 20,
+     "disband": 3,
+     "dens": 3,
+     "denOcc": 1,
+     "denForm": 3,
+     "denClear": 0,
+     "t577Walk": 5
+    },
+    "bodyExit": {
+     "died": {
+      "starve": 0,
+      "old": 0
+     },
+     "walk": {
+      "bandit": 1,
+      "desert": 0,
+      "move": 0
+     },
+     "other": {
+      "expedition": 0,
+      "road": 0,
+      "unknown": 0
+     },
+     "rot": 0,
+     "arrive": 0,
+     "straight": 0,
+     "lost": 0,
+     "vanish": 0,
+     "noted": 27,
+     "trimmed": 26,
+     "lying": 0,
+     "walking": 1
+    },
+    "t765Body": {
+     "depart": 5,
+     "bodied": 0,
+     "bodyless": 5,
+     "joined": 0,
+     "noBody": 0,
+     "groups": [
+      {
+       "day": 1,
+       "from": "광산1",
+       "to": "임업3",
+       "n": 5,
+       "bodied": 0,
+       "queued": 3,
+       "routePx": 13403,
+       "ppd": 16
+      }
+     ]
+    }
+   },
+   "days": 150,
+   "runOut": [
+    "  ✓ 시드 7 — 존이 떴다",
+    "  ✓ 시드 7 — **150일을 끝까지 돌았다**(판 JSON)  150일 · 457초",
+    "  ✗ 시드 7 — 시딩이 섰다(마을마다 첫날 사람이 있다)  51곳 · 첫날 0~8명",
+    "| 판 | 시드 | 일 | 인구 | 소멸 | 무기Q | 확장셀 | 게시 | 도구Q | 보존식 | 생곡 | 해체 | 빈 마을 | 첫 빈 날 | 해체 day≤400 | 죽음 누계 | 행상 피살 | 도적 전환 | 절망 이탈 | 서울 빈 11 중 빈 곳 |",
+    "| WALK=1 RAMP=0 | 7 | 150 | 1925 | 1/51 | 62 | 0 | 356 | 1834.1 | 0 | 7911.8 | 1 | 1 | — | 1 | 0 | 10 | 3 | 14 | 0 |",
+    "| 판 | 시드 | 몸 상한 | 줄어든 몸 | 그 자리 죽음(굶음·늙음) | 걸어 나감(도적·이탈·이주) | 그 밖(원정·행상·모름) | 순간 소멸 | 누운 채 · 걷는 중(끝 날) | 다 누움 · 다 걸음 | 직선 폴백 | 버린 까닭 |",
+    "| CAND_WALK=1 RAMP=0 | 7 | 1 | 1 | 0 (0.0% · 0·0) | 1 (100.0% · 1·0·0) | 0 (0.0% · 0·0·0) | 0 | 0 · 1 | 0 · 0 | 0 | 26 |"
+   ]
+  },
+  "LG-42": {
+   "observe": {
+    "knob": {
+     "T577_CAND_WALK": "1",
+     "T1080_ROAD_LIFE": null,
+     "T858_NO_SHIELD": null
+    },
+    "t1080": {
+     "on": true,
+     "road": 0,
+     "dead": 0,
+     "reroute": 0,
+     "roadDays": 5,
+     "host": {
+      "pick": 1,
+      "pickMatrix": 1,
+      "pickLine": 0,
+      "unreach": 0,
+      "packed": 5,
+      "packFE": 0,
+      "packKg": 0,
+      "packCut": 0,
+      "roadDays": 5,
+      "hungryDays": 5,
+      "minH": 32.69928303820554,
+      "dead": 0,
+      "deadBody": 0,
+      "reroute": 0,
+      "rerouteNone": 0,
+      "arriveFE": 0,
+      "deadRows": [],
+      "rerouteRows": []
+     }
+    },
+    "t765": {
+     "on": true,
+     "road": 0,
+     "rows": [
+      {
+       "d0": 1,
+       "from": "광산1",
+       "fromId": 1,
+       "to": "임업3",
+       "toId": 12,
+       "n": 5,
+       "bodied": 0,
+       "cells": 387,
+       "routeCells": 419,
+       "eta": 2,
+       "why": "dissolve",
+       "packFE": 0,
+       "packKg": 0,
+       "arrived": 5,
+       "joined": 0,
+       "day1": 2
+      }
+     ]
+    },
+    "stats": {
+     "gangs": 1,
+     "members": 3,
+     "peak": 3,
+     "conv": 3,
+     "exo": 12,
+     "loot": 8,
+     "lootAmt": 242.29406548582057,
+     "sup": 1,
+     "supDead": 0,
+     "starve": 20,
+     "disband": 3,
+     "dens": 3,
+     "denOcc": 1,
+     "denForm": 3,
+     "denClear": 0,
+     "t577Walk": 5,
+     "t1080RoadDays": 5,
+     "t765Arrive": 5
+    },
+    "bodyExit": {
+     "died": {
+      "starve": 0,
+      "old": 0
+     },
+     "walk": {
+      "bandit": 1,
+      "desert": 0,
+      "move": 0
+     },
+     "other": {
+      "expedition": 0,
+      "road": 0,
+      "unknown": 0
+     },
+     "rot": 0,
+     "arrive": 0,
+     "straight": 0,
+     "lost": 0,
+     "vanish": 0,
+     "noted": 23,
+     "trimmed": 22,
+     "lying": 0,
+     "walking": 1
+    },
+    "t765Body": {
+     "depart": 5,
+     "bodied": 0,
+     "bodyless": 5,
+     "joined": 0,
+     "noBody": 5,
+     "groups": [
+      {
+       "day": 1,
+       "from": "광산1",
+       "to": "임업3",
+       "n": 5,
+       "bodied": 0,
+       "queued": 3,
+       "routePx": 13403,
+       "ppd": 92160
+      }
+     ]
+    }
+   },
+   "days": 150,
+   "runOut": [
+    "  ✓ 시드 42 — 존이 떴다",
+    "  ✓ 시드 42 — **150일을 끝까지 돌았다**(판 JSON)  150일 · 515초",
+    "  ✗ 시드 42 — 시딩이 섰다(마을마다 첫날 사람이 있다)  51곳 · 첫날 0~8명",
+    "| 판 | 시드 | 일 | 인구 | 소멸 | 무기Q | 확장셀 | 게시 | 도구Q | 보존식 | 생곡 | 해체 | 빈 마을 | 첫 빈 날 | 해체 day≤400 | 죽음 누계 | 행상 피살 | 도적 전환 | 절망 이탈 | 서울 빈 11 중 빈 곳 |",
+    "| WALK=1 RAMP=0 | 42 | 150 | 2024 | 1/51 | 51 | 0 | 330 | 1941.3 | 0 | 7906.4 | 1 | 1 | — | 1 | 0 | 8 | 3 | 12 | 0 |",
+    "| 판 | 시드 | 몸 상한 | 줄어든 몸 | 그 자리 죽음(굶음·늙음) | 걸어 나감(도적·이탈·이주) | 그 밖(원정·행상·모름) | 순간 소멸 | 누운 채 · 걷는 중(끝 날) | 다 누움 · 다 걸음 | 직선 폴백 | 버린 까닭 |",
+    "| CAND_WALK=1 RAMP=0 | 42 | 1 | 1 | 0 (0.0% · 0·0) | 1 (100.0% · 1·0·0) | 0 (0.0% · 0·0·0) | 0 | 0 · 1 | 0 · 0 | 0 | 22 |"
+   ]
+  },
+  "OG-42": {
+   "observe": {
+    "knob": {
+     "T577_CAND_WALK": "1",
+     "T1080_ROAD_LIFE": "0",
+     "T858_NO_SHIELD": null
+    },
+    "t1080": {
+     "on": false,
+     "road": 5,
+     "dead": 0,
+     "reroute": 0,
+     "roadDays": 0,
+     "host": {
+      "pick": 0,
+      "pickMatrix": 0,
+      "pickLine": 0,
+      "unreach": 0,
+      "packed": 0,
+      "packFE": 0,
+      "packKg": 0,
+      "packCut": 0,
+      "roadDays": 0,
+      "hungryDays": 0,
+      "minH": 100,
+      "dead": 0,
+      "deadBody": 0,
+      "reroute": 0,
+      "rerouteNone": 0,
+      "arriveFE": 0,
+      "deadRows": [],
+      "rerouteRows": []
+     }
+    },
+    "t765": {
+     "on": true,
+     "road": 5,
+     "rows": [
+      {
+       "d0": 1,
+       "from": "광산1",
+       "fromId": 1,
+       "to": "임업3",
+       "toId": 12,
+       "n": 5,
+       "bodied": 0,
+       "cells": 387,
+       "routeCells": 419,
+       "eta": 839
+      }
+     ]
+    },
+    "stats": {
+     "gangs": 0,
+     "members": 0,
+     "peak": 3,
+     "conv": 3,
+     "exo": 6,
+     "loot": 8,
+     "lootAmt": 232.41679420981424,
+     "sup": 1,
+     "supDead": 0,
+     "starve": 15,
+     "disband": 4,
+     "dens": 3,
+     "denOcc": 0,
+     "denForm": 3,
+     "denClear": 0,
+     "t577Walk": 5
+    },
+    "bodyExit": {
+     "died": {
+      "starve": 0,
+      "old": 0
+     },
+     "walk": {
+      "bandit": 1,
+      "desert": 0,
+      "move": 0
+     },
+     "other": {
+      "expedition": 0,
+      "road": 0,
+      "unknown": 0
+     },
+     "rot": 0,
+     "arrive": 0,
+     "straight": 0,
+     "lost": 0,
+     "vanish": 0,
+     "noted": 19,
+     "trimmed": 18,
+     "lying": 0,
+     "walking": 1
+    },
+    "t765Body": {
+     "depart": 5,
+     "bodied": 0,
+     "bodyless": 5,
+     "joined": 0,
+     "noBody": 0,
+     "groups": [
+      {
+       "day": 1,
+       "from": "광산1",
+       "to": "임업3",
+       "n": 5,
+       "bodied": 0,
+       "queued": 3,
+       "routePx": 13403,
+       "ppd": 16
+      }
+     ]
+    }
+   },
+   "days": 150,
+   "runOut": [
+    "  ✓ 시드 42 — 존이 떴다",
+    "  ✓ 시드 42 — **150일을 끝까지 돌았다**(판 JSON)  150일 · 481초",
+    "  ✗ 시드 42 — 시딩이 섰다(마을마다 첫날 사람이 있다)  51곳 · 첫날 0~8명",
+    "| 판 | 시드 | 일 | 인구 | 소멸 | 무기Q | 확장셀 | 게시 | 도구Q | 보존식 | 생곡 | 해체 | 빈 마을 | 첫 빈 날 | 해체 day≤400 | 죽음 누계 | 행상 피살 | 도적 전환 | 절망 이탈 | 서울 빈 11 중 빈 곳 |",
+    "| WALK=1 RAMP=0 | 42 | 150 | 1885 | 1/51 | 59 | 0 | 355 | 1753.8 | 0 | 7996.4 | 1 | 1 | — | 1 | 2 | 8 | 3 | 6 | 0 |",
+    "| 판 | 시드 | 몸 상한 | 줄어든 몸 | 그 자리 죽음(굶음·늙음) | 걸어 나감(도적·이탈·이주) | 그 밖(원정·행상·모름) | 순간 소멸 | 누운 채 · 걷는 중(끝 날) | 다 누움 · 다 걸음 | 직선 폴백 | 버린 까닭 |",
+    "| CAND_WALK=1 RAMP=0 | 42 | 1 | 1 | 0 (0.0% · 0·0) | 1 (100.0% · 1·0·0) | 0 (0.0% · 0·0·0) | 0 | 0 · 1 | 0 · 0 | 0 | 18 |"
+   ]
+  }
+ }
+}

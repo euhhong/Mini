@@ -93,11 +93,30 @@ function _bdtOpenDay(vil) {   // 이 마을의 보호기가 끝나는 날(끔이
 function _t765Arrive(day) {   // 길 위 장부 — 닿은 사람을 받는 마을 econ 에 붙이고 몸을 주민으로(차례 = 떠난 차례)
   if (!S.WALK.length) return 0;
   let n = 0;
+  const _life = T577_WALK && _t1080On();   // ★[T1080] 켬 — 길 위도 먹고 늙는다 · 받는 마을이 걷는 사이 해체 · 빔이면 다시 고른다
   for (let i = 0; i < S.WALK.length; i++) {
     const w = S.WALK[i];
+    if (_life && (w.lastDay != null ? w.lastDay : w.d0) < day) {
+      w.lastDay = day;
+      const to0 = S.host.villages.find((v) => v.dbId === w.to);
+      if (!to0 || !to0.econ || !(to0.econ.npcs.length > 0) || to0.econ._banditized) {   // 가던 마을이 해체 · 빔 — 지금 자리에서 길 거리로 다음 마을
+        const rr = S.host.t1080Reroute(w, day);
+        if (rr) { w.to = rr.to; w.d0 = day; w.len = rr.len; w.rr = (w.rr || 0) + 1; S.stats.t1080Reroute = (S.stats.t1080Reroute || 0) + 1; }
+      }
+      const ctxV = S.host.villages.find((v) => v.dbId === w.to) || S.host.villages.find((v) => v.dbId === w.from);
+      if (S.host.t1080RoadDay(w, day, ctxV)) {   // 짐이 떨어져 굶어 죽었다 — 그 사람은 어느 마을에도 안 붙는다(몸은 그 자리에 눕는다)
+        S.stats.t1080Dead = (S.stats.t1080Dead || 0) + 1;
+        const g = S.t765Rows && S.t765Rows.find((r) => r.d0 === w.dep && r.fromId === w.from && r.toId === w.to0);
+        if (g) { g.dead = (g.dead || 0) + 1; g.deadDay = day; }
+        log(day, `길 위 후보 1명이 굶어 죽었다(떠난 지 ${day - (w.dep != null ? w.dep : w.d0)}날 · ${w.pid != null ? '몸이 그 자리에 누움' : '몸 없음'}) [T1080]`);
+        S.WALK.splice(i--, 1); continue;
+      }
+      S.stats.t1080RoadDays = (S.stats.t1080RoadDays || 0) + 1;
+    }
     if (T577_WALK && !(w.ppd > 0 && (day - w.d0) * w.ppd >= w.len - 0.5)) continue;   // 아직 길 위(걸음 장부 · `_t681Day` 의 그 닿음 식)
     const to = S.host.villages.find((v) => v.dbId === w.to);
     if (!to || !to.econ) continue;
+    if (_life) S.host.t1080Arrive(w, to);   // ★[T1080] 남은 제 짐은 받는 마을 곳간에
     const npc = w.npc;
     to.econ.npcs.push(npc);
     if (to.econ.counts && npc && npc.currentJob) to.econ.counts[npc.currentJob] = (to.econ.counts[npc.currentJob] || 0) + 1;
@@ -105,30 +124,45 @@ function _t765Arrive(day) {   // 길 위 장부 — 닿은 사람을 받는 마�
     const joined = S.host.t765Join ? S.host.t765Join(w.pid, to) : false;
     S.stats.t765Arrive = (S.stats.t765Arrive || 0) + 1;
     if (joined) S.stats.t765Joined = (S.stats.t765Joined || 0) + 1;
-    const g = S.t765Rows && S.t765Rows.find((r) => r.d0 === w.d0 && r.fromId === w.from && r.toId === w.to);
-    if (g) { g.arrived = (g.arrived || 0) + 1; g.joined = (g.joined || 0) + (joined ? 1 : 0); g.day1 = day; }
+    const g = S.t765Rows && S.t765Rows.find((r) => r.d0 === (w.dep != null ? w.dep : w.d0) && r.fromId === w.from && r.toId === (w.to0 != null ? w.to0 : w.to));
+    if (g) { g.arrived = (g.arrived || 0) + 1; g.joined = (g.joined || 0) + (joined ? 1 : 0); g.day1 = day; if (w.to0 != null && w.to0 !== w.to) g.rerouted = (g.rerouted || 0) + 1; }
     S.WALK.splice(i--, 1); n++;
   }
   if (n) log(day, `후보 ${n}명이 걸어서 닿았다 — 받는 마을 econ 에 붙음(길 위 남은 ${S.WALK.length}명) [T765]`);
   return n;
 }
+function _t1080On() { return !!(S.host && S.host.t1080On && S.host.t1080On() && S.host.t1080Pick && S.host.t765Depart); }
 function _t577Walk(vil, day) {   // ⓐ 남은 사람 → 가장 가까운 산 마을(해체 표 없는 곳 우선) · econ 항목 이동
   const e = vil.econ; if (!e || !e.npcs.length) return 0;
+  return walkToVillage(vil, e.npcs.slice(), day, 'dissolve');
+}
+// ★★[T1080 ③] **걷기 길 하나** — 해체 남은 사람(`_t577Walk`) · T1075 불행 이탈 · T1079 도적 잔여가 같은 문을 쓴다(사본 0).
+//   people = 그 마을 econ 명부에 지금 있는 사람 객체들(이 문이 받는 마을을 고른 뒤에만 명부에서 뺀다 — 갈 곳이 없으면 아무것도 안 바꾸고 0).
+//   켬(`T1080_ROAD_LIFE` · 호스트) = 받는 마을은 길 거리(거리행렬) 최근접 · 제 짐을 지고 떠난다 · 길 위 하루는 `_t765Arrive` 머리. 끔 = T765 그대로(곧은 거리).
+function walkToVillage(vil, people, day, why) {
+  const e = vil && vil.econ; if (!e || !people || !people.length) return 0;
+  const life = _t1080On();
   let best = null, bd = 1e18;
-  for (const v of S.host.villages) {
+  if (life) { const P = S.host.t1080Pick([{ vil, off: 0 }], new Set([vil])); if (P) { best = P.vil; bd = Math.hypot(best.ccx - vil.ccx, best.ccy - vil.ccy); } }
+  else for (const v of S.host.villages) {
     if (v === vil || !v.econ || !v.econ.npcs.length || v.econ._banditized) continue;
     const d = Math.hypot(v.ccx - vil.ccx, v.ccy - vil.ccy);
     if (d < bd) { bd = d; best = v; }
   }
   if (!best) return 0;
-  const moved = e.npcs.splice(0, e.npcs.length);
+  const set = new Set(people), moved = [];
+  for (let i = e.npcs.length - 1; i >= 0; i--) if (set.has(e.npcs[i])) moved.unshift(e.npcs.splice(i, 1)[0]);
+  if (!moved.length) return 0;
   if (S.host.t765Depart) {   // ★[T765] 길 위 장부 — econ 은 닿는 날 붙는다(`_t765Arrive`) · 몸은 지금 같이 떠난다
     for (const npc of moved) if (e.counts && npc && npc.currentJob) e.counts[npc.currentJob] = Math.max(0, (e.counts[npc.currentJob] || 0) - 1);
     const L = S.host.t765Depart(vil, best, moved.length);
-    for (let i = 0; i < moved.length; i++) S.WALK.push({ npc: moved[i], from: vil.dbId, to: best.dbId, d0: day, len: L.len, ppd: L.ppd, pid: L.pids[i] != null ? L.pids[i] : null });
+    const PK = life && S.host.t1080Pack ? S.host.t1080Pack(vil, moved.length) : null;   // ★[T1080] 제 짐(그 곳간 먹을 것을 고르게 · 25kg 까지)
+    for (let i = 0; i < moved.length; i++) S.WALK.push(Object.assign({ npc: moved[i], from: vil.dbId, to: best.dbId, d0: day, len: L.len, ppd: L.ppd, pid: L.pids[i] != null ? L.pids[i] : null },
+      life ? { dep: day, to0: best.dbId, pack: PK ? PK.bags[i] : {}, h: 100, hp: 100, lastDay: day, why } : {}));
     S.stats.t577Walk = (S.stats.t577Walk || 0) + moved.length;
     (S.t765Rows || (S.t765Rows = [])).push({ d0: day, from: vil.name, fromId: vil.dbId, to: best.name, toId: best.dbId, n: moved.length, bodied: L.pids.length,
-      cells: Math.round(bd), routeCells: Math.round(L.len / SZ), eta: L.ppd > 0 ? day + Math.ceil(Math.max(0, L.len - 0.5) / L.ppd) : null });
+      cells: Math.round(bd), routeCells: Math.round(L.len / SZ), eta: L.ppd > 0 ? day + Math.ceil(Math.max(0, L.len - 0.5) / L.ppd) : null,
+      ...(life ? { why, packFE: PK ? +PK.fe.toFixed(3) : 0, packKg: PK ? +PK.kg.toFixed(2) : 0 } : {}) });
     log(day, `${vil.name} 해체 뒤 남은 ${moved.length}명 → ${best.name}(${Math.round(bd)}셀) [T577 ⓐ] — 몸 ${L.pids.length} · 길 ${Math.round(L.len / SZ)}셀 · 길 위 장부(닿는 날 econ 에 붙음 · T765)`);
     return moved.length;
   }
@@ -673,7 +707,8 @@ function save(day) {
   try {
     const gangs = S.GANGS.map(g => ({ id: g.id, camp: g.camp, n: g.n, food: g.food, zero: g.zero, born: g.born, home: g.home, why: g.why, lootN: g.lootN, lastLoot: g.lastLoot, den: g.den != null ? g.den : null, _sup: g._sup || null, _supKill: g._supKill || 0 , arms: g.arms || undefined }));
     { const _G = _gl(); if (_G) for (let i = 0; i < gangs.length; i++) { const L = _G.gangDump(S.GANGS[i]); if (L) gangs[i]._t748Lots = L; } }   // ★[T748] 갱 비축 줄(켬만 칸이 선다)
-    const _walk = S.WALK.length ? { walk: S.WALK.map((w) => ({ npc: w.npc, from: w.from, to: w.to, d0: w.d0, len: w.len, ppd: w.ppd })) } : {};   // ★[T765] 길 위 장부(켬에서 찰 때만 칸이 선다 · 몸 pid 는 비영속)
+    const _walk = S.WALK.length ? { walk: S.WALK.map((w) => Object.assign({ npc: w.npc, from: w.from, to: w.to, d0: w.d0, len: w.len, ppd: w.ppd },
+      w.dep != null ? { dep: w.dep, to0: w.to0, pack: w.pack || {}, h: w.h, hp: w.hp, lastDay: w.lastDay, why: w.why, rr: w.rr || 0 } : {})) } : {};   // ★[T1080] 켬 칸(짐 · 허기 · HP) — 켬 장부에만   // ★[T765] 길 위 장부(켬에서 찰 때만 칸이 선다 · 몸 pid 는 비영속)
     S.db.upsertBanditState(S.zoneId, JSON.stringify({ seq: S.seq, denSeq: S.denSeq, dens: S.DENS, gangs, stats: { ...S.stats, log: undefined }, ..._walk }), day);
   } catch (e) {
     console.error(`[${S.zoneId}] 🏴 [도적] 저장 실패(다음 날 재시도):`, e.message);
@@ -685,7 +720,8 @@ function restore(row) {
   S.DENS = Array.isArray(d.dens) ? d.dens : [];
   S.GANGS = (Array.isArray(d.gangs) ? d.gangs : []).map(g => ({ ...g, _sup: g._sup || null, _supKill: g._supKill || 0 }));
   if (d.stats) Object.assign(S.stats, d.stats, { log: S.stats.log });
-  if (Array.isArray(d.walk)) S.WALK = d.walk.map((w) => ({ npc: w.npc, from: w.from, to: w.to, d0: w.d0, len: w.len, ppd: w.ppd, pid: null }));   // ★[T765] 다시 뜨면 몸 없이 장부만(몸은 비영속 — 닿으면 받는 마을이 econ 수를 따라 세운다)
+  if (Array.isArray(d.walk)) S.WALK = d.walk.map((w) => Object.assign({ npc: w.npc, from: w.from, to: w.to, d0: w.d0, len: w.len, ppd: w.ppd, pid: null },
+    w.dep != null ? { dep: w.dep, to0: w.to0, pack: w.pack || {}, h: w.h, hp: w.hp, lastDay: w.lastDay, why: w.why, rr: w.rr || 0 } : {}));   // ★[T765] 다시 뜨면 몸 없이 장부만(몸은 비영속 — 닿으면 받는 마을이 econ 수를 따라 세운다)
   console.log(`[${S.zoneId}] 🏴 [도적] 복원: 소굴 ${S.DENS.length}곳(생존 ${S.DENS.filter(x => !x.cleared).length}) · 도적단 ${S.GANGS.length}(총원 ${S.GANGS.reduce((a, g) => a + g.n, 0)}) · 저장 day ${row.day}`);
 }
 function clientCamps() { // 마커 1종: 활동 단(n>0) + 빈 소굴(n=0, 재결성 대기 — 클라가 흐리게). 철거 소굴 제외.
@@ -915,7 +951,10 @@ function _dayRun(day) {
 }
 
 module.exports = { init, onGameTick, dayTick, t986: () => ({ on: T986_BANDIT_DAY, lastDay: S.lastDay }), clientCamps, stats: () => S.stats, incomingFood, t766On: () => T766_INCOMING, armsHeld, ARMS_RES, lotsBoot, gangs: () => S.GANGS,
-  t765: () => ({ on: T577_WALK, road: S.WALK.length, rows: (S.t765Rows || []).map((r) => Object.assign({}, r)) }),   // ★[T765] 길 위 장부 증인(관측 자 `t765-obs` · 하네스)
+  t765: () => ({ on: T577_WALK, road: S.WALK.length, rows: (S.t765Rows || []).map((r) => Object.assign({}, r)) }),
+  walkToVillage,   // ★[T1080 ③] 걷기 길 하나(T1075 불행 이탈 · T1079 도적 잔여가 부른다)
+  t1080: () => ({ on: T577_WALK && _t1080On(), road: S.WALK.length, dead: S.stats.t1080Dead || 0, reroute: S.stats.t1080Reroute || 0, roadDays: S.stats.t1080RoadDays || 0,
+    host: S.host && S.host.t1080Stat ? S.host.t1080Stat() : null }),   // ★[T1080] 셈(관측 자)   // ★[T765] 길 위 장부 증인(관측 자 `t765-obs` · 하네스)
   // ★[T765] 하네스 문 — 운영 함수 그대로(사본 0): 호스트 · 저장소를 꽂고 해체 걷기 · 닿기 · 저장 · 복원을 부른다
   _t765Probe: { setHost: (h, db) => { const k = { host: S.host, db: S.db }; S.host = h; if (db !== undefined) S.db = db; return k; }, walk: (vil, day) => _t577Walk(vil, day), arrive: (day) => _t765Arrive(day),
     ledger: () => S.WALK, reset: () => { S.WALK = []; S.t765Rows = []; }, save: (day) => save(day), restore: (row) => restore(row), get ON() { return T577_WALK; },
