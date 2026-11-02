@@ -11309,6 +11309,39 @@ function villageFamine(vil) {
   return d.hunger < 0;
 }
 
+// ═══ ★[T1085 · 재민 11-02] 촌장이 구성원에게 일을 맡긴다 — econ `assignNPCJob`(자리 · 쿨다운 규칙 그대로) ═══
+//   누가 맡기나(촌장 판정)는 부르는 쪽(존 `tryAssignJob` → `membership.chiefCheck` — 곳간 꺼내기와 같은 술어)이 먼저 섰다.
+//   여기는 **무엇이 바뀌나**만: econ 행 하나의 직업 → 그 행과 같은 직업을 하던 몸 하나의 `simJob`(분포 동기 `syncVillageJobs` 와 같은 뜻 —
+//   몸은 econ 분포를 따른다 · 한 사람이 바뀌면 한 몸이 바뀐다 · 순간이동 · 새 몸 0). 바뀐 몸은 하루 방송과 같은 `jobs` 꼴로 곧바로 알린다.
+//   NPC 마을(창설자 없음)은 촌장 판정에서 이미 막혔다 — 여기에 따로 문을 두지 않는다.
+function _t1085Econ() { return _econMod || (_econMod = require('../sim/economy-sim')); }
+function assignJob(vil, npcId, job) {
+  const E = _t1085Econ(), v = vil && vil.econ;
+  if (!v || !Array.isArray(v.npcs) || !state.world) return { ok: false, why: 'member' };
+  const npc = v.npcs.find((n) => n && n.id === npcId);
+  if (!npc) return { ok: false, why: 'member' };
+  const old = npc.currentJob;
+  const r = E.assignNPCJob(v, npc, job, state.world.day | 0);
+  if (!r.ok) return r;
+  let pid = null;
+  const P = state.deps && state.deps.players;
+  if (P && vil.npcPids) for (const id of vil.npcPids) { const b = P.get(id); if (b && b.simJob === old) { b.simJob = job; pid = id; break; } }
+  if (pid && state.deps.broadcast) { try { state.deps.broadcast({ type: 'village_jobs', jobs: { [pid]: job } }); } catch (e) {} }
+  return { ok: true, old, job, pid };
+}
+// 촌장 화면 명부 — econ 행 그대로(나이 · 직업 · 다시 맡길 수 있기까지 남은 날 · 원정 중 · 촌장이 맡긴 일인가) + 고를 직업(이 땅에 자리가 있는 것 · 빈자리 여부). 읽기 전용.
+function assignRoster(vil) {
+  const E = _t1085Econ(), v = vil && vil.econ;
+  if (!v || !Array.isArray(v.npcs) || !state.world) return null;
+  const day = state.world.day | 0, CD = E.JOB_SWITCH_COOLDOWN;
+  const rows = v.npcs.map((n) => {
+    const since = day - (n.lastJobChangeDay == null ? -999 : n.lastJobChangeDay);
+    return { id: n.id, job: n.currentJob, age: Math.floor(n.age || 0), left: since < CD ? CD - since : 0,
+      away: !!n._warDraft, chief: n._chiefAssignDay != null && n._chiefAssignDay === n.lastJobChangeDay && since < CD };
+  });
+  return { rows, jobs: E.assignableJobs(v), cooldown: CD };
+}
+
 // ═══ ★★[T62 2026-09-03 재민 확정] 공용 쉼터 — 좌표 정본 하나 ═══════════════════
 //
 // ★★**"쉼터"라는 말이 이 저장소에서 여섯 자리를 가리키고 있었다**(§0 실측):
@@ -14885,7 +14918,8 @@ module.exports = { t750CastPre, t750Stat: () => _t750Stat, t719ReachPre, t719Sta
   t1039Stat: () => JSON.parse(JSON.stringify(_t1039Stat)),   // ★[T1039] 도적 전환 몸 증인(관찰기 `t1039-observe` · 하네스)
   t1039Exits: () => state.bodyExits || null,   // ★[T1039] 줄어드는 몸 기록(읽기만 — 관찰기가 은거지로 걷는 몸을 단마다 센다)
   t765Stat: () => JSON.parse(JSON.stringify(_t765Stat)),   // ★[T765] 후보 걷기 몸 증인(관측 자 `t765-obs` · 실제 하루 판)
-  villageFamine, playerVillageDepositMap,   // ★[T159] 기근 판정(엔진 판단을 읽는다) · 품목→재화 대응표
+  villageFamine, playerVillageDepositMap, assignJob, assignRoster,   // ★[T1085] 촌장 일 맡기기
+    // ★[T159] 기근 판정(엔진 판단을 읽는다) · 품목→재화 대응표
   playerVillageWithdrawStockFoodEq, _countsAsFoodEq,   // ★[T20-ⓑ] 한도의 밑변 = econ 식량 등가(보존식 포함)
   // ★[2026-08-25 사건 레이어] 촌장 브리핑 · 게시판 · 납품 — zone.js 핸들러가 소비
   villageBrief, villageBoard, villageDeliver, villageAnchorPx, briefRadiusPx,

@@ -1290,6 +1290,9 @@
       if (c.simVillages && msg.bnd) for (const v of c.simVillages) { const nb = msg.bnd[v.id]; if (Array.isArray(nb) && nb.length) { v.b = nb; delete v.approx; } }
       if (msg.jobs) for (const [pid, job] of Object.entries(msg.jobs)) { const o = c.others.get(pid); if (o) o.simJob = job; }
       if (_wxIngest(c, msg.wx)) needsRedraw = true;   // ★[날씨 축] — 방송과 하네스가 같은 입구
+    } else if (msg.type === 'village_jobs') {
+      // ★[T1085] 촌장이 맡긴 일 — 바뀐 몸의 직업(하루 방송 `jobs` 와 같은 꼴 · 같은 칸)
+      if (msg.jobs) for (const [pid, job] of Object.entries(msg.jobs)) { const o = c.others.get(pid); if (o) o.simJob = job; }
     } else if (msg.type === 'bandit_camps') {
       // §11 도적: 소굴·야영 마커 갱신(서버가 변경 시에만 방송)
       c.banditCamps = (msg.camps && msg.camps.length) ? msg.camps : null;

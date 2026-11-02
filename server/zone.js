@@ -7447,6 +7447,7 @@ function handlePlayerInput(player, raw) {
   else if (msg.type === 'village_chronicle') tryVillageChronicle(player, msg.vid, msg.year);   // ★[T18] 연대기
   else if (msg.type === 'village_deliver') tryVillageDeliver(player, msg.vid, msg.item, msg.want);
   else if (msg.type === 'village_withdraw') tryVillageWithdraw(player, msg.vid, msg.res, msg.qty);   // ★[T11] 곳간 인출 · ★[T779] 촌장만
+  else if (msg.type === 'assign_job') tryAssignJob(player, msg.vid, msg.npc, msg.job);   // ★[T1085] 촌장이 구성원에게 일을 맡긴다
   else if (msg.type === 'village_donate' && T769) tryVillageDonate(player, msg.vid, msg.want);   // ★[T769] 기부 — 누구나 · 상시 · 받는 것 없음(켬에서만)
   else if (msg.type === 'onboarding_state' || msg.type === 'onboarding_greet' || msg.type === 'onboarding_day') Onboarding.handleMsg(player, msg);   // ★[온보딩 v2] 대본 상태·촌장 첫 마디·하루 정산
   else if (msg.type === 'village_trade') tryVillageTrade(player, msg.vid, msg.numeraire);                     // ★[거래소] 시세표(T69 기준 품목)
@@ -7521,6 +7522,12 @@ function handlePlayerInput(player, raw) {
     // ★테스트 전용(E2E_GIVE=1 일 때만 분기 존재) — 게시판 납품 흐름을 실화면으로 재기 위한 부족 픽스처.
     const r = SimVillages.__e2eForceShortage ? SimVillages.__e2eForceShortage(msg.vid | 0, msg.skip) : { err: '미지원' };
     send(player.ws, { type: 'notice', text: r.ok ? `🧪 ${r.name} ${r.item} ${r.before}→${r.after} (문턱 ${r.thr} · 갚을거 ${r.payWith} ${r.payStock})` : `🧪 ${r.err}` });
+  }
+  else if (E2E_GIVE && msg.type === '__e2e_chief') {
+    // ★[T1085] 테스트 전용 — 이 사람을 그 마을 창설자(= 촌장 판정의 표지)로 세운다(마을 세우기 흐름은 이 카드 밖 · 판 꾸밈).
+    const vil = SimVillages.villageByDbId && SimVillages.villageByDbId(msg.vid | 0);
+    if (vil && vil.econ) { vil.econ.founder = player.playerId; if (vil._kin) vil._kin = Object.assign({}, vil._kin, { chief: player.playerId }); }
+    send(player.ws, { type: 'notice', text: vil ? `시험: ${vil.name} 촌장이 되었습니다.` : '시험: 그런 마을이 없습니다.' });
   }
   else if (E2E_GIVE && msg.type === '__e2e_village_deed') {
     // ★[T50] 테스트 전용 — 세계의 "일" 픽스처(econ `_weather` 를 세운다 · 사건은 장부가 스스로 낸다)
@@ -12659,7 +12666,62 @@ function tryVillageBoard(player, vid) {
   if (!SimVillages.villageBoard) return;
   const r = SimVillages.villageBoard(vid | 0, player.x, player.y);
   if (r.err) { send(player.ws, { type: 'notice', text: `🏘️ ${r.err}` }); return; }
+  _t1085Members(player, vid, r);
   send(player.ws, { type: 'village_board', board: r });
+}
+// ═══ ★[T1085 · 재민 11-02] 촌장이 구성원에게 일을 맡긴다 — 동사 `assign_job` ═══════════════════════
+//   누가: 그 마을 촌장 — 곳간 꺼내기와 **같은 술어**(`Membership.chiefCheck` · 근접 게이트 `villageWithdrawGate` 도 같다 · 새 권한 술어 0).
+//     NPC 마을(창설자 없음)은 그 술어가 이미 막는다(④ — 손대지 않는다).
+//   무엇: econ `assignNPCJob`(자리 · 쿨다운 · 징발 · 포로 · 무장 — 자율 전환과 같은 규칙) → 같은 직업을 하던 몸 하나가 새 일로(`SimVillages.assignJob`).
+//   화면: T1070 구성원 탭이 main 에 아직 없다 — 게시판 판(Shift+G)에 촌장에게만 "구성원" 칸을 싣는다(시험 자리 · 자료는 `assignRoster` 하나).
+//   글자: 하십시오체 · 이모지 0 · 이유 한 줄 + 다음에 할 일.
+const _T1085_WHY = {
+  member: () => '이 마을 사람이 아닙니다. 게시판을 다시 열어 명부를 확인하십시오.',
+  job: () => '그런 일은 없습니다.',
+  draft: () => '이 사람은 원정을 나가 마을에 없습니다. 돌아온 뒤에 맡기십시오.',
+  same: (r, L) => `이미 ${L}${require('./events').josa(L, '으로', '로')} 일하고 있습니다.`,
+  captive: () => '포로에게는 무기를 드는 일을 맡길 수 없습니다.',
+  cool: (r) => `이 사람은 얼마 전에 일을 바꾸었습니다. ${r.left}일 뒤에 다시 맡길 수 있습니다.`,
+  slot: (r, L) => `${L} 자리가 남지 않았습니다. 이 땅이 받쳐 주는 만큼만 일할 수 있습니다.`,
+  weapon: () => '무기가 모자랍니다. 무기 하나에 전사 한 사람입니다. 곳간에 무기를 먼저 채우십시오.',
+};
+function _t1085Notice(player, text) { send(player.ws, { type: 'notice', text }); }
+function tryAssignJob(player, vid, npcId, job) {
+  if (!SimVillages.assignJob || !SimVillages.villageWithdrawGate) return null;
+  const g = SimVillages.villageWithdrawGate(vid | 0, player.x, player.y);
+  if (g.err) { _t1085Notice(player, '마을 중심 가까이에서만 일을 맡길 수 있습니다.'); return { ok: false, why: 'near' }; }
+  const vil = g.vil;
+  const go = (c) => {
+    if (!c || !c.ok) {
+      _t1085Notice(player, (vil && vil.econ && vil.econ.founder)
+        ? '촌장만 일을 맡길 수 있습니다.'
+        : '이 마을은 촌장이 직접 일을 나눕니다. 사람이 세운 마을에서만 일을 맡길 수 있습니다.');
+      return { ok: false, why: 'chief' };
+    }
+    const L = JOB_KR_NPC[job] || String(job || '');
+    const r = SimVillages.assignJob(vil, String(npcId || ''), String(job || ''));
+    if (!r.ok) { _t1085Notice(player, (_T1085_WHY[r.why] || _T1085_WHY.job)(r, L)); return r; }
+    const O = JOB_KR_NPC[r.old] || r.old;
+    const CD = (SimVillages.assignRoster(vil) || {}).cooldown;
+    _t1085Notice(player, `${O} 한 사람에게 ${L} 일을 맡겼습니다. 이 사람은 ${CD}일 동안 스스로 일을 바꾸지 않습니다. 마을이 굶으면 먹을 것을 구하는 일로 먼저 돌아갑니다.`);
+    tryVillageBoard(player, vid);   // 명부를 새로 그린다(같은 판 · 같은 자료)
+    return r;
+  };
+  const c = Membership.chiefCheck(player, vil);
+  return (c && typeof c.then === 'function') ? c.then(go).catch(() => { _t1085Notice(player, '촌장을 확인하지 못했습니다. 잠시 뒤 다시 하십시오.'); return null; }) : go(c);
+}
+// 게시판에 실을 명부 — 촌장 판정이 그 자리에서 서고 참일 때만(캐시 · 동기 — 모르면 안 싣는다 · 다음 열기에 선다).
+function _t1085Members(player, vid, r) {
+  if (!SimVillages.assignRoster || !Membership.chiefCached) return;
+  try {
+    const g = SimVillages.villageWithdrawGate(vid | 0, player.x, player.y);
+    if (g.err || !g.vil || !g.vil.econ || !g.vil.econ.founder) return;
+    if (Membership.chiefCached(player, g.vil) !== true) return;
+    const R = SimVillages.assignRoster(g.vil);
+    if (!R) return;
+    r.members = { rows: R.rows.map((x) => Object.assign(x, { jobKo: JOB_KR_NPC[x.job] || x.job })),
+      jobs: R.jobs.map((x) => Object.assign(x, { ko: JOB_KR_NPC[x.job] || x.job })), cooldown: R.cooldown };
+  } catch (e) {}
 }
 // ★★[T18 2026-09-01] 연대기 — 마을 연표. 게이트·권한은 게시판과 **완전히 같다**(같은 마을, 같은 술어).
 //   화면이 그릴 모양(연·계절·문장)은 서버가 다 만들어 보낸다 — 달력 표기를 클라가 다시 짜면 그게 사본이다.
@@ -12916,7 +12978,7 @@ function tryFurnaceSmelt(player, buildingId) {
 //     지어 봐야 안다 — 실제로 이 하네스가 "노를 아예 못 짓는다"를 처음 잡아냈다.
 function __testBind() {
   return {
-    claims, buildings, players, BUILDING_SIZE, Specialty,
+    claims, buildings, players, BUILDING_SIZE, Specialty, tryAssignJob, tryVillageBoard, JOB_KR_NPC,   // ★[T1085] 촌장 일 맡기기(하네스가 진짜 문을 부른다)
     _t738Adopt, _t738: () => _t738, observers, isPositionActive: (x, y) => isPositionActive(x, y), _t774: () => ({ X: _t774X, Y: _t774Y, n: _t774N, src: _t774Src, ref: _spInc.ref, act: _spInc.act, hit: _t774Stat.hit, miss: _t774Stat.miss, same: _t774Src === activeChunkKeys }),   // ★[T774] 활성 열 증인(읽기)
       // ★[T738] SoA x·y 증인(`scripts/t738-witness.js` · 읽기 · 부르기만)
     FURNACE_STAGES, FURNACE_KINDS, FURNACE_FUEL_PER_ORE, CHARCOAL_KILN_STAGES, CHARCOAL_KILN_YIELD, CHARCOAL_KILN_WOOD,
@@ -16926,7 +16988,7 @@ async function syncCanadiaEconomy() {
 }
 
 const NPC_CAP_PER_VILLAGE = Infinity;  // Phase 4d-17: 무제한 (시뮬 인구 그대로 spawn)
-const JOB_KR_NPC = { farmer:'농부', fisher:'어부', hunter:'사냥꾼', lumberjack:'벌목꾼', miner:'광부', prospector:'탐사꾼', smith:'대장장이', forager:'채집꾼', cook:'요리사', warrior:'전사', merchant:'상인', weaponsmith:'무공', armorsmith:'갑공' };
+const JOB_KR_NPC = { farmer:'농부', fisher:'어부', hunter:'사냥꾼', lumberjack:'벌목꾼', miner:'광부', prospector:'탐사꾼', smith:'대장장이', forager:'채집꾼', cook:'요리사', warrior:'전사', merchant:'상인', weaponsmith:'무공', armorsmith:'갑공', mason:'석공', tailor:'재봉사' };   // ★[T1085] 석공 · 재봉사 이름 칸(econ 직업인데 칸이 비어 화면에 영문 키가 떴다)
 // Phase 4d-16-e: 직업별 NPC 색깔 (캐릭터 sprite tint)
 const JOB_NPC_COLOR = {
   farmer:     '#8b7d4a',  // 짙은 갈색 (밀짚모자)
