@@ -120,7 +120,7 @@ async function waitHttp(url, tries = 900) {
   const notices = () => page.evaluate(() => (window.__notices || []).slice());
   // ★[T78 2026-09-03] 알림 경계(`server/notice.js`)가 접두 이모지를 걷고 `kind` 필드로 옮겼다 —
   //   `🏪` 로 찾던 자리가 전부 빈손이 된다. 화면 문자열만 보는 자리라 **말로** 찾는다(검사의 뜻 그대로).
-  //   ⚠거래소 알림의 갈래는 셋이다: 성사("… 거래소 — A → B") · 게이트 거절("마을 중심에서 너무 멀다") ·
+  //   ⚠거래소 알림의 갈래는 셋이다: 성사("… 거래소 — A → B" · T1069 뒤 "… 거래소에서 A을(를) 내고 B을(를) 받았습니다.") · 게이트 거절("마을 중심에서 너무 멀다") ·
   //     장부 거절(곳간·재고·상한). 하나만 잡으면 ①과 ④가 서로 다른 이유로 조용히 빠진다.
   const _isTrade = (s) => /거래소|마을 한가운데에서 너무 멉니다|곳간|마을 재고|내줄 수 있는|갖고 있지 않습니다|치를 수 없습니다|바꿀 수 없습니다/.test(String(s));
   const openTrade = async () => {
@@ -415,7 +415,8 @@ async function waitHttp(url, tries = 900) {
     const said = (await notices()).slice(n0).filter(_isTrade);
     // ★[T84] 접두 이모지 벗기기는 **더 이상 할 일이 없다** — T78 이 알림 경계에서 걷는다(`kind` 로 옮겼다).
     //   줄을 지우지 않고 **뜻이 서게** 남긴다: 앞머리 공백만 턴다.
-    const err = (said.find((x) => !/거래소 —/.test(x)) || '').replace(/^\s+/, '');
+    const err = (said.find((x) => !/거래소 —|거래소에서 .*받았습니다/.test(x)) || '')   // ★[T1097] T1069 말투 뒤 성사 줄 = "…거래소에서 …을(를) 내고 …을(를) 받았습니다."
+      .replace(/^\s+/, '');
     const aft = await askBoard();
     const moved = others0.filter(([res, n0v]) => Math.abs((numOf(aft, res) || 0) - n0v) > 1e-12);
     return { dealt, err, gN0: numOf(bfr, gRow.res), gN1: numOf(aft, gRow.res),

@@ -38,55 +38,12 @@ const ALLOW = {
   'test-harness-lint.js': '이 파일 자신 — 규칙과 돌연변이 픽스처가 이모지다',
 };
 
-const JUDGE_PRED = new Set(['test', 'includes', 'startsWith', 'endsWith', 'match', 'indexOf', 'search']);
-const JUDGE_SEL = new Set(['$', '$$', 'locator', 'click', 'waitForSelector', 'fill']);
-
+// ★[T1097 2026-11-03] 판정 자리 규칙은 정본 `lib-judge-sites.js` 하나(T84 · T751 본문을 글자 그대로 옮김 · `lint-harness-words` 와 같이 쓴다 — 사본 0).
+//   여기선 "무엇을 찾나" = 이모지(`EMO`)만 넘긴다.
+const { judgeLiterals } = require('./lib-judge-sites');
 // 파일 하나에서 **판정 자리의 이모지**를 모은다
 function judgeHits(src, file) {
-  const ast = acorn.parse(src, { ecmaVersion: 2023, sourceType: 'script', locations: true, allowReturnOutsideFunction: true });
-  const hits = [];
-  const has = (node) => {
-    if (!node || typeof node !== 'object') return false;
-    if (node.type === 'Literal' && node.regex) return EMO.test(node.regex.pattern);
-    if (node.type === 'Literal' && typeof node.value === 'string') return EMO.test(node.value);
-    if (node.type === 'TemplateLiteral') return node.quasis.some((q) => EMO.test(q.value.cooked || ''));
-    return false;
-  };
-  const scan = (node, why) => {   // 이 서브트리 안의 이모지 리터럴을 전부 담는다
-    if (!node || typeof node !== 'object') return;
-    if (Array.isArray(node)) { node.forEach((x) => scan(x, why)); return; }
-    if (has(node)) hits.push({ line: node.loc.start.line, why,
-      text: node.regex ? '/' + node.regex.pattern + '/' : (node.value != null ? String(node.value) : node.quasis.map((q) => q.value.cooked).join('${}')) });
-    for (const k of Object.keys(node)) if (k !== 'loc' && k !== 'range') scan(node[k], why);
-  };
-  // ★[T751] **이름 먼저 꼴** — 그 파일이 `function ok(name, cond, …)`(또는 `const ok = (n, c, d) =>`)로 스스로 선언하면
-  //   판정 자리는 **둘째** 인자다(`e2e-mtcut` · `e2e-mtfoot` · `e2e-mtocc` · `e2e-mtfuzz`). 첫 매개 = 이름 꼴 **그리고**
-  //   둘째 매개 = 조건 꼴(`c`·`cond`·`condition`) 둘 다일 때만이다. 종전엔 첫 인자(= 이름 · 장식)를 조건으로 읽어
-  //   라벨의 ★를 판정으로 물었고(린트 탄생 `00b3094a` 09-04 부터) **진짜 조건은 안 읽었다**. 선언이 없거나 첫 인자가
-  //   이름 꼴이 아니면 종전 그대로 첫 인자다(느슨하게 풀지 않는다 — 읽는 자리를 바로잡을 뿐 · 아래 ④e·④f 미끼).
-  const NAME_FIRST = /^(n|name|label|msg|message|title|desc|what)$/, COND_2ND = /^(c|cond|condition)$/;
-  const condIdx = {};
-  for (const st of ast.body) {
-    const decl = st.type === 'FunctionDeclaration' ? [[st.id && st.id.name, st.params]]
-      : st.type === 'VariableDeclaration' ? st.declarations.map((d) => [d.id && d.id.name, d.init && /FunctionExpression$/.test(d.init.type) ? d.init.params : null]) : [];
-    for (const [nm, ps] of decl) if (/^(ok|chk|assert)$/.test(nm || '') && ps && ps.length >= 2 && ps[0].type === 'Identifier' && NAME_FIRST.test(ps[0].name) && ps[1].type === 'Identifier' && COND_2ND.test(ps[1].name)) condIdx[nm] = 1;
-  }
-  const walk = (n) => {
-    if (!n || typeof n !== 'object') return;
-    if (Array.isArray(n)) { n.forEach(walk); return; }
-    if (n.type === 'CallExpression') {
-      const c = n.callee, mem = c && c.type === 'MemberExpression', prop = mem && c.property && c.property.name;
-      if (prop && JUDGE_PRED.has(prop)) { n.arguments.forEach((a) => scan(a, `.${prop}()`)); if (mem && has(c.object)) scan(c.object, `.${prop}() 수신자`); }
-      if (prop && JUDGE_SEL.has(prop)) n.arguments.forEach((a) => scan(a, `${prop}() 셀렉터`));
-      if (c && c.type === 'Identifier' && /^(ok|chk|assert)$/.test(c.name) && n.arguments.length > (condIdx[c.name] || 0)) scan(n.arguments[condIdx[c.name] || 0], 'ok() 조건');
-    }
-    if (n.type === 'BinaryExpression' && /^(===|!==|==|!=)$/.test(n.operator)) { scan(n.left, `${n.operator} 비교`); scan(n.right, `${n.operator} 비교`); }
-    for (const k of Object.keys(n)) if (k !== 'loc' && k !== 'range') walk(n[k]);
-  };
-  walk(ast);
-  // 같은 줄 중복 제거
-  const seen = new Set();
-  return hits.filter((h) => { const k = h.line + '|' + h.text; if (seen.has(k)) return false; seen.add(k); return true; });
+  return judgeLiterals(src, (t) => EMO.test(t)).map(({ line, why, text }) => ({ line, why, text }));
 }
 
 console.log('\n=== 하네스 린트 — 판정 자리에 이모지 0 · 라벨 셀렉터 0 ===\n');
@@ -842,6 +799,19 @@ console.log('\n⑫ 세계 자리에 `Math.random` 0 [T350]');
   const K = (k) => rows.filter((r) => r.first.kind === k).length;
   console.log(`    [표] @regress 띄우는 자리 ${rows.length} — 준비 증인 ${K('ready')} · 끝 기다림 ${K('exit')} · 두드림 ${K('poll')} · 고정 대기 ${K('fixed')} · 증인 없음 ${K('none')}`);
   console.log('    접점: t899-wait-census · fixture-boot.waitUp · /health · test-car-fast(PM 10-23b)');
+}
+
+// ── ⑭ 판정 자리의 **한글 글자는 제품 소스에 있다** [T1097 2026-11-03] ──────────────
+//   T1069(말투 하십시오체) 착지에서 하네스 일곱이 옛 해라체 정규식(`/먹였다/` ↔ "먹였습니다")으로 빨갰고 PM 이 손으로 찾았다(land1038).
+//   자 = `lint-harness-words.js`(판정 자리는 위 ② 와 같은 정본 `lib-judge-sites.js`): 그 리터럴 줄이 태어난 판엔 제품 소스(주석 뺀)에 있던 글자가
+//   지금 없으면 빨강. 미끼 = `test-lint-harness-words`(가짜 레포 · 말투를 바꾸면 잡고 · 하네스를 고치면 풀린다).
+console.log('\n⑭ 판정 글자 ↔ 제품 소스 [T1097]');
+{
+  const r = require('child_process').spawnSync(process.execPath, [path.join(SCRIPTS, 'lint-harness-words.js')], { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 26 });
+  const out = (r.stdout || '').trim().split('\n'), last = out[out.length - 1] || '';
+  ok(r.status === 0 && /^LINT-HARNESS-WORDS PASS · 빨강 0 · /.test(last),
+    '★⑭ 판정 자리의 글자가 하네스 밑에서 사라진 것 0 — 태어난 판엔 제품 소스에 있었는데 지금 없는 조각(말투 카드 꼴)',
+    r.status === 0 ? last : out.filter((l) => /^  ✗/.test(l)).slice(0, 4).join(' ; ') || last);
 }
 
 console.log(`\n=== ${pass + fail}건 중 PASS ${pass} · FAIL ${fail} ===\n`);

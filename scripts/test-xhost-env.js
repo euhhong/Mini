@@ -333,8 +333,8 @@ exit 0
     const why = m ? new Function('HANDOFF_PROTO', m[0] + '\nreturn _t564HandoffWhy;')(1) : null;
     const w = why ? why({ code }) : {};
     const tpl = src.includes('text: `${nm}(으)로 못 넘어간다 — ${w.say}`');
-    ok(code === 'ECONNREFUSED' && w.k === '거절' && w.say === '저쪽 서버가 연결을 받지 않는다' && tpl,
-      'Ⓡ② 서울:3021 닫힘 → ECONNREFUSED → `_t564HandoffWhy` 까닭 거절 · 알림 "<존>(으)로 못 넘어간다 — 저쪽 서버가 연결을 받지 않는다"(재민 11-01 글자)', `${code} → ${w.k} · "${sees.name}(으)로 못 넘어간다 — ${w.say}"`);
+    ok(code === 'ECONNREFUSED' && w.k === '거절' && w.say === '저쪽 서버가 연결을 받지 않습니다.' && tpl,
+      'Ⓡ② 서울:3021 닫힘 → ECONNREFUSED → `_t564HandoffWhy` 까닭 거절 · 알림 "<존>(으)로 못 넘어간다 — 저쪽 서버가 연결을 받지 않습니다."(재민 11-01 글자 · T1069 말투 뒤 — T1097)', `${code} → ${w.k} · "${sees.name}(으)로 못 넘어간다 — ${w.say}"`);
   }
 
   nb.c.kill(); nbS.c.kill();
