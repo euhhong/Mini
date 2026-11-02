@@ -1506,7 +1506,7 @@ function tickBodyExits(now) {
     if (!(p.hp > 0)) { p.vx = 0; p.vy = 0; continue; }             // 길에서 늑대 등에 쓰러졌다 — 깨면 폴리라인으로 돌아온다(캐러밴 그 줄)
     const remain = r.len - r.prog;
     if (r.t765 && remain <= 0.5) { p.vx = 0; p.vy = 0; continue; }   // ★[T765] 후보 몸은 닿아도 안 거둔다 — 붙는 날(도적 하루 장부)까지 그 자리에 선다
-    if ((r.t1039 || r.t1078 != null) && remain <= 0.5) { p.vx = 0; p.vy = 0; continue; }   // ★[T1039 walk] 단이 될 몸도 닿아도 안 거둔다 — 단이 서는 날(도적 하루 장부)까지 은거지에 선다 · ★[T1078] 단에 들 몸(절망 이탈)도
+    if ((r.t1039 || r.t1078 != null || r.t1104 != null) && remain <= 0.5) { p.vx = 0; p.vy = 0; continue; }   // ★[T1104] 길목 · 은거지 · 원정 걸음도 닿으면 선다(도적 하루 장부가 다음 걸음 · 받기를 정한다)   // ★[T1039 walk] 단이 될 몸도 닿아도 안 거둔다 — 단이 서는 날(도적 하루 장부)까지 은거지에 선다 · ★[T1078] 단에 들 몸(절망 이탈)도
     if (remain <= 0.5) { if (T681_ON) { p.vx = 0; p.vy = 0; continue; } _bxGone(r, p); _bx.arrive++; continue; }   // ★[T681 ③] 켬이면 도착 회수는 하루 경계
     const step = T681_ON ? Math.min(remain, sp * dtMs, Math.max(0, _t681BxVis(r, now) - r.prog)) : Math.min(remain, sp * dtMs);   // ★[T681 ③] 켬 = 장부 일정을 넘지 않게(보이는 것)
     if (!(step > 0)) { p.vx = 0; p.vy = 0; continue; }
@@ -1615,7 +1615,7 @@ function _t1039Join(pid, keep) {
   const { players, npcs } = state.deps;
   const p = pid != null ? players.get(pid) : null;
   const r = p && state.bodyExits ? state.bodyExits.get(pid) : null;
-  if (!p || !r || !(r.t1039 || r.t1078 != null)) { _t1039Stat.noBody++; return null; }   // ★[T1078] 단에 들 몸(절망 이탈)도 같은 받기 문
+  if (!p || !r || !(r.t1039 || r.t1078 != null || (r.t1104 != null && r.t1104k === 'g'))) { _t1039Stat.noBody++; return null; }   // ★[T1078] 단에 들 몸(절망 이탈)도 같은 받기 문 · ★[T1104] 길목에서 은거지로 돌아온 단 몸도
   if (!keep) { _bxGone(r, p); _bx.arrive++; _t1039Stat.capped++; return null; }   // 단 몸 상한에 찼다 — 종전 닿음 회수 그 줄(사람은 단에 들었다)
   state.bodyExits.delete(pid);
   p.simCaravan = false; p._bxExit = undefined; p.vx = 0; p.vy = 0;
@@ -1732,6 +1732,57 @@ function _t1079Gone(pid) {   // 사람 기록 없는 몸이 닿았다 — 종전
   const p = state.deps.players.get(pid), r = state.bodyExits && state.bodyExits.get(pid);
   if (r) { _bxGone(r, p); _bx.arrive++; return true; }
   return false;
+}
+// ═══ ★★[T1104 2026-11-03 · ★재민 11-02 "추상 아니지?"] **약탈 · 토벌 = 맵 위 사건** — 도적 층(`bandits.js` · 손잡이 `T1104_BANDIT_WALK`)의 몸 쪽 문 ═══
+//   ⓐ 걸음(`_t1104Walk`) — 단 몸(길목으로 · 은거지로) · 원정 몸(은거지로 · 집으로)이 `_bxWalk` 그대로 걷는다(코스 A* · T681 ③ 걸음 장부 · 닿으면 선다 — 표식 `t1104`).
+//   ⓑ 받기 — 단 몸은 T1039 받기 문(`_t1039Join` — 은거지 일과로) · 원정 몸은 마을 일과로(`_t1104Release` — 명부에서 안 빠졌다 · 걸음 기록만 접는다).
+//   ⓒ 원정 뽑기(`_t1104Draft`) — 그 마을 명부 **뒤부터** 전사 · 사냥꾼 몸(종전 결단의 병력 셈 `warrior + hunter` 의 그 직업) · 출정(`_muster`) · 걷는 몸 · 누운 몸은 건너뛴다.
+//   ⓓ 원정 전사(`_t1104Fall`) — 명부에서 빼고 T590 ⓐ `_bxDie` 그대로(그 자리에 쓰러진다 · 짐 절반 낙하).
+//   ⓔ 노획 싣기 · 내리기 — T466 `_warLootLoad`(몸마다 `CAP_KG`) · T423 내려놓기 `lootGive`(몸 짐 레코드째).
+//   끔이면 한 번도 안 불린다(도적 층이 켬에서만 부른다).
+function _t1104Walk(p, x, y, tag, id, vil) {
+  if (!p) return null;
+  if (state.bodyExits) state.bodyExits.delete(p.pid);   // 걷던 걸음이 있으면 접는다(새 걸음이 지금 자리에서)
+  p._bxExit = undefined;
+  _bxWalk(vil || { dbId: null, ccx: x / SZ, ccy: y / SZ }, p, { k: 'move', to: { x, y } });
+  const r = state.bodyExits.get(p.pid); if (!r) return null;
+  r.t1104 = id; r.t1104k = tag === 't1104s' ? 's' : 'g';
+  p._t1104W = id;
+  return r;
+}
+function _t1104Join(p) { const q = p ? _t1039Join(p.pid, true) : null; if (p) p._t1104W = undefined; return q; }   // 단 몸 — 은거지 일과로(T1039 받기 문)
+function _t1104Release(p) {   // 원정 몸 — 마을 일과로(명부에 그대로 있었다 · 걸음만 접는다)
+  if (!p) return false;
+  if (state.bodyExits) state.bodyExits.delete(p.pid);
+  p.simCaravan = false; p._bxExit = undefined; p._t1104W = undefined; p.vx = 0; p.vy = 0;
+  state.deps.npcs.add(p.pid);
+  return true;
+}
+function _t1104Draft(vil, n) {
+  const players = state.deps.players, out = [];
+  for (let j = vil.npcPids.length - 1; j >= 0 && out.length < n; j--) {
+    const p = players.get(vil.npcPids[j]);
+    if (!p || p._muster || p._bxExit || p.isDown || !(p.hp > 0)) continue;
+    if (p.simJob !== 'warrior' && p.simJob !== 'hunter') continue;
+    out.push(p);
+  }
+  return out;
+}
+function _t1104Fall(vil, p) {
+  if (!p) return false;
+  if (vil) { const i = vil.npcPids.indexOf(p.pid); if (i >= 0) { vil.npcPids.splice(i, 1); if (T822_BODY_SEED) _t822Rekey(vil, i); } }
+  if (state.bodyExits) state.bodyExits.delete(p.pid);
+  p._t1104W = undefined;
+  _bxDie(vil, p, { k: 'expedition' });
+  return true;
+}
+function _t1104Load(bodies, src) { return _warLootLoad(null, bodies, src, null, null); }
+function _t1104Store(vil, p, bag) {   // 원정 몸이 실어 온 것 — 그 마을 곳간에(T423 내려놓기 문 · 몸 짐 레코드째) · 반환 = 내린 양
+  const WC = state.war; if (!vil || !vil.econ || !p || !p.inventory || !bag || !WC || !WC.lootGive) return 0;
+  const items = {}, lots = {}, _G = _t748G(); let n = 0;
+  for (const k of Object.keys(bag)) { const q = Math.min(+bag[k] || 0, +p.inventory[k] || 0); if (!(q > 0)) continue; p.inventory[k] = +p.inventory[k] - q; if (!(p.inventory[k] > 0)) delete p.inventory[k]; items[k] = q; n += q; if (_G) { const r = _G.bagOut(p, k, q); if (r.length) lots[k] = r; } }
+  if (n > 0) WC.lootGive(vil.econ, items, Object.keys(lots).length ? lots : null);
+  return n;
 }
 // 몸 하나를 줄인다 — 까닭 `why`(`_bxTake` 한 몫 · 없으면 `unknown`)에 따라 그 자리에서 죽거나 걸어서 나간다.
 //   ★[P3 삼중 코히런스] 출정(징발·_muster) 중 병사는 대상에서 제외 — 전쟁 실체가 그 pid 를 쥔다(종전 그대로).
@@ -7625,7 +7676,7 @@ function _t681Day(now) {
       if (r.ppd == null) continue;
       r.L = Math.min(r.len, Math.max(0, (d - r.d0) * r.ppd));
       if (r.t765) continue;   // ★[T765] 후보 몸 — 거두지 않는다(붙기는 도적 하루가 econ 장부로 · `_t765Join`)
-      if (r.t1039 || r.t1078 != null) continue;   // ★[T1039 walk] 단이 될 몸 — 거두지 않는다(붙기는 도적 하루가 단을 세울 때 · `_t1039Join`) · ★[T1078] 단에 들 몸도(`_t1078Gather`)
+      if (r.t1039 || r.t1078 != null || r.t1104 != null) continue;   // ★[T1104] 길목 · 원정 걸음도 거두지 않는다(받기는 도적 하루 `t1104Join` · `t1104Release`) · ★[T1039 walk] 단이 될 몸 — 거두지 않는다(붙기는 도적 하루가 단을 세울 때 · `_t1039Join`) · ★[T1078] 단에 들 몸도(`_t1078Gather`)
       if (r.len - r.L <= 0.5) { _bxGone(r, p); _bx.arrive++; }
     }
   }
@@ -8770,6 +8821,7 @@ function banditHost() {
     t1039Depart: _t1039Depart, t1039Join: _t1039Join, t1039Leave: _t1039Leave,   // ★[T1039] 도적 전환 몸 문 셋(도적 `formGang` · `_t1039Arrive` · `syncBodies` — `T1039_BANDIT_BODY` 켬 갈래에서만 불린다)
     t1079Pitch: _t1079Pitch, t1079Find: _t1079Find, t1079Flush: _t1079Flush, t1079Walk: _t1079Walk, t1079Home: _t1079Home, t1079Len: _t1079Len, t1079Gone: _t1079Gone,   // ★[T1079] 은거지 시설 · 짐 더미 문(도적 층 — `T1079_BANDIT_CAMP` 켬에서만 불린다)
     t1078Walkers: _t1078Walkers, t1078Die: _t1078Die, t1078Out: _t1078Out,   // ★[T1078] 단원 = 몸 문 셋(도적 `_t1078Gather` · `_t1078Trim` · `t1078Died` · `_t1078Out` — `T1078_BANDIT_ALL` 켬에서만 불린다)
+    t1104Ppd: _t1079Ppd, t1104Walk: _t1104Walk, t1104Join: _t1104Join, t1104Release: _t1104Release, t1104Draft: _t1104Draft, t1104Fall: _t1104Fall, t1104Load: _t1104Load, t1104Store: _t1104Store,   // ★[T1104] 약탈 · 토벌 걸음 문(도적 층 — `T1104_BANDIT_WALK` 켬에서만 불린다)
     seed: state.villageSeed || 1020,
     cellsW: ZONE ? Math.ceil(ZONE.zoneWidth / SZ) : 0,
     cellsH: ZONE ? Math.ceil(ZONE.zoneHeight / SZ) : 0,

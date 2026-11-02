@@ -16695,11 +16695,10 @@ function _killWarriors(v, n) {
 const T707_MARKET = !(typeof process !== 'undefined' && process.env && process.env.T707_MARKET === '0');
 function _t707On(world) { return T707_MARKET || !!(world && world.t707Market); }
 function _t707Xz(c) { return !!(c && (c._xzHome || (c.from && c.from._xz) || (c.to && c.to._xz))) && !(T1030_XZ_MARKET && c._xzHome); }   // ★[T1030] 켬 = 받는 존의 이웃 존 캐러밴도 장 갈래(집 존 쪽 — 스텁이 목적지 — 은 그 전에 넘긴다)
-function _caravanArrive(world, c, day) {
-    // ★★[T525] 목적지가 이웃 존 스텁 — 도착은 그 존이 치른다(약탈도 그쪽 호스트가 정한다). 팔이 꺼졌거나 호스트가 빠졌으면 짐을 되돌린다.
-    if (c.to && c.to._xz) { if (_xzOn(world)) _xzHandOff(world, c, day); else _xzBounce(world, c, day); return; }
-    // ★[de-abstract] 약탈 (가는 길) = per-entity 실전투(주사위 제거): 길목에 실제 갱 있으면 호위+상인 vs 갱 라운드 스크럼
-    const gangO = world.banditGang ? world.banditGang(c.from, c.to) : null;
+// ★★[T1104] 가는 길 약탈 한 판 — 종전 `_caravanArrive` 머리 덩이를 이름만 올렸다(값 · 순서 무변 · 사본 0). 돌려주는 값 = 화물 손실 몫(0 · 부분 · 1).
+//   부르는 자리 둘: 도착(종전 — 호스트가 만남 문을 안 꽂은 판 · 랩 · CLI) · 길 위 만남(`_raidMeet` — 호스트 `world.banditMeet` 가 그날 그 캐러밴을 만난 단을 줄 때).
+//   `world.onBanditLoot` 여섯째 인자 = 싸운 단(종전 호스트는 다섯까지만 읽는다 · ★[T1104] 켬 호스트는 노획을 그 단의 몸이 나른다).
+function _raidOut(world, c, day, gangO) {
     let outboundLoss = 0;
     if (gangO && gangO.n > 0) {
       const R = _raidScrum(c.escort, _escAtk(c.from), gangO.n, world.banditArmed ? world.banditArmed(gangO) : null);   // ★[T1079] 단 무기 짐(호스트가 줄 때만)
@@ -16710,16 +16709,61 @@ function _caravanArrive(world, c, day) {
         if (R.traderDead) {   // 상인까지 사망 → 화물 전손·교역 종료
           outboundLoss = 1;
           if (c.from.tradeStats) c.from.tradeStats.cargoLost += c.giveAmt;
-          if (world.onBanditLoot) world.onBanditLoot(c.from, c.to, c.giveRes, c.giveAmt, day);
+          if (world.onBanditLoot) world.onBanditLoot(c.from, c.to, c.giveRes, c.giveAmt, day, gangO);
           _xzKillT(c, c.from);
         } else {   // ★상인 도주 → 사상 비례 부분 약탈만, 남은 화물로 감축 배송(전손 아님)
           outboundLoss = Math.min(0.85, 0.25 + 0.5 * Math.min(1, R.escKilled / Math.max(1, R.escStart + 1)));
           const _loot = c.giveAmt * outboundLoss;
           if (c.from.tradeStats) c.from.tradeStats.cargoLost += _loot;
-          if (world.onBanditLoot && _loot > 0) world.onBanditLoot(c.from, c.to, c.giveRes, _loot, day);
+          if (world.onBanditLoot && _loot > 0) world.onBanditLoot(c.from, c.to, c.giveRes, _loot, day, gangO);
         }
       } else if (c.from.tradeStats) { c.from.tradeStats.banditsRepelled = (c.from.tradeStats.banditsRepelled || 0) + 1; }   // 격퇴
     }
+    return outboundLoss;
+}
+// ★★[T1104] 귀로 약탈 한 판 — 종전 `tickCaravansV2` inbound 머리 덩이를 이름만 올렸다(값 · 순서 무변 · 사본 0).
+function _raidIn(world, c, day, gangI) {
+      let inboundLoss = 0;
+      if (gangI && gangI.n > 0) {
+        const R = _raidScrum(c.escort, _escAtk(c.from), gangI.n, world.banditArmed ? world.banditArmed(gangI) : null);   // ★[T1079] 단 무기 짐(호스트가 줄 때만)
+        gangI.n = Math.max(0, gangI.n - R.banditsKilled);
+        if (R.escKilled > 0) _killWarriors(c.from, R.escKilled);   // 죽은 호위만 감소
+        if (!R.repel) {   // 호위 붕괴
+          if (c.from.tradeStats) c.from.tradeStats.caravansRaided++;
+          if (R.traderDead) {   // 상인 사망 → 가져오던 자원 전손
+            inboundLoss = 1;
+            if (world.onBanditLoot && c._returningRes && c._returningAmt > 0) world.onBanditLoot(c.from, c.to, c._returningRes, c._returningAmt, day, gangI);
+            killTrader(c, c.from);
+          } else {   // ★상인 도주 → 부분 약탈, 나머지는 고향까지 회수(감축 입금 — 아래 received)
+            inboundLoss = Math.min(0.85, 0.25 + 0.5 * Math.min(1, R.escKilled / Math.max(1, R.escStart + 1)));
+            if (world.onBanditLoot && c._returningRes && c._returningAmt > 0) world.onBanditLoot(c.from, c.to, c._returningRes, c._returningAmt * inboundLoss, day, gangI);
+          }
+        } else if (c.from.tradeStats) { c.from.tradeStats.banditsRepelled = (c.from.tradeStats.banditsRepelled || 0) + 1; }
+      }
+      return inboundLoss;
+}
+// ★★[T1104 2026-11-03 · ★재민 11-02 "추상 아니지?"] **약탈은 길 위에서 몸이 만난 날 치른다** — 호스트 문 `world.banditMeet(c, day)`(서버 도적 층 · 손잡이 `T1104_BANDIT_WALK` 켬에서만 꽂힌다).
+//   종전: 약탈은 도착(가는 길) · 집 도착(귀로) 그 경계에 길목 표(`banditGang` — 은거지에서 450셀 안 교역로)로 치렀다(몸이 길에 없어도).
+//   켬: 캐러밴 동기 하루마다 호스트가 묻는다 — 이 캐러밴이 오늘 길목을 지나는데 단의 몸이 거기 서 있나(장부 걸음 · 호스트 몫). 주면 **그날 그 자리에서** 위 두 판 중 그 구간의 것을 치르고
+//     손실 몫을 캐러밴에 적는다(`c._raidLoss` — 도착 · 집 도착이 그 몫만 읽고 지운다). 식(`_raidScrum` · 손실 몫 · 노획 · 사상)은 그대로 · 주사위 = 같은 흐름(`v1.srand` · 그 판의 차례).
+//   끔(호스트가 안 꽂음 — 랩 · CLI · 서버 끔) = 이 함수가 안 불린다(아래 `tickCaravansV2` 한 줄이 `world.banditMeet` 없음으로 건너뛴다).
+function _raidMeet(world, c, day) {
+  const leg = c.state;
+  if (leg !== 'outbound' && leg !== 'inbound') return;
+  const g = world.banditMeet(c, day);
+  if (!g) return;
+  const loss = leg === 'outbound' ? _raidOut(world, c, day, g) : _raidIn(world, c, day, g);
+  const L = c._raidLoss || (c._raidLoss = {});
+  L[leg] = Math.max(L[leg] || 0, loss);
+}
+function _raidTaken(c, leg) { const L = c._raidLoss; if (!L) return 0; const v = L[leg] || 0; delete L[leg]; if (!L.outbound && !L.inbound) delete c._raidLoss; return v; }   // ★[T1104] 길 위에서 치른 몫 — 읽고 지운다(되돌아 다른 마을로 가는 다음 구간이 새로 셈하게)
+function _caravanArrive(world, c, day) {
+    // ★★[T525] 목적지가 이웃 존 스텁 — 도착은 그 존이 치른다(약탈도 그쪽 호스트가 정한다). 팔이 꺼졌거나 호스트가 빠졌으면 짐을 되돌린다.
+    if (c.to && c.to._xz) { if (_xzOn(world)) _xzHandOff(world, c, day); else _xzBounce(world, c, day); return; }
+    // ★[de-abstract] 약탈 (가는 길) = per-entity 실전투(주사위 제거): 길목에 실제 갱 있으면 호위+상인 vs 갱 라운드 스크럼
+    //   ★[T1104] 호스트가 만남 문(`world.banditMeet`)을 꽂았으면 약탈은 길 위에서 이미 치렀다(`_raidMeet` — 몸이 만난 날) — 여기선 그 몫만 읽는다(끔 = 종전 글자 그대로 · 같은 차례)
+    const gangO = world.banditMeet ? null : (world.banditGang ? world.banditGang(c.from, c.to) : null);
+    let outboundLoss = world.banditMeet ? _raidTaken(c, 'outbound') : _raidOut(world, c, day, gangO);
     if (c._done) return;   // 행상 사망 → 이 캐러밴 종료
     const deliveredGive = c.giveAmt * (1 - outboundLoss);
 
@@ -17002,6 +17046,7 @@ function tickCaravansV2(world, day) {
   if (!world.caravans || !world.caravans.length) return;
   for (const c of world.caravans) {
     if (c._done) continue;
+    if (world.banditMeet) { _raidMeet(world, c, day); if (c._done) continue; }   // ★[T1104] 길 위 만남(호스트 문이 꽂힌 판만 · 끔 = 이 줄 무동작) — 행상이 길에서 죽었으면 그 캐러밴은 여기서 끝
 
     // ★★[T533] 경계 칸에 서는 날(스텁이 목적지) — 몸과 기록이 함께 넘어간다(`_xzCross` 가 없는 캐러밴은 이 갈래를 안 탄다 = 종전).
     if (c._xzCross && c.state === 'outbound' && c.to && c.to._xz && day >= c._xzCross.day) {
@@ -17019,25 +17064,9 @@ function tickCaravansV2(world, day) {
     }
 
     else if (c.state === 'inbound' && day >= c.returnArriveDay && !c._t707) {   // ★[T707] 정산 전 장은 귀환을 안 닫는다(머리에서 정산되니 실제로는 안 닿는다 · 끔이면 `_t707` 없음 = 종전)
-      // ★[de-abstract] 약탈 (귀환) = per-entity 실전투: 왕복 같은 길목 갱 vs 호위+상인
-      const gangI = world.banditGang ? world.banditGang(c.from, c.to) : null;
-      let inboundLoss = 0;
-      if (gangI && gangI.n > 0) {
-        const R = _raidScrum(c.escort, _escAtk(c.from), gangI.n, world.banditArmed ? world.banditArmed(gangI) : null);   // ★[T1079] 단 무기 짐(호스트가 줄 때만)
-        gangI.n = Math.max(0, gangI.n - R.banditsKilled);
-        if (R.escKilled > 0) _killWarriors(c.from, R.escKilled);   // 죽은 호위만 감소
-        if (!R.repel) {   // 호위 붕괴
-          if (c.from.tradeStats) c.from.tradeStats.caravansRaided++;
-          if (R.traderDead) {   // 상인 사망 → 가져오던 자원 전손
-            inboundLoss = 1;
-            if (world.onBanditLoot && c._returningRes && c._returningAmt > 0) world.onBanditLoot(c.from, c.to, c._returningRes, c._returningAmt, day);
-            killTrader(c, c.from);
-          } else {   // ★상인 도주 → 부분 약탈, 나머지는 고향까지 회수(감축 입금 — 아래 received)
-            inboundLoss = Math.min(0.85, 0.25 + 0.5 * Math.min(1, R.escKilled / Math.max(1, R.escStart + 1)));
-            if (world.onBanditLoot && c._returningRes && c._returningAmt > 0) world.onBanditLoot(c.from, c.to, c._returningRes, c._returningAmt * inboundLoss, day);
-          }
-        } else if (c.from.tradeStats) { c.from.tradeStats.banditsRepelled = (c.from.tradeStats.banditsRepelled || 0) + 1; }
-      }
+      // ★[de-abstract] 약탈 (귀환) = per-entity 실전투: 왕복 같은 길목 갱 vs 호위+상인 · ★[T1104] 만남 문이 꽂혔으면 길 위에서 치른 몫만(`_raidMeet` · 끔 = 종전 글자)
+      const gangI = world.banditMeet ? null : (world.banditGang ? world.banditGang(c.from, c.to) : null);
+      let inboundLoss = world.banditMeet ? _raidTaken(c, 'inbound') : _raidIn(world, c, day, gangI);
       if (c._done) continue;   // 행상 사망 → 캐러밴 종료(자원 입금 X)
 
       if (c._returningRes && c._returningAmt > 0) {
@@ -17818,6 +17847,7 @@ module.exports = {
   _xzProbe: { handOff: _xzHandOff, arrive: _xzArrive, arriveLoop: _xzArriveLoop, handBack: _xzHandBack, ret: _xzReturn },   // ★[T748] 존 경계 짐 레코드 — 하네스가 **이 함수들**을 그대로 부른다(사본 0 · 값 무변)
   setLotHook,   // ★[T732] 곳간 로트 장부 훅(서버 켬일 때만 꽂는다 · 랩·CLI 는 안 꽂는다 = 무동작)
   _t1079Probe: { raidScrum: _raidScrum, escAtk: _escAtk },   // ★[T1079 ⑤] 약탈 실전투 — 하네스 `test-bandit-camp` 가 이 함수를 그대로 부른다(사본 0)
+  _t1104Probe: { meet: _raidMeet, taken: _raidTaken, raidOut: _raidOut, raidIn: _raidIn },   // ★[T1104] 길 위 만남 · 도착이 읽는 몫 · 두 판 — 하네스 `test-bandit-walk` 가 이 함수를 그대로 부른다(사본 0)
   T784_CARGO_AGE, _t784Probe: { F: _t784F, arrive: _t784Arrive },
   T1049_FLOOR_STONE,   // ★[T1049] 돌 바닥 마을은 제 돌을 안 판다(하네스 `test-floor-stone` 가 읽는다)
   T812_CARGO_TEMP, _t812Probe: { exp: _t812Exp },
