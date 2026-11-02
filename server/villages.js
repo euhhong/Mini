@@ -14200,7 +14200,8 @@ function villageViewSrc(vid) {
   const vil = state.byDbId && state.byDbId.get(vid | 0);
   if (!vil || !vil.econ) return null;
   return { vil, ledger: state.ledger, world: state.world, day: (state.world && state.world.day) | 0, E: _lifeEcon(),
-    nameOfEcon: (v) => { const x = state.byEcon && state.byEcon.get(v); return x ? x.name : null; } };
+    nameOfEcon: (v) => { const x = state.byEcon && state.byEcon.get(v); return x ? x.name : null; },
+    needClear: () => _lifeNeedClear(vil) };   // ★[T1084] 개간 술어 정본 그대로(읽기만 · 농부 개간 두 길 — 몸 13040 · 일괄 `_lifeClearDay` — 이 술어 하나를 묻는다)
 }
 
 // ★납품 — 서버 권위. 실물 이동은 `playerVillageDeposit`(정본), 몫 확정은 장부(원자적).
