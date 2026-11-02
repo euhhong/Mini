@@ -1,0 +1,74 @@
+# T1079 하네스 — 최종 코드 · 2026-11-02
+
+## test-bandit-camp(새) 전문
+
+=== T1079 — 은거지 = 실제 시설 · 짐 더미(손잡이 `T1079_BANDIT_CAMP`) ===
+  ✓ 정적 · 손잡이 하나(`'1'` 만 켬) · T1078 켬 위에서만 선다
+  ✓ 정적 · T1079 문 덩이(bandits)에 새 수 0(0 · 1 말고 수 글자 없음)
+  ✓ 정적 · econ `_raidScrum` — 무기 수가 없으면 종전 bA(19) · 있으면 든 사람 `_escAtk`(토벌 · 호위 식) · 맨손 10 · 부르는 자리 둘(가는 길 · 귀로)이 호스트 문을 읽는다
+  ✓ ⑤ 무기 수 없음(`undefined` · `null`) = 종전(도적 atk 19) — 300판 셈이 같다  {"esc":745,"rep":0,"kill":153,"dead":237}
+  ✓ ⑤ 다 든 단(5/5) = 든 사람 atk `_escAtk` 18(무기 품질 기록 없음 → 0.42) — 종전 19 보다 약하지 않다(호위 사상 ≤ 종전)  {"esc":745,"rep":0,"kill":153,"dead":237}
+  ✓ ⑤ 맨손 단(0/5) = atk 10 — 호위 사상 · 상인 죽음이 줄고 격퇴가 는다(같은 300판 씨)  {"esc":503,"rep":170,"kill":1096,"dead":159}
+  ✓ ⑤ 무기 2.9 = 두 자루(정수 자루 · 한 사람 한 무기) — 맨손과 다 든 단 사이  {"esc":724,"rep":6,"kill":470,"dead":219}
+  ✓ [전제] 다섯 판이 다 돌았다
+  ✓ ① 켬 · 단이 은거지에 선 날 — 모닥불(`campfire` · 은거지 칸 가운데 = 몸의 집)과 짐 더미(`chest` · 칸 모서리)가 존 건물로 선다  [[{"x":11248,"y":7696,"owner":"bandit_den"}],{"x":11232,"y":7680,"owner":"bandit_den"}]
+  ✓ ① 클라에 보인다(`building_added`) · 더미 행이 DB 에 남는다(`updateBuildingData` — 바뀐 날만)  방송 6 · DB 4
+  ✓ ⓐ 끔(T1078 켬 · T1079 없음) — 존 건물 0(은거지 = 마커) ⇒ ①이 문 자리가 실제로 다르다
+  ✓ ⓐ T1078 없이 T1079 만 — 무동작(T1078 켬 위에서만 선다 · 회부)
+  ✓ ② 단 기록 `g.food` · `g.arms` = 더미 칸을 읽고 쓰는 문 — 장물(무기 3 실물 · 식량 환산)이 더미에 든다 · 두 값이 늘 같다  [27.5,32.5,32.5,{"weapon":3}]
+  ✓ ② 유지비(종전 줄 `n × BDT_UPKEEP`)가 더미에서 빠진다  [32.5,30]
+  ✓ ② 저장 줄 — 두 칸을 안 싣는다(더미 행이 정본) · 사람 기록 5(해체에서 빠진 econ 항목 그대로)  {"keys":["id","camp","n","zero","born","home","why","lootN","lastLoot","den","_sup","_supKill","walk","t1079","npc1079"],"t1079":1,"recs":5}
+  ✓ ② 복원 — 새 단 객체가 같은 더미 행을 다시 잇는다(같은 값 · 같은 행)  {"before":{"food":30,"weapon":3,"pile":"b2"},"after":{"food":30,"weapon":3,"pile":"b2","accessor":true,"same":true}}
+  ✓ ⓐ 끔 — 무기 짐 · 비축은 단 기록 숫자 칸(더미 없음 · 저장 줄에 실린다)
+  ✓ ③ 해산(5 → 2 < 3) — 더미가 그 자리에 남는다(주인 = 누구나 · 흩어진 날) · 남은 둘이 한 자루씩 들고 간 뒤 무기 1 · 식량 · 무게 kg  {"gid":null,"left":407,"owner":"public","food":26.5,"arms":{"weapon":1},"kg":20.05}
+  ✓ ③ 남은 사람 제 무기는 몸 짐에(한 사람 한 자루) — 그 몸이 이웃으로 걷는다(닿아도 안 거둔다 — 붙는 날까지)  [{"pid":"n13","alive":true,"weapon":1,"k":"move","t765":true,"to":2},{"pid":"n12","alive":true,"weapon":1,"k":"move","t765":true,"to":2}]
+  ✓ ③ **무기 소멸 0** — 들어온 3 = 흩어진 더미 1 + 몸 짐 2(해산 날) → 끝 날 더미 1 + 이웃 곳간 2  [{"inn":3,"live":0,"left":1,"carry":2,"vilArms":0,"lost":0},{"inn":3,"live":0,"left":1,"carry":0,"vilArms":2,"lost":0}]
+  ✓ ⓐ 끔 — 같은 자로 해산에 무기 짐 3이 사라진다(T765 시드 7 단#10 D399 의 그 꼴) ⇒ ③이 문 자리가 실제로 다르다  {"inn":3,"live":0,"left":0,"carry":0,"vilArms":0,"lost":3}
+  ✓ ④ 이웃이 없는 해산 — 남은 둘이 가장 가까운 산 마을(이웃)에 걸어 닿아 주민(econ 25 → 27 · 명부 몸 27 · 새 몸 0 · 소멸 0 · 순간이동 0) · 몸 짐 무기 2 → 그 곳간  [[8,27],27,[0,2],{"pitch":1,"adopt":0,"left":1,"join":0,"joinN":0,"out":2,"home":2,"homeBody":2,"noRec":0,"hand":2,"vilArms":2,"unload":0,"relink":1,"lost":0}]
+  ✓ ⓐ 끔 — 같은 판에서 남은 둘은 닿아 거둬진다(주민 0)  [[8,25],[{"pid":"n9","how":"rot","day":410},{"pid":"n10","how":"rot","day":410},{"pid":"n11","how":"rot","day":410},{"pid":"n12","how":"arrive","day":410},{"pid":"n13","how":"arrive","day":410}]]
+  ✓ ④ 정보범위 안 다른 단(소굴 단) — 남은 둘이 그 단에 든다(n +2 · 사람 기록 2) · 몸은 무기 들고 그 은거지로 걷는다(이탈 몸 문법 · 단 번호)  [{"g":{"id":1,"n":5,"weapon":2,"recs":5},"dg":{"id":2,"n":5,"weapon":2}},{"id":2,"n":7,"bodies":5,"walkers":2,"recs":2},[{"pid":"n13","weapon":1,"k":"desert","gid":2},{"pid":"n12","weapon":1,"k":"desert","gid":2}]]
+  ✓ ④ 닿은 몸은 그 단의 몸 · 몸 짐 무기 2 → 그 단 더미(제 몫 + 2) · 무기 소멸 0 · 소멸 0(새 몸 = 소굴에서 난 사람 수뿐)  [{"weapon":4},{"pitch":2,"adopt":0,"left":1,"join":1,"joinN":2,"out":0,"home":0,"homeBody":0,"noRec":0,"hand":2,"vilArms":0,"unload":2,"relink":0,"lost":0},{"inn":4,"live":4,"left":0,"carry":0,"vilArms":0,"lost":0}]
+  ✓ ③ 소굴 단 해산(econ 약탈 사상) — 더미가 소굴에 남는다 · 남은 둘(황야 출신 — 사람 기록 없음)이 무기 들고 마을로  [{"id":"b2","gid":null,"left":403,"food":144,"arms":{"weapon":0},"lots":0},[{"pid":"n56","rec":false,"to":1,"d0":403,"len":7972.533717668983,"ppd":1920},{"pid":"n57","rec":false,"to":1,"d0":403,"len":7931.725612504768,"ppd":1920}]]
+  ✓ ③ 재결성 단이 그 자리의 옛 더미를 잇는다(같은 행 · 안의 짐째 + 재결성 비축) · 불도 그 불  [{"id":"b2","gid":null,"left":403,"food":144,"arms":{"weapon":0},"lots":0},{"id":"b2","gid":2,"left":null,"food":321,"arms":{"weapon":0}},321]
+  ✓ ③ 사람 기록 없는 몸 — 닿으면 거둔다(회부) · 몸 짐 무기는 그 곳간에(소멸 0)  [{"inn":2,"live":0,"left":0,"carry":0,"vilArms":2,"lost":0},[2,0],{"pitch":2,"adopt":1,"left":1,"join":0,"joinN":0,"out":2,"home":0,"homeBody":0,"noRec":2,"hand":2,"vilArms":2,"unload":0,"relink":0,"lost":0}]
+  ✓ ⓐ 끔 — 같은 판에서 소굴 단 해산에 무기 짐 2가 사라진다  {"inn":2,"live":0,"left":0,"carry":0,"vilArms":0,"lost":2}
+  ✓ ⑤ 켬만 econ 무기 문(`world.banditArmed` = 손에 든 수 `armsHeld`)이 선다 · 끔 = 설치 0(econ 종전 atk 19)
+  ✓ ⓐ 손잡이 그 밖 값(`'0'`) = 손잡이 없음 — 판 결과 JSON 바이트 같음(몸 · 저장 줄 · 로그)  2237B
+  ✓ ⓑ 미끼 `nopile`(야영 터 문을 뗀다) — ③ “무기 소멸 0”이 빨개진다  {"inn":3,"live":0,"left":0,"carry":0,"vilArms":2,"lost":1}
+  ✓ ⓑ 미끼 `nohome`(마을 걷기 문을 뗀다) — ④ “주민 · 소멸 0”이 빨개진다  소멸 2 · 인구 25
+  ✓ ⓑ 미끼 `noarm`(econ 무기 문을 뗀다) — ⑤ 호스트 문 칸이 빨개진다  hook false
+
+결과: PASS (34 통과 · 0 실패)
+
+## 그 밖 — 요약 줄
+* test-arms-body — === 결과: 28 PASS / 0 FAIL ===
+* test-bandit-all — 결과: PASS (31 통과 · 0 실패)
+* test-bandit-body — 결과: PASS (65 통과 · 0 실패)
+* test-bandit-camp — 결과: PASS (34 통과 · 0 실패)
+* test-body-chunks — === 결과: 27 PASS / 0 FAIL ===
+* test-body-exit — === 28건 중 PASS 28 · FAIL 0 ===
+* test-body-fields — === 8 통과 / 0 실패 ===
+* test-body-seed-other — === 결과: 11 PASS / 0 FAIL ===
+* test-body-seed-restart — === 16 통과 / 0 실패 ===
+* test-body — === 324건 중 PASS 324 · FAIL 0 ===
+* test-cand-walk — === 39건 중 PASS 39 · FAIL 0 ===
+* test-events — === 305건 중 PASS 305 · FAIL 0 ===
+* test-handoff-body — === 94 통과 / 0 실패 ===
+* test-harness-lint — === 68건 중 PASS 68 · FAIL 0 ===
+* test-local-midnight-window — === 12건 중 PASS 12 · FAIL 0 ===
+* test-loot-body — === 결과: 13 PASS / 0 FAIL ===
+* test-membership — === PASS 85 / FAIL 0 ===
+* test-moment-lot — === 107건 중 PASS 107 · FAIL 0 ===
+* test-move-soa — === 결과: 286 PASS / 0 FAIL ===
+* test-t742-zone — === 11건 중 PASS 11 · FAIL 0 ===
+* test-t766-dissolve — === 17건 중 PASS 17 · FAIL 0 ===
+* test-t986-bandit-day — === PASS 5 / FAIL 0 ===
+* test-village-found — === 마을 건립 하네스: 51 통과 / 0 실패 ✅ ===
+* test-war-world — 결과: 201 통과 / 0 실패
+* test-move-soa — 셋 동시 판에서 ⑯-b(기동 동안 벽시계 흐름 49ms)가 한 번 빨강 · 홀로 다시 돌려 286/0(벽시계 칸)
+
+## 게이트
+[check] 회귀검증 16 일치 / 0 불일치 ✅
+[inline] 마을실험실.html: 최신 ✅
+[inline] 전쟁실험실.html: 최신 ✅
+=== 배선 검사: 실패 0 · 경고 1 ===

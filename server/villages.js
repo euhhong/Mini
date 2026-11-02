@@ -1540,12 +1540,13 @@ function _t765Depart(vil, best, n) {
   for (const pid of pick) {
     const i = vil.npcPids.indexOf(pid); if (i >= 0) { vil.npcPids.splice(i, 1); if (T822_BODY_SEED) _t822Rekey(vil, i); }   // ★[T833] 명부가 줄면 그 자리부터 다시 굽는다
     _bxWalk(vil, players.get(pid), { k: 'move', vil: best });
-    const r = state.bodyExits && state.bodyExits.get(pid); if (r) r.t765 = 1;
+    _t765Mark(pid);
   }
   _t765Stat.depart += n | 0; _t765Stat.bodied += pick.length; _t765Stat.bodyless += (n | 0) - pick.length;
   _t765Stat.groups.push({ day: state.world ? state.world.day : null, from: vil.name, to: best.name, n: n | 0, bodied: pick.length, queued, routePx: Math.round(len), ppd });
   return { len, ppd, pids: pick };
 }
+function _t765Mark(pid) { const r = state.bodyExits && state.bodyExits.get(pid); if (r) r.t765 = 1; return r || null; }   // 후보 몸 표식 — 한 자리(T765 떠나기 · ★[T1079] 해산 도적 몸의 주민 걷기가 같이 쓴다)
 function _t765Join(pid, to) {
   const { players, npcs } = state.deps;
   const p = pid != null ? players.get(pid) : null;
@@ -1662,6 +1663,68 @@ function _t1078Life(npc, now) {
   if (fv >= dayR || fv < npc._dOff) { _lifeGoHome(npc, '취침'); return true; }
   if (npc._t1078Fed && fv / dayR < SCH_FARMW_R) { _lifeGoHome(npc, '식사'); return true; }
   if (npc._lifeAct === '취침' || npc._lifeAct === '식사' || npc._lifeAct === '귀가') _lifeAct(npc, '배회');
+  return false;
+}
+// ═══ ★★[T1079 2026-11-02 · ★재민 11-02 문 4 ⓑ] **은거지 = 실제 시설 · 짐 더미** — 도적 층(`bandits.js` · 손잡이 `T1079_BANDIT_CAMP`)의 존 쪽 문 ═══
+//   ⓐ 야영 터(`_t1079Pitch`) — 존 건물 행 문 `liveBuildRow`(움집 · 곳간 완공과 같은 문 — DB 행 · 메모리 · 청크 색인)로 모닥불(`campfire` · 은거지 칸 가운데 = 몸의 집)과
+//      짐 더미(`chest` · 은거지 칸 모서리)를 세운다 · 그 자리(x · y 정확히)에 흩어진 단의 옛 더미가 있으면 그 행을 잇는다(`adoptBuildRow` — T1023 의 그 문).
+//   ⓑ 더미 행 영속(`_t1079Flush`) — 바뀌었을 때만 `updateBuildingData` + `building_added`(움집터 단계 갱신과 같은 줄).
+//   ⓒ 해산 몸 걸음 — 다른 단으로(`_t1079Walk` — T1078 이탈 몸 문법 `desert` · 단 번호) · 마을로(`_t1079Home` — `_t1078Out` 그대로 + 표식 `t765` = 닿아도 안 거둔다 · 붙기는 `_t765Join`).
+//   끔이면 한 번도 안 불린다(도적 층이 켬에서만 부른다).
+function _t1079Spots(camp) { return { fx: camp.cx * SZ + SZ / 2, fy: camp.cy * SZ + SZ / 2, px: camp.cx * SZ, py: camp.cy * SZ }; }
+function _t1079Pitch(camp) {
+  const dp = state.deps; if (!dp || !dp.liveBuildRow) return null;
+  const q = _t1079Spots(camp), made = [];
+  let fire = dp.adoptBuildRow ? dp.adoptBuildRow('campfire', q.fx, q.fy, (d) => !!(d && d._camp1079)) : null;
+  let pile = dp.adoptBuildRow ? dp.adoptBuildRow('chest', q.px, q.py, (d) => !!(d && d._camp1079 && d._bandit == null)) : null;
+  const adopted = !!pile;
+  if (!fire) fire = dp.liveBuildRow('campfire', q.fx, q.fy, { _camp1079: 1, floor: 0 }, 'bandit_den', '도적 은거지 모닥불', made);
+  if (!pile) pile = dp.liveBuildRow('chest', q.px, q.py, { _camp1079: 1, floor: 0, food: 0 }, 'bandit_den', '도적 은거지 짐 더미', made);
+  if (!pile) return null;
+  if (!pile.data) pile.data = { _camp1079: 1, floor: 0, food: 0 };
+  for (const b of made) { try { dp.broadcast({ type: 'building_added', building: b }); } catch (e) {} }
+  return { fire, pile, adopted, gid: null, _s: null };
+}
+function _t1079Find(camp, gid) {
+  const dp = state.deps; if (!dp || !dp.adoptBuildRow) return null;
+  const q = _t1079Spots(camp);
+  const pile = dp.adoptBuildRow('chest', q.px, q.py, (d) => !!(d && d._camp1079 && d._bandit === gid));
+  if (!pile) return null;
+  const fire = dp.adoptBuildRow('campfire', q.fx, q.fy, (d) => !!(d && d._camp1079));
+  return { fire, pile, adopted: false, gid, _s: JSON.stringify(pile.data) };
+}
+function _t1079Flush(P) {
+  if (!P || !P.pile || !P.pile.data) return false;
+  const js = JSON.stringify(P.pile.data); if (js === P._s) return false;
+  P._s = js;
+  try { if (state.db && state.db.updateBuildingData && P.pile.dbId) state.db.updateBuildingData(P.pile.dbId, js); } catch (e) {}
+  try { if (state.deps && state.deps.broadcast) state.deps.broadcast({ type: 'building_added', building: P.pile }); } catch (e) {}
+  return true;
+}
+function _t1079Walk(p, cell, gid) {   // 흩어진 단의 몸 — 합류할 단의 은거지로(T1078 이탈 몸 문법 · 닿는 날 도적 하루가 그 단의 몸으로 받는다)
+  if (!p || !cell) return false;
+  if (state.bodyExits) state.bodyExits.delete(p.pid);
+  p._bxExit = undefined;
+  _bxWalk({ dbId: null, ccx: cell.cx, ccy: cell.cy }, p, { k: 'desert', to: { x: cell.cx * SZ + SZ / 2, y: cell.cy * SZ + SZ / 2 }, gid });
+  return true;
+}
+function _t1079Ppd() { return (((state.deps && state.deps.moveSpeed) || 0) / 1000) * (state.dayMs || 0); }   // T681 ③ 하루 걸음(`_bxWalk` 의 rec.ppd 그 식)
+function _t1079Home(p, toVil) {   // 흩어진 단의 몸 — 받는 마을까지 걷되 닿아도 안 거둔다(붙는 날 = 도적 하루 길 위 장부 · `_t765Join`)
+  if (!_t1078Out(p, toVil)) return null;
+  const r = _t765Mark(p.pid);   // T765 표식 문 그대로(닿아도 안 거둔다 · 붙기 `_t765Join` 이 받는다)
+  return { len: r ? r.len : Math.hypot(toVil.ccx * SZ + SZ / 2 - p.x, toVil.ccy * SZ + SZ / 2 - p.y), ppd: _t1079Ppd() };
+}
+function _t1079Len(cell, toVil) {   // 몸 없는 사람의 장부 길 — 은거지 칸 → 회관(코스 A* · 못 찾으면 직선 · `_t1039Depart` 의 그 셈)
+  const x0 = cell.cx * SZ + SZ / 2, y0 = cell.cy * SZ + SZ / 2, x1 = toVil.ccx * SZ + SZ / 2, y1 = toVil.ccy * SZ + SZ / 2;
+  let pts = null; try { pts = computeRoutePts(x0, y0, x1, y1); } catch (e) { pts = null; }
+  let len = 0;
+  if (pts && pts.length >= 2) { for (let i = 1; i < pts.length; i++) len += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y); }
+  else len = Math.hypot(x1 - x0, y1 - y0);
+  return { len, ppd: _t1079Ppd() };
+}
+function _t1079Gone(pid) {   // 사람 기록 없는 몸이 닿았다 — 종전 닿음 회수(T1078 그 끝 · 회부)
+  const p = state.deps.players.get(pid), r = state.bodyExits && state.bodyExits.get(pid);
+  if (r) { _bxGone(r, p); _bx.arrive++; return true; }
   return false;
 }
 // 몸 하나를 줄인다 — 까닭 `why`(`_bxTake` 한 몫 · 없으면 `unknown`)에 따라 그 자리에서 죽거나 걸어서 나간다.
@@ -8490,6 +8553,7 @@ function banditHost() {
     noteBodyExit,                                    // ★[T590] 사람이 줄어든 까닭 — 해체·이탈·원정 전사(몸이 걸어 나갈 곳 · 위 T590 머리글)
     t765Depart: _t765Depart, t765Join: _t765Join,    // ★[T765] 후보 걷기 몸 문 둘(도적 `_t577Walk` — `T577_CAND_WALK=1` 에서만 불린다)
     t1039Depart: _t1039Depart, t1039Join: _t1039Join, t1039Leave: _t1039Leave,   // ★[T1039] 도적 전환 몸 문 셋(도적 `formGang` · `_t1039Arrive` · `syncBodies` — `T1039_BANDIT_BODY` 켬 갈래에서만 불린다)
+    t1079Pitch: _t1079Pitch, t1079Find: _t1079Find, t1079Flush: _t1079Flush, t1079Walk: _t1079Walk, t1079Home: _t1079Home, t1079Len: _t1079Len, t1079Gone: _t1079Gone,   // ★[T1079] 은거지 시설 · 짐 더미 문(도적 층 — `T1079_BANDIT_CAMP` 켬에서만 불린다)
     t1078Walkers: _t1078Walkers, t1078Die: _t1078Die, t1078Out: _t1078Out,   // ★[T1078] 단원 = 몸 문 셋(도적 `_t1078Gather` · `_t1078Trim` · `t1078Died` · `_t1078Out` — `T1078_BANDIT_ALL` 켬에서만 불린다)
     seed: state.villageSeed || 1020,
     cellsW: ZONE ? Math.ceil(ZONE.zoneWidth / SZ) : 0,
