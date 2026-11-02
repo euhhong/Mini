@@ -1393,10 +1393,11 @@ const _bx = { died: { starve: 0, old: 0 }, walk: { bandit: 0, desert: 0, move: 0
               rot: 0, arrive: 0, straight: 0, lost: 0, vanish: 0, noted: 0, trimmed: 0 };
 function _bxMap() { return state.bodyExits || (state.bodyExits = new Map()); }
 // 까닭 한 줄 — 도적 층(`bandits.js` — 호스트 `noteBodyExit`)과 아래 관측이 같은 줄에 쓴다. `toCell` = 은거지 칸 · `toVil` = 옮겨 갈 마을(T577 ⓐ).
-function noteBodyExit(vil, kind, n, toCell, toVil) {
+function noteBodyExit(vil, kind, n, toCell, toVil, gid) {   // ★[T1078] `gid` = 그 몸이 들 단(켬에서만 넘어온다 — 닿는 날 단의 몸 · 끔 = 칸 0)
   if (!vil || !(n > 0) || !BX_CAT[kind]) return;
   const q = vil._bxQ || (vil._bxQ = []);
   const note = { k: kind, n: n | 0 };
+  if (gid != null) note.gid = gid;
   if (toCell && toCell.cx != null) note.to = { x: toCell.cx * SZ + SZ / 2, y: toCell.cy * SZ + SZ / 2 };
   if (toVil && toVil.econ) note.vil = toVil;
   q.push(note);
@@ -1417,6 +1418,7 @@ function _bxTake(vil) {   // 까닭 줄 머리에서 한 사람 몫(없으면 `u
   if (!q || !q.length) return { k: 'unknown' };
   const h = q[0];
   if (--h.n <= 0) q.shift();
+  if (h.gid != null) return { k: h.k, to: h.to || null, vil: h.vil || null, gid: h.gid };   // ★[T1078] 켬에서만(끔 = 종전 글자)
   return { k: h.k, to: h.to || null, vil: h.vil || null };
 }
 // 떠나는 몸이 갈 곳 — 은거지 · 옮겨 갈 마을 · 그 밖은 마을 가장자리(회관 → 몸 방향 · 몸이 회관 위면 가장 가까운 이웃 마을 쪽).
@@ -1439,7 +1441,7 @@ function _bxQuiet(p) {   // 생활층·사냥의 손을 놓게 한다(그 몸은
   p.vx = 0; p.vy = 0;
 }
 // ⓐ 그 자리에서 죽는다
-function _bxDie(vil, p, w) {
+function _bxDie(vil, p, w) {   // ★[T1078] `vil` 이 null 이면 마을 밖 몸(도적 단원) — 같은 문 · 기록의 마을 칸만 빈다
   const { npcs, broadcast } = state.deps;
   const now = Date.now();
   npcs.delete(p.pid);                    // 결정 문을 닫는다(AI 끔)
@@ -1451,10 +1453,10 @@ function _bxDie(vil, p, w) {
   p._bxExit = 'died';
   try { broadcast({ type: 'player_down_state', pid: p.pid, isDown: true, why: 'down' }); } catch (e) {}
   const ms = Math.max(0, +(state.deps.corpseMs || 0));
-  _bxMap().set(p.pid, { pid: p.pid, vid: vil.dbId, k: w.k, cat: 'died', t0: now, until: now + ms,
+  _bxMap().set(p.pid, { pid: p.pid, vid: vil ? vil.dbId : null, k: w.k, cat: 'died', t0: now, until: now + ms,
     untilDay: T681_ON ? state.world.day + ms / Math.max(1, state.dayMs) : undefined });   // ★[T681 ③] 켬 = 누운 시간을 econ 날로(같은 값 ÷ 하루 길이)
-  _bx.died[w.k]++;
-  if (w.k === 'starve') noteStarved(vil);
+  _bx.died[w.k] = (_bx.died[w.k] || 0) + 1;   // ★[T1078] 도적 단원 까닭(`bandit_*`)은 켬에서만 칸이 선다
+  if (w.k === 'starve' && vil) noteStarved(vil);
 }
 // ⓑⓒ 걸어서 나간다
 function _bxWalk(vil, p, w) {
@@ -1472,6 +1474,7 @@ function _bxWalk(vil, p, w) {
   const rec = { pid: p.pid, vid: vil.dbId, k: w.k, cat, t0: now };
   setBodyPts(rec, pts);
   if (T681_ON) { rec.d0 = state.world.day; rec.L = 0; rec.ppd = (((state.deps && state.deps.moveSpeed) || 0) / 1000) * state.dayMs; }   // ★[T681 ③] 켬 = 걸음 장부(존 걸음 × 하루 길이)
+  if (w.gid != null) { rec.t1078 = w.gid; p._bdtGid = w.gid; }   // ★[T1078] 그 단으로 가는 몸(닿아도 안 거둔다 — 도적 하루가 단의 몸으로 받는다 · 길에서 죽으면 단 n −1)
   p._bxExit = cat;
   _bxMap().set(p.pid, rec);
   _bx[cat][w.k]++;
@@ -1497,7 +1500,7 @@ function tickBodyExits(now) {
     if (!(p.hp > 0)) { p.vx = 0; p.vy = 0; continue; }             // 길에서 늑대 등에 쓰러졌다 — 깨면 폴리라인으로 돌아온다(캐러밴 그 줄)
     const remain = r.len - r.prog;
     if (r.t765 && remain <= 0.5) { p.vx = 0; p.vy = 0; continue; }   // ★[T765] 후보 몸은 닿아도 안 거둔다 — 붙는 날(도적 하루 장부)까지 그 자리에 선다
-    if (r.t1039 && remain <= 0.5) { p.vx = 0; p.vy = 0; continue; }   // ★[T1039 walk] 단이 될 몸도 닿아도 안 거둔다 — 단이 서는 날(도적 하루 장부)까지 은거지에 선다
+    if ((r.t1039 || r.t1078 != null) && remain <= 0.5) { p.vx = 0; p.vy = 0; continue; }   // ★[T1039 walk] 단이 될 몸도 닿아도 안 거둔다 — 단이 서는 날(도적 하루 장부)까지 은거지에 선다 · ★[T1078] 단에 들 몸(절망 이탈)도
     if (remain <= 0.5) { if (T681_ON) { p.vx = 0; p.vy = 0; continue; } _bxGone(r, p); _bx.arrive++; continue; }   // ★[T681 ③] 켬이면 도착 회수는 하루 경계
     const step = T681_ON ? Math.min(remain, sp * dtMs, Math.max(0, _t681BxVis(r, now) - r.prog)) : Math.min(remain, sp * dtMs);   // ★[T681 ③] 켬 = 장부 일정을 넘지 않게(보이는 것)
     if (!(step > 0)) { p.vx = 0; p.vy = 0; continue; }
@@ -1605,7 +1608,7 @@ function _t1039Join(pid, keep) {
   const { players, npcs } = state.deps;
   const p = pid != null ? players.get(pid) : null;
   const r = p && state.bodyExits ? state.bodyExits.get(pid) : null;
-  if (!p || !r || !r.t1039) { _t1039Stat.noBody++; return null; }
+  if (!p || !r || !(r.t1039 || r.t1078 != null)) { _t1039Stat.noBody++; return null; }   // ★[T1078] 단에 들 몸(절망 이탈)도 같은 받기 문
   if (!keep) { _bxGone(r, p); _bx.arrive++; _t1039Stat.capped++; return null; }   // 단 몸 상한에 찼다 — 종전 닿음 회수 그 줄(사람은 단에 들었다)
   state.bodyExits.delete(pid);
   p.simCaravan = false; p._bxExit = undefined; p.vx = 0; p.vy = 0;
@@ -1624,6 +1627,42 @@ function _t1039Leave(vil, n, camp) {
   _t1039Stat.left += T.pick.length;
   if (_t1039Stat.rows.length < 200) _t1039Stat.rows.push({ arm: 'spawn', day: state.world ? state.world.day : null, from: vil.name, n: n | 0, left: T.pick.length, queued: T.queued, keep: T.keep, camp: camp ? [camp.cx, camp.cy] : null, pids: T.pick.slice() });
   return T.pick.length;
+}
+// ═══ ★★[T1078 2026-11-02 · ★재민 11-02 "도적과 은신처가 맵에 실제로 보이나"] **도적 단원 전원이 몸** — 도적 층(`bandits.js` · 손잡이 `T1078_BANDIT_ALL`)의 몸 쪽 문 ═══
+//   ⓐ 걷는 몸(`_t1078Walkers`) — 그 단으로 걷는 몸(절망 이탈 — 까닭 줄의 `gid` · `_bxWalk` 가 기록에 `t1078` 표식) · 닿았나(T681 ③ 켬 = 걸음 장부 · 끔 = 틱 걸음).
+//   ⓑ 쓰러짐(`_t1078Die`) — T590 ⓐ `_bxDie` 그대로(마을 칸 null — 짐 절반 낙하 · 누운 몸 · `corpseMs` 뒤 거둠 · 까닭 `bandit_<문>`).
+//   ⓒ 걸어 나감(`_t1078Out`) — 흩어진 단의 몸이 받는 마을까지 `_bxWalk`(T590 `move` 걸음 — 코스 A* · 닿으면 거둠 · 주민 되기는 T1079 ④ · T1080 칸).
+//   ⓓ 일과(`_t1078Life`) — 존 `decideNpcBehavior` 의 마을 일과 문 곁(늑대 도주 뒤): 밤 · 기상 전 = 은거지 `취침` · 아침 창(`SCH_FARMW_R`) + 오늘 끼니가 단 비축에서 났다 = 은거지 `식사` ·
+//      그 밖 = false(종전 배회 — 일터 = 은거지 둘레). 마을 일과의 그 함수들(`_lifeGoHome` · `_lifeAct` · `_t720Fv` · 기상 시차 `SCH_DOFF`) 그대로 — 사본 0 · 도적은 전역 태양시(§19 주석 "도적은 전역 유지").
+//   끔이면 넷 다 한 번도 안 불린다(도적 층이 켬에서만 부른다 · 존 문은 `_bdtGid` 가 선 몸만).
+function _t1078Walkers() {
+  const out = [], M = state.bodyExits; if (!M || !M.size) return out;
+  const players = state.deps.players;
+  for (const [pid, r] of M) {
+    if (r.t1078 == null || r.cat === 'died' || !players.has(pid)) continue;
+    const arrived = (T681_ON && r.ppd != null) ? (r.len - (r.L || 0) <= 0.5) : (r.len - r.prog <= 0.5);
+    out.push({ pid, gid: r.t1078, arrived });
+  }
+  return out;
+}
+function _t1078Die(p, why) { if (!p) return false; _bxDie(null, p, { k: 'bandit_' + (why || 'unknown') }); return true; }
+function _t1078Out(p, toVil) {
+  if (!p || !toVil) return false;
+  if (state.bodyExits) state.bodyExits.delete(p.pid);   // 그 단으로 걷던 몸이면 그 걸음을 접는다(새 걸음이 지금 자리에서 시작)
+  p._bxExit = undefined;
+  _bxWalk(toVil, p, { k: 'move', to: { x: toVil.ccx * SZ + SZ / 2, y: toVil.ccy * SZ + SZ / 2 } });
+  return true;
+}
+function _t1078Life(npc, now) {
+  if (npc._bdtGid == null || npc._bxExit || npc.isDown || !(npc.hp > 0)) return false;
+  const wpF = state.deps.worldPhase; if (!wpF) return false;
+  const dayR = state.deps.dayPhaseRatio || 0.7;
+  const fv = _t720Fv(wpF(now), 0);
+  if (npc._dOff === undefined) npc._dOff = ((_pidHash(npc.pid) % 997) / 997) * SCH_DOFF;
+  if (fv >= dayR || fv < npc._dOff) { _lifeGoHome(npc, '취침'); return true; }
+  if (npc._t1078Fed && fv / dayR < SCH_FARMW_R) { _lifeGoHome(npc, '식사'); return true; }
+  if (npc._lifeAct === '취침' || npc._lifeAct === '식사' || npc._lifeAct === '귀가') _lifeAct(npc, '배회');
+  return false;
 }
 // 몸 하나를 줄인다 — 까닭 `why`(`_bxTake` 한 몫 · 없으면 `unknown`)에 따라 그 자리에서 죽거나 걸어서 나간다.
 //   ★[P3 삼중 코히런스] 출정(징발·_muster) 중 병사는 대상에서 제외 — 전쟁 실체가 그 pid 를 쥔다(종전 그대로).
@@ -7315,7 +7354,7 @@ function _t681Day(now) {
       if (r.ppd == null) continue;
       r.L = Math.min(r.len, Math.max(0, (d - r.d0) * r.ppd));
       if (r.t765) continue;   // ★[T765] 후보 몸 — 거두지 않는다(붙기는 도적 하루가 econ 장부로 · `_t765Join`)
-      if (r.t1039) continue;   // ★[T1039 walk] 단이 될 몸 — 거두지 않는다(붙기는 도적 하루가 단을 세울 때 · `_t1039Join`)
+      if (r.t1039 || r.t1078 != null) continue;   // ★[T1039 walk] 단이 될 몸 — 거두지 않는다(붙기는 도적 하루가 단을 세울 때 · `_t1039Join`) · ★[T1078] 단에 들 몸도(`_t1078Gather`)
       if (r.len - r.L <= 0.5) { _bxGone(r, p); _bx.arrive++; }
     }
   }
@@ -8381,6 +8420,7 @@ function __p3Bind(mock) {
     noteBodyExit, tickBodyExits, bodyExitStats, _starvedToday,   // ★[T590] 줄어드는 몸 — 하네스(`test-body-exit`)가 운영과 같은 문을 부른다
     _t765Depart, _t765Join,   // ★[T765] 후보 걷기 몸 문 둘(하네스 `test-cand-walk` 가 운영과 같은 문을 부른다)
     _t1039Depart, _t1039Join, _t1039Leave,   // ★[T1039] 도적 전환 몸 문 셋(하네스 `test-bandit-body` 가 운영과 같은 문을 부른다)
+    _t1078Walkers, _t1078Die, _t1078Out, _t1078Life,   // ★[T1078] 단원 = 몸 문 넷(하네스 `test-bandit-all` 이 운영과 같은 문을 부른다)
     _t681Day, _t681Flush, T681_ON, T703_MARCH,   // ★[T703] T681 켬(기본) 판의 하루 경계 두 자리 — 하네스가 운영 하루 마감과 같은 차례(econ 앞 `_t681Flush` · 캐러밴 앞 `_t681Day`)로 부른다(값 무변 · 내보내기만)
     _warEngage, _warAfterDaily, _warEndFight, _warBuildRectIndex, _warBlockedCell, _warWorld, warPerf, _warOrderFallback, _warToStandoff,
     T1019_UNTRAP, T1019_ASSAULT_HP, _t1019HpRef, _t1019NoHurt,   // ★[T1019] 하네스(`test-t1019-untrap`)가 운영과 같은 문을 부른다(내보내기만)
@@ -8450,6 +8490,7 @@ function banditHost() {
     noteBodyExit,                                    // ★[T590] 사람이 줄어든 까닭 — 해체·이탈·원정 전사(몸이 걸어 나갈 곳 · 위 T590 머리글)
     t765Depart: _t765Depart, t765Join: _t765Join,    // ★[T765] 후보 걷기 몸 문 둘(도적 `_t577Walk` — `T577_CAND_WALK=1` 에서만 불린다)
     t1039Depart: _t1039Depart, t1039Join: _t1039Join, t1039Leave: _t1039Leave,   // ★[T1039] 도적 전환 몸 문 셋(도적 `formGang` · `_t1039Arrive` · `syncBodies` — `T1039_BANDIT_BODY` 켬 갈래에서만 불린다)
+    t1078Walkers: _t1078Walkers, t1078Die: _t1078Die, t1078Out: _t1078Out,   // ★[T1078] 단원 = 몸 문 셋(도적 `_t1078Gather` · `_t1078Trim` · `t1078Died` · `_t1078Out` — `T1078_BANDIT_ALL` 켬에서만 불린다)
     seed: state.villageSeed || 1020,
     cellsW: ZONE ? Math.ceil(ZONE.zoneWidth / SZ) : 0,
     cellsH: ZONE ? Math.ceil(ZONE.zoneHeight / SZ) : 0,
@@ -14590,6 +14631,7 @@ module.exports = { t750CastPre, t750Stat: () => _t750Stat, t719ReachPre, t719Sta
   playerVillageWithdraw, playerVillageWithdrawStock, villageWithdrawGate,   // ★[T11] 곳간 인출 — 납품의 역연산(같은 표·같은 환산율)
   bodyExitStats, noteBodyExit, tickBodyExits,   // ★[T590] 줄어드는 몸 — 판 자(`t577-server-hook`)가 까닭별 수를 읽는다 · 하네스가 같은 문을 부른다
   t1039Stat: () => JSON.parse(JSON.stringify(_t1039Stat)),   // ★[T1039] 도적 전환 몸 증인(관찰기 `t1039-observe` · 하네스)
+  t1078Life: (npc, now) => _t1078Life(npc, now),   // ★[T1078] 도적 단원 몸의 은거지 곁 일과(존 `decideNpcBehavior` 가 `_bdtGid` 가 선 몸에만 부른다 · 관찰기가 감싼다)
   t1039Exits: () => state.bodyExits || null,   // ★[T1039] 줄어드는 몸 기록(읽기만 — 관찰기가 은거지로 걷는 몸을 단마다 센다)
   t765Stat: () => JSON.parse(JSON.stringify(_t765Stat)),   // ★[T765] 후보 걷기 몸 증인(관측 자 `t765-obs` · 실제 하루 판)
   villageFamine, playerVillageDepositMap,   // ★[T159] 기근 판정(엔진 판단을 읽는다) · 품목→재화 대응표
