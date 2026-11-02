@@ -13,6 +13,7 @@
 //     [자명 통과 금지] 이 세계 곳간엔 뭉뚱그린 재화가 실제로 있고(`food`) 그것이 `withheld` 로 세어졌다 · 기준이 뭉뚱그린 것이면 `pick`
 //  ⑤ 바뀐 칸만 — 안 바뀌면 안 보낸다 · 곳간을 움직이면 그 칸만 온다(머리줄은 안 온다) · 닫으면 더 안 온다
 //  ⑥ 값 — 한 마을 열기 µs(평균 · 최대) · 박자 = 존의 5초
+//  ⑦ [T1103] 마을 화면 말투 — 소식 · 끝낸 일 줄 = 하십시오체(`Events.newsLine`) · 화면 줄 표의 사건 종류 = 촌장 말 표(`LINES`)
 //  ②-T1084 없던 칸 중 셀 수 있는 둘 — 집터 `bedsGain` = econ `hutCapPerHut()`(= 침상 명부가 집 한 채에 더하는 수) ·
 //     공사 줄 `kind:'clear'` = 개간 술어 정본(`villageViewSrc().needClear`) ∧ 농부 몸 · 밭 칸 수 · 개간 몸 수 · 술어가 거짓이면 줄 없음 · 고정 자료 같은 모양
 //
@@ -141,7 +142,12 @@ const ITEM_KEYS = (view) => {   // 품목이 서는 자리 전부(④)
       && (VV.isLumped(want[i].rewItem) ? !('line' in r) && !('rewRes' in r) : (r.line === want[i].line && r.rewRes === want[i].rewItem && r.rewQty === want[i].rewQty))),
       '부탁 줄마다 품목 · 양 · 모인 몫 = 게시판 그대로 · 갚는 것이 뭉뚱그린 것이면 갚는 칸 · 문장 없음(아니면 게시판 문장 그대로)', `갚는 칸 뺀 줄 ${view.requests.rewardWithheld}`);
     const nw = b.news.filter((r) => !VV.isLumped(r.item));
-    ok(view.news.rows.length === nw.length && view.news.rows.every((r, i) => r.line === nw[i].line && r.heard === nw[i].heard && r.from === (nw[i].from || null)), '소식 = 게시판 소식(소문 가시성 `visibleEvents`) 그대로', `${view.news.rows.length}줄 · 뺀 ${view.news.withheld}`);
+    //   ★[T1103] 줄은 같은 사건의 하십시오체(`Events.newsLine`) — 사건 · 들은 날 · 소문 출처 · 줄 수는 게시판 소식 그대로, 문장만 화면 말투다(게시판 줄 = 촌장 하게체 그대로)
+    const vn = V.villageViewNews(VID).filter((r) => !VV.isLumped(r.item));
+    ok(view.news.rows.length === nw.length && view.news.rows.every((r, i) => r.type === nw[i].type && r.day === nw[i].day && r.heard === nw[i].heard && r.from === (nw[i].from || null) && r.line === vn[i].line && vn[i].type === nw[i].type),
+      '소식 = 게시판 소식(소문 가시성 `visibleEvents`)과 같은 사건 · 같은 줄 수 — 줄은 `villageViewNews`(하십시오체)', `${view.news.rows.length}줄 · 뺀 ${view.news.withheld}`);
+    ok(view.news.rows.length > 0 && view.news.rows.every((r) => /니다\.$/.test(r.line)) && nw.some((r, i) => r.line !== view.news.rows[i].line),
+      '[T1103 · 자명 통과 금지] 소식 줄이 하십시오체로 끝나고(…니다.) 게시판 줄(하게체)과 실제로 다르다', view.news.rows.slice(0, 2).map((r) => r.line).join(' / '));
   }
   {
     const bodies = (vil.npcPids || []).map((pid) => H.players.get(pid)).filter(Boolean);
@@ -166,9 +172,16 @@ const ITEM_KEYS = (view) => {   // 품목이 서는 자리 전부(④)
     const pv = view.projects.now;
     ok(pv.filter((x) => x.kind === 'caravan').length === n0, '행상 줄 = 이 마을에서 떠난 캐러밴(econ `world.caravans`)', String(n0));
     ok(!!vil._site === pv.some((x) => x.kind === 'house') && (!vil._site || pv.find((x) => x.kind === 'house').stage === (vil._site.stage | 0)), '집터 줄 = 마을 집터(`_site`) · 단계 그대로', vil._site ? `단계 ${vil._site.stage}` : '집터 없음');
+    {   // ★[T1103] 자재 줄 `give` = 그 자재로 들어가는 내 물건(기부 문 정본 `playerVillageDepositMap` 그대로)
+      const dm = V.playerVillageDepositMap(), hs = pv.find((x) => x.kind === 'house');
+      const rowsN = (hs && hs.need) ? hs.need : [];
+      ok(rowsN.every((n) => Array.isArray(n.give) && n.give.every((it) => dm[it] === n.res) && Object.keys(dm).filter((it) => dm[it] === n.res).length === n.give.length),
+        '[T1103] 집터 자재 줄 `give` = 기부 문이 그 자재로 받는 물건 키 전부', rowsN.length ? rowsN.map((n) => `${n.res}←${n.give.join('/')}`).join(' · ') : '(자재 줄 없음 — 집 행위 끔 판)');
+    }
     const ch = V.villageChronicle(VID, p.x, p.y);
     const built = [].concat(...ch.seasons.map((b) => b.items)).filter((x) => x.type === 'BUILT');
     ok(view.projects.done.length === built.length, '끝낸 일 = 연대기의 완공(`BUILT`)', String(built.length));
+    ok(view.projects.done.every((d) => /니다\.$/.test(d.line)), '[T1103] 끝낸 일 줄 = 하십시오체(`Events.newsLine`)', view.projects.done.length ? view.projects.done[0].line : '(완공 없음)');
   }
   // ── ②-T1084 없던 칸 중 셀 수 있는 둘 — 집터 `bedsGain` · 공사 줄 `kind:'clear'` ──
   say('\n②-T1084 없던 칸 중 셀 수 있는 것(새 칸만)');
@@ -305,6 +318,20 @@ const ITEM_KEYS = (view) => {   // 품목이 서는 자리 전부(④)
     const want = tb.rows.filter((r) => !VV.isLumped(r.res));
     ok(v2.rows.every((r, i) => r.res === want[i].res && r.num === want[i].num), `지문 — 곳간(${res})이 움직이면 시세를 다시 부르고 정본과 같다(낡은 값 0)`);
     st[res] = was;
+  }
+
+  // ── ⑦ [T1103] 마을 화면 말투 — 화면 줄 표(`NEWS_LINES`)가 촌장 말 표(`LINES`)와 같은 사건 종류를 다 덮는다(빠지면 그 소식이 화면에서 조용히 사라진다) ──
+  say('\n⑦ [T1103] 마을 화면 소식 줄 = 하십시오체 · 사건 종류 전부');
+  {
+    const Ev = require(path.join(ROOT, 'server', 'events.js'));
+    const a = Ev.LINE_TYPES.slice().sort(), b = Ev.NEWS_LINE_TYPES.slice().sort();
+    ok(a.length > 10 && JSON.stringify(a) === JSON.stringify(b), '화면 줄 표의 사건 종류 = 촌장 말 표의 사건 종류', `${b.length} / ${a.length}`);
+    const samples = [];
+    for (const t of a) for (const ev of [{ type: t, item: 'wood' }, { type: t, item: 'granary' }, { type: t, item: '가뭄' }, { type: t, item: 'village' }, { type: t, item: '도미' }, { type: t, item: 'wood', meta: { season: 'spring' } }]) samples.push([ev, Ev.newsLine(ev), Ev.briefLine(ev)]);
+    const bad = samples.filter(([, l]) => !(/니다\.$/.test(l)) || /[네군세이]\.$/.test(l));
+    ok(!bad.length, '모든 사건 · 품목 갈래에서 줄이 …니다. 로 끝난다(하게체 끝 0)', bad.length ? bad.slice(0, 3).map(([e, l]) => `${e.type}:${l}`).join(' / ') : `${samples.length}갈래`);
+    ok(samples.some(([, l, br]) => l !== br) && samples.every(([, , br]) => typeof br === 'string'), '[자명 통과 금지] 촌장 말(`briefLine`)은 그대로 하게체 — 두 표가 실제로 다르다', samples[0][2]);
+    ok(!/[0-9]/.test(samples.map(([, l]) => l).join('')), '화면 줄도 수치를 읊지 않는다(`LINES` 와 같은 계약)');
   }
 
   say(`\n결과: PASS ${pass} · FAIL ${fail}`);

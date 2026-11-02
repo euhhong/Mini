@@ -83,9 +83,12 @@ function _requests(board) {
   }
   return { rows, withheld, rewardWithheld };
 }
-function _news(board, day) {
+// ★[T1103] 줄은 마을 화면용 하십시오체(`villages.js villageViewNews` → `Events.newsLine`) — 사건 · 술어 · 줄 수는 게시판 소식과 같다(촌장 말 하게체 줄은 게시판 그대로).
+function _news(board, day, vid) {
+  const V = H && H.SimVillages;
+  const src = (V && V.villageViewNews) ? V.villageViewNews(vid | 0) : (board.news || []);
   const rows = []; let withheld = 0;
-  for (const r of board.news || []) {
+  for (const r of src) {
     if (isLumped(r.item)) { withheld++; continue; }
     rows.push({ line: r.line, type: r.type, day: r.day, heard: r.heard, ago: day - (r.heard | 0), from: r.from || null });
   }
@@ -105,7 +108,9 @@ function _projects(src, vil, chron) {
     if (E && E.T400_BUILD_ACT && E.hutEconStage) {
       const need = E.hutEconStage(vil._site.stage | 0) || {}, mat = vil._site.mat || {};
       o.need = [];
-      for (const k of Object.keys(need)) { if (isLumped(k)) { withheld++; continue; } o.need.push({ res: k, ko: ko(k), need: _r(need[k], 2), have: _r(mat[k] || 0, 2) }); }
+      //   ★[T1103] `give` — 그 자재로 곳간에 들어가는 내 물건 키(기부 문 `village_donate` 이 받는 키 · 정본 `playerVillageDepositMap` 그대로 · 화면 "재료 가져오기"가 쓴다)
+      const dm = (H.SimVillages && H.SimVillages.playerVillageDepositMap) ? H.SimVillages.playerVillageDepositMap() : {};
+      for (const k of Object.keys(need)) { if (isLumped(k)) { withheld++; continue; } o.need.push({ res: k, ko: ko(k), need: _r(need[k], 2), have: _r(mat[k] || 0, 2), give: Object.keys(dm).filter((it) => dm[it] === k) }); }
     }
     // ★[T1084] 다 지으면 늘어나는 침상 — econ 정본 `hutCapPerHut()`(층당 정원 × 층수 상한 1). 완공(`villages.js _lifeCompleteHouse`)이
     //   `_houseCells` 에 한 칸을 더하고 침상 명부 `_mapBedsOf` = 칸 수 × 층당 정원이라, 집 한 채가 더하는 침상이 바로 이 수다(새 수 0).
@@ -137,7 +142,8 @@ function _projects(src, vil, chron) {
   }
   // 끝낸 일 — 연대기(올해)의 완공(`BUILT`)만. 문장은 장부가 쓴 그대로.
   const done = [];
-  if (chron && !chron.err) for (const b of chron.seasons || []) for (const x of b.items || []) if (x.type === 'BUILT') done.push({ line: x.line, day: x.day, ago: src.day - (x.day | 0) });
+  //   ★[T1103] 줄 = 같은 사건의 하십시오체(`Events.newsLine` — 곳간 · 움집은 사건의 `item` 이 가른다 · 연대기가 그 칸을 싣는다)
+  if (chron && !chron.err) for (const b of chron.seasons || []) for (const x of b.items || []) if (x.type === 'BUILT') done.push({ line: (Events.newsLine && Events.newsLine(x)) || x.line, day: x.day, ago: src.day - (x.day | 0) });
   done.sort((a, b) => b.day - a.day);
   return { now, done, withheld };
 }
@@ -190,9 +196,9 @@ function _prices(player, vid, numeraire) {
 // 한 마을 열기 값 — 칸 전부. 게이트 밖이면 `{ far:true, err }`. `memo` = 열린 사람의 지난 시세(`{ key, slot }` · 없으면 늘 정본).
 function build(player, vid, numeraire, memo) {
   const V = H && H.SimVillages;
-  if (!V || !V.villageViewSrc || !V.villageBoard) return { err: '마을 화면을 열 수 없다' };
+  if (!V || !V.villageViewSrc || !V.villageBoard) return { err: '마을 화면을 열 수 없습니다.' };
   const src = V.villageViewSrc(vid | 0);
-  if (!src) return { err: '그런 마을이 없다' };
+  if (!src) return { err: '그런 마을이 없습니다.' };
   const board = V.villageBoard(vid | 0, player.x, player.y);   // ★게이트 = 게시판과 같은 술어(260px)
   if (board.err) return { far: true, err: board.err };
   const vil = src.vil;
@@ -203,7 +209,7 @@ function build(player, vid, numeraire, memo) {
     me: _me(player, vil),
     dash: { pop: vil.econ.npcs.length, toWinter: toWinter(src.day), projectsN: projects.now.length },
     requests: _requests(board),
-    news: _news(board, src.day),
+    news: _news(board, src.day, vid),
     projects,
     members: _members(vil, hd.chiefId),
     store: _store(src, vil),
@@ -218,7 +224,7 @@ function build(player, vid, numeraire, memo) {
 function _timed(player, vid, numeraire, memo) {
   const t0 = process.hrtime.bigint();
   let r;
-  try { r = build(player, vid, numeraire, memo); } catch (e) { ST.err++; r = { err: '마을 화면을 읽지 못했다' }; }
+  try { r = build(player, vid, numeraire, memo); } catch (e) { ST.err++; r = { err: '마을 화면을 읽지 못했습니다.' }; }
   const us = Number(process.hrtime.bigint() - t0) / 1e3;
   ST.builds++; ST.buildUs += us; if (us > ST.maxUs) ST.maxUs = us;
   return r;
