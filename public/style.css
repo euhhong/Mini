@@ -860,3 +860,6 @@ html, body { margin: 0; padding: 0; height: 100%; font-family: var(--font); back
 .bp-hint{margin-top:8px;color:var(--dim-2);font:500 11px/1.45 var(--font)}
 .bp-news{padding:3px 6px;font:500 12px/1.45 var(--font);color:var(--fg)}
 .bp-from{color:var(--dim-2);font-size:11px}
+/* ★[T1085] 촌장 명부(게시판 판 안 · 구성원 칸) — 판의 줄 문법 그대로(줄 · 버튼 토큰 공유 · 새 색 0) */
+.bm-hdr,.bm-row{display:grid;grid-template-columns:1fr 44px 1fr 1fr 72px;gap:6px;align-items:center}
+.bm-row select{font:500 11px var(--font);background:var(--inset);color:var(--fg);border:1px solid var(--line-2);border-radius:0}

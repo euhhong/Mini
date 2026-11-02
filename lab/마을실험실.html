@@ -11556,6 +11556,39 @@ function switchNPCJob(npc, newJob, day, v) {
   npc.lastJobChangeDay = day;
 }
 
+// ★[T1085 · 재민 11-02] 개인 전환 쿨다운 — 자율 전환 두 자리(무장불가 전사 동원해제 · 잉여 직군 차출)가 쓰던 `30` 그대로를 한 이름으로(값 무변).
+//   촌장 지정(`assignNPCJob`)도 같은 수를 읽는다 — 지정한 사람은 이 기간 자율 전환에서 빠진다(바뀐 날 = `lastJobChangeDay`).
+const JOB_SWITCH_COOLDOWN = 30;
+// ★[T1085] 굶을 때 = 식량 등가가 N × 30 일치 밑(직업 전환 가속 · 피커 기근 문과 같은 문턱 · 새 수 0).
+//   그때 자율 식량 전환은 지정보다 앞선다(배고픈 사람은 밭으로) — 지정 쿨다운이 그 전환만 막지 못한다.
+const _T1085_FOOD = { farmer: 1, fisher: 1, hunter: 1, forager: 1 };   // 피커 `foodOpts` 넷 그대로
+function _t1085Hungry(v) { return totalFoodEquivalent(v) < (v.npcs.length || 1) * 30; }
+// ★[T1085] 촌장 지정 — 자율 전환과 **같은 규칙**만 묻는다(새 규칙 0): 징발(마을에 없다) · 포로 무기 직 금지 · 개인 쿨다운 ·
+//   자리(`hasSlot` × `jobCapacity`) · 전사 = 무기 하나에 한 사람(무장불가 전사 동원해제 문과 같은 비교). 통과하면 `switchNPCJob` 그대로.
+//   반환 { ok } | { ok:false, why, left? } — 이유 글자는 부르는 쪽(서버)이 쓴다(econ 은 글자 0).
+//   ⚠econ 은 지정 표지(`npc._chiefAssignDay`)를 자율 전환에서만 읽는다 — 표지가 없으면 종전 비트 그대로.
+function assignNPCJob(v, npc, job, day) {
+  if (!v || !npc || !Array.isArray(v.npcs) || v.npcs.indexOf(npc) < 0) return { ok: false, why: 'member' };
+  if (!JOBS[job]) return { ok: false, why: 'job' };
+  if (npc._warDraft) return { ok: false, why: 'draft' };
+  if (npc.currentJob === job) return { ok: false, why: 'same' };
+  if (npc.captive && CAPTIVE_JOB_BAN[job]) return { ok: false, why: 'captive' };
+  const since = day - (npc.lastJobChangeDay == null ? -999 : npc.lastJobChangeDay);
+  if (since < JOB_SWITCH_COOLDOWN) return { ok: false, why: 'cool', left: JOB_SWITCH_COOLDOWN - since };
+  const counts = jobCounts(v);
+  if (!hasSlot(v, job, jobCapacity(v), counts)) return { ok: false, why: 'slot' };
+  if (job === 'warrior' && (counts.warrior || 0) >= Math.floor((v.storage && v.storage.weapon) || 0)) return { ok: false, why: 'weapon' };
+  switchNPCJob(npc, job, day, v);
+  npc._chiefAssignDay = day;
+  return { ok: true };
+}
+// ★[T1085] 촌장 화면이 고를 직업 — 이 땅에 자리가 하나라도 있는 직업(`jobCapacity` > 0)과 지금 빈자리 여부. 읽기 전용.
+function assignableJobs(v) {
+  const cap = jobCapacity(v), counts = jobCounts(v), out = [];
+  for (const j of JOB_NAMES) if ((cap[j] || 0) > 0) out.push({ job: j, open: hasSlot(v, j, cap, counts) });
+  return out;
+}
+
 // NPC 기회비용 — ★시장가치(한계생산 × 그림자가격). 픽커 한계가치와 *동일 척도*라
 //   switch-in(부족직)·switch-out(잉여직)이 대칭(Lewis 노동이동). 글럿(가격폭락) 재화
 //   생산자(예: 도구 과잉 마을의 대장장이 → 도구가격↓)는 가치가 낮아 1순위로 차출됨.
@@ -14344,7 +14377,7 @@ function autoSwitchJob(v, day, world) {
     if ((counts.warrior || 0) > armed) {
       for (const n of v.npcs) {
         if (n.currentJob !== 'warrior') continue;
-        if (day - n.lastJobChangeDay < 30) continue;
+        if (day - n.lastJobChangeDay < JOB_SWITCH_COOLDOWN) continue;
         const opts = [['farmer', v.land.fertility * 1.5], ['fisher', v.land.water * 1.2], ['hunter', v.land.game * 0.7], ['forager', 0.3]];
         opts.sort((a, b) => b[1] - a[1]);
         switchNPCJob(n, opts[0][0], day, v);
@@ -14362,11 +14395,16 @@ function autoSwitchJob(v, day, world) {
   const priceTbl = (world && typeof world.priceFn === 'function') ? world.priceFn(v) : null;
   const w = priceTbl ? (r => Math.max(0.05, Math.min(200, (priceTbl[r] || 1) / 1.0))) : (_ => 1.0);
   let bestIdx = -1, bestCost = Infinity;
+  //   ★[T1085 ②] 굶는 날의 식량직 전환은 촌장 지정 쿨다운을 넘는다(지정 표지가 마지막 전환일 때만 — 표지 없는 세계 = 종전 비트).
+  let _t1085Hunger = null;
   for (let i = 0; i < v.npcs.length; i++) {
     const n = v.npcs[i];
     if (n.currentJob === need) continue;
     if (n.captive && CAPTIVE_JOB_BAN[need]) continue;   // ★[포로 게이트] 포로에게 전사·사냥꾼(무기 직) 배정 금지 — captive 없으면 무해(항상 통과)
-    if (day - n.lastJobChangeDay < 30) continue;  // 쿨다운(개인 단위 churn 억제)
+    if (day - n.lastJobChangeDay < JOB_SWITCH_COOLDOWN) {  // 쿨다운(개인 단위 churn 억제)
+      if (!(n._chiefAssignDay != null && n._chiefAssignDay === n.lastJobChangeDay && _T1085_FOOD[need]
+        && (_t1085Hunger === null ? (_t1085Hunger = _t1085Hungry(v)) : _t1085Hunger))) continue;
+    }
     const cost = opportunityCost(n, v, w);
     if (cost < bestCost) { bestCost = cost; bestIdx = i; }
   }
@@ -15086,6 +15124,8 @@ function computeVillagePrices(v) {
 }
 
 module.exports = {
+  assignNPCJob, assignableJobs, JOB_SWITCH_COOLDOWN,   // ★[T1085] 촌장 지정 — 서버 동사 `assign_job` 이 부른다(규칙 사본 0)
+  _autoSwitchJobForTest: autoSwitchJob, _switchNPCJobForTest: switchNPCJob,   // ★[T1085] 하네스가 자율 전환 그 함수를 부른다(시험 이름 · 사본 0)
   T860_ON, CATCH_FROM, PRESERVE_FROM, _preserveSurplus, _t860Begin, _t860Dry, T877_ON, _t860Unit, PRESERVED_FOODS, PRESERVE_YIELD, PRESERVE_FOOD_FACTOR, FORAGE_FOOD_FACTOR,   // ★[T860] 잡은 날 말리기 — 손잡이 · 잡은 칸 표(하네스가 spoil 정본과 대조한다 · 사본 0) · 갈무리 한 걸음
   STONE_NET_STOCK,   // ★[T180] STONE_NET 1차 문턱 — v2 수출 게이트가 읽는다(사본 0)
 

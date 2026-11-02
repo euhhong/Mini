@@ -91,6 +91,29 @@ function boardRowHtml(r, i) {
     + `</div>`;
 }
 
+// ★[T1085] 촌장 명부 — 한 사람 한 줄: 지금 일 · 나이 · 형편(원정 중 · n일 뒤 · 촌장이 맡김) · 맡길 일 · "일 맡기기"(명사형).
+function boardMembersHtml(M) {
+  if (!M || !Array.isArray(M.rows)) return '';
+  const jobs = Array.isArray(M.jobs) ? M.jobs : [];
+  let h = `<div class="bd-sec">구성원</div>`;
+  h += `<div class="bm-hdr bp-hdr"><span>지금 일</span><span>나이</span><span>형편</span><span>맡길 일</span><span></span></div>`;
+  for (const r of M.rows) {
+    const shut = r.away || r.left > 0;
+    const st = r.away ? '원정 중' : r.left > 0 ? `${r.left}일 뒤` : '';
+    const mark = r.chief ? '촌장이 맡김' : '';
+    const opts = jobs.filter((j) => j.job !== r.job)
+      .map((j) => `<option value="${j.job}"${j.open ? '' : ' disabled'}>${j.ko}${j.open ? '' : ' (자리 없음)'}</option>`).join('');
+    h += `<div class="bm-row bp-row" data-bm-npc="${r.id}">`
+      + `<span>${r.jobKo}</span><span class="bp-num">${r.age}</span>`
+      + `<span class="bp-rew">${[st, mark].filter(Boolean).join(' · ')}</span>`
+      + `<select data-bm-job${shut ? ' disabled' : ''}>${opts}</select>`
+      + `<button class="bp-give" data-bm-assign${shut ? ' disabled' : ''}>일 맡기기</button>`
+      + `</div>`;
+  }
+  h += `<div class="bp-hint">맡긴 사람은 ${M.cooldown}일 동안 스스로 일을 바꾸지 않습니다. 마을이 굶으면 먹을 것을 구하는 일로 먼저 돌아갑니다.</div>`;
+  return h;
+}
+
 function renderBoardPane() {
   const body = document.getElementById('boardPaneBody');
   const title = document.getElementById('boardPaneTitle');
@@ -121,7 +144,21 @@ function renderBoardPane() {
     h += news.map((n) => `<div class="bp-news">${n.line}`
       + (n.from ? ` <span class="bp-from">${n.from}에서</span>` : '') + `</div>`).join('');
   }
+  // ── ★[T1085] 구성원 — 촌장에게만 서버가 싣는다(`members`) · T1070 구성원 탭 전 시험 자리 ─────────
+  //   값은 전부 서버 것(직업 이름 · 나이 · 남은 날 · 고를 직업과 빈자리) — 여기서 세지 않는다.
+  h += boardMembersHtml(bd.members);
   body.innerHTML = h;
+
+  // 일 맡기기 — 그 줄의 사람 · 고른 직업을 싣는다(된다 · 안 된다는 서버가 말한다).
+  for (const btn of body.querySelectorAll('[data-bm-assign]')) {
+    btn.onclick = () => {
+      const row = btn.closest('[data-bm-npc]');
+      const sel = row && row.querySelector('[data-bm-job]');
+      if (!row || !sel || !sel.value) return;
+      if (evNearVid == null) { showNotice('마을 중심 가까이에서만 일을 맡길 수 있습니다.'); return; }
+      sendPrimary({ type: 'assign_job', vid: evNearVid, npc: row.getAttribute('data-bm-npc'), job: sel.value });
+    };
+  }
 
   // 행 납품 — **그 행의 품목**을 싣는다(수량은 안 싣는다: 서버가 낼 수 있는 만큼 낸다).
   for (const btn of body.querySelectorAll('[data-bp-give]')) {
