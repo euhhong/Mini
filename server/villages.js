@@ -6791,7 +6791,7 @@ function _warEndFight(body, why, winner) {
   const atkSurv = [], defSurv = [], deadA = [], deadB = [];
   if (f) for (const u of f.ctx.units) { const pid = u.agent; if (pid == null || !players.has(pid)) continue;
     if (u.hp <= 0) (u.side === 'A' ? deadA : deadB).push(pid); else (u.side === 'A' ? atkSurv : defSurv).push(pid); }
-  const _t811 = T811_ARMS_BODY && w._armsPack ? { field: 0, dead: null } : null;   // ★[T811 · T857] 쓰러진 · 끌려간 공격 몸 짐 → 결판 자리 더미(끔 · 몸 짐 없으면 null)
+  const _t811 = (T811_ARMS_BODY || T1094_CARRY_CAP) && w._armsPack ? { field: 0, dead: null } : null;   // ★[T811 · T857] 쓰러진 · 끌려간 공격 몸 짐 → 결판 자리 더미(끔 · 몸 짐 없으면 null)
   const escort = [];
   if (w._capResolve && w._capResolve.npcs && w._capResolve.npcs.length) {
     const loserDead = (w._capResolve.side === 'A') ? deadA : deadB;
@@ -7053,6 +7053,7 @@ function _warRationLoad(body) {
   for (const p of bearers) { const cur = _warBagView(p, w._packKeys); for (const k in one) cur[k] = (cur[k] || 0) + one[k]; _warBagWrite(p, w._packKeys, cur); p._warPackOf = w.id; }
   if (_G) bearers.forEach((p, i) => { _G.bagPut(p, _hand[i]); if (w._packSplitLots) _G.bagPut(p, w._packSplitLots); });   // ★[T748] 팩 레코드를 몸 짐 줄로(몸마다 고르게 · 끄면 칸이 안 선다)
   if (w._packSplitLots) w._packSplitLots = null;
+  if (T1094_CARRY_CAP) _t1094PackCap(w, bearers, one);   // ★[T1094 문 6] 몸마다 짐 상한(`CAP_KG`)까지 — 넘는 팩 몫은 집 곳간에 남긴다(군량 먼저 · 무기는 다음 줄 `_warArmsLoad`)
   if (w._rationBook) w._rationBook.bearers = bearers.length;
   body._fgPts = body.pts; body._fgProg = body.prog || 0;   // ★[T441] 길에서 채집 — 그날 지난 구간의 시작점
   return bearers.length;
@@ -7256,13 +7257,71 @@ function _t811Sync(w, why) {
   if (!live.length) w._armsOnBodies = 0;
   return live.length;
 }
+// ════════════════════════════════════════════════════════════════
+// ★★[T1094 2026-11-03 · ★PM 11-02 캐논 문 6(재민 보고됨) "몸이 질 수 있는 만큼만 가져간다"] 손잡이 `T1094_CARRY_CAP`(켬 기본 후보 · 되돌림 `=0` = 종전 글자).
+//   종전: 동원(war-core `warMobilize`)이 곳간에서 뗀 군량 팩(`_opPackLoad` — 병력 × 하루치 × 일수)은 몸 수와 무관하게 몸에 나뉘어(T423 `packSplit`) 실렸고 ·
+//     무기 장부(T403 `w._arms` — 문 5 켬 기본)는 몸에 안 실렸다(T811 끔 기본 — 장부에만 있고 몸에 없는 짐).
+//   켬: 원정 몸이 서는 그 자리(`_warInstantiateAttackers` — 군량 `_warRationLoad` 다음 무기 `_warArmsLoad`)에서 몸마다 짐 상한 `carry.js CAP_KG`(25kg · 있는 짐 문법 —
+//     T441 길 채집 · T466 노획과 같은 몸 기준 · 무게 `weights.js`)까지만 싣는다 — ① 군량 먼저: 그 몸 짐(몸 인벤 전부 `_warBagKg`)이 상한을 넘으면 그 몸에 실은 팩 몫을
+//     같은 비로 덜어(품목 비 그대로 · 몸이 원래 든 것은 안 건드린다 · 레코드는 FIFO 로 같이) 집 곳간에 남긴다(war-core `rationLeave` — 내려놓기 그 문) ·
+//     ② 그다음 무기: 몸마다 남은 자리 ÷ 무기 한 자루 kg 만큼 · 장부가 그 합을 넘으면 넘는 몫은 집 곳간에(장부 −같은 몫 · 거울 다시 셈) · 실은 몫은 작은 자리부터 고르게(물 채우기).
+//     이 원정 무기는 몸에 실린다(T811 꼴 — 결판 자리 낙하 · 줍기 · 귀환 거둠은 T811 · T857 그 문) — 그래서 켬이면 `_warArmsLoad` · 결판 줄이 T811 손잡이와 같이 돈다.
+//   셈 — 원정마다 `w._t1094` { n 몸 · packKg 실은 군량 kg · leftKg · leftFE 남긴 군량 · trim 덜어 낸 몸 · armsOut 반출 · armsKg 실은 무기 kg · armsLeft 남긴 무기 } ·
+//     판 `state._t1094St` { ex · packKg · leftKg · leftFE · trim · armsKg · armsLeft · over 상한 넘은 채 떠난 몸(몸이 원래 든 것만으로 넘친 몸) }(전쟁 셈 `_warStat` 곁 칸).
+//   ⚠상한은 떠나는 순간(싣기)에 건다 — 길에서 딴 것(T441) · 노획(T466 · T826 · T857 줍기)은 종전 그 문 그대로(줍기의 무게 상한은 종전대로 표로만).
+//   새 수 0(상한 · 무게 · 일수 다 종전 값) · 새 몸 필드 0(셈은 전쟁 객체) · war-live · battle-core 무변.
+const T1094_CARRY_CAP = process.env.T1094_CARRY_CAP !== '0';
+function _t1094Stat() { return state._t1094St || (state._t1094St = { ex: 0, packKg: 0, leftKg: 0, leftFE: 0, trim: 0, armsKg: 0, armsLeft: 0, over: 0 }); }   // 셈은 상태 곁 칸(전쟁 셈 `_warStat` 무변 — 하네스가 그 칸을 통째로 견준다)
+function _t1094Cap() { const cc = _carryCfg(); return (cc && cc.CFG && cc.CFG.CAP_KG) || 0; }
+function _t1094Kg(items) { const Wt = _weights(); let s = 0; if (!Wt || !Wt.kgOfOrDefault || !items) return 0; for (const k in items) { const q = items[k] || 0; if (q > 0) s += q * Wt.kgOfOrDefault(k); } return s; }
+// ① 군량 — 몸마다 상한을 넘는 만큼 그 몸에 실은 팩 몫(`one`)을 같은 비로 덜어 집 곳간에 남긴다
+function _t1094PackCap(w, bearers, one) {
+  const cap = _t1094Cap(), kgOne = _t1094Kg(one), keys = w._packKeys || [], G = _t748G(), WC = state.war;
+  const T = w._t1094 || (w._t1094 = { n: bearers.length, packKg: 0, leftKg: 0, leftFE: 0, trim: 0, armsOut: 0, armsKg: 0, armsLeft: 0 }), St = _t1094Stat();
+  St.ex++;
+  if (!(cap > 0) || !(kgOne > 0)) { T.packKg = +(kgOne * bearers.length).toFixed(6); St.packKg += T.packKg; return 0; }
+  const leave = {}, lots = G ? {} : null; let trim = 0;
+  for (const p of bearers) {
+    const over = _warBagKg(p) - cap; if (!(over > 1e-9)) continue;
+    const r = Math.min(1, over / kgOne), bag = _warBagView(p, keys);
+    for (const k in one) {
+      const q = Math.min(bag[k] || 0, (one[k] || 0) * r); if (!(q > 0)) continue;
+      bag[k] = (bag[k] || 0) - q; leave[k] = (leave[k] || 0) + q;
+      if (G) { const recs = G.bagOut(p, k, q); if (recs && recs.length) (lots[k] || (lots[k] = [])).push(...recs); }
+    }
+    _warBagWrite(p, keys, bag); trim++;
+  }
+  const leftKg = _t1094Kg(leave);
+  T.packKg = +(kgOne * bearers.length - leftKg).toFixed(6); T.leftKg = +leftKg.toFixed(6); T.trim = trim;
+  St.packKg += T.packKg; St.leftKg += T.leftKg; St.trim += trim;
+  if (trim && WC && WC.rationLeave) { const fe = WC.rationLeave(w, leave, lots && Object.keys(lots).length ? lots : null); T.leftFE = +(+fe || 0).toFixed(6); St.leftFE += T.leftFE; }
+  for (const p of bearers) if (_warBagKg(p) > cap + 1e-9) St.over++;   // 몸이 원래 든 것만으로 상한을 넘는 몸(팩은 다 덜었다)
+  return trim;
+}
+// ② 무기 — 군량을 실은 뒤 몸마다 남은 자리만큼(자루 = 자리 kg ÷ 한 자루 kg) · 넘는 장부 몫은 집 곳간에 · 실은 몫은 작은 자리부터 고르게
+function _t1094ArmsCap(w, bearers) {
+  const cap = _t1094Cap(), Wt = _weights(), kw = (Wt && Wt.kgOfOrDefault) ? Wt.kgOfOrDefault(T811_KEY) : 0, a = w._arms, M = w._armsPack, WC = state.war;
+  if (!(cap > 0) || !(kw > 0) || !a || !M) return false;
+  const T = w._t1094 || (w._t1094 = { n: bearers.length, packKg: 0, leftKg: 0, leftFE: 0, trim: 0, armsOut: 0, armsKg: 0, armsLeft: 0 }), St = _t1094Stat();
+  const room = bearers.map((p) => { const r = (cap - _warBagKg(p)) / kw; return r > 1e-9 ? r : 0; }), fit = room.reduce((x, y) => x + y, 0), n0 = Math.max(0, a.weapon || 0);
+  const keep = Math.min(n0, fit), leave = n0 - keep;   // 실을 몫 · 남길 몫(장부 −같은 몫)
+  if (leave > 1e-9) { const e = w.atk && w.atk.econ; if (e && e.storage) e.storage.weapon = (e.storage.weapon || 0) + leave; a.weapon = keep; a.left = (a.left || 0) + leave; }
+  const order = bearers.map((p, i) => i).sort((i, j) => (room[i] - room[j]) || (i - j));
+  let rest = Math.max(0, a.weapon || 0), k = order.length;
+  for (const i of order) { const p = bearers[i], q = Math.min(room[i], rest / k); _t811Put(p, _t811Inv(p) + q); M.set(p.pid, q); rest -= q; k--; }
+  T.armsOut = n0; T.armsLeft = +leave.toFixed(6); T.armsKg = +((n0 - leave) * kw).toFixed(6); St.armsKg += T.armsKg; St.armsLeft += T.armsLeft;
+  if (leave > 1e-9 && WC && WC.syncArmsMirror) WC.syncArmsMirror(w.atk);   // 집에 남긴 몫이 곳간에 섰다 — 짐 거울을 다시 센다(war-core 그 함수)
+  if (WC && WC.warLog && leave > 1e-9) WC.warLog(state.world.day, (w.atk && w.atk.name) + ' 못 진 무기를 곳간에 남긴다 — ' + leave.toFixed(2) + '/' + n0);
+  return true;
+}
 function _warArmsLoad(body) {
-  const w = body && body.w; if (!T811_ARMS_BODY || !w || !w._arms || w._arms.done || w._armsPack) return 0;
+  const w = body && body.w; if (!(T811_ARMS_BODY || T1094_CARRY_CAP) || !w || !w._arms || w._arms.done || w._armsPack) return 0;   // ★[T1094 문 6] 켬이면 원정 무기는 몸에 실린다(장부에만 있고 몸에 없는 짐 0)
   const players = state.deps.players, bearers = (body.pids || []).map((pid) => players.get(pid)).filter((p) => p && (p.hp == null || p.hp > 0));
   if (!bearers.length) return 0;
   w._armsPack = new Map(); for (const p of bearers) w._armsPack.set(p.pid, 0);
   w._armsOnBodies = bearers.length;
   _t811Stat().load++;
+  if (T1094_CARRY_CAP && _t1094ArmsCap(w, bearers)) return bearers.length;   // ★[T1094 문 6] 군량을 실은 뒤 남은 자리만큼 — 못 지는 무기는 집 곳간에(장부 −같은 몫)
   _t811Sync(w, 'load');
   return bearers.length;
 }
@@ -8777,6 +8836,7 @@ function __p3Bind(mock) {
     T1060_SCRAM_HOLD, T1060_ATK_AIM,   // ★[T1060] 하네스(`test-t1060-scram-hold`)가 손잡이 값을 읽는다(내보내기만)
     T1089_RET_WALK,   // ★[T1089] 하네스(`test-t1089-ret-walk`)가 손잡이 값을 읽는다(내보내기만 · 귀환 두 문은 T790 줄이 이미 내보낸다)
     banditHost, _t841Sh,   // ★[T841] 도적 몸 신원 문(호스트 `bodySh`) — 하네스(`test-body-seed-other`)가 운영과 같은 호스트를 도적 층에 꽂는다(내보내기만)
+    T1094_CARRY_CAP, _t1094Stat,   // ★[T1094 문 6] 하네스(`test-t1094-carry-cap` · `test-t1094-arms-trip`)가 손잡이 값 · 셈을 읽는다(내보내기만)
     T811_ARMS_BODY, _warArmsLoad, _warArmsCollect, _warArmsUnload, _t811Fall, _t857Pick, _t811Sync, _t811Stat,   // ★[T811] 무기 몸 짐 — 하네스(`test-arms-body`)가 운영과 같은 문을 부른다(내보내기만)
     T790_NO_SNAP, _t790Stat, _t790Mark, _t790Lag, _warSetupReturn, _warPaceReturn,   // ★[T790] 하네스(`test-war-nosnap`)가 운영과 같은 문을 부른다(내보내기만)
     _t804Way, _t804WalkOut, _t804Stat, _warWalkGroupTo,   // ★[T804] 걷는 몸의 길 · 전진 풀기 걸음 — 하네스가 운영과 같은 문을 부른다(내보내기만)
