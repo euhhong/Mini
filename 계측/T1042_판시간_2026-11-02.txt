@@ -1,0 +1,24 @@
+# T1042 판 시간(작업 셸 벽시계 초 · 동시 3 · 4코어) — 판 날 시드 몸상한 팔 대조 관찰기 rc 초
+# rc=124 = 작업 셸 끊기 줄이 찍혔으나 끊기지 않았다(보고 §0) — 판은 끝까지 돌았다
+# dbg-* = WAR_MINDAY=60(전쟁 0 · 수 안 씀) · dbg2-* = WAR_MINDAY=100(수 안 씀) · ci-* = WAR_MINDAY=100 · Infinity = VILLAGE_NPC_CAP 운영 기본(무제한)
+dbg-hold 120 1020 1 hold - 1 rc=0 sec=331
+dbg-rally 120 1020 1 rally - 1 rc=0 sec=331
+dbg-body 120 1020 1 body - 1 rc=0 sec=331
+dbg2-body 260 1020 1 body - 1 rc=0 sec=606
+dbg2-rally 260 1020 1 rally - 1 rc=0 sec=606
+dbg2-hold 260 1020 1 hold - 1 rc=0 sec=716
+c1-base-7 800 7 1 - - 1 rc=0 sec=1852
+c1-base-42 800 42 1 - - 1 rc=0 sec=1857
+c1-base-1020 800 1020 1 - - 1 rc=0 sec=1952
+c1-body-1020 800 1020 1 body - 1 rc=0 sec=1968
+c1-rally-1020 800 1020 1 rally - 1 rc=0 sec=2002
+ci-base-1020 400 1020 Infinity - - 1 rc=0 sec=1481
+ci-hold-1020 400 1020 Infinity hold - 1 rc=0 sec=1452
+c1-hold-1020 800 1020 1 hold - 1 rc=124 sec=3829
+ci-body-1020 400 1020 Infinity body - 1 rc=0 sec=1387
+ci-rally-1020 400 1020 Infinity rally - 1 rc=0 sec=1366
+c1-raid1-1020 800 1020 1 - raid:1 1 rc=0 sec=1792
+c1-raid2-1020 800 1020 1 - raid:2 1 rc=0 sec=1752
+c1-noobs-1020 800 1020 1 - - 0 rc=0 sec=1872
+c1-raid3-1020 800 1020 1 - raid:3 1 rc=0 sec=1913
+ci-raid1-1020 400 1020 Infinity - raid:1 1 rc=0 sec=1566

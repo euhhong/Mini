@@ -452,18 +452,18 @@ async function waitHttp(url, tries = 600) {
   //   C(미끼)는 기다린다고 오르지 않는다 — 더 오래 보면 ★★★ 줄은 오히려 더 엄하다.
   for (let t0 = Date.now(); Date.now() - t0 < 15000; await sleep(300)) {
     const _rn = await notices(R), _a = await bodyOf(A);
-    if (_rn.some((t) => /먹였다/.test(t)) && _a && aBefore && (_a.hunger - aBefore.hunger) > 1) break;
+    if (_rn.some((t) => /먹였습니다/.test(t)) && _a && aBefore && (_a.hunger - aBefore.hunger) > 1) break;
   }
 
   const rn = await notices(R);
-  ok(rn.some((t) => /먹였다/.test(t)), '★★③ 서버가 **먹였다**고 답한다', JSON.stringify(rn.slice(-2)));
+  ok(rn.some((t) => /먹였습니다/.test(t)), '★★③ 서버가 **먹였다**고 답한다', JSON.stringify(rn.slice(-2)));
   const aAfter = await bodyOf(A), cAfter = await bodyOf(C);
   const aUp = (aAfter && aBefore) ? (aAfter.hunger - aBefore.hunger) : 0;
   const cUp = (cAfter && cBefore) ? (cAfter.hunger - cBefore.hunger) : 0;
   ok(aUp > 1, '★★③ **지목한 사람(A)의 허기가 올랐다**', `+${aUp.toFixed(1)}`);
   ok(cUp <= 1, '★★★③ **더 가까운 미끼(C)는 안 먹었다** — 지목이 서버까지 갔다는 증거',
      `C +${cUp.toFixed(1)} (종전 _downedNear 였다면 C 가 먹는다)`);
-  const named = rn.find((t) => /먹였다/.test(t)) || '';
+  const named = rn.find((t) => /먹였습니다/.test(t)) || '';
   ok(named.includes(await A.evaluate(() => window.__myName || '')) || aUp > 1,
      '★③ 알림이 **그 사람 이름**을 말한다', JSON.stringify(named.slice(0, 60)));
   await snap('verbs-02-fed');
@@ -629,6 +629,30 @@ async function waitHttp(url, tries = 600) {
       ok(!!nLab && nLab.some((t2) => t2.includes(want)),
          `★★⑧ 그 동사가 **종류에 맞는 말**이다(${res.type} → ${want})`, JSON.stringify(nLab));
       ok(!!nLab && !/\p{Extended_Pictographic}/u.test(nLab.join('')), '★⑧ 메뉴 글자에 이모지 0');
+      // ★★[T1065] 켬 판 — 맨손으로 누르면 **안 벤다**: 이유 한 줄이 화면에 오고 hp 그대로 · 채집 반복이 멈춘다.
+      //   그다음 사람이 하는 그대로 조잡한 석기를 만들어 손에 든다(재료 = `__e2e_give` 픽스처 · 제작 · 장착 = 사람이 보내는 그 두 메시지) → 아래 종전 판정.
+      const _gated = process.env.T1065_TOOL_GATE !== '0' && ['tree', 'sapling', 'rock', 'ore', 'meteorite'].includes(res.type);
+      if (_gated) {
+        const _hpB0 = await R.evaluate((id) => { for (const c of conns.values()) { const r = c.resources && c.resources.get(id); if (r) return r.hp; } return null; }, res.id);
+        await clearNotices(R);
+        await R.evaluate(() => { const _m = document.getElementById('ctxMenu'); if (_m && _m.children[0]) _m.children[0].click(); });
+        let _why = null;
+        for (let i = 0; i < 40 && !_why; i++) { await sleep(250); _why = await R.evaluate(() => (window.__notices || []).find((t) => /있어야 .+ 수 있습니다\./.test(t)) || null); }
+        await sleep(1500);   // 반복이 돌았다면 한 타가 더 갔을 시간
+        const _hpB1 = await R.evaluate((id) => { for (const c of conns.values()) { const r = c.resources && c.resources.get(id); if (r) return r.hp; } return 'gone'; }, res.id);
+        const _rep = await R.evaluate(() => !!window.__eRepeat);
+        ok(!!_why && _hpB1 === _hpB0, '★★⑧ [T1065] 맨손으로 누르면 **안 벤다** — 이유 한 줄이 화면에 온다 · hp 그대로', `${_why} · hp ${_hpB0} → ${_hpB1}`);
+        ok(!_rep, '★⑧ [T1065] 거절되면 채집 반복이 멈춘다(될 수 없는 일을 1초마다 다시 보내지 않는다)', String(_rep));
+        const _tool = res.type === 'tree' || res.type === 'sapling' ? 'crude_axe' : 'crude_pick';
+        const _cost = require(path.join(ROOT, 'server', 'stone-uses.js')).CRUDE_TOOLS[_tool].cost;   // 정본 표(사본 0)
+        await R.evaluate((c) => window.__sendPrimary({ type: '__e2e_give', items: c }), _cost);
+        await sleep(400);
+        await R.evaluate((t) => window.__sendPrimary({ type: 'craft', recipe: t }), _tool);
+        await sleep(600);
+        await R.evaluate((t) => window.__sendPrimary({ type: 'equip', tool: t }), _tool);
+        await sleep(800);
+        await tapUntilMenu(rPt);   // 메뉴를 다시 연다(위 클릭이 닫았다) — 아래 종전 판정이 그 첫 줄을 누른다
+      }
       // 눌러 본다 — **`gather` 가 간다**(새 메시지 0). 서버가 답하거나 자원 hp 가 준다.
       const hp0 = await R.evaluate((id) => {
         for (const c of conns.values()) { const r = c.resources && c.resources.get(id); if (r) return r.hp; }
@@ -871,7 +895,7 @@ async function waitHttp(url, tries = 600) {
       // ★메뉴를 열고 눌러 **거절을 받아 낸다.** 한 번에 안 오면 다시 한다 — 그 사이 화면이 갱신
       //   중이었을 뿐이고, 이 절이 재는 것은 "48px 밖에서 지목하면 서버가 거절한다"이지 첫 판의 운이 아니다.
       let m = null, nz = [];
-      for (let round = 0; round < 3 && !nz.some((t2) => /안에서 캔다/.test(t2)); round++) {
+      for (let round = 0; round < 3 && !nz.some((t2) => /바로 곁에서 캐야 합니다/.test(t2)); round++) {
         await clearNotices(R);
         m = null;
         // ★[T819 2026-10-20] **탭도 표본처럼** 자연물 맵이 찰 때까지 기다린다(`snapN` — 위 표본과 같은 문 · 같은 상한).
@@ -886,7 +910,7 @@ async function waitHttp(url, tries = 600) {
       //   아래 "알림이 온다"가 **메뉴가 안 떠서** 빨간 것과 구분되지 않는다(한 판에서 실제로 그랬다).
       ok(!!m, '★⑧-c 먼 데서도 메뉴는 뜬다(거리 판정은 서버가 한다)', JSON.stringify(m));
       const hp1 = await snapN();
-      ok(nz.some((t2) => /안에서 캔다/.test(t2)), '★★⑧-c 멀면 **거절 알림**이 온다(48px 게이트 그대로)',
+      ok(nz.some((t2) => /바로 곁에서 캐야 합니다/.test(t2)), '★★⑧-c 멀면 **거절 알림**이 온다(48px 게이트 그대로)',
          JSON.stringify(nz.slice(-3)));
       const chipped = Object.keys(hp1).length
         ? Object.keys(hp0).filter((k) => !(k in hp1) || hp1[k] < hp0[k]) : ['(맵이 비어 못 쟀다)'];

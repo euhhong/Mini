@@ -20,6 +20,8 @@
 //   가상 시계(T745): `--vclock` — 아이 존의 벽시계 · 타이머를 가상 시각 하나에 묶는다(`scripts/t745-vclock.js` · 서버 마을 칸까지 결정론).
 //   집 행위 켬 판(T990): `--house` — 판 조건의 `T400_BUILD_ACT` 만 `'1'`(T914 판 자 — 아이에 `T315_MAPBEDS=1` · `T627_TRIP_DAY=1` 은 t577 이 기본으로 싣는다).
 //     다른 세계다 — `--house` 로 만든 기준선은 `--house` 로만 견준다(기준선 `cond` 칸과 다르면 판 실패 2).
+//   전쟁 팔(T1041): `--war` [inf|front] — 몸 칸 하나만 바뀐다(inf = `VILLAGE_NPC_CAP=Infinity` 몸∞ · front = `T1041_WAR_BODY=1` 전쟁 마을만 몸 무제한) · `--days` 없으면 800날.
+//     만들기 `--make 계측/서버기준선_전쟁_<날짜>.json --war` · 견주기 `계측/서버기준선_전쟁_<날짜>.json --war` · 판 끝 전쟁 누계(선포 · 전투 · 사상 · 포로)를 곁에 적는다.
 //   env 는 아이 판에 그대로 간다 — 손잡이를 켠 트리를 재려면 env 를 얹으면 된다(그 판은 갈려야 맞다).
 //   종료 코드: 같음 0 · 다름 1 · 판 실패 2.
 'use strict';
@@ -69,7 +71,10 @@ if (process.env.SBC_HOOK === '1' && process.env.T577_OUT) {
   process.on('exit', () => {
     try {
       // 마지막 날의 칸 원문(견줄 때 "지금 값"을 보여 주려고 — 갈린 날이 끝 날이 아닐 수도 있어 날마다 원문은 안 남긴다 · 아래 SBC_DUMP_DAY 참조)
-      fs.writeFileSync(OUT, JSON.stringify({ names: globalThis.__sbcNames || [], days, dump: globalThis.__sbcDump || null }));
+      // ★[T1041] 전쟁 누계(war-core `world._warStats` — 마지막 장부 날 · 읽기만) — 전쟁 팔 기준선이 지문 곁에 싣는다(견줌은 날 지문 그대로)
+      let war = null; try { const st = globalThis.__sbcLast && globalThis.__sbcLast.world && globalThis.__sbcLast.world._warStats;
+        if (st) { war = {}; for (const k of ['decl', 'battle', 'atkWin', 'defWin', 'cas', 'captured', 'siege', 'assault', 'sortie', 'withdraw', 'surrender', 'walkover', 'tribute', 'loot']) war[k] = st[k] || 0; } } catch (e) {}
+      fs.writeFileSync(OUT, JSON.stringify({ names: globalThis.__sbcNames || [], days, dump: globalThis.__sbcDump || null, war }));
     } catch (e) {}
   });
   // 견줄 때 첫 갈림 날의 칸 원문을 남긴다(`SBC_DUMP_DAY=<날>` — 그날 scanDay 직전 상태)
@@ -97,11 +102,11 @@ const ROOT = path.join(__dirname, '..');
 const A = process.argv.slice(2);
 const opt = (k, d) => { const i = A.indexOf(k); return i >= 0 ? A[i + 1] : d; };
 const MAKE = opt('--make', null);
-const BASE = MAKE ? null : A.find((x, i) => !x.startsWith('--') && !(A[i - 1] || '').startsWith('--'));
+const BASE = MAKE ? null : A.find((x, i) => !x.startsWith('--') && !(A[i - 1] || '').startsWith('--') && !(A[i - 1] === '--war' && /^(inf|front)$/.test(x)));
 if (!MAKE && !BASE) { console.error('쓰는 법: --make <out.json> [--days 400] [--seeds 1020,7,42] [--par 2] · 또는 <기준선.json> [--days N] [--seeds …] [--par 2]'); process.exit(2); }
 const base = BASE ? JSON.parse(fs.readFileSync(BASE, 'utf8')) : null;
 const PLAN0 = opt('--plan', null);
-const DAYS = parseInt(opt('--days', base ? String(base.days) : '400'), 10);
+const DAYS = parseInt(opt('--days', base ? String(base.days) : (A.includes('--war') ? '800' : '400')), 10);   // ★[T1041] 전쟁 팔은 800날 기본
 const SEEDS = PLAN0 ? PLAN0.split(',').map((x) => +x.split(':')[0]) : String(opt('--seeds', base ? base.seeds.join(',') : '1020,7,42')).split(',').map(Number).filter(Boolean);
 const DAYS_OF = {}; for (const s of SEEDS) DAYS_OF[s] = DAYS;
 if (PLAN0) for (const x of PLAN0.split(',')) { const [a, b] = x.split(':').map(Number); DAYS_OF[a] = b || DAYS; }
@@ -110,7 +115,13 @@ const PAR = parseInt(opt('--par', String(PLAN0 ? Math.max(1, Math.min(SEEDS.leng
 // ★판의 조건 = T650 자(T680 · T683 이 결정론을 본 그 판). 바꾸면 기준선이 다른 세계다.
 //   ★[T990 2026-10-28 · T986 회부 2] `--house` = 집 행위 켬 판 자(T914 — 크루가 곳간 목재로 짓는 판 · 제품 기본과 같은 집 규칙) — 바뀌는 칸은 `T400_BUILD_ACT` 하나.
 const HOUSE = A.includes('--house');
-const COND = { VILLAGE_CARAVAN_MAX: '0', T400_BUILD_ACT: HOUSE ? '1' : '0' };
+//   ★[T1041 2026-11-02] `--war` = 전쟁 팔(판 자 몸 상한 1 은 군대가 몸 하나 대 하나라 전쟁 사상 · 포로 · 함락 · 승패를 못 잰다 — T1031).
+//     바뀌는 칸은 몸 칸 하나다: `--war`(= `--war inf`) = `VILLAGE_NPC_CAP=Infinity`(몸∞ · 운영 기본) · `--war front` = `T1041_WAR_BODY=1`(전쟁에 든 마을만 몸 무제한 · 판 자 전용 손잡이).
+//     전쟁은 365날 뒤에 서므로 `--days` 를 안 주면 800날이다. 다른 세계다 — 전쟁 팔 기준선은 같은 `--war` 갈래로만 견준다(cond 칸).
+const WARI = A.indexOf('--war');
+const WAR = WARI < 0 ? null : ((A[WARI + 1] && !A[WARI + 1].startsWith('--') && /^(inf|front)$/.test(A[WARI + 1])) ? A[WARI + 1] : 'inf');
+const WAR_COND = { inf: { VILLAGE_NPC_CAP: 'Infinity' }, front: { T1041_WAR_BODY: '1' } };
+const COND = Object.assign({ VILLAGE_CARAVAN_MAX: '0', T400_BUILD_ACT: HOUSE ? '1' : '0' }, WAR ? WAR_COND[WAR] : {});
 if (base && base.cond && JSON.stringify(base.cond) !== JSON.stringify(COND)) { console.error(`판 조건이 기준선과 다르다 — 기준선 ${JSON.stringify(base.cond)} · 이 판 ${JSON.stringify(COND)}${HOUSE ? '' : ' (집 행위 켬 기준선이면 --house)'}`); process.exit(2); }
 // ★[T699] 교역로 디스크 캐시 — 부팅 소굴 배치의 교역로 A*(109초)를 판마다 다시 파지 않는다(같은 지문 = 같은 길 · 결과 바이트 같음).
 //   기본 = os 임시 폴더 `durango-route-cache`(레포 밖) · `--route-cache off` = 종전(판마다 판다) · `--route-cache <dir>` = 그 폴더.
@@ -172,7 +183,7 @@ async function runSet(dir, dumpDay) {
     let run = null, fp = null; try { run = JSON.parse(fs.readFileSync(f, 'utf8')); fp = JSON.parse(fs.readFileSync(f + '.sbc.json', 'utf8')); } catch (e) {}
     if (!run || !fp) { out[s] = null; continue; }
     const strip = Object.assign({}, run); delete strip.env; delete strip.days;
-    out[s] = { eight: run.eight, dissolved: run.dissolved, empty: run.empty, runHash: H(JSON.stringify(strip), 16), names: fp.names, days: fp.days, dump: fp.dump };
+    out[s] = { eight: run.eight, dissolved: run.dissolved, empty: run.empty, runHash: H(JSON.stringify(strip), 16), names: fp.names, days: fp.days, dump: fp.dump, war: fp.war || null };
     if (SIDE) { try { out[s].side = sideCondense(JSON.parse(fs.readFileSync(f + '.t740.json', 'utf8'))); } catch (e) { out[s].side = null; } }
     //   ★[T754] 판 DB(+WAL · 400 날 판 하나 1~2 GB)는 지문을 다 읽은 뒤 지운다(가상 시계 · 마을 칸 판만 — 종전 판은 종전 그대로)
     if (SIDE) for (const x of fs.readdirSync(dir)) if (/^sbc-\d+\.db(-wal|-shm)?$/.test(x)) { try { fs.unlinkSync(path.join(dir, x)); } catch (e) {} }
@@ -182,22 +193,24 @@ async function runSet(dir, dumpDay) {
 
 (async () => {
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sbc-'));
-console.log(`\n=== 서버 판 기준선 ${MAKE ? '만들기' : '견주기'} — ${SEEDS.map((x) => `${x}:${DAYS_OF[x]}일`).join(' · ')} · 집 행위 ${HOUSE ? '켬(--house)' : '끔'}${VCLOCK ? ' · 가상 시계' : ''} · 동시 ${PAR} · 교역로 캐시 ${ROUTE_CACHE || '끔'} · 판 ${tmp} ===`);
+console.log(`\n=== 서버 판 기준선 ${MAKE ? '만들기' : '견주기'} — ${SEEDS.map((x) => `${x}:${DAYS_OF[x]}일`).join(' · ')} · 집 행위 ${HOUSE ? '켬(--house)' : '끔'}${WAR ? ` · 전쟁 팔(--war ${WAR} · ${JSON.stringify(WAR_COND[WAR])})` : ''}${VCLOCK ? ' · 가상 시계' : ''} · 동시 ${PAR} · 교역로 캐시 ${ROUTE_CACHE || '끔'} · 판 ${tmp} ===`);
 const R = await runSet(tmp);
 console.log(`  판 모두 ${R.sec}초`);
 if (MAKE) {
   const seeds = {};
   for (const s of SEEDS) { const o = R.out[s]; if (!o) { console.log(`  ✗ 시드 ${s} 판 실패`); process.exit(2); } seeds[s] = { eight: o.eight, dissolved: o.dissolved, empty: o.empty, runHash: o.runHash, names: o.names, days: o.days };
+    if (WAR) seeds[s].war = o.war;   // ★[T1041] 전쟁 누계(기록 · 견줌은 날 지문)
     if (SIDE) { if (!o.side) { console.log(`  ✗ 시드 ${s} 마을 칸 지문 없음`); process.exit(2); } seeds[s].side = o.side; } }
   let head = ''; try { head = require('child_process').execSync('git rev-parse --short=8 HEAD', { cwd: ROOT, encoding: 'utf8' }).trim(); } catch (e) {}
   const doc = { made: new Date().toISOString().slice(0, 10), head, days: DAYS, seeds: SEEDS, cond: COND, clock: 'VILLAGE_DAY_MS=250(t577 기본)' + (VCLOCK ? ' · 가상 시계(T745 --vclock)' : '')
       + ` · 교전 몫 T941_BATTLE_DAY=${process.env.T941_BATTLE_DAY != null ? process.env.T941_BATTLE_DAY : '1(t577 기본 · T959)'}`
       + ` · 길의 날 · 광맥 시각 T990_ECON_DAY=${process.env.T990_ECON_DAY != null ? process.env.T990_ECON_DAY : '1(t577 기본 · T990)'}`, sec: R.sec,   // ★[T990] 판 자 기본이 바뀐 자리(기록만)   // ★[T959] 판 자 기본이 바뀐 자리 — 기준선에 적는다(기록만)
-    how: `node scripts/server-baseline-check.js --make ${MAKE} --days ${DAYS} --seeds ${SEEDS.join(',')}${HOUSE ? ' --house' : ''}${VCLOCK ? ' --vclock' : ''}${VCLOCK && !SIDE ? ' --side off' : ''}`,
+    how: `node scripts/server-baseline-check.js --make ${MAKE} --days ${DAYS} --seeds ${SEEDS.join(',')}${HOUSE ? ' --house' : ''}${WAR ? ' --war ' + WAR : ''}${VCLOCK ? ' --vclock' : ''}${VCLOCK && !SIDE ? ' --side off' : ''}`,
     note: '날 지문 = [scanDay 날 · econ world.day · 그날 전체 sha1 12 · 마을마다 칸 넷(st·pp·hs·tr) sha1 4자리씩]'
       + (SIDE ? ' · 마을 칸 지문(side) = [날 · 그날 전체 sha1 12 · 칸마다 sha1 8(차례 = keys)] — 칸 = 서버 마을 칸(Map · Set 풀어서 · 마을 51 의 6자 해시를 이은 줄 · t740-side-hook)' : ''),
-    vclock: VCLOCK, side: SIDE, house: HOUSE, byseed: seeds };
+    vclock: VCLOCK, side: SIDE, house: HOUSE, war: WAR, byseed: seeds };
   fs.writeFileSync(MAKE, JSON.stringify(doc));
+  if (WAR) for (const s of SEEDS) { const w = seeds[s].war || {}; console.log(`  시드 ${s} 전쟁: 선포 ${w.decl} · 전투 ${w.battle} · 공승 ${w.atkWin} · 방승 ${w.defWin} · 사상 ${w.cas} · 포로 ${w.captured} · 철수 ${w.withdraw} · 항복 ${w.surrender}`); }
   for (const s of SEEDS) { const e = seeds[s].eight; console.log(`  시드 ${s}: 인구 ${e.pop} · 소멸 ${e.dead}/${e.ever} · 무기Q ${e.weapQ} · 확장 ${e.expand} · 게시 ${e.board} · 도구Q ${e.toolQ} · 보존 ${e.preserve} · 곡물 ${e.grain} · 해체 ${seeds[s].dissolved} · 빈 ${seeds[s].empty} · 날 ${seeds[s].days.length}`); }
   console.log(`\n→ ${MAKE} (${fs.statSync(MAKE).size.toLocaleString()} B)`);
   process.exit(0);
@@ -241,6 +254,7 @@ for (const s of SEEDS) {
   res[s] = { same: false, day: od[0], diffs };
   if (!firstBad || od[0] < firstBad.day) firstBad = { seed: s, day: od[0] };
 }
+if (WAR) for (const s of SEEDS) { const w = (R.out[s] && R.out[s].war) || {}, b = (base.byseed[s] && base.byseed[s].war) || {}; console.log(`  시드 ${s} 전쟁(지금 / 기준선): 선포 ${w.decl}/${b.decl} · 전투 ${w.battle}/${b.battle} · 사상 ${w.cas}/${b.cas} · 포로 ${w.captured}/${b.captured}`); }
 if (firstBad && !process.env.SBC_DUMP_DAY) console.log(`\n  (그날 칸 값을 보려면: SBC_DUMP_DAY=${firstBad.day} 로 시드 ${firstBad.seed} 한 판 — 판 JSON 옆 .sbc.json 의 dump)`);
 console.log(`\n=== ${bad ? `다름 ${bad}/${SEEDS.length}` : `같음 ${SEEDS.length}/${SEEDS.length}`} · 판 ${R.sec}초 ===`);
 fs.writeFileSync(path.join(tmp, 'check.json'), JSON.stringify({ base: BASE, plan: DAYS_OF, seeds: SEEDS, sec: R.sec, per: R.per, res }, null, 1));

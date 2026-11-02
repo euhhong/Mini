@@ -232,7 +232,7 @@ const invSum = (inv) => Object.entries(inv || {}).filter(([k]) => !['floor', 'tr
     const total = Object.values(p.inventory).reduce((a, b) => a + b, 0);
     ok(total === F.CFG.CAP, '★★③ 한 개체는 **정해진 양만** 품는다 — 훑으면 마른다',
       `${total} = 상한 ${F.CFG.CAP}`);
-    ok(/다 훑었다/.test(p.__notices().slice(-1)[0] || ''), '★③ 마르면 그렇다고 말해 준다',
+    ok(/다 훑었습니다/.test(p.__notices().slice(-1)[0] || ''), '★③ 마르면 그렇다고 말해 준다',
       (p.__notices().slice(-1)[0] || '').slice(0, 40));
     // ⓒ ★★반독점 — **옆 개체는 멀쩡하다**(전역 공유 풀이면 여기서 같이 말라야 한다)
     const other = Object.values(found).find((f) => f && f.src.key !== spot.src.key);
@@ -250,9 +250,10 @@ const invSum = (inv) => Object.entries(inv || {}).filter(([k]) => !['floor', 'tr
     ok(F.left(k, now + F.CFG.REFILL_MIN * 60000) >= F.CFG.CAP - 1e-6,
       '★★③ **분 단위로 다시 찬다**(편재성 캐논 — 시작 재료는 귀해지지 않는다)',
       `${F.CFG.REFILL_MIN}분 뒤 ${F.left(k, now + F.CFG.REFILL_MIN * 60000).toFixed(1)}/${F.CFG.CAP}`);
-    // ⓔ 채집은 도구가 **필수가 아니다**(§0-ⓑ 실측: 맨손 1, 도구 3 — 게이트가 아니라 가속)
+    // ⓔ 채집 기본 피해는 1 이고 도구는 가속기다(§0-ⓑ 실측: 맨손 1, 도구 3).
+    //   ★[T1065 · ★재민 11-01] 단 벌목 · 채석은 `T1065_TOOL_GATE` 켬이면 손에 든 도구가 있어야 한다(맨손 = 줍기 · 따기 · 덤불 · 약초) — 그 문은 `test-t1065-tool-gate` 가 잰다.
     const zsrc = codeOnly(fs.readFileSync(path.join(ROOT, 'server', 'zone.js'), 'utf8'));
-    ok(/let dmg = 1;/.test(zsrc), '★★③ 채집 기본 피해가 **1**이다 — 도구 없이도 캔다(도구는 가속기)');
+    ok(/let dmg = 1;/.test(zsrc), '★★③ 채집 기본 피해가 **1**이다 — 맨손은 덤불 · 약초 · 줍기를 캔다(도구는 가속기 · 벌목 · 채석 문은 T1065)');
     ok(!/groundItems\.set\([^)]*forage|scatter/i.test(zsrc), '★③ **낙하물 스캐터가 없다** — 땅에 아이템을 흩뿌리지 않는다');
   }
 
@@ -306,7 +307,7 @@ const invSum = (inv) => Object.entries(inv || {}).filter(([k]) => !['floor', 'tr
     for (let i = 0; i < TD.crude_axe + 2 && (p.toolItems || []).length; i++) H.consumeEquippedDurability(p, 1);
     ok((p.toolItems || []).length === 0, '★★⑤ 다 쓰면 **부서져 사라진다**(재제작 루프)',
       `${(p.toolItems || []).length}개 남음`);
-    ok(p.__notices().some((t) => /깨짐/.test(t)), '★⑤ 부서졌다고 알려 준다');
+    ok(p.__notices().some((t) => /깨졌습니다/.test(t)), '★⑤ 부서졌다고 알려 준다');
     // 재제작 — 재료만 있으면 다시 만든다
     p.inventory.pebble = (p.inventory.pebble || 0) + cost.pebble;
     p.inventory.twig = (p.inventory.twig || 0) + cost.twig;

@@ -103,6 +103,7 @@ function pickRiverSpot() {
     // ★테스트 전용 시간 손잡이 — 위 머리 주석의 두 가지. 라이브 기본은 그대로다.
     FISH_WAIT_BASE_MS: '1500', FISH_WAIT_MAX_MS: '6000',
     FISH_WIN_BASE_MS: '3000', FISH_WIN_MIN_MS: '2200',
+    E2E_GIVE: '1',   // ★[T1065] 막대 낚싯대 재료를 쥐여 준다(`__e2e_give` — 다른 e2e 와 같은 픽스처 문) · 제작 · 장착은 사람이 보내는 그 메시지
   });
   // ★★[T355 2026-09-22] 존 기동도 **아이의 입**으로 듣는다(정본 `fixture-boot.waitUp` · T344·T349).
   //   포트 응답은 증인이 아니다 — 앞 판 존이 포트를 쥔 채면 새 존은 `EADDRINUSE` 로 죽고 폴링은
@@ -179,6 +180,21 @@ function pickRiverSpot() {
   //   입질은 왔는데 하네스가 사진을 찍는 사이 창이 지나가 "입질이 안 온다"고 보고했다.
   //   (제품은 멀쩡했다. 알림 로그에 `놓쳤다 — 묵직한 놈이었다(2.3kg)` 가 남아 있었다.)
   //   ⇒ 던지고 나면 **왕복을 최소로** 하고 오직 상태만 본다. 판정과 사진은 다 끝난 뒤에.
+  // ★[T1065] 켬 판 — 맨손 Shift+F 는 안 던진다(이유 한 줄이 화면에 온다) → 막대 낚싯대를 만들어 손에 든다(제작 · 장착 = 사람이 보내는 그 두 메시지)
+  if (process.env.T1065_TOOL_GATE !== '0') {
+    await page.evaluate(() => { window.__notices = []; });
+    await page.keyboard.press('Shift+KeyF');
+    let nt = null;
+    for (let i = 0; i < 30 && !nt; i++) { await sleep(150); nt = await page.evaluate(() => (window.__notices || []).find((t) => /낚싯대가 있어야 낚시를 할 수 있습니다/.test(t)) || null); }
+    const stBare = await page.evaluate(() => window.__fishState || null);
+    ok(!!nt && !stBare, '★★[T1065] 맨손 Shift+F 는 **안 던진다** — 이유 한 줄이 화면에 온다', nt || (stBare ? `던져짐 ${stBare.state}` : '알림 없음'));
+    await page.evaluate(() => window.__sendPrimary({ type: '__e2e_give', items: { twig: 1, fiber: 2 } }));
+    await sleep(400);
+    await page.evaluate(() => window.__sendPrimary({ type: 'craft', recipe: 'crude_rod' }));
+    await sleep(600);
+    await page.evaluate(() => window.__sendPrimary({ type: 'equip', tool: 'crude_rod' }));
+    await sleep(800);
+  }
   const invBefore = await page.evaluate(() => (window.__getInv && window.__getInv()) || {});
   await page.keyboard.press('Shift+KeyF');
   let stWait = null, bit = null, tBite = 0, tPress = 0;
@@ -211,7 +227,7 @@ function pickRiverSpot() {
   ok(stWait && Math.hypot(stWait.lx - spot.x, stWait.ly - spot.y) < 200,
     '★★② 서버가 고른 자리가 **의도한 그 물**이다 = 워프가 실제로 먹혔다',
     stWait ? `${Math.round(Math.hypot(stWait.lx - spot.x, stWait.ly - spot.y))}px` : 'X');
-  ok(notes1.some((t) => /던졌다/.test(t)), '★② 던졌다는 알림이 화면에 온다');
+  ok(notes1.some((t) => /던졌습니다/.test(t)), '★② 던졌다는 알림이 화면에 온다');
 
   ok(!!bit, '★★③ 기다리면 **입질이 온다**(서버가 정한 시각에 상태가 바뀐다)', bit ? `창 ${bit.windowMs}ms` : '시간 초과');
   ok(!!(bit && bit.windowMs > 0), '★③ 창 폭을 **서버가** 실어 보낸다(클라가 지어내지 않는다)', bit ? `${bit.windowMs}ms` : 'X');
@@ -237,7 +253,7 @@ function pickRiverSpot() {
   await sleep((bit2 ? bit2.windowMs : 3000) + 1600);   // 창을 **그냥 지나친다**
   const notes3 = await page.evaluate(() => (window.__notices || []).slice(-4));
   const stMiss = await page.evaluate(() => window.__fishState || null);
-  ok(notes3.some((t) => /놓쳤다/.test(t)), '★★⑤ 창을 지나치면 **놓친다**(서버가 알아서 거둔다)', JSON.stringify(notes3.slice(-1)));
+  ok(notes3.some((t) => /놓쳤습니다/.test(t)), '★★⑤ 창을 지나치면 **놓친다**(서버가 알아서 거둔다)', JSON.stringify(notes3.slice(-1)));
   ok(stMiss === null, '★⑤ 놓치면 찌가 사라진다');
   ok(!(await page.evaluate(() => window.__fishLast)), '★⑤ 놓쳤으면 물고기는 안 들어온다');
   await snap('fi-05-missed');
@@ -249,7 +265,7 @@ function pickRiverSpot() {
   await page.keyboard.press('Shift+KeyF');
   await sleep(1200);
   const notes4 = await page.evaluate(() => (window.__notices || []).slice(-3));
-  ok(notes4.some((t) => /물에 닿지 않는다|물가로/.test(t)), '★⑥ 물에서 멀면 **서버가 거절**한다', JSON.stringify(notes4.slice(-1)));
+  ok(notes4.some((t) => /물에 닿지 않습니다|물가로/.test(t)), '★⑥ 물에서 멀면 **서버가 거절**한다', JSON.stringify(notes4.slice(-1)));
 
   // ── ⑦ **손맛은 눈으로 확인한다** — 찌가 화면에 실제로 그려지는가 ───────────
   //   ★상태만 보면 안 된다. 이 레포가 배치 5 에서 배운 것: 계약이 다 맞는데 화면에 없을 수 있다.

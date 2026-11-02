@@ -50,8 +50,10 @@ async function authenticate(username, password, color, homeZone = null, homeX = 
 // ★★[2026-08-03f 배치 13] 게스트 영속 신원 — 토큰을 주면 같은 playerId, 없으면 새로 발급.
 //   ⚠반환값의 `token` 은 **클라에게 한 번 보내는 것 말고는 어디에도 쓰지 않는다.**
 //     로그·알림·채팅에 절대 찍지 마라(토큰 유출 = 계정 탈취).
-async function guestIdentity(token) {
-  const r = await request('POST', '/guest', { token: token || null });
+//   ★[T1068] `name` — 로비 이름칸의 별명(게스트 · 비밀번호 없음). 주면 central 이 그 게스트 행의 이름으로 싣고(남의 이름이면 `username_taken`),
+//     안 주면 몸통이 종전 그대로다(`{ token }` — 손잡이 끔 · 별명 없음).
+async function guestIdentity(token, name) {
+  const r = await request('POST', '/guest', name ? { token: token || null, name } : { token: token || null });
   return r.data;
 }
 
