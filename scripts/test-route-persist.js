@@ -129,7 +129,9 @@ async function up(warm, extra) {
   const _zp = FB.waitUp(_zone, /zone server up on/, { name: 'zone', capMs: 300000 });
   return (await _zp).ok;
 }
-async function down() { killAll(); await sleep(4000); }
+// ★★[T1033] 판 사이 — 내 아이를 내리고 **그 몸이 내려갈 때까지**(아이의 'exit' · 듣던 포트도 풀린다 · `FB.stopKids`) · 종전 4초 잠(벽시계)
+//   상한은 그물(`REAP_CAP_MS`) — 그래도 산 아이가 있으면 다음 판 `up()` 의 `waitUp` 이 `EADDRINUSE` 로 이름을 붙인다(조용한 빨강 0).
+async function down() { await FB.stopKids(procs); procs.length = 0; await FB.waitFree([CPORT, ZPORT]); }   // ★[T1033] 몸이 내려갔고(exit) 포트가 실제로 풀렸다(bind 로 확인)
 // ★[T884] `sink`(있으면) — 폴링마다 본 **그 하루**(`econTick.last`)를 날 번호로 모은다(⑥ 아래 캐러밴 조각 표 · 판정 아님).
 async function runDays(n, sink) {
   for (let i = 0; i < 400; i++) {
@@ -146,6 +148,9 @@ async function runDays(n, sink) {
   // ★씨앗이 없으면 **스스로 만든다**(족보 ㊾ 의 러너판 · T49 가 `test-site-memo` 에서 판 길).
   //   ⚠이 하네스는 러너 이름순에서 `test-tick-slicer` **앞**이다(70번 vs 80번) —
   //     그래서 신선한 기계의 전수에서는 **매번 반드시** 죽었다. 우연이 아니라 구조였다.
+  // ★[T1033] 머리 — 앞 판(러너의 앞 하네스)의 몸이 아직 3010 · 3020 을 쥐고 내려가는 중이면 풀릴 때까지 기다린다(조건 · 상한 `REAP_CAP_MS` 그물)
+  //   못 풀리면 그대로 간다 — 첫 부팅의 `waitUp` 이 `EADDRINUSE` 로 이름을 붙인다(남의 판은 안 죽인다 · T773)
+  { const wf = await FB.waitFree([CPORT, ZPORT]); if (wf.ms > 200 || wf.held.length) console.log(`  · [T1033] 포트 ${[CPORT, ZPORT].join('·')} — ${wf.held.length ? '아직 쥐임 ' + wf.held.join('·') : '풀림'} (${wf.ms}ms 기다림)`); }
   { const r = await ensureSeed();
     if (!r.ok) { console.log(`  ✗ 씨앗 준비 실패 — ${r.why}`); process.exit(1); }
     if (r.built) console.log('  (이 판이 씨앗을 만들었다 — 다음 실행부터는 곧바로 시작한다)'); }
@@ -194,10 +199,27 @@ async function runDays(n, sink) {
     `다시 판 물려받은 쌍 ${pr2.routeColdPrimed}/${R2boot.primed}`);
 
   // ── ④ 무효화가 둘 다 비우는가(진짜 훅을 부른다) ─────────────────────────
-  const before = await jget(`http://localhost:${ZPORT}/routedbg`);
-  const inv = await jget(`http://localhost:${ZPORT}/routedbg?invalidate=1`);
-  const after = await jget(`http://localhost:${ZPORT}/routedbg`);
+  //   ★★[T1033] 무효화 → 다시 읽기 사이에 **서버가 새 길을 적었으면**(`/perf` 셈 — 콜드 완주 `routeCold` · 다시 파기 `routeRedigChanged` · 서버 권위)
+  //     뒤 읽기의 0 아닌 수는 무효화를 잰 것이 아니다 — 캐러밴이 그 사이 새로 판 길이다(고친 트리 묶은 상자 2/10 "102 → 1" · "98 → 1" · 야간 10-18 "85 → 2").
+  //     종전 꼴은 세 요청을 잇달아 보내고 그 사이를 벽시계에 맡겼다. 이제 창마다 서버 셈을 앞뒤로 읽는다:
+  //       · 뒤 읽기가 둘 다 0 이면 그 창으로 잰다(무효화가 비웠고 그 뒤 새로 든 것도 없다 — 셈이 0 이 아니어도 무효화 앞뒤 몫이라 상관없다).
+  //       · 0 이 아닌데 그 창에 새로 적은 길이 0 이면 그 창으로 잰다(새 길 탓이 아니다 — 아래 두 줄이 그대로 빨갛다 · 무는 힘 그대로).
+  //       · 0 이 아닌데 새로 적은 길이 있으면 무효화를 다시 하고 다시 읽는다(최대 3번 · T1002 ⑧ U 의 꼴 · 판정 줄 · 문턱 무변). 셋 다 그러면 마지막 창으로 잰다.
+  let before = null, after = null, _wrote = null; const _w4 = [];
+  for (let k = 0; k < 3; k++) {
+    const _p0 = ((await jget(`http://localhost:${ZPORT}/perf`)).econTick || {}).probe || {};
+    const b = await jget(`http://localhost:${ZPORT}/routedbg`);
+    await jget(`http://localhost:${ZPORT}/routedbg?invalidate=1`);
+    const a = await jget(`http://localhost:${ZPORT}/routedbg`);
+    const _p1 = ((await jget(`http://localhost:${ZPORT}/perf`)).econTick || {}).probe || {};
+    const wrote = ((_p1.routeCold | 0) - (_p0.routeCold | 0)) + ((_p1.routeRedigChanged | 0) - (_p0.routeRedigChanged | 0));
+    if (!before) before = b;
+    after = a; _wrote = wrote; _w4.push(`${a.mem}/${a.db}(새 길 ${wrote})`);
+    if ((a.mem === 0 && a.db === 0) || wrote === 0) break;
+  }
   ok(before.mem > 0 && before.db > 0, '④ [상황] 무효화 전에 캐시가 실제로 차 있다', `메모리 ${before.mem} · DB ${before.db}`);
+  ok((after.mem === 0 && after.db === 0) || _wrote === 0, '④ [상황] 잰 창이 캐러밴에 안 물들었다(뒤 읽기가 비었거나 · 그 창에 서버가 새로 적은 길 0 — 콜드 완주 · 다시 파기 셈)',
+    `창 ${_w4.length} · 뒤 읽기 메모리/DB(새로 적은 길) ${_w4.join(' · ')}`);
   ok(after.mem === 0, '④ 무효화가 **메모리**를 비운다', `${before.mem} → ${after.mem}`);
   ok(after.db === 0, '④ ★★무효화가 **DB 도** 비운다(한쪽만 지우면 다음 부팅에 썩은 길이 살아난다)', `${before.db} → ${after.db}`);
   await down();
@@ -307,7 +329,9 @@ async function runDays(n, sink) {
     await sleep(Math.min(2000, W.warmIdleLeftMs + 100));
   }
   let wsA = null;
-  try { wsA = await connectWs('name=%EB%8D%B0%EC%9A%B0%EA%B8%B0%EC%86%90%EB%8B%98'); await sleep(1500); } catch (e) { wsA = null; }
+  try { wsA = await connectWs('name=%EB%8D%B0%EC%9A%B0%EA%B8%B0%EC%86%90%EB%8B%98'); } catch (e) { wsA = null; }
+  // ★[T1033] 서버가 **사람이 있다**고 말할 때까지(`/routedbg` humans · 서버 권위) · 종전 1.5초 잠 · 상한 = 접속 welcome 상한과 같은 20초(그물 · 아래 [상황] 이 이름을 댄다)
+  if (wsA) { const _t0 = Date.now(); while (Date.now() - _t0 < 20000) { const W = await jget(`http://localhost:${ZPORT}/routedbg`); if ((W.humans | 0) >= 1) break; await sleep(100); } }
   ok(!!(wsA && wsA.welcome), '⑦d [상황] 사람 하나가 **실제로 접속했다**(가짜 플래그가 아니라 진짜 ws)',
     wsA && wsA.welcome ? `pid ${wsA.welcome.pid || wsA.welcome.playerId || '?'}` : '접속 실패');
   const Wc0 = await jget(`http://localhost:${ZPORT}/routedbg`);

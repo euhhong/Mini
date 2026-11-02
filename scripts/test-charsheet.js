@@ -101,7 +101,12 @@ const move = (imA, fa, imB, fb, rot) => {
   ok(/scene\.cycles\.samples = SAMPLES/.test(src) && /SAMPLES = 64/.test(src), 'SAMPLES 64');
   const cl = require('./client-src.js').readClientSrc();
   ok(/char_meta\.json/.test(cl), '★클라가 메타를 fetch 한다 (규격 하드코딩 금지)');
-  ok(/uiCfg\.charSprite/.test(cl), '★플래그로 감싼다 (기본 OFF — 병행 안전)');
+  ok(/uiCfg\.charSprite/.test(cl), '★플래그로 감싼다 (★T1068 기본 켬 · 끄면 `CHAR_SPRITE=off` · 시트가 안 뜨면 도형 폴백은 그대로 산다)');
+  // ★★[T1068 2026-11-02 · ★재민 11-01 실기 · PM 판정(T1016 회부 1 답 — 재민은 모델을 기대한다)] 기본이 **켬**으로 뒤집혔다.
+  //   서버 env 정본 `!== 'off'`(env 가 빠진 재배포 길에서도 모델) · 클라 상수도 같은 값(welcome 전 · 칸이 없을 때). 종전 = `=== 'on'` · `charSprite: false`.
+  { const ZS = fs.readFileSync(path.join(ROOT, 'server', 'zone.js'), 'utf8');
+    ok(/charSprite: process\.env\.CHAR_SPRITE !== 'off',/.test(ZS), '★★[T1068] 서버 기본 켬 — 존 env 에 `CHAR_SPRITE` 가 없어도 시트(끄려면 `=off`)');
+    ok(/charSprite: true, charWalkMin/.test(cl), '★[T1068] 클라 상수도 켬 — 서버 기본과 같다(welcome 의 `uiCfg` 가 덮어쓴다)'); }
   // ★★[T13 2026-09-02] 이 줄은 **뒤집혔다.** 종전 판정은 `!item.npc &&` 를 요구했고, 그 판정의
   //   이름이 곧 해제 조건이었다 — *"마을 적용은 회부된 별도 배치"*. **그 배치가 T13 이다.**
   //   ⇒ 지우지 않고 **새 계약으로 갈아 끼운다**: NPC 도 시트로 가되, 직업 표를 쓰고, 폴백은 산다.

@@ -324,7 +324,7 @@ function cropSprite(stage, crop) {
   const ulOpen = new Set();
   // ★[정비 배치] 클라 손잡이 — welcome 의 `uiCfg` 가 덮어쓴다(정본은 서버 env · `carryCfg` 와 같은 규약).
   let uiCfg = { vignetteTint: true, moodleShowMax: 3, ghostStallMs: 5000, ghostReconnectMs: 10000,
-                charSprite: false, charWalkMin: 4, charRunMin: 102,     // ★[캐릭 시트] 기본 OFF
+                charSprite: true, charWalkMin: 4, charRunMin: 102,      // ★[캐릭 시트 · ★T1068 기본 켬] 서버 기본과 같다(welcome 이 덮어쓴다 · 끔 = 서버 `CHAR_SPRITE=off`)
                 charMocap2: false,   // ★[T155] 모션 둘째 판 — 기본 OFF · 서버 env 키는 아직 없다(회부)
                 coast588: 'b' };     // ★[T604 추신3] 해안 기본 b — 서버 기본과 같게(부트 `/zones` 굽기가 welcome 전에 돈다 · 다르면 welcome 에서 다시 굽는다)
   // ★비네트 색조 — **축 계열**. 새 아트를 만들지 않고 색만 바꾼다(§8.3 아날로그 채널은 최소로).
@@ -395,6 +395,10 @@ function cropSprite(stage, crop) {
   window.__aimDbg = () => ({ aiming: _aiming, x: _aimLookX, y: _aimLookY,
                              maskAx: window._shadowMaskAx || 0, maskAy: window._shadowMaskAy || 0 });
   let _lastCamIso = null;                // 직전 프레임 카메라 iso 원점 — 커서→월드 투영이 이걸 쓴다
+  // ★[T1059] 직전 프레임에 **그린** 사람들(나 포함) — 렌더 목록의 그 항목 그대로(`wx`·`wy` = 그린 자리 · `z` = 그리는 차례의 정렬 키).
+  //   안개 · 위층 · 시야로 안 그린 사람은 없다. 고르기(46-h-verbs `pickAt`)가 겹친 사람 중 "그림에서 위에 그려진 사람"을 이 `z` 로 가린다(정본 = 렌더 · 셈 사본 0).
+  //   프레임마다 새 배열이라 붙잡아 둔 값은 그대로다(`_lastCamIso` 와 같은 꼴 · T813 누른 순간).
+  let _lastPeopleDrawn = null;
   let _aimDirX = 1, _aimDirY = 0;        // 조준 월드 방향(정규화)
   let _aimT = 0;                         // 이징용 직전 프레임 시각
   // Phase 14.40: Shift 달리기
@@ -449,14 +453,14 @@ function cropSprite(stage, crop) {
 
     if (connPhase === 'error') {
       state = 'error'; hard = true;
-      title = '서버에 들어가지 못했다 — 기다려도 해결되지 않는다';
-      why = `원인: ${connReason || '알 수 없음'}${connStage ? ` · 단계 ${connStage}` : ''}${connRef ? ` · ref ${connRef}` : ''}`;
+      title = '서버에 들어가지 못했습니다. 기다려도 풀리지 않습니다.';
+      why = `까닭: ${connReason || '알 수 없음'}${connStage ? ` · 단계 ${connStage}` : ''}${connRef ? ` · ref ${connRef}` : ''}`;
     } else if (connPhase === 'entering') {
       const el3 = now - (connOutageAt || connHelloAt || now);
       if (el3 < CONN_QUIET_MS) { el.classList.remove('on'); return; }   // ★유예 — 번쩍임 방지
       hard = el3 > CONN_ENTER_WARN_MS;
       state = hard ? 'error' : 'entering';
-      title = hard ? '서버가 입장 처리를 못 끝내고 있다 — 오류일 수 있다'
+      title = hard ? '서버가 들어오는 일을 끝내지 못하고 있습니다. 오류일 수 있습니다.'
                    : '서버가 받았다 — 입장 처리 중';
       why = `${(el3 / 1000).toFixed(0)}초 경과${connStage ? ` · 단계 ${connStage}` : ''}${connRef ? ` · ref ${connRef}` : ''}`;
     } else if (connPhase === 'connecting') {
@@ -464,8 +468,8 @@ function cropSprite(stage, crop) {
       if (el3 < CONN_QUIET_MS) { el.classList.remove('on'); return; }   // ★유예 — 번쩍임 방지
       hard = el3 > CONN_WAIT_WARN_MS;
       state = hard ? 'error' : 'waiting';
-      title = hard ? '서버가 응답하지 않는다 — 계속 재시도 중이지만 오류일 수 있다'
-                   : '서버 응답을 기다리는 중 — 잠시 기다리면 대개 들어가진다';
+      title = hard ? '서버가 대답하지 않습니다. 계속 다시 시도하는 중이지만 오류일 수 있습니다.'
+                   : '서버의 대답을 기다리는 중입니다. 잠시 기다리면 대개 들어가집니다.';
       why = `${(el3 / 1000).toFixed(0)}초 경과 · ${connAttempts}번째 시도`;
     } else if (netStalled) {
       state = 'lost'; hard = true;

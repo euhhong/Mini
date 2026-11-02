@@ -84,7 +84,7 @@ const T577_WALK = process.env.T577_CAND_WALK === '1';
 //     걷던 몸이 단의 몸이 된다(호스트 `t1039Join` — 은거지 곁 새 몸 0). 가는 동안 단은 `GANGS` 밖이다 — 습격 0 · 토벌 표적 0 · 절망 이탈 합류 0 · 유지비 0(길 위 장부 · T765 정본 그 꼴 — 회부).
 //     부팅 실체화(다시 뜸 · 몸은 비영속)는 종전 그대로 은거지에 세운다.
 //   `spawn` — 단 · 단 몸은 종전 그대로 그날 선다 · 단 몸이 서는 그 틱에 단이 된 사람 몫의 마을 몸을 거둔다(호스트 `t1039Leave` — 떠남 표 · 순간이동 0 · 걷는 몸 0).
-const T1039_BODY = typeof process !== 'undefined' && !!process.env ? (process.env.T1039_BANDIT_BODY || '') : '';
+const T1039_BODY = (() => { const v = typeof process !== 'undefined' && !!process.env ? process.env.T1039_BANDIT_BODY : undefined; return v == null || v === '' ? 'walk' : (v === '0' ? '' : v); })();   // ★[PM land1038 · ★재민 11-01 "걸어간 몸이 단"] 켬 기본 = walk · 종전 = `=0` · 대조 `=spawn`
 // ★★[T1078 2026-11-02 · ★재민 11-02 "도적과 은신처가 모두 맵 내에 실제로 보이는 거 맞지..? 추상 아니지?"] **도적 단원 전원이 몸** — 손잡이 `T1078_BANDIT_ALL`('1' 만 켬 · 끔 = 아래 갈래 줄이 하나도 안 닿는다 = 종전 글자).
 //   종전: `syncBodies` 는 단마다 min(3, n)(`BDT_BODY_PER_GANG`) 몸만 은거지 곁에 세웠다(“연출 전용 · econ 무접촉”) — 나머지 사람은 숫자였다 · 몸이 맞아 죽으면 존이 30초 뒤 마을 광장에 되살렸다(순간이동).
 //   켬: ★T1039 `walk` 갈래를 **함께 켠다**(켬이면 `T1039_BANDIT_BODY` 값과 무관하게 walk — `spawn` 은 은거지 곁 새 몸이라 “새 몸 0” 과 맞지 않는다 · 회부).
@@ -137,6 +137,7 @@ function _t765Arrive(day) {   // 길 위 장부 — 닿은 사람을 받는 마�
     if (!to || !to.econ) continue;
     if (w.t1079) { _t1079Arrive(w, to, day); S.WALK.splice(i--, 1); continue; }   // ★[T1079 ④] 해산한 도적이 마을에 닿았다(아래 종전 두 줄 · 붙기 문을 같이 쓴다)
     const npc = w.npc;
+    if (npc && Number.isFinite(npc.age) && day > w.d0) npc.age += (day - w.d0) / 365;   // ★[T1049 ④] 길 위에서도 늙는다 — econ 하루 늙기(`economy-sim.js` `n.age += 1 / 365`)를 걸은 날 수만큼(장부 안은 econ 밖이라 종전엔 그 날들이 빠졌다 · 새 수 0)
     _econJoin(to, npc);
     if (to.econ._banditized) S.stats.t765IntoDis = (S.stats.t765IntoDis || 0) + 1;   // 걷는 사이 받는 마을도 해체됐다(그래도 그 마을에 붙는다 · 표에만)
     const joined = S.host.t765Join ? S.host.t765Join(w.pid, to) : false;

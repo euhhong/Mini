@@ -205,7 +205,7 @@ async function waitHttp(u, n = 900) { for (let i = 0; i < n; i++) { try { const 
   ok(/초 남음|걸어 둔 것/.test(qtxt), '★★② 대기열에 걸렸다(오프라인에도 마른다)', (qtxt.match(/[^\n]{0,20}초 남음/) || [''])[0].trim());
   await sleep(DRY_MS + 2000);
   const dtxt = await page.evaluate(() => window.__panelText());
-  ok(/다 됐다|받기/.test(dtxt), '★★② 다 되면 화면이 그렇게 말한다', (dtxt.match(/[^\n]{0,24}다 됐다[^\n]{0,12}/) || [''])[0].trim());
+  ok(/다 됨|받기/.test(dtxt), '★★② 다 되면 화면이 그렇게 말한다', (dtxt.match(/[^\n]{0,24}다 됐다[^\n]{0,12}/) || [''])[0].trim());
   await page.evaluate(() => { const b = document.querySelector('[data-fcollect]'); if (b) b.click(); });
   await sleep(1400);
   const inv2 = await inv();
@@ -281,7 +281,7 @@ async function waitHttp(u, n = 900) { for (let i = 0; i < n; i++) { try { const 
   ok(!!b1 && ((b1.injury || 0) === ((b0 && b0.injury) || 0)),
     '★★④ 먹은 자리에서 **부상은 없다**(T705 — 잠복이 있다 · 즉시 부상 줄은 끔 판에만)', `${(b0 && b0.injury) || 0} → ${b1 && b1.injury}`);
   ok(said.some((t) => /상함/.test(t)), '★★④ 그리고 화면이 **상한 걸 먹었다**고 말한다', (said.find((t) => /상함/.test(t)) || '').slice(0, 50));
-  ok(said.some((t) => /허기 0/.test(t)), '★④ 회복은 0 이었다', (said.find((t) => /허기/.test(t)) || '').slice(0, 46));
+  ok(said.some((t) => /허기 \+?0(?![0-9])/.test(t)), '★④ 회복은 0 이었다', (said.find((t) => /허기/.test(t)) || '').slice(0, 46));
   const hp1 = await readHp();
   ok(!!hp0 && hp1 === hp0, '★★④ **HP 는 안 깎인다**(아사 폐지 캐논과 같은 결) — 화면 HUD 로 확인', `${hp0} → ${hp1}`);
   await snap('pv-05-ill');
