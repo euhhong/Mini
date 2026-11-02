@@ -15,6 +15,7 @@
     if (!primaryZoneId) return;
     const c = conns.get(primaryZoneId);
     if (c && c.ws.readyState <= 1) return;
+    if (_t1092Wait()) return;   // ★[T1092] 넘긴 존의 답(돌려놓기 · 닫기)을 기다린다 — 아래 함수
     const pm = zonesMeta[primaryZoneId];
     if (!pm) return;
     const now = performance.now();
@@ -36,6 +37,20 @@
     const localY = myAbsPredicted.y - (pm.worldOffsetY || 0);
     console.warn('[recover] primary 재연결', primaryZoneId);
     connect(primaryZoneId, 'primary', { x: localX, y: localY, inventory });
+  }
+
+  // ★★[T1092 2026-11-03] 넘긴 존이 "못 붙으면 돌려놓는다"를 약속한 넘기(`handoff.back` — 서버 손잡이 `T1092_HANDOFF_BACK`)면, 그 존 소켓이 열려 있고
+  //   약속 시한(받는 존 토큰 수명 — 서버가 실어 준 값) 안인 동안 받을 존에 **새로 붙지 않는다**. 답 = `handoff_back`(돌려놓았다 · 30-n-net) · 그 소켓 닫힘
+  //   (종전 정리 — 그때부터 종전 재연결). 왜: 기다리는 사이 이름 · 열쇠로 받는 존에 따로 들어가면 받는 존엔 행에서 선 몸 · 넘긴 존엔 돌려놓은 몸 — 몸 둘
+  //   (게스트는 존 사이 중복 차단이 없다). 약속이 없는 넘기(서버 끔 · 옛 판)는 이 함수가 늘 거짓 — 종전 그대로.
+  function _t1092Wait() {
+    const now = performance.now();
+    for (const cc of conns.values()) {
+      if (!cc._t1092Until) continue;
+      if (cc.role !== 'observer' || cc.ws.readyState !== 1 || now > cc._t1092Until) { cc._t1092Until = 0; continue; }
+      return true;
+    }
+    return false;
   }
 
   // === 경계에서 멈춤 감지 → 강제 핸드오프 ===
