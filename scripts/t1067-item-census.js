@@ -104,6 +104,16 @@ function at(rel, re, raw) {
 }
 const BASE_CTX = { Math, Number, String, Object, Array, Set, Map, JSON, parseFloat, parseInt, isFinite, process };
 const SHIM_REQ = (p) => SV(p);
+// ★[T1099] 리터럴 안의 손잡이(`...(T1065_TOOL_GATE ? {…} : {})`) — 그 파일의 `const T<번호>_<이름> = process.env.<이름> !== '0';` 꼴 줄만
+//   **그 글자 그대로** 평가해 넣는다(env 를 읽는 식만 · 지어낸 값 0). 그 밖의 꼴이면 넣지 않는다(평가가 멈추면 표가 바뀐 것이다).
+const _KNOBS = {};
+function knobsOf(rel) {
+  if (_KNOBS[rel]) return _KNOBS[rel];
+  const s = srcOf(rel), out = {};
+  const re = /^const (T\d+_[A-Z0-9_]+) = (process\.env\.[A-Z0-9_]+ (?:!==|===) '[^']*');/gm;
+  let m; while ((m = re.exec(s.code))) out[m[1]] = vm.runInNewContext(m[2], { process });
+  return (_KNOBS[rel] = out);
+}
 // 리터럴 하나를 **그 글자 그대로** 평가한다 — `re` 는 식 바로 앞에서 끝나야 한다(또는 식 앞의 0폭 자리)
 function litAt(rel, re, ctx) {
   const s = srcOf(rel); const m = re.exec(s.code);
@@ -112,7 +122,7 @@ function litAt(rel, re, ctx) {
   // ⚠`parseExpressionAt` 은 쉼표 식까지 먹는다(객체 칸 `inventory: {…}, tools: …` 에서 `{…}, tools` 를 한 식으로 뜬다) — 첫 식만
   if (node.type === 'SequenceExpression') node = node.expressions[0];
   const text = s.code.slice(node.start, node.end);
-  const value = vm.runInNewContext('(' + text + ')', Object.assign({}, BASE_CTX, { require: SHIM_REQ }, ctx || {}));
+  const value = vm.runInNewContext('(' + text + ')', Object.assign({}, BASE_CTX, knobsOf(rel), { require: SHIM_REQ }, ctx || {}));
   return { value, at: `${rel}:${lineOfIdx(s, m.index)}` };
 }
 const Z = 'server/zone.js', VIL = 'server/villages.js', ICON_JS = 'public/client/43-i-icon.js';
@@ -141,6 +151,12 @@ const ATTACK_DMG = litAt(Z, /const PLAYER_ATTACK_DAMAGE = /).value;
 const BUSH_BERRY_N = litAt(Z, /const BUSH_BERRY_N = /).value;
 const ACORN_BYPRODUCT = litAt(Z, /const ACORN_BYPRODUCT = /).value;
 const RECIPES = L_RECIPES.value, ITEM_RECIPES = L_ITEM_RECIPES.value, BUILDING_RECIPES = L_BUILDING.value, EQUIP = L_EQUIP.value;
+// ★[T1099] 표 글자 **밖에서** 손잡이 문 안에 붙는 줄(`if (T1065_TOOL_GATE) { … RECIPES.crude_rod = {…} }` — zone.js) — 그 글자를 그대로 평가해 붙인다(켬 판만).
+//   `_ax` 는 그 문 안의 지역 이름(조잡한 돌도끼 비용 — `StoneUses.CRUDE_TOOLS.crude_axe.cost` 그대로).
+if (knobsOf(Z).T1065_TOOL_GATE) {
+  const L_ROD = litAt(Z, /RECIPES\.crude_rod = /, { _ax: M.StoneUses.CRUDE_TOOLS.crude_axe.cost });
+  if (!('crude_rod' in RECIPES)) RECIPES.crude_rod = Object.assign({ _at: L_ROD.at, _knob: 'T1065_TOOL_GATE' }, L_ROD.value);
+}
 // 요리 표 = 글자 + 갯벌 주입 + 사냥고기 주입(zone.js 차례 그대로 · 이미 있는 줄은 안 덮는다)
 const COOK = Object.assign({}, L_COOK.value);
 M.Tidal.install({ COOK_RECIPES: COOK });
