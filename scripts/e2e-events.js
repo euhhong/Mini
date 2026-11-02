@@ -416,12 +416,12 @@ async function waitHttp(url, tries = 900) {
     // ★이 한 줄이 2026-08-26 의 회귀를 이름으로 잡는다 —
     //   아래 세 개(인벤 차감·보상 수령·잔여 감소)는 **이것 하나가 무너지면 같이** 무너져서,
     //   원인이 "납품이 안 됐다" 로만 보이고 **왜** 안 됐는지는 말해 주지 않았다.
-    ok(!notes.some((t) => /갚을 것이 없다/.test(t)),
+    ok(!notes.some((t) => /갚을 것이 없습니다/.test(t)),
       '★마을이 약속한 보상을 갚을 수 있다(픽스처가 게시판의 보상 품목을 깎지 않았다)',
-      notes.filter((t) => /갚을 것이 없다/.test(t)).join(' | ') || '(거절 없음)');
+      notes.filter((t) => /갚을 것이 없습니다/.test(t)).join(' | ') || '(거절 없음)');
     ok((invAfter[giveItem] || 0) < (invBefore[giveItem] || 0), '납품한 만큼 인벤에서 빠졌다',
       `${giveItem} ${invBefore[giveItem] || 0} → ${invAfter[giveItem] || 0}`);
-    ok(notes.some((t) => /납품/.test(t)), '납품 결과가 화면 알림으로 돌아왔다');
+    ok(notes.some((t) => /납품|바쳤습니다/.test(t)), '납품 결과가 화면 알림으로 돌아왔다');
     ok(!!rewItem && (invAfter[rewItem] || 0) > (invBefore[rewItem] || 0), '보상(물물)이 인벤에 들어왔다',
       `${rewItem} ${invBefore[rewItem] || 0} → ${invAfter[rewItem] || 0}`);
     const board2 = await page.evaluate(() => window.__evLastBoard || null);
@@ -620,7 +620,7 @@ async function waitHttp(url, tries = 900) {
   await page.evaluate((vid) => window.__sendPrimary({ type: 'village_board', vid }), V.id);
   await sleep(1200);
   const farNote = await page.evaluate(() => (window.__notices || []).slice(-2).join(' | '));
-  ok(/너무 멀/.test(farNote), '멀리서 게시판을 요청하면 서버가 거절한다(거리 게이트는 서버가 판정)', JSON.stringify(farNote));
+  ok(/너무 (멀|멉)/.test(farNote), '멀리서 게시판을 요청하면 서버가 거절한다(거리 게이트는 서버가 판정)', JSON.stringify(farNote));
   await snap('ev-06-far');
 
   const fatal = errs.filter((e) => !/Failed to load resource/.test(e));

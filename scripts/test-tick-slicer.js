@@ -47,11 +47,14 @@ function boot(file, env) {
   const p = spawn(process.execPath, [path.join(ROOT, 'server', file)], {
     cwd: ROOT, env: Object.assign({}, process.env, env), stdio: ['ignore', 'pipe', 'pipe'],
   });
-  p.stdout.on('data', () => {}); p.stderr.on('data', () => {});
+  p._doneAll = null;   // ★[T1033] 존이 제 입으로 찍는 '마감 · 저장 끝' 줄(`slicer-day-stop.js`) — 그 줄을 받은 시각
+  p.stdout.on('data', (b) => { if (p._doneAll == null && /\[slicer-day-stop\] 마감 · 저장 끝/.test(String(b))) p._doneAll = Date.now(); }); p.stderr.on('data', () => {});
   procs.push(p); return p;
 }
 function killAll() { for (const p of procs) { try { p.kill('SIGKILL'); } catch (e) {} } procs.length = 0; }
 process.on('exit', killAll);
+// ★[T1033] 팔 끝 — 내 아이를 내리고 그 몸이 내려갈 때까지(조건 · `FB.stopKids`) · 종전 `killAll()` + 4초 잠
+async function down() { await FB.stopKids(procs); procs.length = 0; await FB.waitFree([CPORT, ZPORT]); }   // ★[T1033] 몸이 내려갔고(exit) 포트가 실제로 풀렸다(bind 로 확인)
 async function waitHttp(u, n = 600) { for (let i = 0; i < n; i++) { try { const r = await fetch(u, { signal: AbortSignal.timeout(5000) }); if (r.ok) return true; } catch (e) {} await sleep(1000); } return false; }
 const cp = (src, dst) => { for (const sfx of ['', '-wal', '-shm']) { try { fs.copyFileSync(src + sfx, dst + sfx); } catch (e) { try { fs.unlinkSync(dst + sfx); } catch (e2) {} } } };
 
@@ -67,7 +70,7 @@ async function arm(label, sliceMs, extraEnv) {
   //   ⚠듣기는 **띄운 그 틱에** 시작한다 — `await` 만 아래로 내린다(표식은 ~120ms 뒤에 찍힌다).
   const _upP = FB.waitUp(_central, /central server up on/, { name: 'central' });
   const _up = await _upP;
-  if (!_up.ok) { console.log(`  ★${_up.why}`); killAll(); return null; }
+  if (!_up.ok) { console.log(`  ★${_up.why}`); await down(); return null; }
   const _zone = boot('zone.js', {
     PORT: String(ZPORT), ZONE_ID: 'hanbando', DB_PATH: ZDB, CENTRAL_URL: `http://localhost:${CPORT}`,
     VILLAGE_DAY_MS: String(DAY_MS), ENABLE_BANDITS: '0', ENABLE_ROADS: '0', ENABLE_WILDLIFE: '0',
@@ -92,7 +95,7 @@ async function arm(label, sliceMs, extraEnv) {
   //     **177~306ms** 뿐이다 — central 때처럼 "우연히 벌어 주던 1초"가 **여기엔 없다**(재는 값 무변).
   //   ⚠듣기는 **띄운 그 틱에** 시작한다(T349 ⑧ 함정) — `await` 만 아래로 내린다.
   const _zp = FB.waitUp(_zone, /zone server up on/, { name: 'zone', capMs: 300000 });
-  if (!await (await _zp).ok) { killAll(); return null; }
+  { const _zu = await _zp; if (!_zu.ok) { console.log(`  ★${_zu.why}`); await down(); return null; } }   // ★[T1033] 존이 못 떴으면 그 사유를 찍는다(종전 조용히 null)
   await sleep(1500);
   await fetch(`http://localhost:${ZPORT}/perf?reset=1`);   // ★창을 열기 직전에 루프 히스토그램 영점
   let j = null;
@@ -107,6 +110,13 @@ async function arm(label, sliceMs, extraEnv) {
   //   ⚠계측(`j`)은 **위에서 이미 떴다** — 이 대기 구간은 판정 창 밖이다.
   //   ★[T665] 날이 얼었으니(`slicer-day-stop.js`) 마을 행이 **다 같은 날**로 저장될 때까지 기다렸다 끈다(종전: 하루 둘을 더 흘리고 끝 —
   //     끄는 순간 팔마다 저장된 날이 갈려 같은 날 마을이 0~4곳만 남는 판이 있었다). 상한은 종전 대기의 다섯 배(배수가 못 끝나면 그대로 끄고 전제가 말한다).
+  //   ★★[T1033 2026-11-01] **다 적혔다의 증인 = 존의 제 말**('마감 · 저장 끝' — `slicer-day-stop.js` 가 존 안에서 본다: 얼림 · 창 없음 · 마감 일 없음 · 저장 줄 0).
+  //     종전 증인("마을 행이 다 목표 날")은 앞날 저장 줄이 날이 넘어간 뒤 목표 날 글자로 먼저 적히는 판에서 **뒤 줄이 도는 도중**에 섰다 —
+  //     그때 끄면(0.5초 폴링의 벽시계) 그 줄에서 값이 바뀐 마을만 앞 줄 값이 남아 팔 하나가 식량 ~28 벗어났다(⑧ 빨강 · 보고 T1033 §2).
+  //     아래 행 날 기다림은 그대로 둔다(같은 상한 · 그 줄이 섰으면 곧바로 선다). 상한 = 종전 대기의 다섯 배(같은 수 · 그물) — 걸리면 ⑧ [전제] 가 이름을 댄다.
+  { const _u0 = Date.now(), _ucap = (DAY_MS * 2 + 1000) * 5;
+    while (_zone._doneAll == null && Date.now() - _u0 < _ucap && _zone.exitCode === null) await sleep(100);
+    if (j) j._t1033 = _zone._doneAll != null ? { ok: true, ms: _zone._doneAll - _u0 } : { ok: false, ms: Date.now() - _u0 }; }
   { const { DatabaseSync } = require('node:sqlite');
     const until = Date.now() + (DAY_MS * 2 + 1000) * 5;
     let last = null;
@@ -121,14 +131,18 @@ async function arm(label, sliceMs, extraEnv) {
     //   진단 한 줄 — 팔이 몇 일 행으로 섰나(전제가 빨가면 여기부터 본다)
     console.log(`  · [${label}] 마을 행 날 ${last ? `${last.lo}~${last.hi} · ${last.n}곳` : '—'}${STOP_AT != null ? ` (목표 ${STOP_AT})` : ''}`);
   }
-  killAll();
-  await sleep(4000);   // 포트 반납(직전 배치의 교훈 — 연속 부팅은 바인드에 실패한다)
+  // ★★[T1033] 포트 반납 = **내 아이가 내려갔다**(아이의 'exit' — 몸이 내려가면 듣던 포트도 풀린다 · `FB.stopKids`) · 종전 4초 잠(벽시계)
+  //   상한은 그물(`REAP_CAP_MS`) — 그래도 산 아이가 있으면 다음 팔의 `waitUp` 이 `EADDRINUSE` 로 이름을 붙인다(조용한 빨강 0).
+  await down();
   return j;
 }
 
 (async () => {
   console.log('\n=== 일틱 조각내기 구조 검사 (짝 비교 · 같은 DB 스냅샷) ===');
   // 씨앗 DB — 없으면 한 번 만들어 둔다(그 뒤로는 재사용). 절차는 공용 정본이 갖고 있다.
+  // ★[T1033] 머리 — 앞 판(러너의 앞 하네스)의 몸이 아직 3010 · 3020 을 쥐고 내려가는 중이면 풀릴 때까지 기다린다(조건 · 상한 `REAP_CAP_MS` 그물)
+  //   못 풀리면 그대로 간다 — 첫 부팅의 `waitUp` 이 `EADDRINUSE` 로 이름을 붙인다(남의 판은 안 죽인다 · T773)
+  { const wf = await FB.waitFree([CPORT, ZPORT]); if (wf.ms > 200 || wf.held.length) console.log(`  · [T1033] 포트 ${[CPORT, ZPORT].join('·')} — ${wf.held.length ? '아직 쥐임 ' + wf.held.join('·') : '풀림'} (${wf.ms}ms 기다림)`); }
   { const r = await ensureSeed();
     if (!r.ok) { console.log(`  ✗ 씨앗 준비 실패 — ${r.why}`); process.exit(1); } }
   //   ★[T665] 씨앗 날 — 모든 팔이 여기서 출발해 씨앗 날 + DAYS 에서 선다(`slicer-day-stop.js`)
@@ -320,6 +334,15 @@ async function arm(label, sliceMs, extraEnv) {
     return { same, diff, skip };
   };
   try {
+    // ★★[T1033] A/A 팔(aa)도 부팅 · 수확됐다 — 종전엔 이 팔만 [전제] 가 없었다(되돌림 팔 둘은 ⑨ · ⑩ [전제]). 못 떴으면 `/tmp/slicer-aa-z.db` 는
+    //   팔 머리에서 깐 **씨앗 사본**이라 A/A · 바닥 쌍이 '같은 날 마을 0곳'으로 빨개지고 ⑧ 의 판정으로 오독된다(부팅 · 포트가 ⑧ 로 보인다).
+    ok(!!(C2 && C2.econTick && C2.econTick.last && C2.econTick.days >= DAYS), '⑧ [전제] A/A 팔(aa)이 부팅 · 수확됐다(아니면 아래 A/A · 바닥 쌍은 씨앗 사본을 잰다)',
+      C2 && C2.econTick && C2.econTick.last ? `${C2.econTick.last.day}일 · ${C2.econTick.days}일 마감` : '없음');
+    // ★★[T1033] 여섯 팔 모두 존이 '마감 · 저장 끝'을 말한 뒤 껐다 — 아니면 같은 날 행에 앞 줄(앞날 마감의 저장) 값이 남을 수 있다(그 마을만 팔마다 갈린다 · 보고 T1033 §2)
+    { const AR = [['base', A], ['head', B], ['base2', A2], ['aa', C2], ['day0', D2], ['life0', L2]];
+      const bad = AR.filter(([, x]) => !(x && x._t1033 && x._t1033.ok)).map(([n, x]) => `${n}${x && x._t1033 ? ' ' + x._t1033.ms + 'ms' : ''}`);
+      ok(bad.length === 0, '⑧ [전제] 여섯 팔 모두 존이 \'마감 · 저장 끝\'을 말한 뒤 껐다(서버 권위 — 아니면 같은 날 행에 앞 줄 값이 남는다)',
+        bad.length ? `못 들은 팔 ${bad.join(' · ')}` : AR.map(([n, x]) => `${n} ${x._t1033.ms}ms`).join(' · ')); }
     ok(a.day === b.day, '⑧ [전제] 두 팔이 **같은 날**까지 돌았다', `대조군 day ${a.day} · 조각내기 day ${b.day}`);
     const AA = cnt('/tmp/slicer-head-z.db', '/tmp/slicer-aa-z.db');    // 같은 설정 두 판 = 원래 있던 발산
     const AB = cnt('/tmp/slicer-base-z.db', '/tmp/slicer-head-z.db');  // 끈 뽑음 ↔ 조각내기
