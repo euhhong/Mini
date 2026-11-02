@@ -1715,7 +1715,7 @@
         if (bubble && performance.now() < bubble.until) {
           if (bubble.lines && bubble.lines.length > 1) {   // ★[T529] 촌장 몸의 인사는 여러 줄 — 마을 말풍선과 같은 쌓기(26px)
             let by = s.y - 32;
-            for (let i = bubble.lines.length - 1; i >= 0; i--) { drawSpeechBubble(s.x, by, bubble.lines[i]); by -= 26; }
+            for (let i = bubble.lines.length - 1; i >= 0; i--) { by -= bubbleStep(drawSpeechBubble(s.x, by, bubble.lines[i])); }   // ★[T1086] 켬이면 판 높이만큼(41-h-bubble `bubbleStep` · 끔 = 종전 26)
           } else drawSpeechBubble(s.x, s.y - 32, bubble.text);
         }
       } else if (item.kind === 'building') {
@@ -1842,7 +1842,7 @@
         const p0 = w2i(a.x, a.y), sp = toScreen(p0.x, p0.y);
         if (sp.x < -260 || sp.y < -160 || sp.x > canvas.width + 260 || sp.y > canvas.height + 160) continue;
         let y = sp.y - 54;
-        for (let i = bb.lines.length - 1; i >= 0; i--) { drawSpeechBubble(sp.x, y, bb.lines[i]); y -= 26; }
+        for (let i = bb.lines.length - 1; i >= 0; i--) { y -= bubbleStep(drawSpeechBubble(sp.x, y, bb.lines[i])); }   // ★[T1086] 켬이면 판 높이만큼(41-h-bubble `bubbleStep` · 끔 = 종전 26)
       }
     }
 
