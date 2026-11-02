@@ -5505,6 +5505,9 @@ Onboarding.init({ SimVillages, terrain: _terrain, ZONE, ZONE_ID, db: db.db, send
   // ★[T62] 공용 쉼터 좌표 — **정본 하나를 부른다**(온보딩이 자리를 다시 고르지 않는다).
   shelterOf: (vid) => { try { return SimVillages.shelterOf ? SimVillages.shelterOf(vid) : null; } catch (e) { return null; } },
   chiefGreetHas: (pid, vid, ask) => { try { return !!(SimVillages.chiefGreetHas && SimVillages.chiefGreetHas(pid, vid, ask)); } catch (e) { return false; } },   // ★[T529] 촌장이 맡은 인사면 근접 인사를 또 안 보낸다
+  // ★[T1086] 첫 의뢰 = 마을 사람 권함 — 권함 자리 · 가입 형편은 `membership.js` 정본이 한다(온보딩은 부르는 법만 안다 · 손잡이 끔이면 둘 다 거짓/무동작).
+  offerJoin: (p, vid) => Membership.offerFirst(p, vid),
+  joinOf: (p) => Membership.joinOf(p),
   // ★[T115] 함께 도착 — 이름으로 물어 **vid → 벗 수**를 낸다. 세는 정본은 `friends.js` 하나다.
   //   ⚠못 물어보면 `null` 이고 시작 화면은 친구 칸 0 으로 그대로 뜬다(막지 않는다).
   friendVidsByName: (name) => Friends.nameVids(name),
@@ -5543,6 +5546,7 @@ Membership.init({ SimVillages, ZONE_ID, send, players, gameDay: gameDayNow,
   central, itemLabel: () => ITEM_LABEL_SERVER,
   afterWithdraw: (player, r) => _afterWithdraw(player, r),
   donate: (player, vid, want) => tryVillageDonate(player, vid, want),   // ★[T769] `/기부` 의 실물 길(켬에서만 불린다)
+  lotClaimed: (player) => _t1086LotClaimed(player),   // ★[T1086] 빈터에 제 터를 잡았나(받아들인 촌장 말의 빈터 줄을 가른다 · 읽기만)
   //   ★[T732] 곳간 문 감싸개 — 켬일 때만 준다(끄면 이 칸이 없다 = membership 이 종전 그대로 부른다). UI · 채팅 인출이 다 이 문을 지난다.
   ...(process.env.T732_MOMENT_LOT !== '0' ? { wrapWithdraw: (player, fn) => _t732Wrap(player, fn) } : {}) });   // ★[T778] 켬 기본
 // ★[T1072] 마을 화면 자료 — 직업 이름표는 **함수 뒤에서** 읽는다(`JOB_KR_NPC` 가 이 줄보다 뒤에서 선다 · 위 이름표 선례).
@@ -7173,6 +7177,7 @@ async function _acceptConnection(ws, req, C) {
       ...(process.env.T1059_PICK_TOP !== '0' ? { pickTop: true } : {}),   // [T1059 · 켬 기본 후보] 겹친 사람 위 우클릭 · 커서 이름표는 그 프레임에 **그린** 사람 중 위에 그려진(렌더 정렬 키가 큰 · 같으면 누른 점에서 가까운) 사람을 고른다(46-h-verbs `pickAt`) · 되돌림 `T1059_PICK_TOP=0` 이면 칸이 없다(옛 welcome · 상자 안 첫 사람)
       ...(process.env.T1020_STOP_MENU !== '0' ? { stopMenu: true } : {}),   // [T1020 · 켬 기본 후보] 맥락 메뉴의 "… 멈추기" 줄은 **누를 때도 멈추기만** 한다(46-h-verbs · 메뉴를 연 뒤 반복이 저절로 멎었으면 새로 시작하지 않는다) · 되돌림 `T1020_STOP_MENU=0` 이면 칸이 없다(옛 토글)
       ...(process.env.T1064_NEXT_STEP !== '0' ? { nextStep: true } : {}),   // [T1064 · 켬 기본 후보] 「지금 할 일」 칸 하나 — 서버가 이미 보내는 대본 상태(onboarding_state · 촌장 첫 인사 · 도착 기록)에서 클라가 다음 행동 한 줄과 그 쪽을 지도 판 밑에 그린다(70-lobby `onbNextRender` · 서버 동작 무변) · 되돌림 `T1064_NEXT_STEP=0` 이면 칸이 없다(옛 welcome · 종전 화면)
+      ...(process.env.T1086_FIRST_JOIN !== '0' ? { firstJoin: { cost: CLAIM_COST.personal } } : {}),   // [T1086 · 켬 기본 후보] 첫 의뢰 = 빈터 + 마을 사람 권함(onboarding · membership) — 「지금 할 일」 칸이 가입 · 터 잡기 · 집 짓기 단계와 단추를 낸다 · 터 값은 서버 정본(`CLAIM_COST.personal` — 클라 상수 0) · 되돌림 `T1086_FIRST_JOIN=0` 이면 칸 없음(종전 K-2 · T1064 칸)
       ...(process.env.T970_CUT_NEAR !== '0' ? { cutNear: true } : {}),   // [T970 · ★T981 켬 기본 — PM 10-28] 클라 산 가르기 붙듦(`_mtCutHold` — 가르기 조각을 만든 띠)을 카메라 둘레(이번 판 산 수집 창의 청크 · 그 청크의 지금 띠)만 남긴다(11-r1-mountain `_mtCutHoldSweep` · 상한 64/48 그대로) · 되돌림 `T970_CUT_NEAR=0` 이면 칸이 없다(옛 welcome · 종전 붙듦)
       ...(process.env.T981_MT_NEAR !== '0' ? { mtNear: true } : {}),   // [T981 · ★T997 켬 기본 — PM 10-29] 클라 산 굽다 만 청크(`_mt3Jobs`)를 이번 판 산 수집 창 것만 남기고 · 가르기 붙듦이 비면 가르기 판 둘(`_mtMaskCv` · `_mtStripCv`)을 만들 때 크기로 되돌린다(11-r1-mountain `_mtNearSweep` · T970 회부 2) · 되돌림 `T981_MT_NEAR=0` 이면 칸이 없다(옛 welcome · 종전 그대로)
       ...(_streamOn() ? { streams: Streams.wireOf(ZONE_ID) ? Streams.wireOf(ZONE_ID).ver : true, streamSlow: Streams.STREAM_SLOW0 } : {}),   // [T585] 개울 — 클라가 `/streams.bin` 을 받아 그리고 걸음 예측에 쓴다(배율도 서버 정본 수)
@@ -7375,8 +7380,9 @@ function handlePlayerInput(player, raw) {
     metrics.chats++;
     // ★[T11] 마을 소속 명령 — `/소속` `/탈퇴` `/추방 <이름>` `/인출 [수량] [재화]`.
     //   **새 클라 조건 0**: 채팅은 이미 있다. 명령은 말이 아니므로 방송하지 않는다.
-    if (VillageKin.ON && VillageKin.handleChat(player, text)) return;   // ★[T785] 켬 — `/촌장` `/곳간 열기|잠금` `/소개` `/길드 초대제|공개` `/초대` `/수락` `/전쟁` `/종전` · 촌장 자리 지킴(`/탈퇴` `/추방`)
-    if (Membership.handleChat(player, text)) return;
+    if (VillageKin.ON && VillageKin.handleChat(player, text)) { Onboarding.pushState(player); return; }   // ★[T1086] 마을 문이 소속을 바꿨을 수 있다(`/수락` · `/탈퇴`) — 칸에 가입 형편을 다시(끔 = 무동작) · ★[T785] 켬 — `/촌장` `/곳간 열기|잠금` `/소개` `/길드 초대제|공개` `/초대` `/수락` `/전쟁` `/종전` · 촌장 자리 지킴(`/탈퇴` `/추방`)
+    if (Membership.firstJoinChat(player, text)) return;   // ★[T1086] 첫 의뢰 권함에 `/소속` — 문턱 12 대신 시작 마을 빈터 권리(촌장 말 한 통 · 칸 형편 같이 · 끔 = 늘 거짓)
+    if (Membership.handleChat(player, text)) { Onboarding.pushState(player); return; }   // ★[T1086] 소속 명령 뒤 칸에 가입 형편을 다시(끔 = 무동작)
     if (Newcomers.handleChat(player, text)) return;   // ★[T19] `/이방인` — 새 클라 조건 0
     if (Friends.handleChat(player, text)) return;     // ★[T115] `/친구` — 새 패널 0 · 새 클라 조건 0
     if (Guild.handleChat(player, text)) return;       // ★[T128] `/초대` `/수락` `/길드` `/소개`
@@ -12019,6 +12025,15 @@ function _kinIsMemberOf(player, vid) { const v = _kinVilOf(player); return !!(v 
 //   그 자리(px)가 **그 사람 마을의 땅**인가 — 종전 "내 길드 사유지"의 자리(T786: 길드 사유지 → 마을 땅).
 function _kinLandOf(px, py) { try { return SimVillages.villageOfCell ? SimVillages.villageOfCell(Math.floor(px / BUILDING_SIZE), Math.floor(py / BUILDING_SIZE)) : null; } catch (e) { return null; } }
 function _kinMyLand(player, px, py) { const v = _kinVilOf(player), l = v ? _kinLandOf(px, py) : null; return !!(l && (l.dbId | 0) === (v.dbId | 0)); }
+// ★[T1086] 이 사람이 시작 마을 빈터(온보딩 빈터 구역 · `vacantLotAllows` 정본) 안에 제 개인 사유지를 잡았나 — 읽기만(받아들인 촌장 말의 빈터 줄을 가른다).
+function _t1086LotClaimed(player) {
+  if (!player) return false;
+  for (const c of claims.values()) {
+    if (c.ownerPid !== player.playerId || c.kind !== 'personal') continue;
+    if (Onboarding.vacantLotAllows(player, c.x + c.w / 2, c.y + c.h / 2)) return true;
+  }
+  return false;
+}
 function _furnaceClaimOf(player, px, py) {
   // 이 좌표를 덮는 사유지 중 플레이어에게 권한이 있는 것 — 개인(본인) 또는 길드(같은 길드).
   if (VillageKin.ON) {   // ★[T786 C3] 켬 — 개인(본인) 사유지 또는 **내 마을 땅**(길드 사유지 자리)
@@ -12844,8 +12859,10 @@ function tryVillageDeliver(player, vid, item, want) {
   send(player.ws, { type: 'notice', text: `📋 ${r.name}에 ${gave}을(를) 바쳤습니다.${got}${r.refused > 0 ? ` ${r.refused}개는 남은 몫을 넘어 돌려받았습니다.` : ''}`
     + (_g732 ? _t732GotLine(player, _g732) : '') });   // ★[T779] 겨울 몫 알림(T20 "올겨울 몫")은 걷었다
   Onboarding.onDeliver(player, r, vid | 0);   // ★[온보딩 v2] 누적 기여(=T11 이 재사용할 하나의 카운터)·곳간 이펙트·훅 대사·빈터 권리
+  const _o1086 = player._memberOfferVid;   // ★[T1086] 아래 종전 문턱(12) 훅이 권함을 바꾸면 칸에 다시 알린다(첫 의뢰 권함은 위 온보딩 훅이 이미 실었다)
   //   ★[T785] 켬 — 가입 문이 '초대제'인 마을은 기여로 권하지 않는다(부름 `/초대` → `/수락` 만 · 문은 마을 칸)
   if (!(VillageKin.ON && VillageKin.joinModeOfVid(vid | 0) === 'invite')) Membership.onDeliver(player, r, vid | 0);   // ★[T11] **그 다음**이다 — 기여가 오른 뒤라야 소속 문턱을 정확히 본다
+  if (player._memberOfferVid !== _o1086) Onboarding.pushState(player);   // ★[T1086] 종전 문턱(12) 권함도 「지금 할 일」 칸이 바로 본다(끔 = 무동작)
   //   ★[T779] 겨울나기 적립(`Winter.onDeliver`)은 걷었다
   // 낸 즉시 게시판이 갱신된다(다 찼으면 목록에서 빠진다)
   const b = SimVillages.villageBoard(vid | 0, player.x, player.y);
