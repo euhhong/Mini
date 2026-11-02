@@ -299,8 +299,24 @@ function pickRiverSpot() {
   const shotA = path.join(SHOTS, 'fi-06-nofloat-a.png');
   const shotB = path.join(SHOTS, 'fi-07-nofloat-b.png');
   const shotC = path.join(SHOTS, 'fi-08-float.png');
-  await page.screenshot({ path: shotA }); await sleep(500);
-  await page.screenshot({ path: shotB });
+  // ★★[T1096 2026-11-03] **내 몸의 애니도 잡음이다** — T1068(`CHAR_SPRITE` 켬 기본 · land1038)부터 서 있는 몸이 숨쉬기(idle) 판을 넘긴다.
+  //   그 판은 실시간(`performance.now`)으로 흐른다 — `freezeT`(물 · 산) 밖이다. 그래서 얼린 화면의 대조군 두 장이 **몸 판만큼** 갈렸다
+  //   (land1038 게이트 62px · 단독 84px — 바뀐 화소가 전부 화면 가운데 내 몸 상자 [629..652]×[346..381] · `CHAR_SPRITE=off` 판 0px).
+  //   ⇒ 대조군 두 장을 **같은 애니 판**에서 찍는다(`e2e-charsprite ⓙ` 의 그 문법 — 판이 다시 올 때까지 기다린다 · 진단 훅 `__charDbg[내 pid].frame`).
+  //     문턱(60 · ×3 · 300)은 그대로다 — 잡음 원인(판 어긋남)을 재는 두 장 밖으로 뺐을 뿐 하네스를 느슨하게 하지 않았다.
+  //     몸을 도형으로 그리는 판(`CHAR_SPRITE=off`)은 판이 없다(`null`) — 그때는 종전 그대로 찍는다.
+  const _frameNow = () => page.evaluate(() => { const p = (typeof myPid !== 'undefined') ? myPid : null; const d = p != null && window.__charDbg ? window.__charDbg[p] : null; return d && d.on ? d.frame : null; });
+  const _shotAtFrame = async (file, want) => {
+    for (let k = 0; k < 120; k++) {
+      const f = await _frameNow();
+      if (want == null || f === want) { await page.screenshot({ path: file }); if ((await _frameNow()) === f) return f; }
+      else await sleep(40);
+    }
+    await page.screenshot({ path: file }); return undefined;   // 못 맞췄다 — 아래 전제가 빨갛게 말한다
+  };
+  const _fA = await _shotAtFrame(shotA, null); await sleep(500);
+  const _fB = await _shotAtFrame(shotB, _fA);
+  ok(_fA !== undefined && _fB === _fA, '★전제 — 대조군 두 장을 **같은 애니 판**에서 찍었다(서 있는 몸의 숨쉬기 판 · 도형 몸이면 판 없음)', `판 ${_fA} → ${_fB}`);
   shots.push(shotA, shotB, shotC);
   await page.keyboard.press('Shift+KeyF');
   let waited = null;
