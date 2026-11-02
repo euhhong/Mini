@@ -108,7 +108,7 @@ const frontBackGap = (v, sgn, rot) => {
   const g = (k) => v[(k + (rot || 0)) % 8];
   return sgn * (((g(0) + g(1) + g(2)) / 3) - ((g(4) + g(5) + g(6)) / 3));
 };
-module.exports = { frontBackRows, frontBackGap };
+module.exports = { frontBackRows, frontBackGap, openSpot };   // ★[T1068] 열린 자리도 내놓는다 — `e2e-nametag-others` 가 같은 자리 고르기를 쓴다(사본 0)
 
 if (require.main === module) (async () => {
   console.log('\n=== 캐릭터 스프라이트 애니 실클라 E2E (Chromium) ===');

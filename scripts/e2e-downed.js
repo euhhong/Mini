@@ -71,6 +71,7 @@ async function waitHttp(url, tries = 600) {
     PORT: String(ZPORT), ZONE_ID: 'hanbando', DB_PATH: ZDB, CENTRAL_URL: `http://localhost:${CPORT}`,
     ENABLE_VILLAGES: '1', ENABLE_BANDITS: '0', ENABLE_ROADS: '0', ENABLE_WILDLIFE: '0',
     E2E_GIVE: '1',
+    CHAR_SPRITE: 'off',   // ★[T1068] 시트 기본 켬 뒤에도 이 판은 **도형**이다 — 도형이 이 검사의 대상이고(인계/R2-개체렌더 · 시트 선적재가 2코어에서 이 판의 시간 판정을 흔든다) 끔 판은 `=off` 로 연다
     // ★시간 손잡이만 줄인다 — 사슬(창→사망→깨어남)은 그대로다.
     // ★창은 **관찰 가능한 만큼** 열어 둔다. 8초로 조였더니 ⓐ 가 통째로 헛것이 됐다 —
     //   패널 감지(폴링) + B 워프에만 10초 넘게 드니 B 가 닿기 전에 창이 지나 A 가 죽고,

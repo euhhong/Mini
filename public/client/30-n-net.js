@@ -970,6 +970,7 @@
 
       if (!msg.observer) {
         myPid = msg.pid;
+        if (typeof msg.name === 'string' && msg.name) myName = msg.name;   // ★[T1068] 머리 위 내 이름 = 서버 · 남이 보는 이름(서버 손잡이 `T1068_GUEST_NICK` 켬에서만 실린다 · 없으면 로비 이름칸 그대로 — 종전)
         inventory = msg.inventory;
         myLedger = msg.ledger || {}; myLots = msg.lots || {};      // ★[원장 승격] 인벤과 같은 스냅샷
         if (msg.uiCfg) uiCfg = Object.assign(uiCfg, msg.uiCfg);    // ★클라 손잡이는 서버 env 가 정본
