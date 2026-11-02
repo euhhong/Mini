@@ -77,6 +77,8 @@ async function enterAndGo(page, V) {
   page.on('pageerror', (e) => errs.push(String(e.message).slice(0, 160)));
   page.on('websocket', (ws) => ws.on('framesent', (f) => { const d = typeof f.payload === 'string' ? f.payload : ''; if (/village_deliver|village_donate|"claim"|village_view/.test(d)) { try { sent.push(JSON.parse(d)); } catch (e) {} } }));
   await page.goto(`http://localhost:${CPORT}/?T1070_VILLAGE_VIEW=1`, { waitUntil: 'domcontentloaded' });
+  // ★[PM land1038] 서버 villageView(T1072)가 이제 진짜 자료를 보낸다 — 이 하네스는 임시 자료(ui-draft) 판이라 서버 자료를 받지 않게 막는다(서버 자료 판은 T1103 이 이 하네스를 옮긴다).
+  await page.evaluate(() => { const _o = window.villageViewOnMessage; window.villageViewOnMessage = function (v) { if (v && v.head) return; return _o(v); }; });
   const near = await enterAndGo(page, V);
   ok(near === V.id, '[상황] 마을 중심 앞 — 클라가 그 마을을 근접 인식', `${near} (기대 ${V.id})`);
   await page.evaluate(() => window.__sendPrimary({ type: '__e2e_day_freeze', on: true }));
