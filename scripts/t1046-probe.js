@@ -29,7 +29,9 @@ global.__t1046 = function (v, line, val, birth) {
   try {
     const N = (v.npcs || []).length || 1;
     let fe = null; try { fe = V1 ? V1.totalFoodEquivalent(v) / N : null; } catch (e) { fe = null; }
-    let pW = null; try { const W = v._world; if (W && typeof W.priceFn === 'function') { const t = W.priceFn(v); if (t) pW = t.wood; } } catch (e) { pW = null; }
+    let pW = null; { const W = v._world; const _had = !!W && Object.prototype.hasOwnProperty.call(W, '_effDemCache'), _c0 = W && W._effDemCache;   // ★[T1062] 세계 칸 `_effDemCache` 를 그대로 되돌린다(읽기만 — 보고 T1062 §0)
+      try { if (W && typeof W.priceFn === 'function') { const t = W.priceFn(v); if (t) pW = t.wood; } } catch (e) { pW = null; }
+      finally { if (W) { if (_had) W._effDemCache = _c0; else delete W._effDemCache; } } }
     (rec.v[v.name] || (rec.v[v.name] = [])).push([(v._world && v._world.day) | 0, line, val == null ? null : String(val), birth ? 1 : 0, N, r3(fe), r3(((v.storage || {}).wood || 0) / N),
       r3(v.housing != null ? v.housing / N : null), r3(v._mapBeds != null ? v._mapBeds / N : null), r3(((v._consEMA || {}).wood || 0) / N), r3(pW), v._t400Live ? 1 : 0]);
   } catch (e) { rec.errs++; if (!rec.err0) rec.err0 = String(e && e.stack || e).slice(0, 400); }

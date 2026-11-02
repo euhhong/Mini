@@ -45,7 +45,11 @@ V1.tickVillage = function (v, day) {
         else { const o = pre.get(n); if (o !== j) { sw++; if (j === 'lumberjack') ljIn++; if (o === 'lumberjack') ljOut++; } } }
     }
     let pW = null, pF = null;
-    try { const W = v._world; if (W && typeof W.priceFn === 'function') { const t = W.priceFn(v); if (t) { pW = t.wood; pF = t.food; } } } catch (e) { /* 값 없음 */ }
+    // ★[T1062] 읽기만 — v2 값 식은 그날 첫 부름에서 세계 칸 `world._effDemCache`(그날 세계 총공급)를 세운다. 틱 앞에서 먼저 부르면 그 칸이 다른 순간의 곳간으로 서서
+    //   세계가 그날 다른 값을 읽는다(T1050 랩 t17 시드 42 인구 5,760 → 5,977 — 보고 T1062 §0). 부르기 전 칸을 쥐고 그대로 되돌린다(없었으면 지운다).
+    { const W = v._world; const _had = !!W && Object.prototype.hasOwnProperty.call(W, '_effDemCache'), _c0 = W && W._effDemCache;
+      try { if (W && typeof W.priceFn === 'function') { const t = W.priceFn(v); if (t) { pW = t.wood; pF = t.food; } } } catch (e) { /* 값 없음 */ }
+      finally { if (W) { if (_had) W._effDemCache = _c0; else delete W._effDemCache; } } }
     let fe = null; try { fe = N > 0 ? V1.totalFoodEquivalent(v) / N : null; } catch (e) { fe = null; }
     const E = v._allocEma || {};
     (rec.v[v.name] || (rec.v[v.name] = [])).push([day | 0, N, lj, fJ, cr, dr, drLj, ljIn, ljOut, ljBorn, sw, r2(fe), r4(pW), r4(pF), r4(E.wood), r4(E.food),
