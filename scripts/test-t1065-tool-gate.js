@@ -210,6 +210,7 @@ if (ON && OFF) {
   ok(R.chop.hpTool === R.chop.hp0 - R.chop.mult || (R.chop.hpTool === 'gone' && R.chop.hp0 <= R.chop.mult), '★★조잡한 돌도끼를 들면 벤다 — 배수 그대로(`TOOL_EFFECTS.crude_axe`)', `hp ${R.chop.hp0} → ${R.chop.hpTool} · 배수 ${R.chop.mult}`);
   ok(R.chop.dura && R.chop.dura[1] === R.chop.dura[0] - 1, '조잡한 돌도끼 내구 1 닳음(종전 문법)', JSON.stringify(R.chop.dura));
   ok(R.quarry.hpBare === R.quarry.hp0 && /조잡한 돌괭이가 있어야 돌을 캘 수 있습니다/.test(R.quarry.bareText || ''), '★★맨손 채석 — hp 그대로 · 이유 한 줄', R.quarry.bareText);
+  ok(/자갈은 바위 곁에서 맨손으로 주울 수 있습니다\./.test(R.quarry.bareText || ''), '★맨손 채석 이유가 자갈 얻는 길을 같이 말한다(돌괭이가 자갈 3 을 먹는다 — 길이 돌지 않게)', R.quarry.bareText);
   ok(R.quarry.hpTool === R.quarry.hp0 - R.quarry.mult || (R.quarry.hpTool === 'gone' && R.quarry.hp0 <= R.quarry.mult), '★조잡한 돌괭이를 들면 캔다 — 배수 그대로', `hp ${R.quarry.hp0} → ${R.quarry.hpTool}`);
   ok(R.bush.hpBare !== R.bush.hp0, '★맨손 덤불 — 된다(맨손 = 줍기 · 따기 · 덤불)', `hp ${R.bush.hp0} → ${R.bush.hpBare}`);
   ok(ON.forest.found, '[상황] 나무 곁 잔가지 줍는 자리가 있다');

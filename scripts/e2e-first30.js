@@ -210,7 +210,14 @@ const T = Z.terrain;
 const fctx = (hasVessel) => ({                    // ★존 `_forageCtx` 와 같은 술어(주입만 · 사본 0)
   forestMult: (x, y) => (T.getForestMultiplier ? T.getForestMultiplier('hanbando', x, y) : 1),
   isRock: (x, y) => Z.isRockTileLocal(x, y), isWater: (x, y) => Z.isWaterTileLocal(x, y),
-  isSea: (x, y) => Z.isSeaTileLocal(x, y), hasVessel: !!hasVessel });
+  isSea: (x, y) => Z.isSeaTileLocal(x, y), hasVessel: !!hasVessel,
+  // ★[T1065] 켬이면 존이 `rockNear` 를 준다(바위 개체 둘레 자갈 ③′) — 자는 화면에 보이는 바위로 같은 술어를 준다(끔 = 없음 = 종전)
+  rockNear: GATE ? (x, y, rad) => RES.some((r) => r.on && r.t === 'rock' && Math.hypot(r.x - x, r.y - y) <= rad) : undefined });
+// ★[T1065] 도구 문(존 `T1065_TOOL_GATE` 그대로 읽는다) — 켬이면 맞는 도구가 없을 때 나무 · 바위를 고르지 않는다(사람도 맨손이면 거절 이유를 보고 줍기로 간다)
+const GATE = !!Z.T1065_TOOL_GATE;
+let _tools = [];   // 마지막 `state()` 가 본 손 도구
+const _has = (types) => _tools.some((t) => t && types.includes(t.type) && t.d > 0);
+const gatedOut = (r) => GATE && ((r.t === 'tree' || r.t === 'sapling') ? !_has(['axe', 'crude_axe']) : (['rock', 'ore', 'meteorite'].includes(r.t) ? !_has(['pickaxe', 'crude_pick']) : false));
 // 계절 한가운데 날 — `seasonOf` 가 정본(달력·기온·열매가 전부 이 함수를 본다)
 function seasonMidDay(se) { const Y = (Ev.calendarOf(0) || {}).yearDays || 365; const ds = []; for (let d = 0; d < Y; d++) if (Ev.seasonOf(d) === se) ds.push(d); return ds.length ? ds[Math.floor(ds.length / 2)] : 0; }   // 첫 해 안에서
 const SDAY = seasonMidDay(SEASON);
@@ -268,9 +275,11 @@ const A2L = (p) => (p ? { x: p.x - WOX, y: p.y - WOY } : null);
 async function meL() { return A2L(await ev(() => { const m = window.__getMyAbs(); return { x: m.x, y: m.y }; })); }
 async function srvL() { return A2L(await ev(() => (window.__getSrvAbs ? window.__getSrvAbs() : null))); }
 async function state() {
-  return ev(() => ({ inv: window.__getInv(), tools: window.__getTools(), eq: window.__getEquipped ? window.__getEquipped() : null,
+  const _s = await ev(() => ({ inv: window.__getInv(), tools: window.__getTools(), eq: window.__getEquipped ? window.__getEquipped() : null,
     g: window.__getGauges(), body: window.__bodyState || null, near: window.__evNearVid == null ? null : window.__evNearVid,
     greet: window.__onbGreet || null, quest: window.__onbQuest || null }));
+  if (_s && Array.isArray(_s.tools)) _tools = _s.tools;   // ★[T1065] 손 도구 메모(동기 고르기가 읽는다)
+  return _s;
 }
 const KEYSET = { E: ['KeyS', 'KeyD'], W: ['KeyW', 'KeyA'], N: ['KeyW', 'KeyD'], S: ['KeyS', 'KeyA'], NE: ['KeyD'], SE: ['KeyS'], SW: ['KeyA'], NW: ['KeyW'] };
 const DIRS = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'];   // atan2(y 아래) 45° 칸 — `31-m-move worldKeysDir` 의 W=NW·D=NE·S=SE·A=SW 와 두 키 조합
@@ -535,7 +544,7 @@ async function eatOne(item) {
 
 // ── 목표 찾기(보이는 것만) ─────────────────────────────────────────────────────
 function visRes(types) {
-  return RES.filter((r) => r.on && types.includes(r.t) && !unreach.has(r.id) && !keepHitStand(r));
+  return RES.filter((r) => r.on && types.includes(r.t) && !gatedOut(r) && !unreach.has(r.id) && !keepHitStand(r));   // ★[T1065] 맨손이면 나무 · 바위는 고르지 않는다
 }
 function keepHitStand(r) { return keepHit(r.x, r.y); }
 function visCells(pred) {
@@ -551,7 +560,7 @@ function visCells(pred) {
   return out;
 }
 const freshEdge = (cx, cy) => { let f = false; for (const [dx, dy] of N4) { const k = waterKind(cx + dx, cy + dy); if (k === 2) return false; if (k === 1) f = true; } return f; };
-const nearAnyRes = (c) => RES.some((r) => Math.hypot(r.x - c.x, r.y - c.y) < C.GATHER);
+const nearAnyRes = (c) => RES.some((r) => !gatedOut(r) && Math.hypot(r.x - c.x, r.y - c.y) < C.GATHER);   // ★[T1065] E 최근접이 건너뛰는 것(맨손 나무 · 바위)은 줍기를 안 가린다(존 `tryGather` 고르기와 같은 뜻)
 const nearWater = (cx, cy) => N4.some(([dx, dy]) => waterKind(cx + dx, cy + dy) > 0);
 const forDepleted = new Map();   // 셀 → 다 훑은 시각
 function forageCells(kind) {

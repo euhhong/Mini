@@ -3008,7 +3008,7 @@ if (T1065_TOOL_GATE) {
 }
 const T1065_NEED = {
   chop:   { ok: (t) => t === 'axe' || t === 'crude_axe', slot: 'tool', make: 'crude_axe', act: '나무를 벨' },
-  quarry: { ok: (t) => t === 'pickaxe' || t === 'crude_pick', slot: 'tool', make: 'crude_pick', act: '돌을 캘' },
+  quarry: { ok: (t) => t === 'pickaxe' || t === 'crude_pick', slot: 'tool', make: 'crude_pick', act: '돌을 캘', hint: '자갈은 바위 곁에서 맨손으로 주울 수 있습니다.' },   // hint = 그 재료를 맨손으로 얻는 길(줍기 ③′ — 돌괭이가 자갈을 먹으니 길이 돌지 않게)
   attack: { ok: (t) => !!TOOL_EFFECTS[t], slot: 'weapon', make: 'crude_blade', act: '싸울' },
   fish:   { ok: (t) => t === 'crude_rod', slot: null, make: 'crude_rod', act: '낚시를 할' },
   ranged: { ok: () => false, slot: null, make: null, act: '활을 쏠', none: '활' },
@@ -3031,7 +3031,7 @@ function _t1065Gate(player, kind, quiet) {   // quiet = 고르기만(셈 안 함
   const lab = (t) => (RECIPES[t] && RECIPES[t].label) || ITEM_LABEL_SERVER[t] || t;
   if (own) return `${lab(own.type)}${_t1065Jo(lab(own.type), '을', '를')} 손에 들어야 ${N.act} 수 있습니다. 가방에서 골라 손에 드십시오.`;
   const r = RECIPES[N.make], L = lab(N.make);
-  return `${L}${_t1065Jo(L, '이', '가')} 있어야 ${N.act} 수 있습니다. ${_t1065Cost(r && r.cost)}로 제작 창에서 만들 수 있습니다.`;
+  return `${L}${_t1065Jo(L, '이', '가')} 있어야 ${N.act} 수 있습니다. ${_t1065Cost(r && r.cost)}로 제작 창에서 만들 수 있습니다.${N.hint ? ' ' + N.hint : ''}`;
 }
 // 자연물 → 그 일의 동사(벌목 · 채석) · 나머지는 맨손(null)
 const _t1065ResKind = (r) => { const t = r && r.type; return (t === 'tree' || t === 'sapling') ? 'chop' : (t === 'rock' || t === 'ore' || t === 'meteorite') ? 'quarry' : null; };
