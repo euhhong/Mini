@@ -13,6 +13,8 @@
 //   열 때 그 게이트를 지나야 한다. 열린 채 멀어지면 시세 칸 = `{ none:'far' }` · 나머지 칸은 마지막 값에서 멈춘다(멀리서 다시 안 읽는다).
 // ★제5 규약 — 가입 계량기는 하나(`onboarding.contrib` — `membership.publicState` 가 `contribOf` 로 읽는 그 값).
 //
+// ★[T1084] 없던 29칸 중 지금 세계에서 셀 수 있는 둘을 더했다 — 집터 줄 `bedsGain` · 공사 줄 `kind:'clear'`(새 칸만 · 옛 이름 무변 · `보고/T1084_2026-11-02.md`).
+//
 // 보내는 때: 열 때 칸 전부(`full:true`) · 열려 있는 동안 **JSON 이 바뀐 칸만**(`full:false`) — 존의 5초 박자(아래 `TICK_MS`) +
 //   마을 장부 메시지(납품 · 교환 · 기부 · 꺼내기 …) 직후 한 번. 닫거나 끊기면 표지를 지운다.
 
@@ -105,9 +107,22 @@ function _projects(src, vil, chron) {
       o.need = [];
       for (const k of Object.keys(need)) { if (isLumped(k)) { withheld++; continue; } o.need.push({ res: k, ko: ko(k), need: _r(need[k], 2), have: _r(mat[k] || 0, 2) }); }
     }
+    // ★[T1084] 다 지으면 늘어나는 침상 — econ 정본 `hutCapPerHut()`(층당 정원 × 층수 상한 1). 완공(`villages.js _lifeCompleteHouse`)이
+    //   `_houseCells` 에 한 칸을 더하고 침상 명부 `_mapBedsOf` = 칸 수 × 층당 정원이라, 집 한 채가 더하는 침상이 바로 이 수다(새 수 0).
+    //   의뢰 집터(`phouse`)는 마을 침상 명부에 안 들어간다(그 집은 의뢰한 사람 것) — 그 줄엔 키가 없다.
+    if (E && E.hutCapPerHut) { const b = E.hutCapPerHut(); if (b > 0) o.bedsGain = b; }
     now.push(o);
   }
   if (vil._psite) { const o = site(vil._psite, 'phouse'); if (vil._psite.ownerName) o.ownerName = vil._psite.ownerName; now.push(o); }
+  // ★[T1084] 밭 일구기 — 개간 술어 정본(`villages.js _lifeNeedClear` · 손잡이 `src.needClear`)이 참이고 농부 몸이 있는 동안 선다.
+  //   그 둘이 개간 두 길(몸 · 일괄 `_lifeClearDay(vil, farmerN)`)의 문 그대로다. 지금 밭 칸 수 · 지금 개간을 쥔 몸 수(`_clearCrew`)만 싣는다 —
+  //   목표 칸 수는 술어 안의 식이라 싣지 않는다(옮겨 적으면 사본 · 회부 T1084).
+  {
+    let nc = false; try { nc = !!(src.needClear && src.needClear()); } catch (e) { nc = false; }
+    let farmer = false;
+    if (nc) for (const pid of vil.npcPids || []) { const q = H.players && H.players.get(pid); if (q && q.simJob === 'farmer') { farmer = true; break; } }
+    if (nc && farmer) now.push({ kind: 'clear', fields: vil._farmSet ? vil._farmSet.size : 0, crew: vil._clearCrew | 0 });
+  }
   for (const c of (src.world && src.world.caravans) || []) {
     if (!c || c._done || c.from !== vil.econ) continue;
     const to = src.nameOfEcon ? src.nameOfEcon(c.to) : null;
