@@ -19,6 +19,16 @@
 * 아님: `--single-threaded-gc` 274~334(그대로) · `--trace-opt/--trace-deopt` + 시계 줄 — 발생기는 다시 세기 +0.35초부터 BFS 끝(+20.4초 · `다 셈`)까지 TurboFan 코드였다(그 뒤 탈최적화는 T968 `hold` 꼬리 · 일 끝난 뒤).
 * 같은 꼴(작게): A* 교역로 재개형 +5~24% · 생활층 쉼표 +10~16%(`T1027_PROBE=1` · `VILLAGE_TICK_SLICE_MS=0` 대조 · 판 둘씩).
 * 재는 셈 둘(`T977_PROBE` · `T1027_PROBE`)은 `=1` 일 때만 돈다. `scripts/t646-anatomy.js` 에 `T1027_ZFLAGS`(존 덧 V8 깃발).
+## T1077. ★★2026-11-02 — **경계 "끊김·멈춤" = central `/zones` 의 닛폰 주소**(브라우저가 옮겨 붙을 `wsUrl`) · 고침 스크립트 `fix-central-hosts.sh` · update-live ⑧ central · 반대 줄 · 클라 까닭 한 줄 (승인 대기 · 보고/T1077_2026-11-02.md)
+
+* 재민 11-02 "경계에서 이번엔 튕기지 않고 연결 끊김으로 멈춘다" — 서버끼리 인계(`/handoff_prepare` · 한반도 env `ZONE_HOST_NIPPON` · T1048)는 통과 · 브라우저 주소는 central `/zones`(`server/central.js:774` `publicZoneMap(PUBLIC_HOST)` → `hostFromEnv`)가 준다. central env 에 키가 없거나 빈 줄이면 26존 표(`ZONE_HOSTS` = 서울) → 서울:3021(닫힘) → 브라우저 접속 실패 → 보낸 존 ACK 3초 시한 `⚠ ACK timeout` 이 몸을 지운다(서버 알림 0).
+* 재현: `scripts/e2e-handoff-proto.js` 판 `ⓗ`(central env 만 닛폰 = `nippon.invalid` · 존 env 는 맞음) — 인계 됨 · `⚠ ACK timeout` · 알림 0 · 배너만 선다.
+* central 을 다시 짓는 길(`redeploy-hanbando.sh` `recreate()` · `redeploy-all.sh` central 칸 · `reset-world.sh` `build_env`)은 옛 env 를 **통째로 옮긴다** — 빼지도 되살리지도 않는다. 손 줄: T485 §3 8 이 넣었고 §3 13 롤백이 빈 줄로 둔다 · T1048 되넣기 줄은 한반도만.
+* 고침(재민 손 한 번 · 서울): `ssh seoul 'cd /opt/Mini && bash scripts/fix-central-hosts.sh --dry'` → 인자 없이. 존 컨테이너 env 의 `ZONE_HOST_<ID>` 중 central 에 없거나 빈 것만 넣고 central 하나만 다시 띄운다(같은 이미지 · 포트 · `/data` · 라벨 · 옛 env 그대로 · 값 화면 0). 다른 값이면 손대지 않는다(✗ · 사람 판정).
+* 확인 줄: `update-live.sh` ⑧ 에 셋 더 — `도쿄 <존> → hanbando`(존 안에서 /health · 키 요구 0) · `central /zones → <도쿄 존>: wsUrl 주소 = 한반도가 넘기는 주소` · `central /zones → hanbando: wsUrl 주소 = 도쿄 <존> 가 넘기는 주소`(같음/다름만 · 값 0). ✗ 면 끝에서 멈춘다(rc 1).
+* 클라: 넘겨받을 존에 못 붙으면 배너 까닭 줄 맨 앞 "<표시 이름> 서버에 연결하지 못했습니다"(30-n-net `onclose` · 00-const `paintConnBanner` · 문턱 무변).
+* 자: `test-xhost-env` 33/0(`--against 54d20ebf` 22/11) · `test-update-snap` 26/0(main 22/4) · `e2e-handoff-proto` 27/0(main + 하네스 26/1).
+
 ## T1048. ★★2026-11-01 — **서울 한반도 env 의 `ZONE_HOST_NIPPON` 을 뺀 길 = `redeploy-light.sh`(T538 재배포 줄)** · 이어 싣기 · update-live 끝 `[⑧] 경계` (승인 대기 · 보고/T1048_2026-11-01.md)
 
 * 재민 11-01 "닛폰(으)로 못 넘어간다 — 저쪽 서버가 연결을 받지 않는다" = `_t564HandoffWhy` 거절 갈래. 한반도 env 에 키가 없으면 `hostFromEnv` 가 `ZONE_HOSTS[nippon]`(= `CENTRAL_IP` 서울) → 서울:3021 닫힘 → ECONNREFUSED 다.
