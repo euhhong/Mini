@@ -631,6 +631,65 @@ console.log('\n[⑫ T1067 그림 없던 품목 — `props_render.py ITEMS_T1067`
   }
 }
 
+console.log('\n[⑬ T1088 그림 없던 품목 이어서 — `props_render.py ITEMS_T1088` · 같은 물건 표 `_같은물건`]');
+{
+  // ★★[T1088] ⑫ 와 같은 물음을 다음 묶음에 — 키는 굽는 표에서 뽑는다(사본 금지).
+  //   서버 품목인가: 무게 정본 · 요리 표(`tidal.cookMap` — 조개탕 · 미역국은 요리 인스턴스라 무게가 없다) · econ 칸(`economy-sim.RESOURCES` — 호피 등 곳간 칸) 중 하나.
+  const py = fs.readFileSync(RENDER_PY, 'utf8');
+  const blk = py.match(/^ITEMS_T1088 = \[([\s\S]*?)^\]/m);
+  ok(!!blk, 'props_render.py 에서 ITEMS_T1088 표를 읽었다');
+  const NK = blk ? [...blk[1].matchAll(/\('([a-z_]+)',\s*m_/g)].map(m => m[1]) : [];
+  ok(NK.length === 123 && new Set(NK).size === NK.length, `T1088 백스물셋 · 겹침 0 (실측 ${NK.length} · 겹침 ${NK.length - new Set(NK).size})`);
+  ok(/^ITEMS \+= ITEMS_T1088$/m.test(py), '굽는 고리가 이 표를 돈다(`ITEMS += ITEMS_T1088`)');
+  const W4 = require(path.join(ROOT, 'server', 'weights.js'));
+  const COOK = require(path.join(ROOT, 'server', 'tidal.js')).cookMap();
+  const ECON = require(path.join(ROOT, 'sim', 'economy-sim.js')).RESOURCES;
+  const csrc = fs.readFileSync(CLIENT_ICON, 'utf8');
+  const tbl = csrc.match(/const ICON_RENDERED = new Set\(\[([\s\S]*?)\]\);/);
+  const wanted = new Set(tbl ? [...tbl[1].matchAll(/'([\w]+)'/g)].map(m => m[1]) : []);
+  let bad = 0; const notSrv = [], notWired = [];
+  for (const k of NK) {
+    const q = path.join(ICON_DIR, k + '.png');
+    if (!fs.existsSync(q)) { ok(false, `${k}.png 이 없다`); bad++; continue; }
+    const m = pngMeta(q);
+    if (!(m.w === 96 && m.h === 96)) { ok(false, `${k}.png ${m.w}×${m.h} (96 아님)`); bad++; }
+    else if (!(m.clear > 200 && m.solid > 200)) { ok(false, `${k}.png 알파가 죽었다 (투명 ${m.clear} · 불투명 ${m.solid})`); bad++; }
+    if (W4.kgOf(k) == null && !COOK[k] && !ECON.includes(k)) notSrv.push(k);
+    if (!wanted.has(k)) notWired.push(k);
+  }
+  ok(bad === 0, `${NK.length}장 전수 — 96×96 · 알파 살아 있음 (어긋남 ${bad})`);
+  ok(notSrv.length === 0, `키 ${NK.length}개가 전부 서버 품목이다(무게 · 요리 표 · econ 칸) ${notSrv.length ? '— 아닌 것: ' + notSrv.join(', ') : ''}`);
+  ok(notWired.length === 0, `${NK.length}키 전부 ICON_RENDERED 에 올랐다 ${notWired.length ? '— 안 오른 것: ' + notWired.join(', ') : ''}`);
+  // ★같은 흙 문법 — 진흙 · 고령토는 **같은 모델 함수**(빛만 다르다) · ⑫ 의 날것/익힌 것과 같은 물음.
+  for (const [a, b] of [['clay', 'kaolin']]) {
+    const fa = (py.match(new RegExp('^def m_' + a + '\\(\\):\\s*(?:"""[\\s\\S]*?"""\\s*)?_(\\w+)\\(', 'm')) || [])[1];
+    const fb = (py.match(new RegExp('^def m_' + b + '\\(\\):\\s*(?:"""[\\s\\S]*?"""\\s*)?_(\\w+)\\(', 'm')) || [])[1];
+    ok(!!fa && fa === fb, `${a} / ${b}: 같은 모델 함수 _${fa || '?'} / _${fb || '?'}`);
+  }
+  // ★갈래 표가 낡지 않았다 — 제 그림이 생긴 키가 `_갈래` 빌림 목록에 남아 있지 않다(클라는 덮지 않지만 표가 거짓말을 한다).
+  const LOCK = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'assets', 'icons.lock.json'), 'utf8'));
+  const stale = [];
+  for (const [g, v] of Object.entries(LOCK['_갈래'] || {})) if (v && Array.isArray(v.items)) for (const k of v.items) if (fs.existsSync(path.join(ICON_DIR, k + '.png'))) stale.push(`${g}:${k}`);
+  ok(stale.length === 0, `\`_갈래\` 빌림 목록에 제 그림 있는 키 0 ${stale.length ? '— ' + stale.slice(0, 8).join(', ') : ''}`);
+  // ★같은 물건 표 — 넣기 표(`villages.playerVillageDepositMap()`)에서 그 econ 칸으로 들어오는 플레이어 품목이 **정확히 하나**이고 그게 표의 그림이다.
+  const SAME = Object.entries(LOCK['_같은물건'] || {}).filter(([k]) => k !== '_');
+  const DEP = require(path.join(ROOT, 'server', 'villages.js')).playerVillageDepositMap();
+  ok(SAME.length > 0, `같은 물건 표 ${SAME.length}줄`);
+  for (const [k, src] of SAME) {
+    const from = Object.keys(DEP).filter((p) => DEP[p] === k);
+    ok(from.length === 1 && from[0] === src, `${k} ← 넣기 표의 품목 [${from.join(', ')}] = 그림 ${src}`);
+    ok(!fs.existsSync(path.join(ICON_DIR, k + '.png')) && fs.existsSync(path.join(ICON_DIR, src + '.png')) && wanted.has(src),
+       `${k}: 제 PNG 0 · 그림 ${src}.png 있음 · ICON_RENDERED 에 ${src}`);
+  }
+  ok(/L\['_같은물건'\]/.test(csrc), '클라가 같은 물건 표를 읽는다(`43-i-icon.js`)');
+  // ★짐 창에서 갈리는가 — ⑩ · ⑫ 와 **같은 자 · 같은 문턱**(`iconDist` · `ICON_FLOOR`).
+  for (const k of NK) {
+    if (!fs.existsSync(path.join(ICON_DIR, k + '.png'))) continue;
+    const { best, who } = nearestIcon(k);
+    ok(best >= ICON_FLOOR, `${k}: 가장 닮은 아이콘 ${who} 와 |Δ| ${best.toFixed(1)} ≥ ${ICON_FLOOR}`);
+  }
+}
+
 if (SELFTEST) {
   console.log('\n[--selftest] ②가 오염(투명 화소 0)을 잡았어야 한다.');
   console.log('결과: ' + (fail ? 'PASS(검사기가 오염을 잡았다)' : 'FAIL(자명 통과 — 검사기가 눈멀었다)'));
