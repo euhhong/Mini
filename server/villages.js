@@ -6705,6 +6705,30 @@ function _warEndFight(body, why, winner) {
   else _warCleanupBody(body, false);
 }
 // 공격 생존자 귀환(도보) — 반환 route(def→atk)·marchDays 페이싱·산개(open) 그룹.
+// ★★[T1089 2026-11-02 · T1042 회부 1위 25마디 · 캐논 "모든 NPC 는 일관된 몸 — 몸이 걸어 돌아온다 · 순간이동 0"] **귀환 몸이 집까지 걸어 온다** — 손잡이 `T1089_RET_WALK`(켬 기본 후보 · 되돌림 `=0` = 종전 글자).
+//   종전(T681 장부 귀환): 귀환 대형의 원점 = 그날 장부 자리(`body.cmd`) — 귀환 첫날 내내 길 머리(= 방어 마을 중심)이고, 이튿날 경계에 장부가 집에 닿으면 그 자리에서 푼다(`_warCleanupBody`).
+//     ⇒ 살아 돌아온 몸은 **적 마을 중심(대개 그 마을 큰집 발자국 안)에서 풀린다** — 집은 장부만 갔다(T790 끔이면 지휘 몸은 귀환 첫 걸음에 그 자리로 놓인다 — 순간이동). 그 뒤는 생활층 몫인데
+//     판 자(하루 250ms)에선 그 몸이 풀린 자리에서 한 칸도 안 옮는다(T1089 판 자 끔 — 원정 귀환 풀림 134/134 가 적 마을 중심 · 큰집 발자국 안 · 2 ~ 166날 0칸) → 그 마을의 하나뿐인 몸이 남의 큰집에 수십 ~ 수백 날 서 있고, 제 마을이 공격받으면 긴급 소집이 그 몸을 수백 칸 밖에서 부른다
+//     → 공격은 포진점에 닿아 풀리지만 맞설 몸이 없다 → 진척 없음 → 대치 → 이튿날 철수(보고 T1042 §1-2 ② · T1089 §1).
+//   켬: 귀환 대형이 길(귀환 경로 — 종전 그 폴리라인) 위를 몸 걸음으로 간다 — 걷는 점이 대형 첫 몸의 길 투영 자리에서 출발해 한 걸음에 몸 걸음(`_t790Mark` 같은 값)씩 집 쪽으로 · 대형은 그 점을 따른다(T790 몸 걸음 · 걷는 길 `_t804Way`).
+//     길 끝(집) 점은 설 칸(`_warStandNear` — T1019 · 막힌 칸이면 가장 가까운 설 칸). 장부가 끝났는데(이튿날 경계) 몸이 아직 길 위면 풀지 않고 계속 걷다가 닿으면 푼다(`_warPaceReturn`) ·
+//     하루 경계에서 지난 경계보다 집에 가까워지지 않았으면(막힘) 그 자리에서 푼다(종전 꼴 — `t1089Late` 셈). 몸 짐 · 무기 · 결속 해제는 종전 그 함수(`_warCleanupBody`) 그대로.
+//   걸음 몫은 종전 그대로(T681 · T832 · T844 — 그날 몫 = 하루 길이 × 틱 Hz · 운영 시계 43,200 걸음 = 몸 1,440초 ⇒ 몸 걸음으로 2,880칸 남짓 — 귀환 길은 그날 안에 닿는다).
+//     판 자(하루 250ms = 8 걸음 · 몸 0.5칸)는 판 자 손잡이 `T941_BATTLE_DAY`(교전 하루 = 운영 하루)가 켜져 있을 때 **걷는 귀환 날도 교전 날처럼 운영 하루 몫**으로 센다(`_t941Q` 술어 한 자리 —
+//     T941 끔(제품 · 하네스)은 무동작 · 배수 0). 틱이 못 쓴 몫은 하루 마감 첫 자리 `_t681Flush` 가 채운다(T832 · T844 그 고리).
+//   새 수 0 · 새 상태 0(국면 'return' 그대로) · war-core · war-live · battle-core 무변.
+const T1089_RET_WALK = process.env.T1089_RET_WALK !== '0';
+function _t1089Home(body) {   // ★[T1089] 걷는 귀환이 집에 닿았나 — 걷는 점이 길 끝이고 첫 몸(지휘)이 그 점에 닿았다(T790 늦음 셈 · T1044 칸 내림과 같은 술어 `FOLLOW_SNAP`)
+  const g = body.retGroup, T = body._t1089; if (!g || !T) return true;
+  const c = g.commander; if (!c || c.dead) return true;
+  return T.p >= body.len - 0.5 && Math.hypot(g.cmd.cx - c.x, g.cmd.cy - c.y) <= state.warLive.MU.FOLLOW_SNAP;
+}
+function _t1089Step(body) {   // ★[T1089] 걷는 점 한 걸음(몸 걸음 px) — 대형 원점 = 그 점(길 끝이면 설 칸 집 점)
+  const g = body.retGroup, T = body._t1089;
+  T.p = Math.min(body.len, T.p + (g._t790Walk || 0) * SZ);
+  const c = T.p >= body.len ? T.end : caravanPointAt(body, T.p, T);
+  g.cmd = { cx: c.x / SZ, cy: c.y / SZ }; g.heading = Math.atan2(body.w.atk.ccy - g.cmd.cy, body.w.atk.ccx - g.cmd.cx);
+}
 function _warSetupReturn(body, survPids, isRout) {
   const w = body.w, WL = state.warLive, players = state.deps.players;
   body.phase = 'return'; body.pids = survPids.slice(); body._retRout = !!isRout; body.atkGroup = null; body.fight = null;
@@ -6721,6 +6745,11 @@ function _warSetupReturn(body, survPids, isRout) {
   body.retGroup = units.length ? WL.buildGroup(units, 'open', { cx: body.cmd.cx, cy: body.cmd.cy }, body.heading, (w.id || 1) * 523 + 7) : null;
   _t790Mark(body.retGroup);   // ★[T790 ①] 켬 — 귀환 지휘 몸은 결판 자리에서 길 머리까지 걷는다(끔 = 무동작 · 첫 틱에 놓인다)
   if (body.retGroup) body.retGroup.detour = _warDetourFor(body);
+  if (T1089_RET_WALK && body.retGroup && body.len > 0 && _t790Mark(body.retGroup, true)._t790Walk > 0) {   // ★[T1089] 켬 — 귀환 대형은 몸 걸음 · 걷는 길 · 걷는 점(첫 몸의 길 투영 자리에서 출발 · 길 끝 = 설 칸 집 점) · 걸음 정본이 없는 판(하네스 목)은 종전대로(T790 그 규칙 — 걷지 못하는 몸을 세워 두지 않는다)
+    body.retGroup.detour = _warDetourFor(body, true);
+    const u0 = body.retGroup.units[0], e = caravanPointAt(body, body.len), en = _warStandNear(e.x / SZ, e.y / SZ);
+    body._t1089 = { p: _polyS({ pts: body.pts, cum: body.cum, id: 0 }, { x: u0.x * SZ, y: u0.y * SZ }, {}, 'k'), end: en ? { x: en.cx * SZ, y: en.cy * SZ } : e, segIdx: 0, prevD: null };
+  }
   if (body.retGroup) _warSyncMeta(body.retGroup, 0, isRout);
 }
 // 귀환 페이싱 + 도착 시 해제·정리.
@@ -6728,8 +6757,10 @@ function _warPaceReturn(body, now, dtMs) {
   if (T681_ON && body._t681) {   // ★[T681 ①] 켬 — 진척 · 답압 · 회수는 하루 경계 장부(`_t681Day`) · 틱은 병사가 지휘관을 따라 걷기만(보이는 것)
     if (!body.retGroup) return;
     body.retGroup.cmd = { cx: body.cmd.cx, cy: body.cmd.cy }; body.retGroup.heading = body.heading;
+    if (T1089_RET_WALK && body._t1089) _t1089Step(body);   // ★[T1089] 켬 — 대형 원점 = 걷는 점(위 줄 = 종전 장부 자리)
     state.warLive._muStepFollow(body.retGroup, state.warLive.MU.FOLLOW_CAP);
     _warSyncMeta(body.retGroup, 0, body._retRout);
+    if (T1089_RET_WALK && body._t1089 && body._t1089.done && _t1089Home(body)) _warCleanupBody(body, true);   // ★[T1089] 켬 — 장부가 끝난 뒤 걸어 닿았다 — 종전 귀환 끝 그 함수로 푼다
     return;
   }
   const remainPx = body.len - body.prog;
@@ -7444,7 +7475,7 @@ function _t941Q(body) {   // 켬일 때만 부른다 — 그날 몫(교전이면
   const d = state.world.day | 0;
   let q = body._t681q;
   if (!q || q.day !== d) q = body._t681q = { day: d, left: _t681Quota() };
-  const inBattle = !!(body.w && body.w.phase === 'battle' && body.phase !== 'return');
+  const inBattle = !!(body.w && body.w.phase === 'battle' && body.phase !== 'return') || !!(T1089_RET_WALK && body.phase === 'return' && body._t1089);   // ★[T1089] 판 자(T941 켬) — 걷는 귀환 날도 교전 날처럼 운영 하루 몫(T1089 끔 = 종전 술어)
   if (inBattle && !q.b) { q.b = 1; q.left = Math.round(q.left / _t681Quota() * _t941BattleQuota()); }
   else if (!inBattle && q.b) { q.b = 0; q.left = Math.round(q.left / _t941BattleQuota() * _t681Quota()); }
   return q;
@@ -7516,6 +7547,12 @@ function _t681Day(now) {
       if (want > body.prog) { _t681StampPath(body, body.prog, want); body.prog = want; }
       const c = caravanPointAt(body, body.prog); body.cmd = { cx: c.x / SZ, cy: c.y / SZ };
       body.heading = Math.atan2(body.w.atk.ccy - body.cmd.cy, body.w.atk.ccx - body.cmd.cx);
+      if (T1089_RET_WALK && body._t1089 && body.retGroup && body.len - body.prog <= 0.5 && !_t1089Home(body)) {   // ★[T1089] 켬 — 장부는 집인데 몸이 아직 길 위 — 걸어 닿을 때 푼다(`_warPaceReturn`)
+        const g = body.retGroup, c = g.commander, dH = c ? Math.hypot(body._t1089.end.x / SZ - c.x, body._t1089.end.y / SZ - c.y) : 0;
+        const stuck = body._t1089.prevD != null && dH >= body._t1089.prevD; body._t1089.prevD = dH; body._t1089.done = 1;   // 지난 경계보다 집에 가까워지지 않았다(막힘) — 아래 종전 줄이 그 자리에서 푼다
+        if (!stuck) continue;
+        state._warStat.t1089Late = (state._warStat.t1089Late || 0) + 1;
+      }
       if (body.len - body.prog <= 0.5 || !body.retGroup) { _warCleanupBody(body, true); continue; }   // 집에 닿았다 — 풀어 준다(종전 귀환 끝 그 함수)
     }
     const sec = Math.max(1, state.dayMs) / 1000;   // 장부 속도 = 그날 옮긴 칸 ÷ 하루 길이(초) — 위협의 접근 항이 읽는다
@@ -8609,6 +8646,7 @@ function __p3Bind(mock) {
     T1019_UNTRAP, T1019_ASSAULT_HP, _t1019HpRef, _t1019NoHurt,   // ★[T1019] 하네스(`test-t1019-untrap`)가 운영과 같은 문을 부른다(내보내기만)
     T1044_SCRAM_WALK,   // ★[T1044] 하네스(`test-t1044-scram-walk`)가 손잡이 값을 읽는다(내보내기만 · 걸음은 운영 문 `tickWarBodies` 그대로)
     T1060_SCRAM_HOLD, T1060_ATK_AIM,   // ★[T1060] 하네스(`test-t1060-scram-hold`)가 손잡이 값을 읽는다(내보내기만)
+    T1089_RET_WALK,   // ★[T1089] 하네스(`test-t1089-ret-walk`)가 손잡이 값을 읽는다(내보내기만 · 귀환 두 문은 T790 줄이 이미 내보낸다)
     banditHost, _t841Sh,   // ★[T841] 도적 몸 신원 문(호스트 `bodySh`) — 하네스(`test-body-seed-other`)가 운영과 같은 호스트를 도적 층에 꽂는다(내보내기만)
     T811_ARMS_BODY, _warArmsLoad, _warArmsCollect, _warArmsUnload, _t811Fall, _t857Pick, _t811Sync, _t811Stat,   // ★[T811] 무기 몸 짐 — 하네스(`test-arms-body`)가 운영과 같은 문을 부른다(내보내기만)
     T790_NO_SNAP, _t790Stat, _t790Mark, _t790Lag, _warSetupReturn, _warPaceReturn,   // ★[T790] 하네스(`test-war-nosnap`)가 운영과 같은 문을 부른다(내보내기만)
