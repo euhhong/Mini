@@ -6432,6 +6432,14 @@ const T823_FREEZE_SHELL = process.env.T823_FREEZE_SHELL !== '0';
 //   그 몸을 일반 접속 몸 리터럴과 같은 칸 · 같은 기본값으로 얹는다(★[T873] 일반 접속 리터럴과 **같은 함수** `_bodyInto` — 칸 목록 한 벌). 끔 = 승격 갈래가 종전 그대로(같은 줄 · 같은 차례).
 const T868_PROMOTE_BODY = process.env.T868_PROMOTE_BODY !== '0';   // ★[PM 착지 10-23] 켬 기본(결함 고침 — 라이브의 보통 넘기가 몸을 잃었다) · 되돌림 `=0`
 const T890_TAKEOVER_BODY = process.env.T890_TAKEOVER_BODY !== '0';   // ★[T890] 같은 존 승계도 몸 칸 한 벌(`serializeBody` → `parseBody` → `_bodyInto`) · 켬 기본 · 되돌림 `=0`(승계 자리 주석)
+// ★★[T1068 2026-11-02 · ★재민 11-01 실기 "다른 플레이어의 닉네임이 안 보인다"] 손잡이 `T1068_GUEST_NICK`(켬 기본 후보 · 되돌림 `=0` = 종전 — T208 그대로).
+//   귀속: 로비 이름칸에 별명만 친 게스트(비밀번호 없음)는 **자기 화면**에선 그 별명(클라 `myName = inputName` · `30-n-net.js`)인데,
+//   서버 · 남의 화면에선 central 이 발급 때 지은 `여행자XXXX`(아래 공통 복원 `name = acct.name` · T208 — "별명은 조용히 버려진다" · T211 판정대기 #23 · 개명 문 회부).
+//   켬 = ① 별명을 central 게스트 행의 이름으로 싣는다(`/guest` 에 `name` — 이름 짓는 자리는 central 하나 그대로 · 지목 `findPerson` 이 그 이름으로 찾는다)
+//        — 그 이름이 남의 것(계정 예약 `findAccount` · 사람 `findPerson`)이면 남의 계정 이름과 같은 거절(`username_taken`)
+//        ② welcome 에 내 이름(`name`) — 클라 머리 위 이름표 = 남이 보는 이름(별명 없는 게스트도 `여행자` 가 아니라 `여행자XXXX`).
+//   끔 = 종전 바이트(`/guest` 는 토큰만 · welcome 칸 없음).
+const T1068_GUEST_NICK = process.env.T1068_GUEST_NICK !== '0';
 const E2E_CONN_FAIL = (process.env.E2E_GIVE === '1') ? (process.env.E2E_CONN_FAIL || '') : '';
 const E2E_CONN_HANG = (process.env.E2E_GIVE === '1') ? (process.env.E2E_CONN_HANG || '') : '';
 function _connFailPoint(stage) {
@@ -6688,14 +6696,21 @@ async function _acceptConnection(ws, req, C) {
       //   ⚠발급된 토큰은 **welcome 으로 클라에 한 번 보내는 것 말고 어디에도 쓰지 않는다.**
       //     로그·알림·채팅에 절대 찍지 않는다(토큰 유출 = 계정 탈취).
       let guestTokenOut = null;
+      let _t1068Taken = false;
       try {
-        const g = await central.guestIdentity(inGuestToken);
-        if (g && g.ok && g.player_id) {
+        const g = await central.guestIdentity(inGuestToken, (T1068_GUEST_NICK && inUsername) ? inUsername : null);   // ★[T1068] 이름칸 별명을 central 게스트 행의 이름으로(끔 = 토큰만 — 종전)
+        if (g && g.ok === false && g.reason === 'username_taken') _t1068Taken = true;   // ★[T1068] 그 별명이 다른 사람의 것 — 아래에서 남의 계정 이름과 같은 거절
+        else if (g && g.ok && g.player_id) {
           playerId = g.player_id; guestTokenOut = g.token || null;
           // ★[배치 14 ②] central 이 그 게스트의 **행 전체**를 함께 준다 — 등록 계정과 같은 복원 경로를 탄다.
           if (g.player) { acct = g.player; _persistentIdentity = true; }
         }
       } catch (e) { /* central 불가 — 아래 폴백(1회용 신원)으로 떨어진다. 기존 동작과 동일 */ }
+      if (_t1068Taken) {   // ★[T1068] 위 `checkUsernameTaken` 거절과 같은 꼴(로비 `#authError` 의 그 사유 — 새 사유 0)
+        send(ws, { type: 'auth_error', reason: 'username_taken' });
+        setTimeout(() => { try { ws.close(); } catch (e) {} }, 100);
+        return;
+      }
       if (!playerId) {
         // ★폴백: central 이 죽어 있으면 종전 그대로 1회용 신원. 접속 자체를 막지 않는다
         //   (게스트에게 central 장애가 곧 '입장 불가'가 되면 그게 더 큰 퇴보다).
@@ -7006,6 +7021,7 @@ async function _acceptConnection(ws, req, C) {
     //   게스트는 그게 빈 문자열이라 **제 사유지도 남의 것으로 보였다.**
     //   등록 계정은 `player_id === username` 이라 우연히 맞았을 뿐이다.
     playerId: player.playerId,
+    ...(T1068_GUEST_NICK ? { name: player.name } : {}),   // ★[T1068] 내 이름 = 남이 보는 이름(클라 머리 위 이름표가 이걸 쓴다 · 끔 = 칸 없음 — 종전 welcome 바이트)
     // ★게스트 영속 신원 토큰 — 게스트 접속에만 실린다(등록 계정·핸드오프는 null).
     //   클라는 이걸 localStorage 에 넣고 다음 접속에 제시한다. **화면에 절대 그리지 않는다.**
     //   매 접속 같은 값을 돌려준다(자가 치유 — 클라 저장이 어긋나도 다음 접속에 맞춰진다).
@@ -7086,9 +7102,11 @@ async function _acceptConnection(ws, req, C) {
       moodleShowMax: (Body.CFG && Body.CFG.SHOW_MAX) || 3,
       ghostStallMs: parseInt(process.env.GHOST_STALL_MS || '5000', 10) || 5000,          // 딱지·예측 정지
       ghostReconnectMs: parseInt(process.env.GHOST_RECONNECT_MS || '10000', 10) || 10000, // 소켓 강제 끊기
-      // ★[캐릭 시트 2026-08-30] 플래그 기본 OFF — 종전 도형 렌더가 기본이다(병행 안전).
-      //   기본 전환은 재민 실기 뒤 튜닝 배치. 문턱도 env 정본(클라 상수 금지).
-      charSprite: process.env.CHAR_SPRITE === 'on',
+      // ★[캐릭 시트 2026-08-30] 문턱도 env 정본(클라 상수 금지).
+      // ★★[T1068 2026-11-02 · ★재민 11-01 실기 "캐릭터가 처음 도형으로 돌아갔다" · PM 판정(T1016 회부 1 답 — 재민은 모델을 기대한다)]
+      //   **기본 켬**(`!== 'off'` · 끄려면 `CHAR_SPRITE=off`). 종전 = `=== 'on'`(기본 끔 · "재민 실기 뒤 기본 전환") — 라이브는 env `CHAR_SPRITE=on` 으로 켜 왔는데
+      //   env 를 새로 짓는 재배포 길(`redeploy-light.sh` — `EXTRA_ENV` 없이 · 이어 싣기는 `ZONE_HOST_*` 뿐)에서 빠지면 도형으로 돌아갔다. 이제 env 가 빠져도 모델이 나온다.
+      charSprite: process.env.CHAR_SPRITE !== 'off',
       charWalkMin: parseFloat(process.env.CHAR_WALK_MIN || '') || 4,
       charRunMin: parseFloat(process.env.CHAR_RUN_MIN || '') || 102,
       ...(process.env.T492_SEASON_AMB === 'on' ? { seasonAmb: true } : {}),   // [T492] 계절 환경음 손잡이 — 끔이면 칸이 없다(welcome 바이트 동일)

@@ -395,6 +395,16 @@ function findAccount(username) { return username ? stmtGetAccountByName.get(user
 //   ⇒ 예약 술어는 그대로 두고(게스트 이름이 등록을 막으면 안 된다) **지목 술어를 하나 세운다.**
 const stmtGetPersonByName = db.prepare('SELECT * FROM players WHERE player_id = ? OR name = ? LIMIT 1');
 function findPerson(name) { return name ? stmtGetPersonByName.get(name, name) : null; }
+// ★★[T1068 2026-11-02 · ★재민 11-01 "다른 플레이어의 닉네임이 안 보인다"] **게스트 별명** — 그 이름이 **다른 사람의 것**인가.
+//   술어는 있는 둘 그대로(사본 0): 예약(`findAccount` — 계정 이름은 게스트가 못 단다 · 존 `checkUsernameTaken` 과 같은 물음) ·
+//   지목(`findPerson` — 사람 이름 · player_id. 게스트 이름도 발급 때 이 술어로 겹침을 피한다 — T208 재시도 루프).
+//   자기 행이면 비어 있는 것과 같다(다시 들어온 그 게스트가 같은 별명을 쳤다).
+function _t1068NickTaken(nick, selfId) {
+  const a = findAccount(nick); if (a && a.player_id !== selfId) return true;
+  const p = findPerson(nick); if (p && p.player_id !== selfId) return true;
+  return false;
+}
+const stmtSetGuestName = db.prepare('UPDATE players SET name = ? WHERE player_id = ? AND password_hash IS NULL');   // ★[T1068] 게스트 행만(계정 이름은 승계 · 가입이 짓는다)
 
 // ── ★★[T115] 친구 — 정본 술어 넷. 여기 말고 어디서도 이 표를 해석하지 않는다 ──────
 //   ★쌍의 정렬은 **한 자리에서만** 한다(`_pair`). 호출부마다 정렬하면 그게 사본이고,
@@ -857,6 +867,10 @@ const server = http.createServer(async (req, res) => {
       const data = await readBody(req);
       const tok = (typeof data.token === 'string' && /^[0-9a-f]{64}$/.test(data.token)) ? data.token : null;
       const now = Date.now();
+      // ★★[T1068] `name` — 로비 이름칸의 별명(존이 손잡이 `T1068_GUEST_NICK` 켬에서만 싣는다). 다듬기는 `/auth` 의 이름 그대로(trim · 16자).
+      //   그 이름이 남의 것이면 **아무것도 안 바꾸고**(열쇠 회전 · 발급 0) `username_taken` — 존이 남의 계정 이름과 같은 거절로 돌려준다.
+      //   없으면 이 문은 종전 글자 그대로다(별명 칸이 비면 아래 갈래가 하나도 안 돈다).
+      const nick = (typeof data.name === 'string') ? data.name.trim().slice(0, 16) : '';
       if (tok) {
         //   ★[T217] 행에 없으면 **유예 중인 옛 열쇠**인지 본다(위 회전 주석).
         let row = stmtGetByGuestToken.get(tok);
@@ -864,6 +878,7 @@ const server = http.createServer(async (req, res) => {
         //   ★등록 계정으로 승격된 행(비밀번호가 생긴 행)은 이 경로로 되돌려주지 않는다 —
         //     게스트 토큰이 등록 계정의 열쇠가 되면 그게 곧 계정 탈취다.
         if (row && !row.password_hash) {
+          if (nick && _t1068NickTaken(nick, row.player_id)) return jsonResp(res, 200, { ok: false, reason: 'username_taken' });   // ★[T1068] 열쇠를 갈기 전에(부작용 0)
           //   ★★[T217 2026-09-13 · #27 판정] **열쇠를 쓸 때마다 갈아 끼운다(회전).**
           //     T216 이 잰 사슬로 이미 새어 나갔을 수 있는 토큰이 지금도 유효하다 — 문을 닫는 것만으로는
           //     **이미 나간 열쇠**가 안 죽는다. 그래서 제 주인이 다음에 들어올 때 새 토큰을 주고 옛것을 버린다.
@@ -896,12 +911,14 @@ const server = http.createServer(async (req, res) => {
             }
           }
           try { stmtTouchGuest.run(now, row.player_id); } catch (e) {}
+          if (nick && nick !== row.name) { try { stmtSetGuestName.run(nick, row.player_id); row = stmtGetPlayer.get(row.player_id) || row; } catch (e) {} }   // ★[T1068] 별명이 그 게스트의 이름이 된다(다시 들어와 다른 별명을 쳐도 비어 있으면 바뀐다)
           // ★[2026-08-03g 배치 14 ②] **행 전체**를 준다 — zone 이 등록 계정과 같은 경로로 몸(인벤·좌표·
           //   도구·숙련)을 복원한다. 게스트 전용 저장 경로를 새로 만들지 않기 위한 최소 변경.
           return jsonResp(res, 200, { ok: true, player_id: row.player_id, token: _tok, isNew: false, player: { ...row, guest_token: _tok } });
         }
       }
       // 새 게스트 — playerId 와 토큰을 함께 만든다. 충돌은 사실상 없지만 유니크 제약이 있으니 재시도한다.
+      if (nick && _t1068NickTaken(nick, null)) return jsonResp(res, 200, { ok: false, reason: 'username_taken' });   // ★[T1068] 발급 전에(부작용 0)
       for (let i = 0; i < 4; i++) {
         const pid = newGuestPlayerId(), t = newGuestToken();
         // ★★[T208 2026-09-12] **이름은 여기서 한 번만 지어진다.** 여태 전원이 `여행자` 였고,
@@ -909,8 +926,8 @@ const server = http.createServer(async (req, res) => {
         //   식별자는 **있는 것**을 쓴다 — `player_id`(`anon_` + base64url 12자)의 꼬리 넷.
         //   유일성도 **있는 것**이 지킨다: 이 `for` 는 원래 pid 유니크 충돌 때문에 도는 재시도 루프다.
         //   이름이 겹치면 같은 자리에서 다시 뽑는다 ⇒ 충돌 확률은 새 규약 없이 사실상 0(보고 §0-ⓑ).
-        const gname = `여행자${pid.slice(-4)}`;
-        if (findPerson(gname)) continue;
+        const gname = nick || `여행자${pid.slice(-4)}`;   // ★[T1068] 별명이 있으면 그 이름(바로 위에서 비어 있음을 봤다)
+        if (!nick && findPerson(gname)) continue;
         try {
           stmtInsertGuest.run(pid, gname, '#5a9ae0', t, now, now);
           console.log(`[central] 게스트 신원 발급: ${pid}`);   // ★playerId 만 — 토큰은 절대 안 찍는다
