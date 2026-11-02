@@ -11607,6 +11607,15 @@ function shelterOf(vid) {
 }
 function hasShelter(vid) { return !!shelterOf(vid); }
 
+// ★★[T1093 ② 2026-11-03 · land1038 실기 e2e-first30 "첫 잠자리" 막힘 · 사람 화면 쪽] 손잡이 `T1093_SHELTER_ROOF`(켬 기본 후보 · `=0` = 종전 바이트)
+//   T136 은 쉼터 지붕 선언(`shelter: 1` — 클라 `34-m-renderloop` 가 이 칸으로 쉼터 지붕 그림을 고른다)을 **부팅 시딩 길**
+//   (`materializeVillageStructures` 'shelter' → `buildStructureRect`)에만 실었다. 그런데 새 세계의 쉼터는 **살아 있는 길**
+//   (`_shelterBackfill` → `ensureShelter` → `addShelter` → `_liveHut6x4` · 유저 마을 쉼터 완공도 같은 문)로 서고, 그 길은 선언 없이 선다.
+//   ⇒ 다음 부팅의 다시 실물화 전까지 그 쉼터는 **아무 움집과 같은 지붕**이라 사람 눈엔 커서 이름표로만 갈린다
+//     (실측: e2e-first30 "알아본 길=이름표만(지붕 표지 없음)" · T511 회부 3 그 줄).
+//   켜면 같은 선언 한 칸을 같은 자리에 싣는다 — 벽 · 바닥 · 문 · 콜라이더 · 영속 행 · 브로드캐스트 그대로 · 새 수 0 · 지붕 그림만 시딩 길과 같아진다.
+const T1093_SHELTER_ROOF = process.env.T1093_SHELTER_ROOF !== '0';
+
 // 쉼터 한 채를 그 마을에 등록한다 — DB 행 + 런타임 + 실체(청크가 다음에 켜질 때 선다).
 //   ★멱등: 이미 있으면 있는 것을 돌려준다(두 채가 서지 않는다).
 function addShelter(vid, cx, cy) {
@@ -11622,7 +11631,8 @@ function addShelter(vid, cx, cy) {
   // ★★실체 — **정본 하나를 부른다**(사본 금지). 마을 움집이 완공될 때 서는 그 코드 그대로다
   //   (`_liveHut6x4` = `_lifeCompleteHouse` 에서 뽑아낸 것). ⇒ 벽·바닥·문·`hut` 태그·브로드캐스트가 같다.
   //   그리고 **지금 선다** — 다음 부팅을 기다리지 않는다(T19 가 배운 것).
-  try { _liveHut6x4(vil, c.cx, c.cy, `npc_simvil_${vil.dbId}`, `${vil.name} 쉼터`); } catch (e) {}
+  //   ★[T1093] 켬 = 부팅 시딩 길(`materializeVillageStructures` 'shelter')과 같은 지붕 선언 `shelter: 1` 을 같은 자리(`hut` 뒤)에 싣는다(아래 `T1093_SHELTER_ROOF`).
+  try { _liveHut6x4(vil, c.cx, c.cy, `npc_simvil_${vil.dbId}`, `${vil.name} 쉼터`, undefined, T1093_SHELTER_ROOF ? { shelter: 1 } : undefined); } catch (e) {}
   lifeSiteReset(vil);   // 쉼터가 한 채 늘었으니 집터 후보를 다시 훑는다(겹쳐 짓지 않게)
   return { ok: true, cell: c };
 }
@@ -12013,18 +12023,20 @@ function _t400BodyStep(vil, npc, now) {
 //   여태 이 열 줄은 `_lifeCompleteHouse` 안에만 있었다. T62 의 쉼터가 **같은 실체**를 세우므로
 //   뽑아낸다 — 두 번째 사본을 만들면 그게 곧 "벽 규약이 갈리는" 자리다(족보 ㉒·(83)).
 //   ⚠기하는 한 글자도 안 바뀌었다: [cx-5..cx+0]×[cy-5..cy-2] · 남벽 문 `cx-3`·`cx-2` · `hut` 태그.
-function _liveHut6x4(vil, cx, cy, ownerId, ownerName, made) {
+// ★[T1093] `decl` = 시딩 길(`buildStructureRect` 의 `tag`)이 `hut` 뒤에 싣는 선언 칸(쉼터 `{ shelter: 1 }`) — 없으면 종전 바이트 그대로.
+function _liveHut6x4(vil, cx, cy, ownerId, ownerName, made, decl) {
   const dp = state.deps;
   const lb = dp && dp.liveBuildRow;
   if (!lb) return null;
   const out = made || [];
   const tag = _vbFootprint('house', cx, cy), doorXs = new Set([cx - 3, cx - 2]);   // ★[T284] 발자국 한 곳
+  const D = decl ? (o) => Object.assign(o, decl) : (o) => o;   // ★[T1093] 선언 칸(시딩 길과 같은 키 차례: side · floor · hut · 선언)
   for (let x = cx - 5; x <= cx + 0; x++) {
-    lb('wall', x * SZ, (cy - 5) * SZ, { side: 'N', floor: 0, hut: tag }, ownerId, ownerName, out);
-    if (!doorXs.has(x)) lb('wall', x * SZ, (cy - 1) * SZ, { side: 'N', floor: 0, hut: tag }, ownerId, ownerName, out);
+    lb('wall', x * SZ, (cy - 5) * SZ, D({ side: 'N', floor: 0, hut: tag }), ownerId, ownerName, out);
+    if (!doorXs.has(x)) lb('wall', x * SZ, (cy - 1) * SZ, D({ side: 'N', floor: 0, hut: tag }), ownerId, ownerName, out);
   }
-  for (let y = cy - 5; y <= cy - 2; y++) { lb('wall', (cx + 0) * SZ, y * SZ, { side: 'E', floor: 0, hut: tag }, ownerId, ownerName, out); lb('wall', (cx - 6) * SZ, y * SZ, { side: 'E', floor: 0, hut: tag }, ownerId, ownerName, out); }
-  for (let x = cx - 5; x <= cx + 0; x++) for (let y = cy - 5; y <= cy - 2; y++) lb('floor', x * SZ + SZ / 2, y * SZ + SZ / 2, { floor: 0, hut: tag }, ownerId, ownerName, out);
+  for (let y = cy - 5; y <= cy - 2; y++) { lb('wall', (cx + 0) * SZ, y * SZ, D({ side: 'E', floor: 0, hut: tag }), ownerId, ownerName, out); lb('wall', (cx - 6) * SZ, y * SZ, D({ side: 'E', floor: 0, hut: tag }), ownerId, ownerName, out); }
+  for (let x = cx - 5; x <= cx + 0; x++) for (let y = cy - 5; y <= cy - 2; y++) lb('floor', x * SZ + SZ / 2, y * SZ + SZ / 2, D({ floor: 0, hut: tag }), ownerId, ownerName, out);
   if (!made) { try { dp.broadcast({ type: 'buildings_spawn', buildings: out }); } catch (e) {} }
   return out;
 }
@@ -15197,7 +15209,7 @@ module.exports = { t750CastPre, t750Stat: () => _t750Stat, t719ReachPre, t719Sta
   //   극성을 읽으면, 규약이 또 뒤집힐 때 **하네스만 빨강**이 되고(T298 §0ⓒ 가 실제로 밟았다)
   //   더 나쁘게는 정규식이 낡아도 초록이 될 수 있다. 그래서 값을 **그대로 내준다**(사본 0 · T244 ⑧ 문법).
   //   env 를 지운 자식 프로세스에서 이 문을 부르면 그것이 **서버 기본**이다(족보 128).
-  __probe: { lifeSiteFilters: (vil) => _lifeSiteFilters(vil), liveHut6x4: (v, x, y, o, n, m) => _liveHut6x4(v, x, y, o, n, m),
+  __probe: { lifeSiteFilters: (vil) => _lifeSiteFilters(vil), liveHut6x4: (v, x, y, o, n, m, d) => _liveHut6x4(v, x, y, o, n, m, d), T1093_SHELTER_ROOF,   // ★[T1093] 선언 칸(`d`) · 손잡이(하네스 읽기만)
     handles: () => ({ T230_TERR_HOUSING, T219_HOUSE_TRIGGER, T315_HOUSE_GAP, T315_MAPBEDS }),
     mapBedsOf: (vil) => _mapBedsOf(vil),   // ★[T315] 침상 명부 정본 — 하네스가 규칙을 다시 적지 않게
     vbFootprint: (t, cx, cy) => _vbFootprint(t, cx, cy) },   // ★[T315] 발자국 정본(순수) — 간격 유도 ⓐ항이 발자국을 덮나 하네스가 직접 본다
