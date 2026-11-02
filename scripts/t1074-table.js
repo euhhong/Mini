@@ -72,3 +72,27 @@ if (Object.keys(out.shield).length) {
   for (const [k, o] of Object.entries(out.shield)) console.log(`| ${k === 'A' ? '켬' : '끔'} | ${o.seeds} | ${o.fam365} | ${o.fd365} | ${o.fdShield365} | ${o.pop400} | ${o.empty} |`);
 }
 if (JOUT) fs.writeFileSync(JOUT, JSON.stringify(out, null, 1));
+// ── 죽음 가르기(기본 판) — 죽음이 난 마을-날의 압력 칸 음수 몫 비례(T934 꼴 · t815 줄 · 빚 죽음은 그날 칸 몫에 함께 묻힌다)
+function split(dir) {
+  const tot = { logi: 0, hunger: 0, health: 0, happy: 0 }, t365 = { logi: 0, hunger: 0, health: 0, happy: 0 }; let deaths = 0, d365 = 0;
+  for (const s of SEEDS) {
+    const t = J(path.join(dir, `base-${s}.t815.json`)); if (!t) return null;
+    const C = t.cols, iD = C.indexOf('deathsToday'), ix = {}; for (const c of Object.keys(tot)) ix[c] = C.indexOf(c);
+    for (const [day, vs] of t.rows) for (const x of vs) {
+      const dd = x[iD]; if (!(dd > 0)) continue; deaths += dd; if (day < 365) d365 += dd;
+      let neg = 0; for (const c in ix) neg += Math.min(0, +x[ix[c]] || 0);
+      if (neg < 0) for (const c in ix) { const sh = Math.min(0, +x[ix[c]] || 0) / neg * dd; tot[c] += sh; if (day < 365) t365[c] += sh; }
+    }
+  }
+  return { deaths, d365, tot, t365 };
+}
+console.log('\n죽음 가르기(기본 판 · 압력 칸 음수 몫 비례 · logi = K 넘김 · hunger = 옛 굶주림 두 줄)\n');
+console.log('| 손잡이 | 800날 죽음 | logi | hunger | health | happy | 첫해 죽음 | 첫해 logi | 첫해 hunger | 첫해 health | 첫해 happy |');
+console.log('|---|---|---|---|---|---|---|---|---|---|---|');
+for (const k of ['off', 'on']) {
+  const r = split(path.join(ROOT, `run-on-${k}`)); if (!r) continue;
+  const f = (o, n) => ['logi', 'hunger', 'health', 'happy'].map((c) => `${o[c].toFixed(0)} (${n ? (100 * o[c] / n).toFixed(0) : 0}%)`).join(' | ');
+  console.log(`| ${k === 'on' ? '켬' : '끔'} | ${r.deaths} | ${f(r.tot, r.deaths)} | ${r.d365} | ${f(r.t365, r.d365)} |`);
+  out.split = out.split || {}; out.split[k] = r;
+}
+if (JOUT) fs.writeFileSync(JOUT, JSON.stringify(out, null, 1));
