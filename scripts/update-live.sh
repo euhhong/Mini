@@ -27,6 +27,7 @@
 #   ⑥ `reset-world.sh nippon --live`(관측자 한 줄) → 도쿄 스탬프 = 도쿄 HEAD
 #   ⑦ `live-lag.sh` 판정 한 줄
 #   ⑧ ★[T1048] 경계 한 줄(읽기만 · env 값 0) — 서울 한반도 컨테이너 env 에 `ZONE_HOST_<도쿄 존>` 이 **있고** 그 존이 보는 주소의 `/health` 가 **존 안에서** 닿는가
+#        ★[T1077] + 도쿄 존 → 한반도 반대 방향(존 안에서 /health) · central `/zones` 가 브라우저에 주는 이웃 `wsUrl` 주소 = 존끼리 넘기는 주소(양쪽 · 같음/다름만 · 값 0)
 #        (도쿄 존 = 도쿄 `durango-zone-*` · 없으면 nippon) · 하나라도 ✗ 면 멈춤(갱신은 끝났다 — 경계만 막힌 것) · `--dry` 도 찍는다(멈추지 않는다)
 #   ★[T897] 고정 — ② 뒤 · ③ 앞: 이 갱신이 다시 띄울 대상만 지금 이미지에 `:prev-<대상>` 태그(`reset-world.sh <대상> --pin-prev` · 서울 central · 한반도 · 도쿄 닛폰은 ④ 뒤 —
 #     도쿄 reset-world.sh 가 새 판이어야 해서) · 안 바뀔 대상은 `:prev` 를 뗀다(`--drop-prev`) · 바꿀 것이 하나도 없는 갱신이면 고정본을 그대로 둔다.
@@ -71,29 +72,62 @@ zone_of() { sed -n 's/^PLAN .*zone=\([01]\).*/\1/p' | tail -1; }
 #   env 를 옮겨 싣는 재배포(redeploy-hanbando · reset-world)는 빠진 줄을 되살리지도 않는다 ⇒ 갱신 끝마다 이 줄이 본다.
 #   주소는 존 정본(`server/zone-config.js` `hostFromEnv` — ZONE_HOST_<ID> > ZONE_HOSTS > PUBLIC_HOST > localhost)에게 **존 컨테이너 안에서** 묻는다(사본 0 · 존 프로세스와 같은 길).
 #   찍는 것: 키 있음/없음 · 주소가 도쿄 ssh 주소와 같은가(값 0) · 포트 · /health 코드 또는 오류 이름(ECONNREFUSED · ETIMEDOUT …) · ms.
-xhost_check() {
-  local ids ta
-  ids="$(ssh -n "$T" "docker ps -a --format '{{.Names}}'" 2>/dev/null | sed -n 's/^durango-zone-//p' | tr '\n' ' ')"
-  [ -n "${ids// /}" ] || ids=nippon
-  ta="$(ssh -G "$T" 2>/dev/null | awk '$1=="hostname"{print $2; exit}')"
-  ssh "$S" bash -s -- "${ta:--}" $ids <<'XHOST'
-ta="$1"; shift; [ "$ta" = - ] && ta=""
-C=durango-zone-hanbando; bad=0
-JS='const [id,ta]=process.argv.slice(1);let Z;try{Z=require("./server/zone-config.js").ZONES}catch(e){console.log("no 존 표를 못 읽었다");process.exit(0)}
+xhost_zone() {   # xhost_zone <호스트> <존 컨테이너> <fwd|rev> <그 쪽 ssh 주소|-> <대상 존…> — 줄마다 ✓/✗ · rc(ssh 낱말엔 빈칸 · 한글 0 — 이름은 저쪽에서 짓는다)
+  ssh "$1" bash -s -- "${@:2}" <<'XHOST'
+C="$1"; MODE="$2"; ta="$3"; shift 3; [ "$ta" = - ] && ta=""; bad=0
+if [ "$MODE" = rev ]; then SRCN="도쿄 ${C#durango-zone-}"; AL=서울; KEYREQ=0; else SRCN="서울 한반도"; AL=도쿄; KEYREQ=1; fi   # ★[T1077] 반대 방향은 키를 요구하지 않는다(도쿄 ZONE_HOSTS = 서울이 맞다)
+JS='const [id,ta,al]=process.argv.slice(1);let Z;try{Z=require("./server/zone-config.js").ZONES}catch(e){console.log("no 존 표를 못 읽었다");process.exit(0)}
 const t=Z[id];if(!t){console.log("no 이 존 표(ENABLED_ZONES)에 "+id+" 없음");process.exit(0)}
-const same=ta?(t.host===ta?"주소 = 도쿄 ssh 주소":"주소 ≠ 도쿄 ssh 주소"):"도쿄 ssh 주소 모름";const t0=Date.now();
+const same=ta?(t.host===ta?"주소 = "+al+" ssh 주소":"주소 ≠ "+al+" ssh 주소"):al+" ssh 주소 모름";const t0=Date.now();
 const q=require("http").get({host:t.host,port:t.port,path:"/health",timeout:5000},(r)=>{r.resume();console.log((r.statusCode===200?"ok ":"no ")+same+" · :"+t.port+"/health "+r.statusCode+" · "+(Date.now()-t0)+"ms")});
 q.on("timeout",()=>q.destroy(Object.assign(new Error("timeout"),{code:"ETIMEDOUT"})));q.on("error",(e)=>console.log("no "+same+" · :"+t.port+" "+(e.code||e.message)+" · "+(Date.now()-t0)+"ms"));'
 for id in "$@"; do
   K="ZONE_HOST_$(printf %s "$id" | tr '[:lower:]' '[:upper:]')"
   n="$(docker inspect "$C" --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null | grep -c "^$K=" || true)"
-  r="$(docker exec "$C" node -e "$JS" "$id" "$ta" 2>&1 | tail -1)"
+  r="$(docker exec "$C" node -e "$JS" "$id" "$ta" "$AL" 2>&1 | tail -1)"
   case "$r" in "ok "*) st=ok; d="${r#ok }" ;; "no "*) st=no; d="${r#no }" ;; *) st=no; d="존 안에서 못 물었다: $(printf %s "$r" | cut -c1-100)" ;; esac
-  if [ "${n:-0}" -ge 1 ]; then kp="env $K 있음"; else kp="env $K 없음"; fi
-  if [ "${n:-0}" -ge 1 ] && [ "$st" = ok ]; then echo "✓ 경계 서울 한반도 → $id: $kp · $d"; else echo "✗ 경계 서울 한반도 → $id: $kp · $d"; bad=1; fi
+  if [ "${n:-0}" -ge 1 ]; then kp="env $K 있음"; else kp="env $K 없음"; [ "$KEYREQ" = 1 ] || kp="$kp(ZONE_HOSTS)"; fi
+  if { [ "${n:-0}" -ge 1 ] || [ "$KEYREQ" != 1 ]; } && [ "$st" = ok ]; then echo "✓ 경계 $SRCN → $id: $kp · $d"; else echo "✗ 경계 $SRCN → $id: $kp · $d"; bad=1; fi
 done
 exit $bad
 XHOST
+}
+# ★[T1077] 그 컨테이너 정본이 보는 존 주소 하나(값 — **이 셸 변수로만** 견준다 · 화면 0). 존 = `ZONES[id].host` · central = `/zones` 를 짓는 `publicZoneMap(PUBLIC_HOST)` 그대로.
+host_of() {   # host_of <호스트> <컨테이너> <존 id> <zone|central>
+  ssh "$1" bash -s -- "${@:2}" <<'HOSTOF'
+docker exec "$1" node -e 'const [id,k]=process.argv.slice(1);try{const C=require("./server/zone-config.js");const t=k==="central"?C.publicZoneMap(process.env.PUBLIC_HOST||"localhost")[id]:C.ZONES[id];console.log(t&&t.host?t.host:"")}catch(e){console.log("")}' "$2" "$3" 2>/dev/null | tail -1
+HOSTOF
+}
+# ★★[T1077 2026-11-02 · ★재민 11-02 실기 "경계에서 이번엔 튕기지 않고 연결 끊김으로 멈춘다"] central `/zones` 의 이웃 주소 · 도쿄 → 한반도 반대 방향.
+#   존↔존 인계(`/handoff_prepare`)는 위 줄이 본다. 그런데 브라우저가 옮겨 붙을 주소(`wsUrl`)는 central `/zones` 가 준다 — central env 에 `ZONE_HOST_NIPPON` 이
+#   없으면 26존 표(`ZONE_HOSTS` = 서울)로 떨어져 닛폰 = 서울:3021(닫힘) → 브라우저 접속 실패 → 보낸 존 ACK 3초 시한이 몸을 지운다(서버 알림 0).
+#   찍는 것: central 이 브라우저에 주는 그 존 주소가 **존끼리 넘기는 주소와 같은가**(같음/다름만 · 값 0) — 앞(한반도가 넘기는 도쿄 존) · 반대(도쿄 존이 넘기는 한반도).
+#   반대 방향 존↔존 줄(`도쿄 <존> → hanbando`)은 키를 요구하지 않는다(도쿄는 `ZONE_HOSTS` 26존 = central 주소 = 서울이 맞다 · 있음/없음만 적는다).
+xhost_central() {   # xhost_central <도쿄 존 id…> — 줄마다 ✓/✗ · rc
+  local id hv cv nv cvh bad=0
+  for id in "$@"; do
+    hv="$(host_of "$S" durango-zone-hanbando "$id" zone)"; cv="$(host_of "$S" durango-central "$id" central)"
+    if [ -n "$cv" ] && [ "$cv" = "$hv" ]; then echo "✓ 경계 central /zones → $id: wsUrl 주소 = 한반도가 넘기는 주소"
+    else echo "✗ 경계 central /zones → $id: wsUrl 주소 ≠ 한반도가 넘기는 주소$([ -z "$cv" ] && echo '(central 에서 못 물었다)')"; bad=1; fi
+  done
+  cvh="$(host_of "$S" durango-central hanbando central)"
+  for id in "$@"; do
+    nv="$(host_of "$T" "durango-zone-$id" hanbando zone)"
+    if [ -n "$cvh" ] && [ "$cvh" = "$nv" ]; then echo "✓ 경계 central /zones → hanbando: wsUrl 주소 = 도쿄 $id 가 넘기는 주소"
+    else echo "✗ 경계 central /zones → hanbando: wsUrl 주소 ≠ 도쿄 $id 가 넘기는 주소$([ -z "$cvh" ] && echo '(central 에서 못 물었다)')"; bad=1; fi
+  done
+  return $bad
+}
+xhost_check() {
+  local ids ta sa id bad=0
+  ids="$(ssh -n "$T" "docker ps -a --format '{{.Names}}'" 2>/dev/null | sed -n 's/^durango-zone-//p' | tr '\n' ' ')"
+  [ -n "${ids// /}" ] || ids=nippon
+  ta="$(ssh -G "$T" 2>/dev/null | awk '$1=="hostname"{print $2; exit}')"
+  sa="$(ssh -G "$S" 2>/dev/null | awk '$1=="hostname"{print $2; exit}')"
+  xhost_zone "$S" durango-zone-hanbando fwd "${ta:--}" $ids || bad=1
+  for id in $ids; do xhost_zone "$T" "durango-zone-$id" rev "${sa:--}" hanbando || bad=1; done   # ★[T1077] 반대 방향
+  xhost_central $ids || bad=1                                                                                   # ★[T1077] central /zones
+  return $bad
 }
 tokyo_old() { ssh -n "$T" "docker inspect durango-zone-nippon --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null | awk -F= 'NF{n=n (n?\" \":\"\") \$1} /^PLAYER_CAP=/{c=substr(\$0,12)} /^CENTRAL_HOST=/{h=substr(\$0,14)} END{printf \"cap=%s host=%s names=%s\n\", c, h, n}'"; }
 
@@ -165,7 +199,7 @@ if [ "$DRY" = 1 ] && [ "$RB" = 0 ]; then
   bash <(ssh -n "$S" cat "$SD/scripts/sync-tokyo.sh") --dry 2>&1 | ind
   say "[예행 ⑦] 지금 렉 판정(읽기만)"
   bash <(ssh -n "$S" cat "$SD/scripts/live-lag.sh") 2>&1 | tail -1 | ind
-  say "[예행 ⑧] 경계 — 서울 한반도 → 도쿄 존(읽기만 · env 값 0 · 실제 판은 ✗ 면 끝에서 멈춘다)"
+  say "[예행 ⑧] 경계 — 서울 한반도 → 도쿄 존 · 도쿄 → 한반도 · central /zones 주소(읽기만 · env 값 0 · 실제 판은 ✗ 면 끝에서 멈춘다)"
   xhost_check 2>&1 | ind
   say "  (예행 — 라이브 무변 · 서울 git fetch 만)"
   exit 0
@@ -351,8 +385,8 @@ bash <(ssh -n "$S" cat "$SD/scripts/live-lag.sh") > "$TMP/lag" 2>&1
 sed -n '2,$p' "$TMP/lag" | ind
 
 # ⑧ ★[T1048] 경계 — 서울 한반도 → 도쿄 존(읽기만 · env 값 0). ✗ 면 멈춘다(갱신은 끝났다 · 넘기만 막혀 있다)
-say "[⑧] 경계 — 서울 한반도 → 도쿄 존(env 키 있음 · 존 안에서 /health 닿음)"
+say "[⑧] 경계 — 서울 한반도 → 도쿄 존(env 키 있음 · 존 안에서 /health 닿음) · 도쿄 → 한반도 · central /zones 주소(★T1077)"
 XL="$(xhost_check 2>&1)"; xrc=$?
 echo "$XL" | ind
-[ "$xrc" = 0 ] || stop "경계 ✗(위 [⑧] 줄) — 한반도가 도쿄 존에 못 넘긴다(사람 눈엔 '…(으)로 못 넘어간다 — <까닭>')" "없음 — 갱신은 다 됐다 · 남은 것은 서울 한반도 env 키 · 도쿄 포트(보고/T1048 §5 재민 손)"
+[ "$xrc" = 0 ] || stop "경계 ✗(위 [⑧] 줄) — 넘기가 막혀 있다(존↔존 줄이면 사람 눈엔 '…(으)로 못 넘어간다 — <까닭>' · central /zones 줄이면 '<존> 서버에 연결하지 못했습니다' — 보고/T1077)" "없음 — 갱신은 다 됐다 · 남은 것은 서울 한반도 env 키 · 도쿄 포트(보고/T1048 §5) · central 주소(서울에서 \`bash scripts/fix-central-hosts.sh --dry\` → 없이 · 보고/T1077 — 재민 손)"
 say "  ✓ 끝 — 서울 ${SH1:0:12} · 도쿄 ${TH1:0:12} · 바뀐 것: ${DONE:-없음(이미 최신)}"

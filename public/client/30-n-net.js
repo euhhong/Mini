@@ -826,12 +826,25 @@
     ws.onclose = (ev) => {
       if (conns.get(zoneId) === c) conns.delete(zoneId);
       _lastCloseAt.set(zoneId, performance.now()); // cooldown 기록
+      // ★[T1077] 넘김 실패를 본다 — ⓐ 넘겨받을 존 소켓이 welcome(`c.meta`) 전에 닫혔다(그 주소에 못 붙음 · 재시도도 같은 문) ·
+      //   ⓑ 보낸 존이 먼저 닫았는데(ACK 3초 시한 — 몸을 지웠다) 받을 존은 아직 welcome 전이다(주소가 막혀 열리지도 닫히지도 않는 판).
+      if (_hoTo && ((zoneId === _hoTo && !c.meta) || (zoneId === _hoFrom && !(conns.get(_hoTo) && conns.get(_hoTo).meta)))) _t1077HoFail(_hoTo);
       // Phase 5-G trace: close 이유 진단
       console.warn('[ws] close', zoneId, 'role=' + role, 'code=' + ev.code, 'reason=' + (ev.reason || '(empty)'), 'wasClean=' + ev.wasClean);
     };
     ws.onerror = (ev) => {
       console.warn('[ws] error', zoneId, 'role=' + role);
     };
+  }
+
+  // ★[T1077] 넘겨받을 존에 못 붙었다 — 화면에 까닭 한 줄(하십시오체 · 존 이름은 표시 이름 — 서버 T564 알림과 같은 자리)
+  function _t1077HoFail(zid) {
+    const nm = (zonesMeta[zid] && zonesMeta[zid].displayName) || zid;
+    const t = `${nm} 서버에 연결하지 못했습니다`;
+    if (_hoFail === t) return;
+    _hoFail = t;
+    console.warn('[handoff] 받을 존 접속 실패', zid);
+    paintConnBanner();
   }
 
   // Phase 5-G: observer 연결 fail 시 cooldown — 매 frame retry storm 방지
@@ -1053,6 +1066,7 @@
       }
       // ★[접속 진단] 여기까지 왔으면 **들어간 것**이다. 배너를 걷고 시도 횟수를 0으로.
       if (c.role === 'primary') { connEverReady = true; connAttempts = 0; connHelloAt = 0; connOutageAt = 0;
+        _hoTo = null; _hoFrom = null; _hoFail = '';   // ★[T1077] 주 존에 들어갔다 — 넘김 끝(실패 까닭도 걷는다)
         _reconnAt = 0;   // ★백오프 시계도 푼다 — 다음 끊김은 곧바로 한 번 시도한다(★[T1024] 켬이면 끊김을 본 순간부터 첫 간격 1초 뒤 · 33-m-conn)
         connMark('ready', { reason: '', stage: '', ref: '' }); }
       if (c.role === 'primary' && _ld.rx) _ldMark('welcomeDone');   // ★[T920] 첫 welcome 처리 끝
@@ -1611,6 +1625,7 @@
       console.log('[handoff]', primaryZoneId, '→', target, 'token=', token.slice(0,8));
       const oldPrimary = primaryZoneId;
       primaryZoneId = target;
+      _hoTo = target; _hoFrom = oldPrimary; _hoFail = '';   // ★[T1077] 넘김의 두 끝 — welcome 이 걷는다 · 그 전에 받을 존 소켓이 닫히면 까닭 한 줄
 
       // ★ observer로 미리 연결된 ws가 있으면 promote만 — 새 ws 안 만듦 → 끊김 ~0
       const existingTarget = conns.get(target);
