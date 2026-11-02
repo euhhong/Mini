@@ -75,6 +75,10 @@ function createContext(){
 // ═══════════ 지형 — concealed / treeBlocks (★[T284] 존 어댑터 위임) ═══════════
 // ★[T284] 전투실험실의 genForest(무작위 나무·가짜 건물 22채)는 **제거**했다 — 장애물은 존의 것이다.
 //   ctx.world = { blocked(x,y), losBlocked(x1,y1,x2,y2), coverAt(x,y,pad), advance(ctx,u), flee(ctx,u) } (좌표 = 존 셀 = m).
+//   ★[T1090] advance · flee · hold 는 골라 줄 수 있다 — 없으면 독립 실행 식(빈 들판의 행군 · 궤주 방향 · 지키지 않음).
+//     push(ctx,u,dt) 도 골라 준다 — 주면 sep 끝의 몸 클램프 대신 어댑터가 몸을 장애물 밖으로 민다.
+//     존(server)은 advance · flee · hold 를 주고 push 는 안 준다(무변). 전투실험실(lab)은 장애물 · 사선 · 은폐 · push 를 준다 —
+//     길찾기 없이 곧게 걷는 독립 실행 판에서 클램프는 나무 앞에서 몸을 세운다(보고 T1090 §3 · 숲 판 47.8 → 97.9초) — 07-10 밀어내기(둘레로 미끄러짐)가 그 판의 지형 규칙이다.
 //   아래 여유(1.4·1.8)는 전투실험실 concealed 의 수 그대로다(나무 1.4 · 건물 1.8 → 어댑터가 둘 중 가까운 쪽 규칙으로 쓴다).
 function concealed(ctx,u){ return !!(ctx.world&&ctx.world.coverAt(u.x,u.y,1.8)); }
 function treeBlocks(ctx,x1,y1,x2,y2){ return !!(ctx.world&&ctx.world.losBlocked(x1,y1,x2,y2)); }
@@ -269,7 +273,7 @@ function stepBattle(ctx,dt){
       sep(ctx,u,dt); continue; }
     // ── 궤주(개별) ──
     if(u.routing){u.st='rout';
-      if(ctx.world){ const f=ctx.world.flee(ctx,u); u.face=Math.atan2(f.dy,f.dx); u.x+=f.dx*D.spd*1.25*dt; u.y+=f.dy*D.spd*1.25*dt; sep(ctx,u,dt); continue; }   // ★[T284] 존: 방향만 어댑터(속도식 그대로)
+      if(ctx.world&&ctx.world.flee){ const f=ctx.world.flee(ctx,u); u.face=Math.atan2(f.dy,f.dx); u.x+=f.dx*D.spd*1.25*dt; u.y+=f.dy*D.spd*1.25*dt; sep(ctx,u,dt); continue; }   // ★[T284] 존: 방향만 어댑터(속도식 그대로)
       const gx=u.side==='A'?-40:DEPLOY_W+40; const dx=gx-u.x,dy=0, dd=Math.hypot(dx,dy)||1; u.face=Math.atan2(dy,dx);
       u.x+=dx/dd*D.spd*1.25*dt; sep(ctx,u,dt); continue;}
     const engR=D.ranged>0?D.ranged+2:13;
@@ -290,7 +294,7 @@ function stepBattle(ctx,dt){
         if(dd>0.25){const st=Math.min(D.spd*dt,dd); u.x+=dx/dd*st; u.y+=dy/dd*st;} u.face=ctx.cmdHeading; sep(ctx,u,dt); continue;
       }
       u.st='adv'; const c=ctx._cen[u.side==='A'?'B':'A'];
-      if(ctx.world){ const a=ctx.world.advance(ctx,u); if(a){u.face=Math.atan2(a.dy,a.dx); u.x+=a.dx*mSpd*fSpd*dt; u.y+=a.dy*mSpd*fSpd*dt;} sep(ctx,u,dt); continue; }   // ★[T284] 존: 방향만 어댑터(속도식 그대로 · null=제자리 · 적 본대가 없으면 목표로)
+      if(ctx.world&&ctx.world.advance){ const a=ctx.world.advance(ctx,u); if(a){u.face=Math.atan2(a.dy,a.dx); u.x+=a.dx*mSpd*fSpd*dt; u.y+=a.dy*mSpd*fSpd*dt;} sep(ctx,u,dt); continue; }   // ★[T284] 존: 방향만 어댑터(속도식 그대로 · null=제자리 · 적 본대가 없으면 목표로)
       if(c.n){const s=c.x>u.x?1:-1; u.face=s>0?0:Math.PI; u.x+=s*mSpd*fSpd*dt; sep(ctx,u,dt);} continue; }
     u.tgt=e; const d=Math.sqrt(dist2(u,e));
     if(u.form==='wall'){const c=ctx._cen[u.side==='A'?'B':'A']; u.face=c.n?Math.atan2(c.y-u.y,c.x-u.x):Math.atan2(e.y-u.y,e.x-u.x);}
@@ -308,18 +312,18 @@ function stepBattle(ctx,dt){
         if(d<=D.ranged){
           if(u.cd<=0){ const los=ctx.world?!treeBlocks(ctx,u.x,u.y,e.x,e.y):true;
             if(los){u.st='shoot'; u.cd=D.cd; if(ctx.rng()<mf){shoot(ctx,u,e); ctx.sides[u.side][ak]--;}} else {u.st='block'; u.cd=1;} }
-        } else if(ctx.world&&ctx.world.hold(ctx,u,e)){ u.st='hold'; }   // ★[T284] 지키는 쪽은 물러나는 적을 쫓지 않는다
+        } else if(ctx.world&&ctx.world.hold&&ctx.world.hold(ctx,u,e)){ u.st='hold'; }   // ★[T284] 지키는 쪽은 물러나는 적을 쫓지 않는다
         else { u.st='adv'; const dd=d||1,ms=D.spd*(0.55+0.45*mf)*fSpd; u.x+=(e.x-u.x)/dd*ms*dt; u.y+=(e.y-u.y)/dd*ms*dt; }
       } else {
-        if(d<15&&ctx.world&&d>D.reach&&ctx.world.hold(ctx,u,e)){ u.st='hold'; }   // ★[T284] 추격 없음
+        if(d<15&&ctx.world&&d>D.reach&&ctx.world.hold&&ctx.world.hold(ctx,u,e)){ u.st='hold'; }   // ★[T284] 추격 없음
         else if(d<15){ u.st='melee'; const dd=d||1,ms=(D.chg||D.spd)*(0.55+0.45*mf)*fSpd; if(d>D.reach){u.x+=(e.x-u.x)/dd*ms*dt; u.y+=(e.y-u.y)/dd*ms*dt;} else if(u.cd<=0){u.cd=D.cd; if(ctx.rng()<mf)hurt(ctx,e,uMAtk,u.x,u.y,'melee',D.shBrk);} }
-        else if(ctx.world){ u.st='adv'; const f=ctx.world.flee(ctx,u); u.x+=f.dx*D.spd*fSpd*dt; u.y+=f.dy*D.spd*fSpd*dt; }   // ★[T284] 탄 떨어진 사수 이탈 — 방향만 어댑터
+        else if(ctx.world&&ctx.world.flee){ u.st='adv'; const f=ctx.world.flee(ctx,u); u.x+=f.dx*D.spd*fSpd*dt; u.y+=f.dy*D.spd*fSpd*dt; }   // ★[T284] 탄 떨어진 사수 이탈 — 방향만 어댑터
         else { u.st='adv'; const gx=u.side==='A'?-40:DEPLOY_W+40,dd=Math.abs(gx-u.x)||1; u.x+=(gx-u.x)/dd*D.spd*fSpd*dt; }
       }
       sep(ctx,u,dt); continue;
     }
     // ── 근접 ──
-    if(d>D.reach&&ctx.world&&ctx.world.hold(ctx,u,e)){ u.st='hold'; }   // ★[T284] 지키는 쪽(holder)은 물러나는 적(대형으로 돌아간 병사)을 쫓지 않는다
+    if(d>D.reach&&ctx.world&&ctx.world.hold&&ctx.world.hold(ctx,u,e)){ u.st='hold'; }   // ★[T284] 지키는 쪽(holder)은 물러나는 적(대형으로 돌아간 병사)을 쫓지 않는다
     else if(d>D.reach){ u.st='adv'; let gx=e.x,gy=e.y;
       if(u.form!=='wall'&&u.form!=='circle'&&UNITS[e.type].ranged===0&&e.form!=='wall'&&e.form!=='circle'&&frontBlocked(ctx,u,e)){
         const efx=Math.cos(e.face),efy=Math.sin(e.face),rx=u.x-e.x,ry=u.y-e.y,sd=(rx*(-efy)+ry*efx)>0?1:-1;
@@ -346,16 +350,21 @@ function stepBattle(ctx,dt){
     if(done||ar.trav>=ar.range){ if(ctx.onArrow)ctx.onArrow(hitU?'hit':'end',ar,hitU); ctx.arrows.splice(i,1); }   // ★[T458] 화살 사건 — 보기만 하는 훅(상태 무변 · 없으면 종전)
   }
   // ── 종료 판정 ──
-  const la=ctx.units.filter(u=>u.side==='A'&&u.hp>0).length, lb=ctx.units.filter(u=>u.side==='B'&&u.hp>0).length;
-  const fa=ctx.units.filter(u=>u.side==='A'&&u.hp>0&&!u.routing).length, fb=ctx.units.filter(u=>u.side==='B'&&u.hp>0&&!u.routing).length;
-  if(!ctx.result && !ctx.world){   // ★[T284] 존(연속 전투)엔 판 결과가 없다 — 정산 계기는 호스트가 행위(궤주·항복·철수)로 본다
-    if(fa===0&&fb>0)ctx.result={win:'B'};
-    else if(fb===0&&fa>0)ctx.result={win:'A'};
-    else if(fa===0&&fb===0)ctx.result={win:la>lb?'A':lb>la?'B':'무'};
-    else if(ctx.tick>120)ctx.result={win:la>lb?'A':lb>la?'B':'무'};
-  }
+  if(!ctx.result && !ctx.world) judge(ctx);   // ★[T284] 존(연속 전투)엔 판 결과가 없다 — 정산 계기는 호스트가 행위(궤주·항복·철수)로 본다
   // 시체 페이드
   for(const c of ctx.corpses)c.rot=Math.max(0,c.rot-dt*0.03);
+}
+// ★[T1090] 판 결과 식을 함수 하나로(같은 식 · 같은 자리에서 부른다 — 바이트 동작 무변). 전투실험실처럼 지형 어댑터(ctx.world)를 단
+//   독립 판은 stepBattle 이 결과를 안 내므로(존 규약) 판 뒤에 이것을 부른다 — 식을 랩에 다시 적지 않는다(사본 0).
+function judge(ctx){
+  if(ctx.result)return ctx.result;
+  const la=ctx.units.filter(u=>u.side==='A'&&u.hp>0).length, lb=ctx.units.filter(u=>u.side==='B'&&u.hp>0).length;
+  const fa=ctx.units.filter(u=>u.side==='A'&&u.hp>0&&!u.routing).length, fb=ctx.units.filter(u=>u.side==='B'&&u.hp>0&&!u.routing).length;
+  if(fa===0&&fb>0)ctx.result={win:'B'};
+  else if(fb===0&&fa>0)ctx.result={win:'A'};
+  else if(fa===0&&fb===0)ctx.result={win:la>lb?'A':lb>la?'B':'무'};
+  else if(ctx.tick>120)ctx.result={win:la>lb?'A':lb>la?'B':'무'};
+  return ctx.result;
 }
 function shoot(ctx,u,e){const D=UNITS[u.type]; const dist=Math.hypot(e.x-u.x,e.y-u.y);
   const ft=dist/D.arrowV; const lx=e.x+(e._vx||0)*ft, ly=e.y+(e._vy||0)*ft;
@@ -370,7 +379,8 @@ function sep(ctx,u,dt){let sx=0,sy=0,n=0,hxx=0,hyy=0,hn=0; const bx=Math.floor(u
       if(d<SEP_CORE){hxx+=dx/d*(SEP_CORE-d)*0.5;hyy+=dy/d*(SEP_CORE-d)*0.5;hn++;}}}}   // ★[몸 하한] 지름 0.5m 침범 위치보정 누적(1.0m 소프트 간격과 별개 층)
   if(n){u.x+=sx/n*1.0*dt; u.y+=sy/n*1.0*dt;}
   if(hn){const hl=Math.hypot(hxx,hyy); if(hl>1e-9){const hk=Math.min(1,Math.max(1.0*dt,0.08)/hl); u.x+=hxx*hk; u.y+=hyy*hk;}}   // 몸 겹침 해소 — dt 무관 최소 0.08m/스텝(압착에도 관통 불가), 나무·건물 클램프가 뒤에서 지형 보정
-  if(ctx.world&&u._ox!=null&&ctx.world.blocked(u.x,u.y)&&!(T1019_UNTRAP&&ctx.world.blocked(u._ox,u._oy))){   // ★[T284] 몸 클램프 — 존의 장애물(지형·건물 행). 축별로 미끄러지고, 둘 다 막히면 제자리 · ★[T1019] 켬 = 이전 자리도 막혔으면(갇힌 몸) 안 묶는다 — 걸어 나온다
+  if(ctx.world&&ctx.world.push){ ctx.world.push(ctx,u,dt); }   // ★[T1090] 어댑터가 몸을 장애물 밖으로 민다(주면 아래 클램프 대신 · 전투실험실 = 07-10 나무 · 집 밀어내기 · 존은 안 준다 = 무변)
+  else if(ctx.world&&u._ox!=null&&ctx.world.blocked(u.x,u.y)&&!(T1019_UNTRAP&&ctx.world.blocked(u._ox,u._oy))){   // ★[T284] 몸 클램프 — 존의 장애물(지형·건물 행). 축별로 미끄러지고, 둘 다 막히면 제자리 · ★[T1019] 켬 = 이전 자리도 막혔으면(갇힌 몸) 안 묶는다 — 걸어 나온다
     const nx=u.x, ny=u.y;
     if(!ctx.world.blocked(nx,u._oy)){u.y=u._oy;}
     else if(!ctx.world.blocked(u._ox,ny)){u.x=u._ox;}
@@ -508,7 +518,7 @@ const BattleCore={
   _buildArmies:buildArmies, _stepBattle:stepBattle, _trackVel:trackVel, _updateMorale:updateMorale,
   _hurt:hurt, _shoot:shoot, _buildGrid:buildGrid, _nearestEnemy:nearestEnemy, _sep:sep,
   _spawn:spawn, _concealed:concealed, _treeBlocks:treeBlocks,
-  _screened:screened, _frontBlocked:frontBlocked, _makeHandle,
+  _screened:screened, _frontBlocked:frontBlocked, _makeHandle, _judge:judge,
   // ── 전역 API: 단일 _defaultCtx 위임(시그니처 불변) ──
   // 지형
   concealed(u){return concealed(_defaultCtx,u);},
@@ -525,6 +535,7 @@ const BattleCore={
   screened(u,tx,ty){return screened(_defaultCtx,u,tx,ty);},
   frontBlocked(u,e){return frontBlocked(_defaultCtx,u,e);},
   trackVel(dt){return trackVel(_defaultCtx,dt);},
+  judge(){return judge(_defaultCtx);},   // ★[T1090] 판 결과(지형 어댑터를 단 독립 판 — 전투실험실)
   sep(u,dt){return sep(_defaultCtx,u,dt);},
   // 핵심 인터페이스
   buildArmies(spec){return buildArmies(_defaultCtx,spec);},

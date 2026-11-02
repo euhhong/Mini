@@ -238,16 +238,21 @@ console.log('\n[G] 랩 HTML 인라인 엔진');
     // ★[T834 ③ · T818 회부 4] **battle-core 사본도 잰다**(셋째 인라인 · 전쟁실험실 하나). `inline-battle.js` 엔 `--check` 가 없다 —
     //   랩 사본을 임시 파일로 떠서 그 스크립트를 **그대로** 돌리고(사본 0 · 같은 변환) 바이트가 같은지만 본다(레포 파일 무접촉 · 검사만).
     //   T818 이 이 사본이 T458 세 줄만큼 낡아 있던 것을 다시 굽다 찾았다 — 문이 없던 자리다.
+    // ★[T1090 2026-11-02] **전투실험실도 같은 문으로 잰다**(넷째 인라인 · lab/전투실험실.html — 07-10 원본을 battle-core 인라인으로 바꾼 판).
+    //   전투실험실은 econ · path-core 를 안 싣는다(전투만) — 그래서 위 랩 목록(labs)이 아니라 여기서 battle-core 하나만 잰다.
     const war = labs.find((f) => path.basename(f) === '전쟁실험실.html');
-    if (war) {
+    const fightLab = path.join(root, 'lab', '전투실험실.html');
+    for (const lab of [war, fs.existsSync(fightLab) ? fightLab : null]) {
+      if (!lab) continue;
+      const nm = path.basename(lab);
       const os = require('os');
-      const tmp = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'lab-battle-')), '전쟁실험실.html');
+      const tmp = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'lab-battle-')), nm);
       try {
-        fs.copyFileSync(war, tmp);
+        fs.copyFileSync(lab, tmp);
         execFileSync(process.execPath, [path.join(root, 'sim/inline-battle.js'), tmp], { stdio: 'ignore' });
-        if (fs.readFileSync(tmp).equals(fs.readFileSync(war))) ok('랩 인라인 battle-core = 정본(`inline-battle.js` 를 다시 돌려도 차 0)');
-        else bad('랩 인라인 battle-core 가 정본과 다르다 — node sim/inline-battle.js lab/전쟁실험실.html 로 갱신해야 한다');
-      } catch (e) { bad('battle-core 인라인 검사를 못 돌렸다 — ' + String(e && e.message || e).slice(0, 120)); }
+        if (fs.readFileSync(tmp).equals(fs.readFileSync(lab))) ok(`${nm} 인라인 battle-core = 정본(\`inline-battle.js\` 를 다시 돌려도 차 0)`);
+        else bad(`${nm} 인라인 battle-core 가 정본과 다르다 — node sim/inline-battle.js lab/${nm} 로 갱신해야 한다`);
+      } catch (e) { bad(`${nm} battle-core 인라인 검사를 못 돌렸다 — ` + String(e && e.message || e).slice(0, 120)); }
       finally { try { fs.rmSync(path.dirname(tmp), { recursive: true, force: true }); } catch (e) {} }
     }
   }

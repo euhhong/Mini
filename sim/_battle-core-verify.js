@@ -5,8 +5,8 @@
 //   ★ 전투실험실.html은 읽기만. 실행: node sim/_battle-core-verify.js [maxTicks]
 //   ★ 결정론: Math.random을 deploy/buildArmies 직전에 시드 주입 → 두 엔진이 동일 순서로 RNG 소비.
 const fs = require('fs'), path = require('path');
-const ROOT = path.join(__dirname, '..', '..');
-const LAB = path.join(ROOT, '전투실험실.html');
+// ★[T1090] 07-10 원본이 레포 안으로 들어왔다(lab/원본/ · 고치지 않음) — 종전 경로(저장소 밖 ../../전투실험실.html)는 컨테이너에서 늘 없었다.
+const LAB = path.join(__dirname, '..', 'lab', '원본', '전투실험실_0710.html');
 const _log = console.log;
 
 // ── 시드 RNG (_war-probe.js __mr 패턴 재사용) ──

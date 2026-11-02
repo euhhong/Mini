@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>⚔️ 전투 실험실 — 개별 교전</title>
+<title>전투 실험실 — 개별 교전</title>
 <style>
   html,body{margin:0;height:100%;background:#15181d;color:#cfd6e0;font-family:-apple-system,sans-serif;overflow:hidden;}
   .wrap{display:flex;gap:12px;padding:10px;align-items:flex-start;height:100vh;box-sizing:border-box;}
@@ -27,500 +27,795 @@
 <div class="wrap">
   <canvas id="cv" width="760" height="760"></canvas>
   <div class="panel">
-    <h1>⚔️ 전투 실험실</h1>
-    <div style="color:#8a94a4;font-size:12px;margin-bottom:4px">개별 NPC 교전(2D 시뮬 → 탑다운). 무기×방패(장비·파손됨)×재질. 방패는 도끼·화살에 깨져 무방비화.</div>
+    <h1>전투 실험실</h1>
+    <div style="color:#8a94a4;font-size:12px;margin-bottom:4px">개별 NPC 교전(2D 시뮬 → 탑다운). 무기×방패(장비·파손됨)×재질. 방패는 도끼·화살에 깨져 무방비화.<br><span style="color:#6f8aa8">전투 계산 = 본 게임 전투 코어(sim/battle-core.js 인라인) — 7월 원본은 lab/원본/전투실험실_0710.html</span></div>
 
     <div class="side sa"><b style="color:#7ab0ff">A군 (청)</b>
-      <div class="row"><label>🛡 창방패</label><input type="range" id="a_spear" min="0" max="100" value="10"><b id="a_spear_v">10</b></div>
-      <div class="row"><label>🔱 장창</label><input type="range" id="a_pike" min="0" max="100" value="0"><b id="a_pike_v">0</b></div>
-      <div class="row"><label>🪓 양손도끼</label><input type="range" id="a_axe" min="0" max="100" value="0"><b id="a_axe_v">0</b></div>
-      <div class="row"><label>🗡 석검</label><input type="range" id="a_dagger" min="0" max="100" value="0"><b id="a_dagger_v">0</b></div>
-      <div class="row"><label>🏹 궁수</label><input type="range" id="a_archer" min="0" max="100" value="5"><b id="a_archer_v">5</b></div>
-      <div class="row"><label>🪨 투석병</label><input type="range" id="a_slinger" min="0" max="100" value="0"><b id="a_slinger_v">0</b></div>
-      <div class="row"><label>🧑‍🌾 농기구민병</label><input type="range" id="a_militia" min="0" max="100" value="0"><b id="a_militia_v">0</b></div>
-      <div class="row"><label>⭐ 청동전사</label><input type="range" id="a_champ" min="0" max="2" value="0"><b id="a_champ_v">0</b> <span style="color:#7a8494;font-size:11px">희귀</span></div>
-      <div class="row"><label>▦ 대형</label><select id="a_form"><option value="line" selected>선형</option><option value="wall">방패벽</option><option value="open">산개</option><option value="circle">원형(방진)</option><option value="column">종대</option></select></div>
+      <div class="row"><label>창방패</label><input type="range" id="a_spear" min="0" max="100" value="10"><b id="a_spear_v">10</b></div>
+      <div class="row"><label>장창</label><input type="range" id="a_pike" min="0" max="100" value="0"><b id="a_pike_v">0</b></div>
+      <div class="row"><label>양손도끼</label><input type="range" id="a_axe" min="0" max="100" value="0"><b id="a_axe_v">0</b></div>
+      <div class="row"><label>석검</label><input type="range" id="a_dagger" min="0" max="100" value="0"><b id="a_dagger_v">0</b></div>
+      <div class="row"><label>궁수</label><input type="range" id="a_archer" min="0" max="100" value="5"><b id="a_archer_v">5</b></div>
+      <div class="row"><label>투석병</label><input type="range" id="a_slinger" min="0" max="100" value="0"><b id="a_slinger_v">0</b></div>
+      <div class="row"><label>농기구민병</label><input type="range" id="a_militia" min="0" max="100" value="0"><b id="a_militia_v">0</b></div>
+      <div class="row"><label>청동전사</label><input type="range" id="a_champ" min="0" max="2" value="0"><b id="a_champ_v">0</b> <span style="color:#7a8494;font-size:11px">희귀</span></div>
+      <div class="row"><label>대형</label><select id="a_form"><option value="line" selected>선형</option><option value="wall">방패벽</option><option value="open">산개</option><option value="circle">원형(방진)</option><option value="column">종대</option></select></div>
+      <div class="row"><label>무기 품질</label><input type="range" id="a_q" min="0" max="1" step="0.05" value="0.5"><b id="a_q_v">0.5</b> <span style="color:#7a8494;font-size:11px">0.5 = 배수 1</span></div>
     </div>
     <div class="side sb"><b style="color:#ff8a7a">B군 (적)</b>
-      <div class="row"><label>🛡 창방패</label><input type="range" id="b_spear" min="0" max="100" value="4"><b id="b_spear_v">4</b></div>
-      <div class="row"><label>🔱 장창</label><input type="range" id="b_pike" min="0" max="100" value="0"><b id="b_pike_v">0</b></div>
-      <div class="row"><label>🪓 양손도끼</label><input type="range" id="b_axe" min="0" max="100" value="4"><b id="b_axe_v">4</b></div>
-      <div class="row"><label>🗡 석검</label><input type="range" id="b_dagger" min="0" max="100" value="4"><b id="b_dagger_v">4</b></div>
-      <div class="row"><label>🏹 궁수</label><input type="range" id="b_archer" min="0" max="100" value="3"><b id="b_archer_v">3</b></div>
-      <div class="row"><label>🪨 투석병</label><input type="range" id="b_slinger" min="0" max="100" value="0"><b id="b_slinger_v">0</b></div>
-      <div class="row"><label>🧑‍🌾 농기구민병</label><input type="range" id="b_militia" min="0" max="100" value="0"><b id="b_militia_v">0</b></div>
-      <div class="row"><label>⭐ 청동전사</label><input type="range" id="b_champ" min="0" max="2" value="0"><b id="b_champ_v">0</b> <span style="color:#7a8494;font-size:11px">희귀</span></div>
-      <div class="row"><label>▦ 대형</label><select id="b_form"><option value="line" selected>선형</option><option value="wall">방패벽</option><option value="open">산개</option><option value="circle">원형(방진)</option><option value="column">종대</option></select></div>
+      <div class="row"><label>창방패</label><input type="range" id="b_spear" min="0" max="100" value="4"><b id="b_spear_v">4</b></div>
+      <div class="row"><label>장창</label><input type="range" id="b_pike" min="0" max="100" value="0"><b id="b_pike_v">0</b></div>
+      <div class="row"><label>양손도끼</label><input type="range" id="b_axe" min="0" max="100" value="4"><b id="b_axe_v">4</b></div>
+      <div class="row"><label>석검</label><input type="range" id="b_dagger" min="0" max="100" value="4"><b id="b_dagger_v">4</b></div>
+      <div class="row"><label>궁수</label><input type="range" id="b_archer" min="0" max="100" value="3"><b id="b_archer_v">3</b></div>
+      <div class="row"><label>투석병</label><input type="range" id="b_slinger" min="0" max="100" value="0"><b id="b_slinger_v">0</b></div>
+      <div class="row"><label>농기구민병</label><input type="range" id="b_militia" min="0" max="100" value="0"><b id="b_militia_v">0</b></div>
+      <div class="row"><label>청동전사</label><input type="range" id="b_champ" min="0" max="2" value="0"><b id="b_champ_v">0</b> <span style="color:#7a8494;font-size:11px">희귀</span></div>
+      <div class="row"><label>대형</label><select id="b_form"><option value="line" selected>선형</option><option value="wall">방패벽</option><option value="open">산개</option><option value="circle">원형(방진)</option><option value="column">종대</option></select></div>
+      <div class="row"><label>무기 품질</label><input type="range" id="b_q" min="0" max="1" step="0.05" value="0.5"><b id="b_q_v">0.5</b> <span style="color:#7a8494;font-size:11px">0.5 = 배수 1</span></div>
     </div>
 
     <div class="row" style="margin-top:8px">
-      <button onclick="deploy()">↻ 배치/리셋</button>
-      <button id="playBtn" onclick="togglePlay()">▶ 전투 시작</button> <button id="cmdBtn" onclick="toggleCommand()">🎮 지휘 모드(WASD)</button>
+      <button onclick="deploy()">배치/리셋</button>
+      <button id="playBtn" onclick="togglePlay()">전투 시작</button> <button id="cmdBtn" onclick="toggleCommand()">지휘 모드(WASD)</button>
       <label style="margin-left:8px;color:#aeb8c4">속도 <select id="speed"><option value="1" selected>1×(실시간)</option><option value="2">2×</option><option value="4">4×</option><option value="8">8×</option></select></label>
-      <label style="margin-left:8px;color:#aeb8c4">🌲 지형 <select id="terrain"><option value="plain" selected>평지</option><option value="forest">숲</option><option value="edge">숲 가장자리</option><option value="village">🏘 마을(시가전)</option></select> <button id="regenBtn" style="margin-left:4px;padding:1px 6px;background:#2a3340;color:#9fb0c0;border:1px solid #3a4656;border-radius:4px;cursor:pointer;font-size:12px">🔄 재생성</button></label>
+      <label style="margin-left:8px;color:#aeb8c4">지형 <select id="terrain"><option value="plain" selected>평지</option><option value="forest">숲</option><option value="edge">숲 가장자리</option><option value="village">마을(시가전)</option></select> <button id="regenBtn" style="margin-left:4px;padding:1px 6px;background:#2a3340;color:#9fb0c0;border:1px solid #3a4656;border-radius:4px;cursor:pointer;font-size:12px">재생성</button></label>
     </div>
 
-    <div class="stat" id="stat">배치하고 ▶ 전투 시작.</div>
+    <div class="row" style="margin-top:6px"><label>증원</label><select id="r_type"><option value="spear">창방패</option><option value="pike">장창</option><option value="greataxe">양손도끼</option><option value="dagger">석검</option><option value="archer">궁수</option><option value="slinger">투석병</option><option value="militia">농기구민병</option><option value="champion">청동전사</option></select> <input type="range" id="r_n" min="0" max="100" value="5" style="width:90px"><b id="r_n_v">5</b>
+      <button onclick="reinforce('A')" style="padding:2px 8px">A 증원</button> <button onclick="reinforce('B')" style="padding:2px 8px">B 증원</button></div>
+
+    <div class="stat" id="stat">배치하고 전투 시작.</div>
 
     <div class="lg">
       <b style="color:#cfd6e0">병종</b> — 무기(역할)×방패(장비, 1손 근접만)×재질(석·청동·철 품질)<br>
       <span style="background:#5a8ad0"></span>창방패(리치1.8+방패=앵커) · <span style="background:#57a8a8"></span>장창(2손 최대리치·먼저찌름) · <span style="background:#b5563a"></span>양손도끼(방패 파쇄기)<br>
       <span style="background:#9a9488"></span>석검(경장 고속유격=궁수사냥) · <span style="background:#5fbf6a"></span>궁수(원거리+단검) · <span style="background:#c8862e;border:1px solid #ffd23f;width:9px;height:9px"></span>청동전사(족장 — <b style="color:#ffd23f">전사 시 사기 급락</b>)<br>
       <b>방패</b>(흰 호): 정면 화살 대부분 차단·근접 55%↓ — 근데 <b>도끼 2방에 부서지고</b> 화살도 서서히 깎음 → <b>파손 후 무방비</b>(호 사라짐).<br>
-      상성 삼각: 🛡방패 &gt; 🏹궁수 &gt; 🪓도끼 &gt; 🛡방패. 사상 55%(족장死 40%) 넘으면 궤주.
+      상성 삼각: 방패 &gt; 궁수 &gt; 도끼 &gt; 방패. 사상 55%(족장死 40%) 넘으면 궤주.
     </div>
   </div>
 </div>
 
+<!-- BATTLE-CORE · durango-mini/sim/battle-core.js 인라인 · 재생성: node durango-mini/sim/inline-battle.js -->
 <script>
+// ═══════════════════════════════════════════════════════════════════════════
+// battle-core.js — 전투실험실.html 전투 시뮬 코어를 복사 추출(0리스크: 전투실험실은 무수정).
+//   DOM·렌더·컨트롤 제외한 순수 계산만. window.BattleCore(브라우저) / module.exports(Node) 겸용 노출.
+//   전쟁실험실이 이 파일을 <!-- BATTLE-CORE --> 마커 사이에 인라인해서 씀(sim/inline-battle.js).
+//   ★ 로직·상수·이름은 전투실험실과 동일. deploy()→buildArmies(spec)만 DOM 읽기를 데이터 주입으로 치환.
+//     spawn()에 선택적 quality 인자 추가(미지정=배수 1.0 → 전투실험실과 완전 동일 동작).
+// ═══════════════════════════════════════════════════════════════════════════
+;(function(root){
 'use strict';
-// ═══════════ 좌표·뷰 (시뮬은 월드좌표 world(x,y) m, 렌더만 투영 — 이식 시 project()만 교체) ═══════════
-const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
-const WORLD_W=130, WORLD_H=130;          // 전장 130×130 m
-let view={z:1, ox:0, oy:0};              // 기본: 전장 전체가 화면에 맞도록 z 계산
-function fitView(){const s=Math.min(cv.width/WORLD_W, cv.height/WORLD_H); view.z=s; view.ox=(cv.width-WORLD_W*s)/2; view.oy=(cv.height-WORLD_H*s)/2;}
-// ★탑다운 투영(항등). 아이소 이식 시 여기만 바꾸면 됨 — 시뮬 로직은 world(x,y) 그대로.
-function project(x,y){return [x*view.z+view.ox, y*view.z+view.oy];}
 
-// ═══════════ 병종 정의 (데이터 주도 — 투석병 등 추가는 항목 하나) ═══════════
-// ★유닛=무기(역할)×편성×재질. 방패=장비속성(shield감쇠·shHP내구·shBrk파쇄) — 1손 근접만 소지. 2손(장창·양손도끼·활)은 방패X.
-//   화살: 온전한 정면 방패는 대부분 완전차단(소수 관통)+방패 천천히 깎임. 근접: 감쇠+방패 소모(도끼=급파쇄). 방패 HP0 → 무방비.
+// ★[T284 2026-09-14 · 좌표계 하나] 이 파일엔 **전장 상자가 없다.** 아래 DEPLOY_W/H 는 독립 실행(전투실험실·
+//   war-core runBattleHeadless·랩) 이 buildArmies 표준 배치를 펼 때 쓰는 **배치 폭**일 뿐 좌표계가 아니다.
+//   존(server/villages.js)은 buildArmies 를 부르지 않는다 — 병사 위치는 존 좌표(셀 = m) 그대로이고,
+//   장애물·시야·궤주 방향은 ctx.world 어댑터(존의 술어)가 답한다. 어댑터 없음 = 빈 들판(독립 실행 종전 동작).
+const DEPLOY_W=130, DEPLOY_H=130;        // 표준 배치 폭(전투실험실과 동일 — 독립 실행 전용)
+// ★[T995 2026-10-29 · T956 회부 3 ㉠ · 시험 손잡이로 끔 발급 → ★T1008 2026-10-30 재민 ㉠ **켬 기본** · 되돌림 `T995_BACK_AMMO=0` = 종전 글자] 사수의 3.5m 물러섬은 **탄이 있을 때만**.
+//   종전: 사수는 적이 3.5m 안이면 탄이 있든 없든 반걸음 물러선다(아래 원거리 절 첫 줄) — 탄 없는 사수는 그 밖(15m 안)에선 다가서므로
+//   탄 없는 사수 둘이 3.5m 에서 물러섬 ↔ 다가섬을 되풀이해 손(1.2m)이 한 번도 안 닿는다(보고 T956 §2-3 ⓑ · 존은 시간 상한이 없다).
+//   켬: 탄이 없으면 그 물러섬 줄을 건너뛰고 탄 없는 절(15m 안 다가섬 · 손 닿으면 친다)로 간다. 새 수 0(3.5 · 15 · reach 그대로).
+//   ★[T1008] 켬 기본 — 노드(서버 · 하네스)는 env 가 `'0'` 일 때만 끔 · 브라우저(전쟁실험실 인라인 — env 없음) = 켬.
+const T995_BACK_AMMO=!(typeof process!=='undefined'&&process.env&&process.env.T995_BACK_AMMO==='0');   // ★[T1008 10-30] 켬 기본 · 되돌림 `=0`
+// ★★[T1019 2026-10-31 · T1008 회부 1 ⓒ] **막힌 칸 안에 선 몸은 걸어 나온다** — 손잡이 `T1019_UNTRAP`(켬 기본 후보 · 되돌림 `=0` = 종전 글자 · 서버 war-live · villages 와 같은 손잡이 하나).
+//   종전: 아래 몸 클램프(sep 끝)는 새 자리가 막혔으면 축별로 미끄러지고 둘 다 막히면 **이전 자리**로 되돌린다 — 이전 자리도 막힌 칸이면(대형 원점이 건물 발자국에 섰다 ·
+//     집 안에 있던 몸이 징발됐다 · 그 뒤 지은 집) 한 걸음이 칸보다 작아 칸 안 다음 점은 늘 막힘이라 **영원히 못 나온다**(T295 후속 · T541 ⓑ · T790 주석의 그 덫 · 보고 T1008 ⓒ 401날 전쟁).
+//   켬: 이전 자리가 막힌 칸이면 클램프를 건너뛴다(걸음은 그대로 — 밖으로 나오면 그다음 걸음부터 종전 클램프). war-live T790 `inBlk`(걷는 대형 몸)와 같은 규칙 · 새 수 0.
+//   노드(서버 · 하네스)는 env 가 `'0'` 일 때만 끔 · 브라우저(전쟁실험실 인라인 — env 없음) = 켬(랩은 ctx.world 가 없어 클램프 줄 자체가 안 돈다 — 무변).
+const T1019_UNTRAP=!(typeof process!=='undefined'&&process.env&&process.env.T1019_UNTRAP==='0');   // ★[T1019 10-31] 켬 기본 후보 · 되돌림 `=0`
+
+// ═══════════ 병종 정의 (전투실험실 UNITS 복사) ═══════════
 const UNITS={
-  spear   : {name:'창방패', hp:120, atk:24, reach:1.8,  spd:1.5, chg:2.2, cd:1.0, shield:0.55, shHP:60, shBrk:8,  ranged:0,  mAtk:24, col:'#5a8ad0', r:0.42, role:'front'},   // 1손창+방패: 전열 앵커·화살 차단
-  pike    : {name:'장창',   hp:110, atk:30, reach:2.5,  spd:1.4, chg:2.0, cd:1.1, shield:0,    shHP:0,  shBrk:16, ranged:0,  mAtk:30, col:'#57a8a8', r:0.42, role:'front', standoff:1},   // 2손 장창: 최대 리치(먼저 찌름)·관통, 방패 없음(화살·측면 취약). standoff=리치 거리 유지(찌르고 물러서기)
-  greataxe: {name:'양손도끼',hp:115, atk:40, reach:1.6, spd:1.5, chg:2.1, cd:1.0, shield:0,    shHP:0,  shBrk:58, ranged:0,  mAtk:40, col:'#b5563a', r:0.44, role:'front'},   // 2손 도끼: ★방패 파쇄기(1~2방에 방패 깸)·고공격 → 방패 벗기고 도륙, 자신은 무방비. shBrk 58=방패 첫방 거의 파쇄 → 도끼 소프트 우세(shHP60 상대)
-  dagger  : {name:'석검',   hp:84,  atk:40, reach:1.35, spd:1.9, chg:3.9, cd:0.7, shield:0,    shHP:0,  shBrk:6,  ranged:0,  mAtk:40, col:'#9a9488', r:0.36, role:'front'},   // 경장 단병(마제석검): 최속 유격·궁수 사냥, 방패X. ★spd 3.9=비전투 걷기(4.1m/s) 바로 아래 — 무기 든 전투는 맨몸보다 느려야(본 게임 32px=1m, MOVE_SPEED220×0.6=4.1)
-  archer  : {name:'궁수',   hp:58,  atk:44, reach:1.2,  spd:1.9, chg:1.9, cd:8.0, shield:0,    shHP:0,  shBrk:4,  ranged:40, arrowV:52, mAtk:10, col:'#5fbf6a', r:0.36, role:'back'},   // 활(2손·방패X)+단검. 재장전 8초(≈7.5발/분 고증) — 느린 대신 발당 살상↑ + 제압(사기)로 대군 볼륨 가치. 무방비엔 치명, 방패엔 막힘
-  slinger : {name:'투석병', hp:46,  atk:22, reach:1.2,  spd:2.0, chg:1.9, cd:4.2, shield:0,    shHP:0,  shBrk:3,  ranged:52, arrowV:42, spread:1.9, ammo:'stones', mAtk:8, col:'#c9a24b', r:0.34, role:'back'},   // ★[밸런스] 돌 직사(곡사X): 활보다 사거리↑(40→52 명확한 standoff)·재장전 5.0→4.2·명중 2.2→1.9(궁수 하위호환 탈피, 견제역). 경장·근접 매우 약·돌은 방패 못 부숨. 돌 소진 시 백병/후퇴
-  champion: {name:'청동전사',hp:175, atk:46, reach:1.5, spd:1.8, chg:3.0, cd:0.65,shield:0.35, shHP:80, shBrk:20, ranged:0,  mAtk:46, col:'#c8862e', r:0.5, role:'front', champ:1},   // 족장/정예(청동~철): 강력+방패, 전사 시 아군 사기 급락
-  militia : {name:'농기구민병',hp:68, atk:22, reach:1.4, spd:1.6, chg:2.0, cd:1.0, shield:0,    shHP:0,  shBrk:5,  ranged:0,  mAtk:22, col:'#8a7a5a', r:0.38, role:'front'},   // ★[밸런스] 조악한 징집병(농기구): hp60→68·공격18→22(머릿수로 의미 — 무의미 전멸 회피). 방패X·무기재고 불필요. 사기 낮아 쉽게 궤주·파손 잦음(농기구)
+  spear   : {name:'창방패', hp:120, atk:24, reach:1.8,  spd:1.5, chg:2.2, cd:1.0, shield:0.55, shHP:60, shBrk:8,  ranged:0,  mAtk:24, col:'#5a8ad0', r:0.42, role:'front'},
+  pike    : {name:'장창',   hp:110, atk:30, reach:2.5,  spd:1.4, chg:2.0, cd:1.1, shield:0,    shHP:0,  shBrk:16, ranged:0,  mAtk:30, col:'#57a8a8', r:0.42, role:'front', standoff:1},
+  greataxe: {name:'양손도끼',hp:115, atk:40, reach:1.6, spd:1.5, chg:2.1, cd:1.0, shield:0,    shHP:0,  shBrk:58, ranged:0,  mAtk:40, col:'#b5563a', r:0.44, role:'front'},
+  dagger  : {name:'석검',   hp:84,  atk:40, reach:1.35, spd:1.9, chg:3.9, cd:0.7, shield:0,    shHP:0,  shBrk:6,  ranged:0,  mAtk:40, col:'#9a9488', r:0.36, role:'front'},
+  archer  : {name:'궁수',   hp:58,  atk:44, reach:1.2,  spd:1.9, chg:1.9, cd:8.0, shield:0,    shHP:0,  shBrk:4,  ranged:40, arrowV:52, mAtk:10, col:'#5fbf6a', r:0.36, role:'back'},
+  slinger : {name:'투석병', hp:46,  atk:22, reach:1.2,  spd:2.0, chg:1.9, cd:4.2, shield:0,    shHP:0,  shBrk:3,  ranged:52, arrowV:42, spread:1.9, ammo:'stones', mAtk:8, col:'#c9a24b', r:0.34, role:'back'},   // ★[밸런스] 돌 직사(곡사X)·활보다 사거리↑(40→52 명확한 standoff)·재장전 5.0→4.2·명중 2.2→1.9(궁수 하위호환 탈피, 견제역). 여전히 근접 약·방패 못 부숨
+  champion: {name:'청동전사',hp:175, atk:46, reach:1.5, spd:1.8, chg:3.0, cd:0.65,shield:0.35, shHP:80, shBrk:20, ranged:0,  mAtk:46, col:'#c8862e', r:0.5, role:'front', champ:1},
+  militia : {name:'농기구민병',hp:68, atk:22, reach:1.4, spd:1.6, chg:2.0, cd:1.0, shield:0,    shHP:0,  shBrk:5,  ranged:0,  mAtk:22, col:'#8a7a5a', r:0.38, role:'front'},   // ★[밸런스] 조악한 징집병(농기구): hp60→68·공격18→22(머릿수로 의미 — 무의미 전멸 회피). 방패X·사기 낮아 쉽게 궤주·파손 잦음
 };
 const SIDE_COL={A:'#7ab0ff', B:'#ff8a7a'};
-const ARROWS_PER=20;   // ★궁수당 화살(부대 원정 보급) — 부대 단위 재고. 소진 시 백병(단검)/후퇴
-const STONES_PER=15;   // ★투석병당 돌(부대 원정 보급) — 화살과 병렬 재고. 소진 시 백병/후퇴
-const BREAK_P={dagger:0.05, spear:0.018, pike:0.025, greataxe:0.012, champion:0.004, archer:0, slinger:0, militia:0.06};   // ★무기 파손 확률(타격당, 재질): 석검 잘 부러짐·청동 내구. 민병=농기구라 높음·투석병=투사만. 파손→맨손(백병 약화·이탈↑)
-// ═══════════ 사기(개별) — 이진 임계 폐지, 창발·전염 궤주 ═══════════
-const MRL0={champion:1.0, spear:0.85, pike:0.80, greataxe:0.80, dagger:0.72, archer:0.70, slinger:0.68, militia:0.62};   // ★[밸런스] 병종 기본 사기. 민병 0.55→0.62: 즉시 사기붕괴로 머릿수 못살린 채 전멸하던 것 완화(여전히 최저·궤주 잦음)
-const M_BREAK=0.45, M_RALLY=0.62;   // 이탈 개시 문턱 · 재규합 문턱 — 죽기 전에 도망(승자 생존·학살 완화)
-const M_RATE=1.4;                   // 사기 수렴 속도(/초) — 충격 뒤 서서히 안정
-const M_KODDS=0.45, M_KCONTAG=0.22, M_KCHAMP=0.20, M_KRELCAS=1.0, M_KABS=0.5;   // 국지 우열·전염(옆 아군 도망)·족장 앵커·상대적 사상비(뒤처지면 급락) + 절대 소모(피 흘릴수록 전반 사기↓ → 대등전도 전멸 전 한쪽 붕괴)
-const M_KCOMMIT=0.38, M_KWOUND=0.30, M_KDESP=0.55, COMMIT_D=6;   // ★접촉 심리(du Picq: 궤주는 접촉 前 공포에서 — 접촉하면 firming, 도망=배후 피살). 부상(Grossman 투쟁/도피): 도망 가능하면 공포↑(이탈), 궁지(접촉)면 결사↑("에라 모르겠다")
-const M_BREAKRATE=2.5;              // 이탈 확률 계수 — 사기 낮을수록 확률↑(절벽 아닌 곡선)
-const SUP_ARROW=0.05, SUP_DEATH=0.05, SUP_R=3.0;   // 화살 제압·사망충격 사기감소 + 반경(제압사격=죽이기보다 무너뜨림)
+const ARROWS_PER=20;   // 궁수당 화살(부대 원정 보급)
+const STONES_PER=15;   // 투석병당 돌(부대 원정 보급) — 소진 시 백병/후퇴
+const BREAK_P={dagger:0.05, spear:0.018, pike:0.025, greataxe:0.012, champion:0.004, archer:0, slinger:0, militia:0.06};   // 무기 파손 확률(타격당). 민병=농기구라 높음, 투석병=투사만
+// ═══════════ 사기(개별) 상수 ═══════════
+const MRL0={champion:1.0, spear:0.85, pike:0.80, greataxe:0.80, dagger:0.72, archer:0.70, slinger:0.68, militia:0.62};   // ★[밸런스] 민병=징집병이라 낮음(쉽게 궤주). 0.55→0.62: 즉시 사기붕괴로 머릿수 못살린 채 전멸하던 것 완화(여전히 최저·궤주 잦음)
+const M_BREAK=0.45, M_RALLY=0.62;
+const M_RATE=1.4;
+const M_KODDS=0.45, M_KCONTAG=0.22, M_KCHAMP=0.20, M_KRELCAS=1.0, M_KABS=0.5;
+const M_KCOMMIT=0.38, M_KWOUND=0.30, M_KDESP=0.55, COMMIT_D=6;
+const M_BREAKRATE=2.5;
+const SUP_ARROW=0.05, SUP_DEATH=0.05, SUP_R=3.0;
+const FORM_SPD={line:1, wall:0.85, open:1.15, column:1.25, circle:0};   // 대형별 이동속도
+const FORM_KO={line:'선형', wall:'방패벽', open:'산개', circle:'원형', column:'종대'};
 
-// ═══════════ 상태 ═══════════
-let units=[], arrows=[], corpses=[];
-let sides={A:{start:0,dead:0,rout:false}, B:{start:0,dead:0,rout:false}};
-let running=false, tick=0, result=null, _raf=0, _mFrame=0, _mAcc=0;
-// ═══════════ 숲 지형 — 나무가 화살 차단·시야 제한·기동 방해 (궁수 불리·근접/매복 유리, 고증) ═══════════
-let trees=[], buildings=[], terrain='plain', _regenTerrain=false;   // terrain: plain·forest·edge·village. buildings=사각 건물(완전 차단·시야 차단). _regenTerrain=같은 지형 새로 뽑기 요청
-let playerMode=false, keys={}, commander=null, cmdHeading=0;   // ★지휘 모드: 플레이어가 지휘관(A 선봉) WASD 직접 조작 → 부대가 지휘관 기준 슬롯을 대형 유지·회전하며 추종, 적 감지 시 자동 교전
+// ═══════════ 상태 → 컨텍스트 객체(ctx) ═══════════
+// ★ 다중 인스턴스화: 전역 싱글톤이던 상태를 ctx 객체로 묶음. 각 함수가 ctx를 첫 인자로 받아 ctx.* 참조.
+//   전역 API는 단일 _defaultCtx에 위임(전투실험실·기존 전쟁실험실 경로 100% 보존).
+//   _grid·_cen 도 반드시 ctx 소속 — 두 전투가 동시 구동 시 서로 밟으면 안 됨.
+//   rng: 인스턴스 RNG 훅(기본 Math.random). 본체 코드는 Math.random()→ctx.rng() 관례.
+//   origin/heading: 맵 배치용(기본 0 — 이번 단계 배치 로직 불변, 훅만 마련).
+function createContext(){
+  return {
+    units:[], arrows:[], corpses:[],
+    sides:{A:{start:0,dead:0,rout:false}, B:{start:0,dead:0,rout:false}},
+    tick:0, result:null,
+    world:null, terrain:'plain',   // ★[T284] 장애물은 ctx 가 갖지 않는다 — world 어댑터(존)가 답한다(null=빈 들판)
+    playerMode:false, keys:{}, commander:null, cmdHeading:0,
+    _grid:new Map(),
+    _cen:{A:{x:0,y:0,n:0,march:2.2},B:{x:0,y:0,n:0,march:2.2}},
+    rng:Math.random,          // 인스턴스 RNG 훅(하네스가 시드 주입 시 교체)
+    origin:{cx:0,cy:0}, heading:0,   // 맵 배치용(기본 0)
+  };
+}
+
+// ═══════════ 지형 — concealed / treeBlocks (★[T284] 존 어댑터 위임) ═══════════
+// ★[T284] 전투실험실의 genForest(무작위 나무·가짜 건물 22채)는 **제거**했다 — 장애물은 존의 것이다.
+//   ctx.world = { blocked(x,y), losBlocked(x1,y1,x2,y2), coverAt(x,y,pad), advance(ctx,u), flee(ctx,u) } (좌표 = 존 셀 = m).
+//   ★[T1090] advance · flee · hold 는 골라 줄 수 있다 — 없으면 독립 실행 식(빈 들판의 행군 · 궤주 방향 · 지키지 않음).
+//     push(ctx,u,dt) 도 골라 준다 — 주면 sep 끝의 몸 클램프 대신 어댑터가 몸을 장애물 밖으로 민다.
+//     존(server)은 advance · flee · hold 를 주고 push 는 안 준다(무변). 전투실험실(lab)은 장애물 · 사선 · 은폐 · push 를 준다 —
+//     길찾기 없이 곧게 걷는 독립 실행 판에서 클램프는 나무 앞에서 몸을 세운다(보고 T1090 §3 · 숲 판 47.8 → 97.9초) — 07-10 밀어내기(둘레로 미끄러짐)가 그 판의 지형 규칙이다.
+//   아래 여유(1.4·1.8)는 전투실험실 concealed 의 수 그대로다(나무 1.4 · 건물 1.8 → 어댑터가 둘 중 가까운 쪽 규칙으로 쓴다).
+function concealed(ctx,u){ return !!(ctx.world&&ctx.world.coverAt(u.x,u.y,1.8)); }
+function treeBlocks(ctx,x1,y1,x2,y2){ return !!(ctx.world&&ctx.world.losBlocked(x1,y1,x2,y2)); }
+
+// ═══════════ spawn (전투실험실 복사 + 선택적 quality 인자) ═══════════
+// ★ quality 미지정 → 배수 1.0 = 전투실험실과 완전 동일(atk 손 안 댐, RNG 소비 순서 동일).
+//   quality 지정 → u.atk *= (0.85 + 0.3×(weapQ−0.5)) 최소침습(전쟁실험실 마을 무기품질 반영용).
+//   weapQ 기본 0.5(=배수 1.0). spawn 시그니처 끝에 추가라 기존 호출(4~5인자)은 그대로.
+function spawn(ctx,side,type,x,y,form,quality){const D=UNITS[type];
+  const u={id:ctx.units.length,side,type,x,y,hp:D.hp,maxHp:D.hp, shp:D.shHP||0, shMax:D.shHP||0, tgt:null, st:'adv', cd:ctx.rng()*D.cd, face:side==='A'?0:Math.PI, _rt:0, mrl:MRL0[type]||0.8, routing:false, form:form||'line'};
+  if(quality){ const weapQ=(quality.weapQ!=null?quality.weapQ:0.5); u.atk=D.atk*(0.85+0.3*(weapQ-0.5)); }   // 미지정이면 u.atk 미설정 → hurt/stepBattle이 D.atk 사용(동일). 지정 시만 개체 atk 배수
+  ctx.units.push(u);}
+
+// ═══════════ buildArmies(spec) — 전투실험실 deploy()의 배치 로직 복사, DOM 읽기만 spec 주입 ═══════════
+// spec = { A:{champion,greataxe,spear,pike,dagger,archer, form}, B:{...}, terrain:'plain', playerCmd:false,
+//          quality:{ A:{weapQ}, B:{weapQ} } }   // quality 생략 시 전투실험실과 완전 동일
+// ★ 초기 위치 주입(선택): spec.A.units / spec.B.units = [{type, x, y, face?, cmd?}] (로컬좌표 0~130)이 있으면
+//   그 진영은 표준 라인 배치 대신 각 유닛을 그 위치로 spawn(행군/포진 대형 위치 승계 → 스냅 0). count(champion 등)는 무시.
+//   위치 미주입(units 없음) 진영은 기존 표준 배치 100% 동일 → 전투실험실·골든마스터 비트동일. 화살/돌/지휘관/슬롯/품질은 표준과 동일하게 세팅.
+function buildArmies(ctx,spec){
+  spec=spec||{};
+  ctx.units=[]; ctx.arrows=[]; ctx.corpses=[]; ctx.tick=0; ctx.result=null;
+  ctx.terrain=(spec.terrain!=null)?spec.terrain:'plain';   // ★[T284] 지형 이름만 기록(가짜 지형 생성 제거 — 장애물은 ctx.world)
+  ctx.sides={A:{start:0,dead:0,rout:false}, B:{start:0,dead:0,rout:false}};
+  ctx.playerMode=!!spec.playerCmd;
+  const sideSpec=s=>spec[s]||{};
+  const rd=(side,sfx)=>{const v=sideSpec(side)[BC_KEY[sfx]]; return +(v||0);};   // rd('a_champ') → spec.A.champion 치환
+  const gf=side=>{const f=sideSpec(side).form; return f||'line';};
+  const qOf=side=>spec.quality?spec.quality[side]:null;   // 품질 배수(선택)
+  const cyc=DEPLOY_H/2;
+  const place=(side)=>{
+    const dir = side==='A' ? 1 : -1;
+    const form = gf(side); ctx.sides[side].form=form;
+    const frontX = side==='A' ? 40 : DEPLOY_W-40;
+    const backX  = side==='A' ? 22 : DEPLOY_W-22;
+    const front=[], back=[];
+    const add=(sfx,key,arr)=>{const n=rd(side,sfx);for(let i=0;i<n;i++)arr.push(key);};
+    add('champ','champion',front); add('axe','greataxe',front); add('spear','spear',front); add('pike','pike',front); add('dagger','dagger',front); add('militia','militia',front);
+    add('archer','archer',back); add('slinger','slinger',back);
+    const q=qOf(side);   // 이 진영 품질(spawn에 전달)
+    if(form==='circle'){
+      const outer=[],inner=[];
+      for(const u of front)(u==='dagger'?inner:outer).push(u);
+      for(const u of back)inner.push(u);
+      const cx=frontX-dir*12, cy=cyc, oR=Math.max(4, outer.length*0.42);
+      for(let i=0;i<outer.length;i++){const a=i/Math.max(1,outer.length)*6.283; spawn(ctx,side,outer[i],cx+Math.cos(a)*oR,cy+Math.sin(a)*oR,form,q);}
+      for(let i=0;i<inner.length;i++){const a=i/Math.max(1,inner.length)*6.283+0.4, rr=Math.max(1.2,(oR-3)*(inner.length>8?(0.55+0.45*(i%2)):0.62)); spawn(ctx,side,inner[i],cx+Math.cos(a)*rr,cy+Math.sin(a)*rr,form,q);}
+      return;
+    }
+    let sp,per,dep;
+    if(form==='wall'){sp=2.4;per=16;dep=2.4;}
+    else if(form==='open'){sp=8;per=8;dep=7;}
+    else if(form==='column'){sp=2.8;per=5;dep=2.8;}
+    else {sp=4.5;per=10;dep=3;}
+    const lay=(arr,x0,s2,base,d2,zz)=>{const n=arr.length;if(!n)return;
+      const p2=form==='column'?base:Math.min(Math.max(base,Math.floor(DEPLOY_H*0.9/s2)),Math.max(base,Math.ceil(n/2)));
+      for(let i=0;i<n;i++){const c=(i/p2)|0, r=i%p2, colN=Math.min(p2,n-c*p2);
+        const zig=(form==='open'||zz)?(c%2)*s2*0.55:0;
+        spawn(ctx,side,arr[i], x0 - dir*c*d2, cyc+(r-(colN-1)/2)*s2+zig, form,q);}};
+    if(form==='open'||form==='column'){
+      lay(front,frontX,sp,per,dep); lay(back,backX, form==='open'?8:4.5, 12, 3);
+    } else {
+      const fl=[],sl=[],fk=[];
+      for(const u of front){ if(u==='spear'||u==='champion')fl.push(u); else if(u==='dagger')fk.push(u); else sl.push(u); }
+      if(!fl.length){fl.push(...sl);sl.length=0;}
+      if(!fl.length){fl.push(...fk);fk.length=0;}
+      lay(fl,frontX,sp,per,dep);
+      if(sl.length)lay(sl,frontX-dir*(dep+2),sp,per,dep);
+      {const aw=back.length, pr=Math.max(1,Math.floor(DEPLOY_H*0.84/5.0));
+        for(let i=0;i<aw;i++){const c=(i/pr)|0,r=i%pr,rn=Math.min(pr,aw-c*pr); spawn(ctx,side,back[i], backX-dir*c*5, cyc+(r-(rn-1)/2)*5.0+(c%2)*2.5, form,q);}}
+      if(fk.length){const half=Math.ceil(fk.length/2),fy=DEPLOY_H*0.30;
+        for(let i=0;i<fk.length;i++){const top=i<half,idx=top?i:i-half,cnt=top?half:fk.length-half;
+          spawn(ctx,side,fk[i], frontX-dir*3, (top?cyc-fy:cyc+fy)+(idx-(cnt-1)/2)*2.6, form,q);}}
+    }
+  };
+  // ═══ 초기 위치 주입(선택) — spec.A/B.units=[{type,x,y,face?,cmd?}] 있으면 표준 라인 배치 대신 그 위치로 spawn ═══
+  // ★[행군→전투 연속] 전쟁실험실이 행군/포진 대형의 개별 병사 로컬좌표를 넘기면, 표준 재배치(측방 스냅) 없이
+  //   병사가 서 있던 그 자리에서 전투 유닛이 됨. 위치 미주입(count-only spec)이면 아래 place()가 표준 배치(전투실험실·골든마스터 100% 동일).
+  //   ★결정론: 주입 경로는 RNG 무소비(위치 확정). 표준 place() 경로는 손대지 않음 → 시드-오프셋 불변(골든마스터 비트동일).
+  const placeInjected=(side,list)=>{
+    const form=gf(side); ctx.sides[side].form=form; const q=qOf(side);
+    const CL=(v)=>v<0.5?0.5:(v>DEPLOY_W-0.5?DEPLOY_W-0.5:v);   // 로컬 WORLD(0~130) 범위 클램프(가장자리)
+    let cmdU=null;
+    for(const it of list){ if(!it||!UNITS[it.type])continue;
+      const x=CL(+it.x), y=CL(+it.y);
+      spawn(ctx,side,it.type,x,y,form,q);
+      const u=ctx.units[ctx.units.length-1];
+      if(it.face!=null)u.face=+it.face;   // 지정 시 향(미지정=spawn 기본: A→+x, B→π=적 방향, origin/θ 정합)
+      if(it.agent)u.agent=it.agent;   // ★[S1 미러] injected unit의 agent 참조를 유닛에 그대로 부착(순수 데이터 — step 로직·RNG 무영향). 전쟁실험실 _lbSyncAgents가 매 프레임 u→agent 단방향 미러. 표준 place() 경로는 it 없음 → 무영향(골든마스터 비트동일).
+      if(it.cmd)cmdU=u;
+    }
+    if(!cmdU){ const arr=ctx.units.filter(u=>u.side===side); if(arr.length)cmdU=arr.reduce((a,b)=>(side==='A'?b.x>a.x:b.x<a.x)?b:a,arr[0]); }   // cmd 미지정 → 최전방(A=최대x, B=최소x=적에 가장 가까운 열)
+    if(cmdU)cmdU._injCmd=true;   // 표식(플레이어 지휘블록이 이 지휘관을 우선 채택)
+  };
+  const _uA=sideSpec('A').units, _uB=sideSpec('B').units;
+  if(Array.isArray(_uA)&&_uA.length) placeInjected('A',_uA); else place('A');
+  if(Array.isArray(_uB)&&_uB.length) placeInjected('B',_uB); else place('B');
+  ctx.sides.A.start=ctx.units.filter(u=>u.side==='A').length;
+  ctx.sides.B.start=ctx.units.filter(u=>u.side==='B').length;
+  ctx.sides.A.arrows=ctx.units.filter(u=>u.side==='A'&&u.type==='archer').length*ARROWS_PER;
+  ctx.sides.B.arrows=ctx.units.filter(u=>u.side==='B'&&u.type==='archer').length*ARROWS_PER;
+  ctx.sides.A.stones=ctx.units.filter(u=>u.side==='A'&&u.type==='slinger').length*STONES_PER;   // ★부대 돌 재고=투석병수×보급(소진 시 백병/후퇴)
+  ctx.sides.B.stones=ctx.units.filter(u=>u.side==='B'&&u.type==='slinger').length*STONES_PER;
+  ctx.sides.A.hadChamp=ctx.units.some(u=>u.side==='A'&&u.type==='champion');
+  ctx.sides.B.hadChamp=ctx.units.some(u=>u.side==='B'&&u.type==='champion');
+  if(ctx.playerMode){ const As=ctx.units.filter(u=>u.side==='A'); if(As.length){
+    // ★주입 경로: placeInjected가 표식한 지휘관(_injCmd) 우선. 표준 경로(_injCmd 없음)는 기존대로 최전방(최대x) — 골든마스터 불변.
+    const inj=As.find(u=>u._injCmd);
+    ctx.commander=inj||As.reduce((a,b)=>b.x>a.x?b:a,As[0]); ctx.commander.cmd=true; ctx.cmdHeading=0;
+    for(const u of As){u.slx=u.x-ctx.commander.x; u.sly=u.y-ctx.commander.y;}
+  }}
+  return { A:ctx.sides.A.start, B:ctx.sides.B.start };
+}
+// deploy()의 rd(side.toLowerCase()+'_'+sfx) 접미사 → spec 키 매핑 (champ→champion 등)
+const BC_KEY={champ:'champion', axe:'greataxe', spear:'spear', pike:'pike', dagger:'dagger', archer:'archer', slinger:'slinger', militia:'militia'};
+
+// ═══════════ 헬퍼 (전투실험실 복사) ═══════════
+// ★ dist2/gkey/frontal 은 상태 무참조 순수 함수 → 전역 유지(ctx 불필요, 바이트 동일).
+//   _grid·_cen 은 ctx 소속(동시 구동 시 격리). buildGrid/nearestEnemy/screened/frontBlocked/hurt 는 ctx 인자화.
+function dist2(a,b){const dx=a.x-b.x,dy=a.y-b.y;return dx*dx+dy*dy;}
+const BK=2.5;
+const SEP_CORE=0.5;   // ★[몸=단단한 하한 0.5m — 고증(성인 어깨폭)] 랩 정본 NPC_BODY와 수동 동기(battle-core는 독립 파일). 1.0m는 몸이 아니라 전투 간격(행동) — 압착 시 몸까지 압축, 그 밑은 불가
+function gkey(x,y){return ((Math.floor(x/BK)+256)*8192)+(Math.floor(y/BK)+256);}
+function buildGrid(ctx){ctx._grid.clear(); let ax=0,ay=0,an=0,bxx=0,byy=0,bn=0,aM=1e9,bM=1e9;
+  for(const u of ctx.units){if(u.hp<=0)continue; const k=gkey(u.x,u.y); const c=ctx._grid.get(k); if(c)c.push(u); else ctx._grid.set(k,[u]);
+    const mn=(u.type==='spear'||u.type==='pike'||u.type==='greataxe'||u.type==='champion');
+    if(u.side==='A'){ax+=u.x;ay+=u.y;an++; if(mn&&UNITS[u.type].spd<aM)aM=UNITS[u.type].spd;}else{bxx+=u.x;byy+=u.y;bn++; if(mn&&UNITS[u.type].spd<bM)bM=UNITS[u.type].spd;}}
+  ctx._cen.A.x=an?ax/an:0;ctx._cen.A.y=an?ay/an:0;ctx._cen.A.n=an;ctx._cen.A.march=aM<1e9?aM:2.2; ctx._cen.B.x=bn?bxx/bn:0;ctx._cen.B.y=bn?byy/bn:0;ctx._cen.B.n=bn;ctx._cen.B.march=bM<1e9?bM:2.2;}
+function nearestEnemy(ctx,u,maxR,los){const bx=Math.floor(u.x/BK),by=Math.floor(u.y/BK); let best=null,bd=1e18;
+  for(let r=0;r<=(maxR||80);r++){
+    for(let ix=bx-r;ix<=bx+r;ix++)for(let iy=by-r;iy<=by+r;iy++){
+      if(r>0&&ix>bx-r&&ix<bx+r&&iy>by-r&&iy<by+r)continue;
+      const c=ctx._grid.get(((ix+256)*8192)+(iy+256)); if(!c)continue;
+      for(const e of c){if(e.side===u.side||e.hp<=0)continue; const dx=u.x-e.x,dy=u.y-e.y,d=dx*dx+dy*dy; if(d<bd&&!(los&&ctx.world&&treeBlocks(ctx,u.x,u.y,e.x,e.y))){bd=d;best=e;}}}
+    if(best){const rm=r*BK; if(bd<=rm*rm)break;}
+  }
+  return best?{e:best,d:Math.sqrt(bd)}:null;}
+function frontal(target,fromX,fromY){
+  const aTo=Math.atan2(fromY-target.y,fromX-target.x); let da=aTo-target.face;
+  while(da>Math.PI)da-=6.283; while(da<-Math.PI)da+=6.283; return Math.abs(da)<(target.form==='wall'?2.0:1.22);}
+function screened(ctx,u,tx,ty){
+  const dx=tx-u.x,dy=ty-u.y,d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d;
+  const pts=[[u.x,u.y],[u.x+ux*4,u.y+uy*4]];
+  for(const p of pts){const bx=Math.floor(p[0]/BK),by=Math.floor(p[1]/BK);
+    for(let ix=bx-1;ix<=bx+1;ix++)for(let iy=by-1;iy<=by+1;iy++){const c=ctx._grid.get(((ix+256)*8192)+(iy+256));if(!c)continue;
+      for(const o of c){if(o===u||o.side!==u.side||o.hp<=0)continue; const ox=o.x-u.x,oy=o.y-u.y,t=ox*ux+oy*uy;
+        if(t<0.6||t>Math.min(d,7))continue; if(Math.abs(ox*uy-oy*ux)<0.85)return true;}}}
+  return false;}
+function frontBlocked(ctx,u,e){const bx=Math.floor(e.x/BK),by=Math.floor(e.y/BK);
+  for(let ix=bx-1;ix<=bx+1;ix++)for(let iy=by-1;iy<=by+1;iy++){const c=ctx._grid.get(((ix+256)*8192)+(iy+256));if(!c)continue;
+    for(const o of c){if(o===u||o.side!==u.side||o.hp<=0)continue; const dx=o.x-e.x,dy=o.y-e.y; if(dx*dx+dy*dy<2.3*2.3&&frontal(e,o.x,o.y))return true;}}
+  return false;}
+function hurt(ctx,target,dmg,fromX,fromY,kind,shBrk){
+  const D=UNITS[target.type];
+  dmg*=(0.75+ctx.rng()*0.5);
+  const front=target.form==='circle'?true:frontal(target,fromX,fromY);
+  if(!front && kind!=='arrow'){ const col=target.form==='column'; dmg*=col?1.75:1.4; target.mrl=Math.max(0,(target.mrl||1)-(col?0.11:0.07)); }
+  if(D.shield>0 && (target.shp||0)>0 && front){
+    const wall=target.form==='wall';
+    const wArc=wall||target.form==='circle';
+    if(kind==='arrow'){ target.shp-=wArc?0.15:0.5;
+      if(ctx.rng()<(wArc?0.99:0.95))dmg=0; else dmg*=0.5;
+    } else { dmg*=(1-D.shield)*(wall?0.88:1); target.shp-=(shBrk||8); }
+    if(target.shp<0)target.shp=0;
+  }
+  target.hp-=dmg;
+  if(target.hp<=0 && !target._dead){target._dead=1; ctx.corpses.push({x:target.x,y:target.y,side:target.side,rot:1}); ctx.sides[target.side].dead++;
+    const bx=Math.floor(target.x/BK),by=Math.floor(target.y/BK);
+    for(let ix=bx-1;ix<=bx+1;ix++)for(let iy=by-1;iy<=by+1;iy++){const c=ctx._grid.get(((ix+256)*8192)+(iy+256));if(!c)continue;for(const o of c){if(o.side===target.side&&o.hp>0)o.mrl=Math.max(0,(o.mrl||1)-SUP_DEATH);}}
+  }
+}
+
+// ═══════════ 시뮬 (전투실험실 stepBattle 복사) ═══════════
+function stepBattle(ctx,dt){
+  ctx.tick+=dt;
+  buildGrid(ctx);
+  updateMorale(ctx,dt);
+  const order=ctx.units.slice(); for(let i=order.length-1;i>0;i--){const j=(ctx.rng()*(i+1))|0;const t=order[i];order[i]=order[j];order[j]=t;}
+  for(const u of order){
+    if(u.hp<=0||u.ctl)continue;   // ★[T284] ctl=대형이 모는 병사(대치·후퇴 중) — 전투 스텝이 움직이지 않는다(격자·사기·피격 대상엔 그대로 있다)
+    u._ox=u.x; u._oy=u.y;         // ★[T284] 몸 클램프 기준(이 스텝 시작 위치)
+    const D=UNITS[u.type]; u.cd-=dt;
+    const uAtk=u.atk!=null?u.atk:D.atk, uMAtk=u.atk!=null?(D.mAtk*(u.atk/D.atk)):D.mAtk;   // ★품질 배수: u.atk 설정 시 근접·백병에 반영. 미설정(전투실험실)이면 D.atk/D.mAtk 그대로.
+    // ── 지휘 모드: 지휘관 WASD 직접 조작 ──
+    if(ctx.playerMode && u.cmd){ let mx=0,my=0; if(ctx.keys.w)my-=1; if(ctx.keys.s)my+=1; if(ctx.keys.a)mx-=1; if(ctx.keys.d)mx+=1;
+      const m=Math.hypot(mx,my);
+      if(m>0){mx/=m;my/=m; u.x+=mx*D.spd*dt; u.y+=my*D.spd*dt; u.face=Math.atan2(my,mx); ctx.cmdHeading=u.face;}
+      const ce=(nearestEnemy(ctx,u,Math.ceil((D.ranged>0?D.ranged+2:13)/BK)+1,true)||{}).e;
+      if(ce){const cd=Math.sqrt(dist2(u,ce)); if(m===0)u.face=Math.atan2(ce.y-u.y,ce.x-u.x);
+        if(D.ranged>0){ if(cd<=D.ranged&&u.cd<=0){const los=ctx.world?!treeBlocks(ctx,u.x,u.y,ce.x,ce.y):true; if(los){u.st='shoot';u.cd=D.cd;shoot(ctx,u,ce);}} }
+        else if(cd<=D.reach&&u.cd<=0){u.cd=D.cd;u.st='melee';hurt(ctx,ce,uAtk,u.x,u.y,'melee',D.shBrk);} }
+      sep(ctx,u,dt); continue; }
+    // ── 궤주(개별) ──
+    if(u.routing){u.st='rout';
+      if(ctx.world&&ctx.world.flee){ const f=ctx.world.flee(ctx,u); u.face=Math.atan2(f.dy,f.dx); u.x+=f.dx*D.spd*1.25*dt; u.y+=f.dy*D.spd*1.25*dt; sep(ctx,u,dt); continue; }   // ★[T284] 존: 방향만 어댑터(속도식 그대로)
+      const gx=u.side==='A'?-40:DEPLOY_W+40; const dx=gx-u.x,dy=0, dd=Math.hypot(dx,dy)||1; u.face=Math.atan2(dy,dx);
+      u.x+=dx/dd*D.spd*1.25*dt; sep(ctx,u,dt); continue;}
+    const engR=D.ranged>0?D.ranged+2:13;
+    const mf=u.mrl>=0.5?1:Math.max(0.35,(u.mrl-0.15)/0.35);
+    const fSpd=FORM_SPD[u.form]||1;
+    const isMain=(u.type==='spear'||u.type==='pike'||u.type==='greataxe'||u.type==='champion');
+    const mSpd=isMain?ctx._cen[u.side].march:D.spd;
+    u._detCd=(u._detCd||0)-dt;
+    const tgtOk = u.tgt && u.tgt.hp>0 && dist2(u,u.tgt)<25*25 && !(ctx.world&&treeBlocks(ctx,u.x,u.y,u.tgt.x,u.tgt.y));
+    let e;
+    if(tgtOk && u._detCd>0) e=u.tgt;
+    else { u._detCd=0.35+ctx.rng()*0.12; e=(nearestEnemy(ctx,u,Math.ceil(engR/BK)+1,true)||{}).e; }
+    if(!e){
+      if(ctx.playerMode && u.side==='A' && ctx.commander && ctx.commander.hp>0){
+        const cs=Math.cos(ctx.cmdHeading),sn=Math.sin(ctx.cmdHeading);
+        const tx=ctx.commander.x + u.slx*cs - u.sly*sn, ty=ctx.commander.y + u.slx*sn + u.sly*cs;
+        const dx=tx-u.x,dy=ty-u.y,dd=Math.hypot(dx,dy);
+        if(dd>0.25){const st=Math.min(D.spd*dt,dd); u.x+=dx/dd*st; u.y+=dy/dd*st;} u.face=ctx.cmdHeading; sep(ctx,u,dt); continue;
+      }
+      u.st='adv'; const c=ctx._cen[u.side==='A'?'B':'A'];
+      if(ctx.world&&ctx.world.advance){ const a=ctx.world.advance(ctx,u); if(a){u.face=Math.atan2(a.dy,a.dx); u.x+=a.dx*mSpd*fSpd*dt; u.y+=a.dy*mSpd*fSpd*dt;} sep(ctx,u,dt); continue; }   // ★[T284] 존: 방향만 어댑터(속도식 그대로 · null=제자리 · 적 본대가 없으면 목표로)
+      if(c.n){const s=c.x>u.x?1:-1; u.face=s>0?0:Math.PI; u.x+=s*mSpd*fSpd*dt; sep(ctx,u,dt);} continue; }
+    u.tgt=e; const d=Math.sqrt(dist2(u,e));
+    if(u.form==='wall'){const c=ctx._cen[u.side==='A'?'B':'A']; u.face=c.n?Math.atan2(c.y-u.y,c.x-u.x):Math.atan2(e.y-u.y,e.x-u.x);}
+    else u.face=Math.atan2(e.y-u.y,e.x-u.x);
+    // ── 궁수·투석병(원거리) ──
+    if(D.ranged>0){
+      const ak=D.ammo||'arrows';   // 탄약 재고 키: 궁수=arrows, 투석병=stones
+      const ammo=ctx.sides[u.side][ak]>0;
+      if(d<3.5&&(ammo||!T995_BACK_AMMO)){   // ★[T995 ㉠] 켬 = 탄이 있을 때만 물러선다(끔 = 종전 — 탄과 무관)
+        u.st='melee'; const bd=Math.hypot(e.x-u.x,e.y-u.y)||1;
+        u.x+=(u.x-e.x)/bd*D.spd*0.5*fSpd*dt; u.y+=(u.y-e.y)/bd*D.spd*0.5*fSpd*dt;
+        if(d<D.reach && u.cd<=0){u.cd=D.cd; if(ctx.rng()<mf)hurt(ctx,e,uMAtk,u.x,u.y,'melee',D.shBrk);} sep(ctx,u,dt); continue;
+      }
+      if(ammo){
+        if(d<=D.ranged){
+          if(u.cd<=0){ const los=ctx.world?!treeBlocks(ctx,u.x,u.y,e.x,e.y):true;
+            if(los){u.st='shoot'; u.cd=D.cd; if(ctx.rng()<mf){shoot(ctx,u,e); ctx.sides[u.side][ak]--;}} else {u.st='block'; u.cd=1;} }
+        } else if(ctx.world&&ctx.world.hold&&ctx.world.hold(ctx,u,e)){ u.st='hold'; }   // ★[T284] 지키는 쪽은 물러나는 적을 쫓지 않는다
+        else { u.st='adv'; const dd=d||1,ms=D.spd*(0.55+0.45*mf)*fSpd; u.x+=(e.x-u.x)/dd*ms*dt; u.y+=(e.y-u.y)/dd*ms*dt; }
+      } else {
+        if(d<15&&ctx.world&&d>D.reach&&ctx.world.hold&&ctx.world.hold(ctx,u,e)){ u.st='hold'; }   // ★[T284] 추격 없음
+        else if(d<15){ u.st='melee'; const dd=d||1,ms=(D.chg||D.spd)*(0.55+0.45*mf)*fSpd; if(d>D.reach){u.x+=(e.x-u.x)/dd*ms*dt; u.y+=(e.y-u.y)/dd*ms*dt;} else if(u.cd<=0){u.cd=D.cd; if(ctx.rng()<mf)hurt(ctx,e,uMAtk,u.x,u.y,'melee',D.shBrk);} }
+        else if(ctx.world&&ctx.world.flee){ u.st='adv'; const f=ctx.world.flee(ctx,u); u.x+=f.dx*D.spd*fSpd*dt; u.y+=f.dy*D.spd*fSpd*dt; }   // ★[T284] 탄 떨어진 사수 이탈 — 방향만 어댑터
+        else { u.st='adv'; const gx=u.side==='A'?-40:DEPLOY_W+40,dd=Math.abs(gx-u.x)||1; u.x+=(gx-u.x)/dd*D.spd*fSpd*dt; }
+      }
+      sep(ctx,u,dt); continue;
+    }
+    // ── 근접 ──
+    if(d>D.reach&&ctx.world&&ctx.world.hold&&ctx.world.hold(ctx,u,e)){ u.st='hold'; }   // ★[T284] 지키는 쪽(holder)은 물러나는 적(대형으로 돌아간 병사)을 쫓지 않는다
+    else if(d>D.reach){ u.st='adv'; let gx=e.x,gy=e.y;
+      if(u.form!=='wall'&&u.form!=='circle'&&UNITS[e.type].ranged===0&&e.form!=='wall'&&e.form!=='circle'&&frontBlocked(ctx,u,e)){
+        const efx=Math.cos(e.face),efy=Math.sin(e.face),rx=u.x-e.x,ry=u.y-e.y,sd=(rx*(-efy)+ry*efx)>0?1:-1;
+        gx=e.x+(-efy*sd)*2.4-efx*0.9; gy=e.y+(efx*sd)*2.4-efy*0.9;
+      }
+      const asp=(D.chg||D.spd)*((u.type==='greataxe'&&(UNITS[e.type].shield>0||e.form==='wall'))?1.25:1);
+      const dd=Math.hypot(gx-u.x,gy-u.y)||1,ms=asp*(0.55+0.45*mf)*fSpd; u.x+=(gx-u.x)/dd*ms*dt; u.y+=(gy-u.y)/dd*ms*dt; }
+    else { u.st='melee'; if(u.cd<=0){u.cd=D.cd; const amb=(concealed(ctx,u)&&!concealed(ctx,e))?1.5:1; const atk=u.broken?uMAtk*0.5:uAtk*amb; if(ctx.rng()<mf)hurt(ctx,e,atk,u.x,u.y,'melee',u.broken?4:D.shBrk); if(!u.broken&&ctx.rng()<(BREAK_P[u.type]||0))u.broken=true;}
+      if(D.standoff){const eR=UNITS[e.type].reach; if(eR<D.reach-0.3 && d<eR+0.5){const dd=d||1,sb=(D.chg||D.spd)*0.85; u.x-=(e.x-u.x)/dd*sb*fSpd*dt; u.y-=(e.y-u.y)/dd*sb*fSpd*dt;}}
+    }
+    sep(ctx,u,dt);
+  }
+  // ── 화살 ──
+  for(let i=ctx.arrows.length-1;i>=0;i--){const ar=ctx.arrows[i]; ar.px=ar.x; ar.py=ar.y; const mx=ar.vx*dt,my=ar.vy*dt; ar.x+=mx; ar.y+=my; ar.trav+=Math.hypot(mx,my); let done=false, hitU=null;
+    if(ctx.world&&treeBlocks(ctx,ar.px,ar.py,ar.x,ar.y))done=true;
+    if(!done){const dx=ar.x-ar.px,dy=ar.y-ar.py,L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L; const bx=Math.floor(ar.x/BK),by=Math.floor(ar.y/BK); let hu=null,hd=1e9;
+      for(let ix=bx-1;ix<=bx+1;ix++)for(let iy=by-1;iy<=by+1;iy++){const c=ctx._grid.get(((ix+256)*8192)+(iy+256));if(!c)continue;
+        for(const o of c){if(o.hp<=0||o===ar.sh)continue; const ox=o.x-ar.px,oy=o.y-ar.py,t=ox*ux+oy*uy; if(t<-0.25||t>L+0.35)continue; const perp=Math.abs(ox*uy-oy*ux); const rr=UNITS[o.type].r+0.22; if(perp<rr&&t<hd&&(o.side!==ar.side||ar.trav>6.0)){hd=t;hu=o;}}}
+      if(hu){ if(hu.side!==ar.side){ hurt(ctx,hu,ar.dmg,hu.x,hu.y,'arrow',0); hitU=hu;
+          const hbx=Math.floor(hu.x/BK),hby=Math.floor(hu.y/BK);
+          for(let ix=hbx-1;ix<=hbx+1;ix++)for(let iy=hby-1;iy<=hby+1;iy++){const c=ctx._grid.get(((ix+256)*8192)+(iy+256));if(!c)continue;for(const en of c){if(en.side!==ar.side&&en.hp>0){const ex=en.x-hu.x,ey=en.y-hu.y;if(ex*ex+ey*ey<SUP_R*SUP_R)en.mrl=Math.max(0,(en.mrl||1)-SUP_ARROW);}}}
+        } done=true; }
+    }
+    if(done||ar.trav>=ar.range){ if(ctx.onArrow)ctx.onArrow(hitU?'hit':'end',ar,hitU); ctx.arrows.splice(i,1); }   // ★[T458] 화살 사건 — 보기만 하는 훅(상태 무변 · 없으면 종전)
+  }
+  // ── 종료 판정 ──
+  if(!ctx.result && !ctx.world) judge(ctx);   // ★[T284] 존(연속 전투)엔 판 결과가 없다 — 정산 계기는 호스트가 행위(궤주·항복·철수)로 본다
+  // 시체 페이드
+  for(const c of ctx.corpses)c.rot=Math.max(0,c.rot-dt*0.03);
+}
+// ★[T1090] 판 결과 식을 함수 하나로(같은 식 · 같은 자리에서 부른다 — 바이트 동작 무변). 전투실험실처럼 지형 어댑터(ctx.world)를 단
+//   독립 판은 stepBattle 이 결과를 안 내므로(존 규약) 판 뒤에 이것을 부른다 — 식을 랩에 다시 적지 않는다(사본 0).
+function judge(ctx){
+  if(ctx.result)return ctx.result;
+  const la=ctx.units.filter(u=>u.side==='A'&&u.hp>0).length, lb=ctx.units.filter(u=>u.side==='B'&&u.hp>0).length;
+  const fa=ctx.units.filter(u=>u.side==='A'&&u.hp>0&&!u.routing).length, fb=ctx.units.filter(u=>u.side==='B'&&u.hp>0&&!u.routing).length;
+  if(fa===0&&fb>0)ctx.result={win:'B'};
+  else if(fb===0&&fa>0)ctx.result={win:'A'};
+  else if(fa===0&&fb===0)ctx.result={win:la>lb?'A':lb>la?'B':'무'};
+  else if(ctx.tick>120)ctx.result={win:la>lb?'A':lb>la?'B':'무'};
+  return ctx.result;
+}
+function shoot(ctx,u,e){const D=UNITS[u.type]; const dist=Math.hypot(e.x-u.x,e.y-u.y);
+  const ft=dist/D.arrowV; const lx=e.x+(e._vx||0)*ft, ly=e.y+(e._vy||0)*ft;
+  const scatter=(0.015+dist*0.0022)*(D.spread||1);   // 투석병 spread>1=명중 낮음(궁수는 spread 없음→동일)
+  const ang=Math.atan2(ly-u.y,lx-u.x)+(ctx.rng()-0.5)*2*scatter;
+  const aDmg=u.atk!=null?u.atk:D.atk;   // ★궁수 품질: u.atk 설정 시 화살 피해 반영, 미설정이면 D.atk(전투실험실 동일)
+  ctx.arrows.push({x:u.x,y:u.y,px:u.x,py:u.y,vx:Math.cos(ang)*D.arrowV,vy:Math.sin(ang)*D.arrowV,dmg:aDmg,side:u.side,range:D.ranged*1.5,trav:0,sh:u});
+  if(ctx.onArrow)ctx.onArrow('fire',ctx.arrows[ctx.arrows.length-1],u);}   // ★[T458] 쏜 순간(보기만 · 상태 무변)
+function sep(ctx,u,dt){let sx=0,sy=0,n=0,hxx=0,hyy=0,hn=0; const bx=Math.floor(u.x/BK),by=Math.floor(u.y/BK);
+  for(let ix=bx-1;ix<=bx+1;ix++)for(let iy=by-1;iy<=by+1;iy++){const c=ctx._grid.get(((ix+256)*8192)+(iy+256)); if(!c)continue;
+    for(const o of c){if(o===u||o.hp<=0)continue; const dx=u.x-o.x,dy=u.y-o.y,d2=dx*dx+dy*dy; if(d2<1.0*1.0&&d2>1e-4){const d=Math.sqrt(d2);sx+=dx/d;sy+=dy/d;n++;
+      if(d<SEP_CORE){hxx+=dx/d*(SEP_CORE-d)*0.5;hyy+=dy/d*(SEP_CORE-d)*0.5;hn++;}}}}   // ★[몸 하한] 지름 0.5m 침범 위치보정 누적(1.0m 소프트 간격과 별개 층)
+  if(n){u.x+=sx/n*1.0*dt; u.y+=sy/n*1.0*dt;}
+  if(hn){const hl=Math.hypot(hxx,hyy); if(hl>1e-9){const hk=Math.min(1,Math.max(1.0*dt,0.08)/hl); u.x+=hxx*hk; u.y+=hyy*hk;}}   // 몸 겹침 해소 — dt 무관 최소 0.08m/스텝(압착에도 관통 불가), 나무·건물 클램프가 뒤에서 지형 보정
+  if(ctx.world&&ctx.world.push){ ctx.world.push(ctx,u,dt); }   // ★[T1090] 어댑터가 몸을 장애물 밖으로 민다(주면 아래 클램프 대신 · 전투실험실 = 07-10 나무 · 집 밀어내기 · 존은 안 준다 = 무변)
+  else if(ctx.world&&u._ox!=null&&ctx.world.blocked(u.x,u.y)&&!(T1019_UNTRAP&&ctx.world.blocked(u._ox,u._oy))){   // ★[T284] 몸 클램프 — 존의 장애물(지형·건물 행). 축별로 미끄러지고, 둘 다 막히면 제자리 · ★[T1019] 켬 = 이전 자리도 막혔으면(갇힌 몸) 안 묶는다 — 걸어 나온다
+    const nx=u.x, ny=u.y;
+    if(!ctx.world.blocked(nx,u._oy)){u.y=u._oy;}
+    else if(!ctx.world.blocked(u._ox,ny)){u.x=u._ox;}
+    else {u.x=u._ox; u.y=u._oy;}
+  }
+}
+// ★★[T295 ② 2026-09-19] **군량이 모자라면 사기가 떨어진다** — 손잡이 `T295_RATION_MRL` (기본 **끔**).
+//   ⓐ **값이 곧 손잡이다**(새 수 0): 손잡이에 적힌 수가 사기 항의 가중치다 — 값은 재민(랩 A/B 표 뒤).
+//     미설정·0 이면 아래 항 자체가 안 돌아 사기 식은 **한 글자도 안 바뀐다**(비트 동일).
+//   ⓑ **부족분은 호스트가 준다**: `ctx.sides[side].ration` = 그 편의 군량 충족도(1 = 넉넉 · 0 = 바닥).
+//     미주입이면 1(무해) — 독립 실행(전투실험실·runBattleHeadless)은 종전 그대로다.
+function _bcKnob(name){ const g=(typeof window!=='undefined')?window:null;
+  if(g&&g[name]!==undefined&&g[name]!==null)return String(g[name]);
+  if(typeof process!=='undefined'&&process.env&&process.env[name]!==undefined)return String(process.env[name]);
+  return null; }
+function rationMrlW(){ const x=_bcKnob('T295_RATION_MRL'); if(x===null)return 0; const n=parseFloat(x); return Number.isFinite(n)&&n>0?n:0; }
+function updateMorale(ctx,dt){
+  const _ratW=rationMrlW();
+  for(const u of ctx.units)u._rPrev=u.routing;
+  const relA=ctx.sides.A.start?ctx.sides.A.dead/ctx.sides.A.start:0, relB=ctx.sides.B.start?ctx.sides.B.dead/ctx.sides.B.start:0;
+  const ord=ctx.units.slice(); for(let i=ord.length-1;i>0;i--){const j=(ctx.rng()*(i+1))|0;const t=ord[i];ord[i]=ord[j];ord[j]=t;}
+  for(const u of ord){if(u.hp<=0)continue;
+    const bx=Math.floor(u.x/BK),by=Math.floor(u.y/BK); let fN=0,eN=0,rN=0,champ=0,dMin2=1e9;
+    for(let ix=bx-1;ix<=bx+1;ix++)for(let iy=by-1;iy<=by+1;iy++){const c=ctx._grid.get(((ix+256)*8192)+(iy+256));if(!c)continue;
+      for(const o of c){if(o===u||o.hp<=0)continue; if(o.side===u.side){fN++; if(o._rPrev)rN++; if(o.type==='champion')champ=1;} else {eN++; const dx=u.x-o.x,dy=u.y-o.y,dd=dx*dx+dy*dy; if(dd<dMin2)dMin2=dd;}}}
+    const myRel=u.side==='A'?relA:relB, enRel=u.side==='A'?relB:relA;
+    const commit=u.st==='melee'?1:(dMin2<COMMIT_D*COMMIT_D?1-Math.sqrt(dMin2)/COMMIT_D:0);
+    const wound=1-u.hp/u.maxHp;
+    let tgt=(MRL0[u.type]||0.8)+M_KODDS*(fN-eN)/(fN+eN+1)-M_KCONTAG*rN+M_KCHAMP*champ+M_KRELCAS*(enRel-myRel)-M_KABS*myRel
+      +M_KCOMMIT*commit-M_KWOUND*wound*(1-commit)+M_KDESP*wound*commit
+      +(u.form==='wall'?0.30:u.form==='circle'?0.15:u.form==='open'?-0.08:0) - (u.broken?0.18:0);
+    if(_ratW>0){ const _r=ctx.sides[u.side].ration; if(_r!=null&&_r<1) tgt-=_ratW*(1-Math.max(0,_r)); }   // ★[T295 ②] 굶은 편은 먼저 흔들린다(손잡이 켤 때만)
+    if(tgt<0)tgt=0;else if(tgt>1)tgt=1;
+    u.mrl+=(tgt-u.mrl)*Math.min(1,M_RATE*dt);
+    if(u.mrl<0)u.mrl=0;else if(u.mrl>1)u.mrl=1;
+    if(!u.routing){ if(u.mrl<M_BREAK && ctx.rng()<(M_BREAK-u.mrl)*M_BREAKRATE*dt)u.routing=true; }
+    else if(u.mrl>M_RALLY && eN===0)u.routing=false;
+  }
+}
+// ★유닛 속도 추적(궁수 리드사격용) — 전투실험실 루프의 trackVel
+function trackVel(ctx,dt){for(const u of ctx.units){if(u.hp<=0)continue;u._vx=((u.x-(u._px||u.x))/dt)||0;u._vy=((u.y-(u._py||u.y))/dt)||0;u._px=u.x;u._py=u.y;}}
+
+// ═══════════ 인스턴스 편의 핸들 ═══════════
+// _makeHandle(ctx) = 인스턴스 편의객체. step(dt)=trackVel+stepBattle 한 틱. getter/setter는 ctx에 위임.
+// ★[T874 2026-10-23] 손잡이 `T874_BATTLE_FAST`(★T900 켬 기본 · `=0` 끔 = 종전 그대로) — 아래 리터럴의 접근자 열둘(`get units()` …)은
+//   리터럴이 먼저 깐 칸 위에 덮여 핸들이 만들어지자마자 사전 모드다(V8 `AccessorsOverwritingNonLast`). 켬이면 같은 리터럴을 지은 뒤
+//   같은 이름 · 같은 차례 · 같은 속성(열거 · 고칠 수 있음 · 읽기만)으로 빠른 꼴 핸들에 옮긴다(`_t874Handle`) — 접근자는 핸들마다 새 닫힘이 아니라
+//   모두가 같이 쓰는 함수 하나(`this.ctx` 를 읽는다 · 핸들의 `ctx` 칸 = 같은 ctx)라 칸이 생길 때 같이 달려 사전으로 안 떨어진다. 메서드 넷 · step 은 같은 함수 그대로.
+//   ★★[T900 2026-10-23] **켬 기본**(★PM 10-23 · T874 회부 1) — `!== '0'`(env · 브라우저 랩은 `window.T874_BATTLE_FAST`) · 되돌림 `=0`(= T900 전 바이트 · 끔 = 리터럴 그대로).
+const _T874_HG={ get units(){return this.ctx.units;}, get arrows(){return this.ctx.arrows;}, get corpses(){return this.ctx.corpses;},
+  get sides(){return this.ctx.sides;}, get world(){return this.ctx.world;},
+  get result(){return this.ctx.result;}, get tick(){return this.ctx.tick;},
+  get commander(){return this.ctx.commander;}, get cmdHeading(){return this.ctx.cmdHeading;},
+  get terrain(){return this.ctx.terrain;}, get playerMode(){return this.ctx.playerMode;}, get keys(){return this.ctx.keys;} };
+const _T874_HD=Object.getOwnPropertyNames(_T874_HG).map(k=>[k,Object.getOwnPropertyDescriptor(_T874_HG,k)]);
+function _t874Handle(h0){
+  const h={ctx:h0.ctx, step:h0.step};
+  for(const [k,d] of _T874_HD)Object.defineProperty(h,k,d);
+  h.setKeys=h0.setKeys; h.setCmdHeading=h0.setCmdHeading; h.setPlayerMode=h0.setPlayerMode; h.addUnits=h0.addUnits;
+  return h;
+}
+function _makeHandle(ctx){
+  const h0=_makeHandleLit(ctx);
+  return _bcKnob('T874_BATTLE_FAST')!=='0'?_t874Handle(h0):h0;
+}
+function _makeHandleLit(ctx){
+  return {
+    ctx,
+    step(dt){ trackVel(ctx,dt); stepBattle(ctx,dt); },
+    // getter
+    get units(){return ctx.units;}, get arrows(){return ctx.arrows;}, get corpses(){return ctx.corpses;},
+    get sides(){return ctx.sides;}, get world(){return ctx.world;},
+    get result(){return ctx.result;}, get tick(){return ctx.tick;},
+    get commander(){return ctx.commander;}, get cmdHeading(){return ctx.cmdHeading;},
+    get terrain(){return ctx.terrain;}, get playerMode(){return ctx.playerMode;}, get keys(){return ctx.keys;},
+    // setter(ctx에)
+    setKeys(k){ctx.keys=k||{};}, setCmdHeading(h){ctx.cmdHeading=h;}, setPlayerMode(v){ctx.playerMode=!!v;},
+    // ★[제3자 참전 삽입 구조 — 사용자 지시 "중립 난입·원군을 언제든지 꽂을 수 있게"] addUnits(side, list, quality?):
+    //   진행 중 전투에 유닛 증원. list=[{type,x,y,face?,agent?,cmd?}] 로컬좌표(0~130). 반환=투입 수.
+    //   start·화살/돌 보급·챔프 플래그 동기(사상비·궤주 분모 정합). 결판 후(result)면 0. additive —
+    //   이 API를 안 부르는 기존 전투는 비트 동일(골든마스터 무영향). '적대 인식'은 측 선택으로 표현:
+    //   중립이 A를 공격하면 B측으로 투입(그 역도 동일) — 3진영 FFA는 battle-core 구조 확장(별도 설계).
+    addUnits(side, list, quality){
+      if((side!=='A'&&side!=='B')||!Array.isArray(list)||!list.length||ctx.result)return 0;
+      const CL=v=>ctx.world?v:(v<0.5?0.5:(v>DEPLOY_W-0.5?DEPLOY_W-0.5:v));   // ★[T284] 존 좌표는 자르지 않는다
+      const form=(ctx.sides[side]&&ctx.sides[side].form)||'line';
+      let n=0;
+      for(const it of list){ if(!it||!UNITS[it.type])continue;
+        spawn(ctx,side,it.type,CL(+it.x),CL(+it.y),form,quality||null);
+        const u=ctx.units[ctx.units.length-1];
+        if(it.face!=null)u.face=+it.face;
+        if(it.agent)u.agent=it.agent;
+        if(it.cmd)u.cmd=true;
+        ctx.sides[side].start++;
+        if(it.type==='archer')ctx.sides[side].arrows=(ctx.sides[side].arrows||0)+ARROWS_PER;
+        if(it.type==='slinger')ctx.sides[side].stones=(ctx.sides[side].stones||0)+STONES_PER;
+        if(it.type==='champion')ctx.sides[side].hadChamp=true;
+        n++;
+      }
+      return n;
+    },
+  };
+}
+// createBattle(spec,opts) — 독립 인스턴스 생성. opts.rng/origin/heading 적용 → buildArmies → 핸들.
+//   ★ 맵 위 여러 전투 동시 구동의 토대: 각 호출이 독립 ctx(units/grid/cen/rng 전부 격리).
+function createBattle(spec,opts){
+  opts=opts||{};
+  const ctx=createContext();
+  if(opts.rng) ctx.rng=opts.rng;
+  if(opts.origin){ ctx.origin.cx=opts.origin.cx||0; ctx.origin.cy=opts.origin.cy||0; }
+  if(opts.heading!=null) ctx.heading=opts.heading;
+  buildArmies(ctx,spec);
+  return _makeHandle(ctx);
+}
+
+// ═══════════ 노출 (economy-engine이 window.EconEngine 노출하는 것과 동형) ═══════════
+// ★ 전역 싱글톤 경로 = 단일 _defaultCtx 위임(전투실험실·기존 전쟁실험실 100% 보존).
+//   기존 전역 API(buildArmies/stepBattle/…) 시그니처는 불변(ctx 없이) — 내부에서 _defaultCtx 주입.
+//   인스턴스 경로는 createBattle/_makeHandle 또는 _-접두 raw(ctx 인자) 함수를 씀.
+const _defaultCtx=createContext();
+// ★ 전역 경로는 '살아있는' Math.random 을 매 호출 참조해야 함(전투실험실·전쟁실험실 하네스가
+//   Math.random 을 재바인딩[시드 주입]하며, 레거시는 매 draw마다 Math.random() 직접 호출).
+//   createContext의 rng:Math.random 은 생성 시점 참조를 캡처 → 재바인딩을 못 따라감(골든마스터 시드-오프셋 불일치).
+//   _defaultCtx만 live indirection 으로 교체(인스턴스 ctx는 opts.rng 명시 캡처 유지 = 격리).
+_defaultCtx.rng=()=>Math.random();
+const BattleCore={
+  // 상수
+  UNITS, ARROWS_PER, STONES_PER, BREAK_P, MRL0, SIDE_COL, BK,
+  M_BREAK, M_RALLY, M_RATE, M_KODDS, M_KCONTAG, M_KCHAMP, M_KRELCAS, M_KABS,
+  M_KCOMMIT, M_KWOUND, M_KDESP, COMMIT_D, M_BREAKRATE,
+  SUP_ARROW, SUP_DEATH, SUP_R, FORM_SPD, FORM_KO, DEPLOY_W, DEPLOY_H,
+  // ── 다중 인스턴스 API ──
+  createContext, createBattle,
+  // raw(ctx 인자) 함수 — 인스턴스 직접 구동/디버깅용
+  _buildArmies:buildArmies, _stepBattle:stepBattle, _trackVel:trackVel, _updateMorale:updateMorale,
+  _hurt:hurt, _shoot:shoot, _buildGrid:buildGrid, _nearestEnemy:nearestEnemy, _sep:sep,
+  _spawn:spawn, _concealed:concealed, _treeBlocks:treeBlocks,
+  _screened:screened, _frontBlocked:frontBlocked, _makeHandle, _judge:judge,
+  // ── 전역 API: 단일 _defaultCtx 위임(시그니처 불변) ──
+  // 지형
+  concealed(u){return concealed(_defaultCtx,u);},
+  treeBlocks(x1,y1,x2,y2){return treeBlocks(_defaultCtx,x1,y1,x2,y2);},
+  // 시뮬
+  spawn(side,type,x,y,form,quality){return spawn(_defaultCtx,side,type,x,y,form,quality);},
+  stepBattle(dt){return stepBattle(_defaultCtx,dt);},
+  updateMorale(dt){return updateMorale(_defaultCtx,dt);},
+  hurt(target,dmg,fromX,fromY,kind,shBrk){return hurt(_defaultCtx,target,dmg,fromX,fromY,kind,shBrk);},
+  shoot(u,e){return shoot(_defaultCtx,u,e);},
+  buildGrid(){return buildGrid(_defaultCtx);},
+  nearestEnemy(u,maxR,los){return nearestEnemy(_defaultCtx,u,maxR,los);},
+  frontal, dist2, gkey,   // 상태 무참조 순수 함수(ctx 불필요)
+  screened(u,tx,ty){return screened(_defaultCtx,u,tx,ty);},
+  frontBlocked(u,e){return frontBlocked(_defaultCtx,u,e);},
+  trackVel(dt){return trackVel(_defaultCtx,dt);},
+  judge(){return judge(_defaultCtx);},   // ★[T1090] 판 결과(지형 어댑터를 단 독립 판 — 전투실험실)
+  sep(u,dt){return sep(_defaultCtx,u,dt);},
+  // 핵심 인터페이스
+  buildArmies(spec){return buildArmies(_defaultCtx,spec);},
+  // 상태 컨테이너 접근 (_defaultCtx 위임) — ★[T818 ②] 접근자 칸은 리터럴 밖(바로 아래 끝)에서 단다
+  // 지휘 입력(전쟁실험실이 씀) — _defaultCtx에
+  setKeys(k){_defaultCtx.keys=k||{};}, setPlayerMode(v){_defaultCtx.playerMode=!!v;}, setCmdHeading(h){_defaultCtx.cmdHeading=h;},
+};
+// ★[T818 ②] 접근자 14개를 리터럴 밖으로(T806 ② 꼴 — 리터럴 안 접근자 = 사전 모드 · 같은 이름 · 같은 몸통 · 열거 · 고칠 수 있음 · 값 무변 · 키 차례만 이 칸들이 끝으로)
+for(const [k,g] of [['_defaultCtx',function(){return _defaultCtx;}],['units',function(){return _defaultCtx.units;}],['arrows',function(){return _defaultCtx.arrows;}],['corpses',function(){return _defaultCtx.corpses;}],['sides',function(){return _defaultCtx.sides;}],['_grid',function(){return _defaultCtx._grid;}],['_cen',function(){return _defaultCtx._cen;}],['tick',function(){return _defaultCtx.tick;}],['result',function(){return _defaultCtx.result;}],['commander',function(){return _defaultCtx.commander;}],['cmdHeading',function(){return _defaultCtx.cmdHeading;}],['keys',function(){return _defaultCtx.keys;}],['playerMode',function(){return _defaultCtx.playerMode;}],['terrain',function(){return _defaultCtx.terrain;}]])Object.defineProperty(BattleCore,k,{get:g,enumerable:true,configurable:true});
+root.BattleCore=BattleCore;
+if(typeof module!=='undefined'&&module.exports)module.exports=BattleCore;
+
+})(typeof window!=='undefined'?window:globalThis);
+
+</script>
+<!-- /BATTLE-CORE -->
+<script>
+'use strict';
+// ═══════════ 전투 실험실 — 진영을 짜고 전투만 시키는 랩 ═══════════
+//   07-10 원본(lab/원본/전투실험실_0710.html · 고치지 않음)의 화면 · 입력 · 지형 그대로.
+//   ★[T1090 2026-11-02] 전투 계산은 전부 위 BATTLE-CORE 블록(window.BattleCore = sim/battle-core.js 인라인) 하나다 — 이 스크립트에는
+//     병종표 · 사기 · 피해 · 이동 식이 **없다**(사본 0). 코어를 고치면 `node sim/inline-battle.js lab/전투실험실.html` 로 다시 굽는다
+//     (lab-wiring-check 가 어긋남을 잡는다). 그래서 7월 뒤 코어 변경(몸 0.5m · 탄 없는 사수 · 무기 품질 · 증원 addUnits …)이 여기 그대로 보인다.
+//   이 스크립트가 갖는 것: 화면(투영 · 그리기) · 입력(병력 · 대형 · 품질 · 증원) · 지형(나무 · 집 — 07-10 genForest 그대로) · 지형 어댑터(장애물 셋).
+const BC=window.BattleCore;
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const WORLD_W=BC.DEPLOY_W, WORLD_H=BC.DEPLOY_H;   // 전장 130×130 m(코어 표준 배치 폭)
+let view={z:1, ox:0, oy:0};
+function fitView(){const s=Math.min(cv.width/WORLD_W, cv.height/WORLD_H); view.z=s; view.ox=(cv.width-WORLD_W*s)/2; view.oy=(cv.height-WORLD_H*s)/2;}
+function project(x,y){return [x*view.z+view.ox, y*view.z+view.oy];}
+const UNITS=BC.UNITS, SIDE_COL=BC.SIDE_COL, FORM_KO=BC.FORM_KO;
+
+let running=false, _raf=0;
+// ═══════════ 지형 — 나무 · 집(07-10 원본 genForest 그대로) ═══════════
+//   ★[T284] 코어에는 장애물이 없다 — 장애물은 그 판의 것이다(존은 존 지형 · 이 랩은 아래 나무 · 집). 코어는 ctx.world 어댑터로 묻는다.
+let trees=[], buildings=[], terrain='plain', _regenTerrain=false;
 function genForest(mode){ trees=[]; buildings=[]; terrain=mode;
-  if(mode==='village'){   // ★마을(마을실험실 실축): 회관 8×8 + 집채 6×4(중심간 12셀) → 좁은 길·choke point. [고증메모: 망루/지붕 고저차 궁수 우세는 본 게임 이식 시 — 궁수가 망루 점령하는 AI 필요]
+  if(mode==='village'){   // 마을(시가전): 회관 8×8 + 집채 6×4(중심간 12) → 좁은 길
     const cx=WORLD_W/2, cy=WORLD_H/2; buildings.push({x:cx,y:cy,w:8,h:8}); const placed=[[cx,cy]];
-    let tr=0; while(buildings.length<22 && tr++<900){ const a=Math.random()*6.283, r=13+Math.random()*40, hx=cx+Math.cos(a)*r, hy=cy+Math.sin(a)*r;   // 조밀·넓게(반경13~53) → 사선 대부분 벽에 막힘
+    let tr=0; while(buildings.length<22 && tr++<900){ const a=Math.random()*6.283, r=13+Math.random()*40, hx=cx+Math.cos(a)*r, hy=cy+Math.sin(a)*r;
       if(hx<10||hx>WORLD_W-10||hy<10||hy>WORLD_H-10)continue; let ok=true;
-      for(const p of placed)if(Math.hypot(hx-p[0],hy-p[1])<12){ok=false;break;} if(!ok)continue;   // 중심간 12=집채 사이 6~8m 좁은 길
-      const vert=Math.random()<0.5; buildings.push({x:hx,y:hy,w:vert?4:6,h:vert?6:4}); placed.push([hx,hy]); }   // 집채 6×4(방향 랜덤)
+      for(const p of placed)if(Math.hypot(hx-p[0],hy-p[1])<12){ok=false;break;} if(!ok)continue;
+      const vert=Math.random()<0.5; buildings.push({x:hx,y:hy,w:vert?4:6,h:vert?6:4}); placed.push([hx,hy]); }
     return; }
-  if(mode!=='forest'&&mode!=='edge')return;   // forest/edge만 나무, 그 외=평지
-  const g=8.5, x0= mode==='edge'?WORLD_W*0.42:6, x1=WORLD_W-6;   // 균일 격자 스캐터(간격~8.5m): 사선이 자주 나무에 막힘. edge=한쪽 절반만
+  if(mode!=='forest'&&mode!=='edge')return;
+  const g=8.5, x0= mode==='edge'?WORLD_W*0.42:6, x1=WORLD_W-6;
   for(let x=x0;x<x1;x+=g)for(let y=6;y<WORLD_H-6;y+=g){ if(Math.random()<0.72){
     const tx=x+(Math.random()-0.5)*g*0.85, ty=y+(Math.random()-0.5)*g*0.85;
     if(tx>3&&tx<WORLD_W-3&&ty>3&&ty<WORLD_H-3)trees.push({x:tx,y:ty,r:0.75+Math.random()*0.65});}}
 }
-// ★은폐: 나무·건물 근처면 은폐(매복 가능). 근접 기습(은폐측만) 판정에 사용
+// 은폐(나무 1.4 · 집 1.8 — 07-10 그대로)
 function concealed(u){ for(const t of trees){const dx=u.x-t.x,dy=u.y-t.y;if(dx*dx+dy*dy<(t.r+1.4)*(t.r+1.4))return true;}
   for(const b of buildings){if(Math.abs(u.x-b.x)<b.w/2+1.8&&Math.abs(u.y-b.y)<b.h/2+1.8)return true;} return false; }
-// ★나무가 시야/화살 경로를 막는가 — losRk(사냥) 원리: 경로 샘플링, 나무 반경 내면 차단
+// 사선이 나무 · 집에 막히는가(07-10 그대로)
 function treeBlocks(x1,y1,x2,y2){ if(!trees.length&&!buildings.length)return false;
   for(const t of trees){ const dx=x2-x1,dy=y2-y1,L2=dx*dx+dy*dy; if(L2<1e-6)continue;
-    let s=((t.x-x1)*dx+(t.y-y1)*dy)/L2; if(s<0.06||s>1)continue;   // 발사자 바로 앞은 제외(자기 나무 뒤 아님)
-    const px=x1+dx*s,py=y1+dy*s, pd=Math.hypot(t.x-px,t.y-py); if(pd<t.r+1.6)return true; }   // 나무 반경+1.6=사선을 넓게 차단(수관·가지가 화살 막음) → 숲 궁수 무력화
-  if(buildings.length){ const dx=x2-x1,dy=y2-y1,d=Math.hypot(dx,dy),n=Math.ceil(d/1.5);   // 건물(사각)=완전 차단: 경로가 벽 통과하면 시야·화살 막힘
+    let s=((t.x-x1)*dx+(t.y-y1)*dy)/L2; if(s<0.06||s>1)continue;
+    const px=x1+dx*s,py=y1+dy*s, pd=Math.hypot(t.x-px,t.y-py); if(pd<t.r+1.6)return true; }
+  if(buildings.length){ const dx=x2-x1,dy=y2-y1,d=Math.hypot(dx,dy),n=Math.ceil(d/1.5);
     for(let i=1;i<n;i++){const s=i/n,px=x1+dx*s,py=y1+dy*s; for(const b of buildings)if(Math.abs(px-b.x)<b.w/2&&Math.abs(py-b.y)<b.h/2)return true;} }
   return false; }
+// ★[T1090] 지형 어댑터 — 이 판의 장애물(나무 · 집)을 코어에 알려 준다. advance · flee · hold 는 주지 않는다(빈 들판과 같은 행군 · 궤주 식).
+//   push = 07-10 sep 의 나무 · 집 밀어내기 그대로(코어가 sep 끝 같은 자리에서 부른다) — 몸이 나무 둘레로 미끄러지고 집 벽을 타고 모서리를 돈다.
+//   (코어의 칸 클램프는 길찾기가 있는 존용이다 — 곧게 걷는 이 판에서는 나무 앞에 몸이 선다 · 보고 T1090 §3.)
+//   평지는 어댑터 없음(= 07-10 평지와 같은 길).
+const LAB_WORLD={
+  blocked(x,y){ for(const t of trees){const dx=x-t.x,dy=y-t.y,rr=t.r+0.5; if(dx*dx+dy*dy<rr*rr)return true;}
+    for(const b of buildings){if(Math.abs(x-b.x)<b.w/2+0.45&&Math.abs(y-b.y)<b.h/2+0.45)return true;} return false; },
+  losBlocked(x1,y1,x2,y2){ return treeBlocks(x1,y1,x2,y2); },
+  coverAt(x,y){ return concealed({x,y}); },
+  push(c,u,dt){
+    if(trees.length)for(const t of trees){const dx=u.x-t.x,dy=u.y-t.y,d2=dx*dx+dy*dy,rr=t.r+0.5; if(d2<rr*rr&&d2>1e-4){const d=Math.sqrt(d2);u.x=t.x+dx/d*rr;u.y=t.y+dy/d*rr;}}
+    if(buildings.length)for(const b of buildings){const dx=u.x-b.x,dy=u.y-b.y,hx=b.w/2+0.45,hy=b.h/2+0.45; if(Math.abs(dx)<hx&&Math.abs(dy)<hy){const ox=hx-Math.abs(dx),oy=hy-Math.abs(dy);
+      const gx=(u.tgt&&u.tgt.hp>0)?u.tgt.x:u.x, gy=(u.tgt&&u.tgt.hp>0)?u.tgt.y:u.y;
+      if(ox<oy){u.x=b.x+(dx<0?-hx:hx); u.y+=Math.sign(gy-u.y||1)*Math.min(2.6*dt,hy+0.2);}
+      else {u.y=b.y+(dy<0?-hy:hy); u.x+=Math.sign(gx-u.x||1)*Math.min(2.6*dt,hx+0.2);}}}
+  },
+};
 
-// ═══════════ 배치 (진형: 근접 전열 앞·궁수 후열) ═══════════
+// ═══════════ 배치 — 화면 값 → 코어 buildArmies(spec) ═══════════
+const KEYS=['spear','pike','axe','dagger','archer','slinger','militia','champ'];
+const SPEC_KEY={spear:'spear', pike:'pike', axe:'greataxe', dagger:'dagger', archer:'archer', slinger:'slinger', militia:'militia', champ:'champion'};
+function readSide(s){ const o={}; for(const k of KEYS)o[SPEC_KEY[k]]=+document.getElementById(s+'_'+k).value;
+  const f=document.getElementById(s+'_form'); o.form=f?f.value:'line'; return o; }
+function readQ(s){ const el=document.getElementById(s+'_q'); return el?{weapQ:+el.value}:null; }
 function deploy(){
-  running=false; document.getElementById('playBtn').textContent='▶ 전투 시작';
-  units=[]; arrows=[]; corpses=[]; tick=0; result=null;
+  running=false; document.getElementById('playBtn').textContent='전투 시작';
   const _t=document.getElementById('terrain')?document.getElementById('terrain').value:'plain';
-  if(_t!==terrain||_regenTerrain){genForest(_t);_regenTerrain=false;}   // ★지형은 terrain 변경(또는 재생성 요청) 시만 새로 뽑음 — 유닛 수만 바꿀 땐 동일 전장 유지(실험 일관성)
-  sides={A:{start:0,dead:0,rout:false}, B:{start:0,dead:0,rout:false}};
-  const rd=id=>+document.getElementById(id).value;
-  const gf=id=>{const el=document.getElementById(id);return el?el.value:'line';};
-  const cyc=WORLD_H/2;
-  const place=(side)=>{
-    const dir = side==='A' ? 1 : -1;   // A=+x 전진, B=-x. 열 깊이는 적 반대쪽으로 쌓음
-    const form = gf(side.toLowerCase()+'_form'); sides[side].form=form;
-    const frontX = side==='A' ? 40 : WORLD_W-40;   // 전열
-    const backX  = side==='A' ? 22 : WORLD_W-22;   // 후열(궁수)
-    const front=[], back=[];
-    const add=(sfx,key,arr)=>{const n=rd(side.toLowerCase()+'_'+sfx);for(let i=0;i<n;i++)arr.push(key);};
-    add('champ','champion',front); add('axe','greataxe',front); add('spear','spear',front); add('pike','pike',front); add('dagger','dagger',front); add('militia','militia',front);   // ★민병=조악 전열(전열 바로 뒤 2선 합류)
-    add('archer','archer',back); add('slinger','slinger',back);   // ★투석병=후열(궁수와 함께 견제)
-    if(terrain==='village'){   // ★시가전: 대형 붕괴 → 마을 안 분산 난전. 양측이 중앙(회관)서 뒤섞여 조우 → 궁수 kite 공간 없음, 근접·매복 유리(건물 회피 배치)
-      const all=[...front,...back]; const xLo=side==='A'?16:WORLD_W*0.40, xHi=side==='A'?WORLD_W*0.60:WORLD_W-16;   // 진영 구역 겹침(중앙대 뒤섞임) → 즉시 난전·kite 불가
+  if(_t!==terrain||_regenTerrain){genForest(_t);_regenTerrain=false;}   // 지형은 바뀔 때(또는 재생성)만 새로 뽑는다 — 병력만 바꾸면 같은 전장
+  const spec={A:readSide('a'), B:readSide('b'), terrain, playerCmd:BC.playerMode};
+  const qa=readQ('a'), qb=readQ('b');
+  if(qa&&qb&&(qa.weapQ!==0.5||qb.weapQ!==0.5))spec.quality={A:qa,B:qb};   // 무기 품질(코어 spawn 의 weapQ · 0.5 = 배수 1 = 07-10)
+  if(terrain==='village'){   // 시가전: 대형이 깨진 채 마을 안에 흩어져 선다(07-10 그대로 — 자리는 여기서 뽑아 코어에 넘긴다)
+    for(const s of ['A','B']){ const sp=spec[s], all=[];
+      const fr=['champion','greataxe','spear','pike','dagger','militia'], bk=['archer','slinger'];
+      for(const t of fr.concat(bk))for(let i=0;i<(sp[t]||0);i++)all.push(t);
+      const xLo=s==='A'?16:WORLD_W*0.40, xHi=s==='A'?WORLD_W*0.60:WORLD_W-16, list=[];
       for(const type of all){ let x,y,tr=0;
         do{ x=xLo+Math.random()*(xHi-xLo); y=12+Math.random()*(WORLD_H-24); tr++; }
         while(tr<50 && buildings.some(b=>Math.abs(x-b.x)<b.w/2+1.6&&Math.abs(y-b.y)<b.h/2+1.6));
-        spawn(side,type,x,y,'open'); }   // 산개 상태(난전)
-      return;
-    }
-    if(form==='circle'){   // ★원형(방진): 방패·창·도끼=바깥 방어벽(전방위), 궁수·석검=안쪽 보호(비잔틴 방진·만인대 후퇴 고증)
-      const outer=[],inner=[];
-      for(const u of front)(u==='dagger'?inner:outer).push(u);   // 근접 중 석검(경보병)만 안, 방패·창·도끼는 바깥벽
-      for(const u of back)inner.push(u);                          // 궁수 안쪽
-      const cx=frontX-dir*12, cy=cyc, oR=Math.max(4, outer.length*0.42);
-      for(let i=0;i<outer.length;i++){const a=i/Math.max(1,outer.length)*6.283; spawn(side,outer[i],cx+Math.cos(a)*oR,cy+Math.sin(a)*oR,form);}
-      for(let i=0;i<inner.length;i++){const a=i/Math.max(1,inner.length)*6.283+0.4, rr=Math.max(1.2,(oR-3)*(inner.length>8?(0.55+0.45*(i%2)):0.62)); spawn(side,inner[i],cx+Math.cos(a)*rr,cy+Math.sin(a)*rr,form);}   // 안쪽 동심(다수면 2겹)
-      return;
-    }
-    let sp,per,dep;
-    if(form==='wall'){sp=2.4;per=16;dep=2.4;}        // 방패벽: 밀집·넓은 전면·얕은 열
-    else if(form==='open'){sp=8;per=8;dep=7;}         // 산개: 넓게 벌림
-    else if(form==='column'){sp=2.8;per=5;dep=2.8;}   // 종대: 좁고 깊음
-    else {sp=4.5;per=10;dep=3;}                         // 선형(기본)
-    // ★전면 폭: 하한=대형별 per(소규모=이전 값 → 병종·대형상성 보존), 대군은 병력비례로 확장(전면폭 계단 제거 → 스케일 일관성). 종대만 좁게 고정
-    const lay=(arr,x0,s2,base,d2,zz)=>{const n=arr.length;if(!n)return;
-      const p2=form==='column'?base:Math.min(Math.max(base,Math.floor(WORLD_H*0.9/s2)),Math.max(base,Math.ceil(n/2)));
-      for(let i=0;i<n;i++){const c=(i/p2)|0, r=i%p2, colN=Math.min(p2,n-c*p2);
-        const zig=(form==='open'||zz)?(c%2)*s2*0.55:0;   // ★산개·궁수=열마다 y 반칸 엇갈림(체커보드) → 뒤 궁수 사선이 앞 궁수 틈으로(곡사 없는 부족 궁수는 종심 밀집 불가)
-        spawn(side,arr[i], x0 - dir*c*d2, cyc+(r-(colN-1)/2)*s2+zig, form);}};
-    if(form==='open'||form==='column'){   // 산개·종대: 전군 한 덩어리
-      lay(front,frontX,sp,per,dep); lay(back,backX, form==='open'?8:4.5, 12, 3);
-    } else {   // ★제병협동(선형·방패벽): 방패류 전열 · 창도끼 2선 · 궁수 후열 · 석검 측면
-      const fl=[],sl=[],fk=[];
-      for(const u of front){ if(u==='spear'||u==='champion')fl.push(u); else if(u==='dagger')fk.push(u); else sl.push(u); }
-      if(!fl.length){fl.push(...sl);sl.length=0;}   // 방패 없으면 창/도끼가 전열
-      if(!fl.length){fl.push(...fk);fk.length=0;}   // 그것도 없으면 석검 전열(순수 석검=한 덩어리 → 매트릭스 보존)
-      lay(fl,frontX,sp,per,dep);                                  // 전열: 방패류
-      if(sl.length)lay(sl,frontX-dir*(dep+2),sp,per,dep);     // 2선: 창·도끼(전열 바로 뒤 ~5m → 접촉 시 빠른 합류·파쇄)
-      {const aw=back.length, pr=Math.max(1,Math.floor(WORLD_H*0.84/5.0));   // 후열 궁수: 곡사 없어 종심 불가 → 전장 폭까지 1열 횡대(초과분만 뒤열 지그재그). 전선 폭=화력 상한(고증)
-        for(let i=0;i<aw;i++){const c=(i/pr)|0,r=i%pr,rn=Math.min(pr,aw-c*pr); spawn(side,back[i], backX-dir*c*5, cyc+(r-(rn-1)/2)*5.0+(c%2)*2.5, form);}}
-      if(fk.length){const half=Math.ceil(fk.length/2),fy=WORLD_H*0.30;   // 측면: 석검 좌우 분리(유격)
-        for(let i=0;i<fk.length;i++){const top=i<half,idx=top?i:i-half,cnt=top?half:fk.length-half;
-          spawn(side,fk[i], frontX-dir*3, (top?cyc-fy:cyc+fy)+(idx-(cnt-1)/2)*2.6, form);}}
-    }
-  };
-  place('A'); place('B');
-  sides.A.start=units.filter(u=>u.side==='A').length;
-  sides.B.start=units.filter(u=>u.side==='B').length;
-  sides.A.arrows=units.filter(u=>u.side==='A'&&u.type==='archer').length*ARROWS_PER;   // ★부대 화살 재고=궁수수×보급(소진 시 백병/후퇴)
-  sides.B.arrows=units.filter(u=>u.side==='B'&&u.type==='archer').length*ARROWS_PER;
-  sides.A.stones=units.filter(u=>u.side==='A'&&u.type==='slinger').length*STONES_PER;   // ★부대 돌 재고=투석병수×보급(화살과 병렬, 소진 시 백병/후퇴)
-  sides.B.stones=units.filter(u=>u.side==='B'&&u.type==='slinger').length*STONES_PER;
-  sides.A.hadChamp=units.some(u=>u.side==='A'&&u.type==='champion');
-  sides.B.hadChamp=units.some(u=>u.side==='B'&&u.type==='champion');
-  if(playerMode){ const As=units.filter(u=>u.side==='A'); if(As.length){
-    commander=As.reduce((a,b)=>b.x>a.x?b:a,As[0]); commander.cmd=true; cmdHeading=0;   // ★최전방(+x)=지휘관(선봉). heading=0(정면 +x) 기준
-    for(const u of As){u.slx=u.x-commander.x; u.sly=u.y-commander.y;}   // 지휘관 기준 로컬 슬롯 → 이동/회전 시 cmdHeading 적용해 대형 유지
-  }}
+        list.push({type,x,y}); }
+      sp.units=list; sp.form='open'; }
+  }
+  BC.buildArmies(spec);
+  BC._defaultCtx.world=(trees.length||buildings.length)?LAB_WORLD:null;
   fitView(); draw(); updStat();
 }
-// ★고증 메모: 방패벽·방진·마니플(산개 지그재그)·제병협동은 국가·상비군의 훈련된 전술로, 후기 청동기~초기 철기 부족사회(송국리)엔 없었음.
-//   실제 그 시대 전투 = 습격·매복·산병 + 느슨한 무리의 광란 돌격. 조직 대형은 수메르·이집트·그리스·로마 등 국가 형성 후 발달.
-//   → 게임성 위해 현재는 유지하되, 본 게임 이식 시 "철기 보급 + 족장/국가 권력 강화" 이후 해금되는 발전 요소로 다루는 것이 고증적.
-const FORM_SPD={line:1, wall:0.85, open:1.15, column:1.25, circle:0};   // 대형별 이동속도(방패벽 느림·종대 빠름·원형=정지 방어. kite/standoff에도 곱해져 방진은 제자리 고정)
-const FORM_KO={line:'선형', wall:'방패벽', open:'산개', circle:'원형', column:'종대'};
-function spawn(side,type,x,y,form){const D=UNITS[type];
-  units.push({id:units.length,side,type,x,y,hp:D.hp,maxHp:D.hp, shp:D.shHP||0, shMax:D.shHP||0, tgt:null, st:'adv', cd:Math.random()*D.cd, face:side==='A'?0:Math.PI, _rt:0, mrl:MRL0[type]||0.8, routing:false, form:form||'line'});}
-
-// ═══════════ 헬퍼 ═══════════
-function dist2(a,b){const dx=a.x-b.x,dy=a.y-b.y;return dx*dx+dy*dy;}
-// ★공간 해시(BK=2.5m 버킷): 이웃·표적 조회 O(N²)→~O(N). 본체 대규모 전투 이식 코드도 여기서 검증. sep반경1.0<BK라 3×3이 이웃 전부 포함.
-const BK=2.5; let _grid=new Map();
-const _cen={A:{x:0,y:0,n:0,march:2.2},B:{x:0,y:0,n:0,march:2.2}};   // ★진영 중심(원거리 행군 목표) + 주력 최저속도(대형 유지 전진) — 프레임당 1회
-function gkey(x,y){return ((Math.floor(x/BK)+256)*8192)+(Math.floor(y/BK)+256);}   // 오프셋(궤주 이탈=음수 인덱스 대비)
-function buildGrid(){_grid.clear(); let ax=0,ay=0,an=0,bxx=0,byy=0,bn=0,aM=1e9,bM=1e9;
-  for(const u of units){if(u.hp<=0)continue; const k=gkey(u.x,u.y); const c=_grid.get(k); if(c)c.push(u); else _grid.set(k,[u]);
-    const mn=(u.type==='spear'||u.type==='pike'||u.type==='greataxe'||u.type==='champion');   // 대형 유지 주력(벽을 이룸)
-    if(u.side==='A'){ax+=u.x;ay+=u.y;an++; if(mn&&UNITS[u.type].spd<aM)aM=UNITS[u.type].spd;}else{bxx+=u.x;byy+=u.y;bn++; if(mn&&UNITS[u.type].spd<bM)bM=UNITS[u.type].spd;}}
-  _cen.A.x=an?ax/an:0;_cen.A.y=an?ay/an:0;_cen.A.n=an;_cen.A.march=aM<1e9?aM:2.2; _cen.B.x=bn?bxx/bn:0;_cen.B.y=bn?byy/bn:0;_cen.B.n=bn;_cen.B.march=bM<1e9?bM:2.2;}
-function nearestEnemy(u,maxR,los){const bx=Math.floor(u.x/BK),by=Math.floor(u.y/BK); let best=null,bd=1e18;   // ★확장 링 탐색(maxR 링까지만 = 원거리 캡). 찾은 뒤 '다음 링 최소거리(r·BK) > best'면 종료 → 진짜 최근접 보장. los=true면 나무에 가려진 적 제외(감지)
-  for(let r=0;r<=(maxR||80);r++){
-    for(let ix=bx-r;ix<=bx+r;ix++)for(let iy=by-r;iy<=by+r;iy++){
-      if(r>0&&ix>bx-r&&ix<bx+r&&iy>by-r&&iy<by+r)continue;   // 링 둘레만(내부 셀은 이미 이전 링서 봄)
-      const c=_grid.get(((ix+256)*8192)+(iy+256)); if(!c)continue;
-      for(const e of c){if(e.side===u.side||e.hp<=0)continue; const dx=u.x-e.x,dy=u.y-e.y,d=dx*dx+dy*dy; if(d<bd&&!(los&&trees.length&&treeBlocks(u.x,u.y,e.x,e.y))){bd=d;best=e;}}}   // 감지: 가려진 적 제외
-    if(best){const rm=r*BK; if(bd<=rm*rm)break;}
-  }
-  return best?{e:best,d:Math.sqrt(bd)}:null;}
-function frontal(target,fromX,fromY){ // 공격이 방패(정면) 각 안인가 — face 기준 ±70°
-  const aTo=Math.atan2(fromY-target.y,fromX-target.x); let da=aTo-target.face;
-  while(da>Math.PI)da-=6.283; while(da<-Math.PI)da+=6.283; return Math.abs(da)<(target.form==='wall'?2.0:1.22);}   // 방패벽=넓은 정면 각(±115°, 옆 전우 방패가 측면 엄호)
-// ★사선 차폐: 아군이 직사 경로(전방 0.6~7m·수직 0.85m)를 막는가 → 후열은 간접 아크사격(제압 위주). 전방 시야 트인 궁수만 정확 직사
-function screened(u,tx,ty){
-  const dx=tx-u.x,dy=ty-u.y,d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d;
-  const pts=[[u.x,u.y],[u.x+ux*4,u.y+uy*4]];   // 궁수 근처 + 4m 전방 두 군집만 조회(O(1))
-  for(const p of pts){const bx=Math.floor(p[0]/BK),by=Math.floor(p[1]/BK);
-    for(let ix=bx-1;ix<=bx+1;ix++)for(let iy=by-1;iy<=by+1;iy++){const c=_grid.get(((ix+256)*8192)+(iy+256));if(!c)continue;
-      for(const o of c){if(o===u||o.side!==u.side||o.hp<=0)continue; const ox=o.x-u.x,oy=o.y-u.y,t=ox*ux+oy*uy;
-        if(t<0.6||t>Math.min(d,7))continue; if(Math.abs(ox*uy-oy*ux)<0.85)return true;}}}
-  return false;}
-// ★적 e의 정면(±방패각)이 이미 아군으로 포화됐는가 → 남는 유닛은 측/후면 우회(창발적 포위)
-function frontBlocked(u,e){const bx=Math.floor(e.x/BK),by=Math.floor(e.y/BK);
-  for(let ix=bx-1;ix<=bx+1;ix++)for(let iy=by-1;iy<=by+1;iy++){const c=_grid.get(((ix+256)*8192)+(iy+256));if(!c)continue;
-    for(const o of c){if(o===u||o.side!==u.side||o.hp<=0)continue; const dx=o.x-e.x,dy=o.y-e.y; if(dx*dx+dy*dy<2.3*2.3&&frontal(e,o.x,o.y))return true;}}
-  return false;}
-function hurt(target,dmg,fromX,fromY,kind,shBrk){
-  const D=UNITS[target.type];
-  dmg*=(0.75+Math.random()*0.5);   // ★무기 피해 변량 ±25% — 타격질·급소. 평균은 기본값
-  const front=target.form==='circle'?true:frontal(target,fromX,fromY);   // ★원형(방진)=전방위 방어 → 항상 정면 취급
-  if(!front && kind!=='arrow'){ const col=target.form==='column'; dmg*=col?1.75:1.4; target.mrl=Math.max(0,(target.mrl||1)-(col?0.11:0.07)); }   // ★근접 측·후면 치기: 방패 무효 + 피해↑ + 사기충격. 종대=좁고 긴 대열이라 측면 붕괴 급속(1.75배). 화살 측면은 방패 미적용까지만
-  if(D.shield>0 && (target.shp||0)>0 && front){   // 정면 + 방패 온전
-    const wall=target.form==='wall';   // ★방패벽=정면 극강(맞물린 방패). 측/후면은 이 블록 밖 → flanking 취약
-    const wArc=wall||target.form==='circle';   // 화살 차단은 방진(원형)도 방패벽급(밀집 방패로 사방 화살 견딤). 단 근접 파쇄는 일반 → 도끼가 방진도 뚫음
-    if(kind==='arrow'){ target.shp-=wArc?0.15:0.5;   // ★화살: 정면 방패 차단(선형 95%·방패벽/방진 99%)
-      if(Math.random()<(wArc?0.99:0.95))dmg=0; else dmg*=0.5;
-    } else { dmg*=(1-D.shield)*(wall?0.88:1); target.shp-=(shBrk||8); }   // ★근접: 정면 감쇠(방패벽 소폭↓). 방패 파쇄는 선형과 동일 → 도끼가 방패벽·방진도 뚫음
-    if(target.shp<0)target.shp=0;
-  }
-  target.hp-=dmg;
-  if(target.hp<=0 && !target._dead){target._dead=1; corpses.push({x:target.x,y:target.y,side:target.side,rot:1}); sides[target.side].dead++;
-    const bx=Math.floor(target.x/BK),by=Math.floor(target.y/BK);   // ★사망 사기충격: 근처 아군(눈앞에서 동료가 쓰러짐)
-    for(let ix=bx-1;ix<=bx+1;ix++)for(let iy=by-1;iy<=by+1;iy++){const c=_grid.get(((ix+256)*8192)+(iy+256));if(!c)continue;for(const o of c){if(o.side===target.side&&o.hp>0)o.mrl=Math.max(0,(o.mrl||1)-SUP_DEATH);}}
-  }
+// ★[T1090] 증원 — 진행 중인 판에 병사를 더 넣는다(코어 addUnits · 07-10 뒤 생긴 것). 자리는 그 진영 후열 줄(코어 표준 배치 후열 x 22 · 간격 5)
+function reinforce(side){
+  const type=document.getElementById('r_type').value, n=+document.getElementById('r_n').value;
+  if(!n||!UNITS[type])return;
+  const backX=side==='A'?22:WORLD_W-22, list=[];
+  for(let i=0;i<n;i++)list.push({type, x:backX, y:WORLD_H/2+(i-(n-1)/2)*5.0});
+  if(!BC.units.length)return;
+  const h=BC._makeHandle(BC._defaultCtx); h.addUnits(side,list,readQ(side.toLowerCase()));
+  draw(); updStat();
 }
 
-// ═══════════ 시뮬 (월드좌표 — 투영 무관) ═══════════
-function stepBattle(dt){
-  tick+=dt;
-  buildGrid();   // ★공간 해시 재구축(프레임 1회) — 이하 nearestEnemy·sep가 O(N)
-  updateMorale(dt);   // ★개별 사기 갱신(국지 우열·전염·족장 앵커·상대적 사상) → 확률적 개별 궤주
-  const order=units.slice(); for(let i=order.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;const t=order[i];order[i]=order[j];order[j]=t;}   // ★처리순서 무작위(막타 편향 제거 — 안 그러면 배열 앞 진영이 코인플립 전승)
-  for(const u of order){
-    if(u.hp<=0)continue;
-    const D=UNITS[u.type]; u.cd-=dt;
-    // ── 지휘 모드: 지휘관 WASD 직접 조작(+근처 적 자동 공격 — 선봉이니 직접 싸움) ──
-    if(playerMode && u.cmd){ let mx=0,my=0; if(keys.w)my-=1; if(keys.s)my+=1; if(keys.a)mx-=1; if(keys.d)mx+=1;
-      const m=Math.hypot(mx,my);
-      if(m>0){mx/=m;my/=m; u.x+=mx*D.spd*dt; u.y+=my*D.spd*dt; u.face=Math.atan2(my,mx); cmdHeading=u.face;}   // 이동 방향 → 대형 진행방향(부대 회전 기준)
-      const ce=(nearestEnemy(u,Math.ceil((D.ranged>0?D.ranged+2:13)/BK)+1,true)||{}).e;
-      if(ce){const cd=Math.sqrt(dist2(u,ce)); if(m===0)u.face=Math.atan2(ce.y-u.y,ce.x-u.x);
-        if(D.ranged>0){ if(cd<=D.ranged&&u.cd<=0){const los=trees.length?!treeBlocks(u.x,u.y,ce.x,ce.y):true; if(los){u.st='shoot';u.cd=D.cd;shoot(u,ce);}} }
-        else if(cd<=D.reach&&u.cd<=0){u.cd=D.cd;u.st='melee';hurt(ce,D.atk,u.x,u.y,'melee',D.shBrk);} }
-      sep(u,dt); continue; }
-    // ── 궤주(개별): 자기 진영 뒤로 도주(전투 안 함) ──
-    if(u.routing){u.st='rout'; const gx=u.side==='A'?-40:WORLD_W+40; const dx=gx-u.x,dy=0, dd=Math.hypot(dx,dy)||1; u.face=Math.atan2(dy,dx);
-      u.x+=dx/dd*D.spd*1.25*dt; sep(u,dt); continue;}
-    const engR=D.ranged>0?D.ranged+2:13;   // 획득 사거리(궁수=사거리+여유, 근접=국지 13m). 이 밖은 링탐색 대신 중심으로 행군
-    const mf=u.mrl>=0.5?1:Math.max(0.35,(u.mrl-0.15)/0.35);   // ★동요(사기<0.5) 전투효율: 주저해 공격 확률↓·머뭇거리며 전진. 정상↔궤주 사이 중간 상태(가만히 X)
-    const fSpd=FORM_SPD[u.form]||1;   // 대형별 전진속도(방패벽 느림·종대 빠름·원형 정지)
-    const isMain=(u.type==='spear'||u.type==='pike'||u.type==='greataxe'||u.type==='champion');   // 주력=대형 유지(진영 최저속도로 동기화 전진), 석검·궁수=자유
-    const mSpd=isMain?_cen[u.side].march:D.spd;
-    u._detCd=(u._detCd||0)-dt;   // ★감지 스로틀(0.35초) — 매 프레임 재탐색 X
-    const tgtOk = u.tgt && u.tgt.hp>0 && dist2(u,u.tgt)<25*25 && !(trees.length&&treeBlocks(u.x,u.y,u.tgt.x,u.tgt.y));   // 기존 타겟이 살아있고·근거리·안 가려짐
-    let e;
-    if(tgtOk && u._detCd>0) e=u.tgt;   // 유지(진동 방지)
-    else { u._detCd=0.35+Math.random()*0.12; e=(nearestEnemy(u,Math.ceil(engR/BK)+1,true)||{}).e; }   // 재감지: LOS 통과(안 가려진) 최근접 → 나무 뒤 매복 성립 + 더 가까운 새 위협 전환
-    if(!e){
-      if(playerMode && u.side==='A' && commander && commander.hp>0){   // ★부대: 적 없으면 지휘관 슬롯 추종(대형 유지·진행방향 회전)
-        const cs=Math.cos(cmdHeading),sn=Math.sin(cmdHeading);
-        const tx=commander.x + u.slx*cs - u.sly*sn, ty=commander.y + u.slx*sn + u.sly*cs;   // 로컬 슬롯을 진행방향으로 회전 → 대형이 곡선 주행 시 함께 돎
-        const dx=tx-u.x,dy=ty-u.y,dd=Math.hypot(dx,dy);
-        if(dd>0.25){const st=Math.min(D.spd*dt,dd); u.x+=dx/dd*st; u.y+=dy/dd*st;} u.face=cmdHeading; sep(u,dt); continue;
-      }
-      u.st='adv'; const c=_cen[u.side==='A'?'B':'A'];   // ★국지에 적 없음 → 적 군대 중심으로 행군(원거리 far-search 소멸). y는 35%만 호밍 → 전열 유지
-      if(c.n){const s=c.x>u.x?1:-1; u.face=s>0?0:Math.PI; u.x+=s*mSpd*fSpd*dt; sep(u,dt);} continue; }   // 순수 x-전진(적 방향) — y 유지 → 대열 보존. 주력=최저속도 동기화(대형 유지)·석검=자유
-    u.tgt=e; const d=Math.sqrt(dist2(u,e));
-    if(u.form==='wall'){const c=_cen[u.side==='A'?'B':'A']; u.face=c.n?Math.atan2(c.y-u.y,c.x-u.x):Math.atan2(e.y-u.y,e.x-u.x);}   // ★방패벽=대열 일체(적 군대 중심으로 방패) → 측면 화살 차단, 각자 추적 시 생기던 측면 구멍 제거
-    else u.face=Math.atan2(e.y-u.y,e.x-u.x);
-    // ── 궁수·투석병: 탄약 있으면 사격, 소진 시 백병(단검/맨손)/후퇴. 근접 위협 시 kite ──
-    if(D.ranged>0){
-      const ak=D.ammo||'arrows';   // ★탄약 재고 키: 궁수=arrows, 투석병=stones(화살과 병렬 재고)
-      const ammo=sides[u.side][ak]>0;
-      if(d<3.5){ // 적이 붙음 → 뒤로 물러나며 약한 근접(단검)
-        u.st='melee'; const bd=Math.hypot(e.x-u.x,e.y-u.y)||1;
-        u.x+=(u.x-e.x)/bd*D.spd*0.5*fSpd*dt; u.y+=(u.y-e.y)/bd*D.spd*0.5*fSpd*dt;   // 뒷걸음질(무한 카이팅 방지)
-        if(d<D.reach && u.cd<=0){u.cd=D.cd; if(Math.random()<mf)hurt(e,D.mAtk,u.x,u.y,'melee',D.shBrk);} sep(u,dt); continue;
-      }
-      if(ammo){   // 탄약 있음: 사격 or 사거리로 접근
-        if(d<=D.ranged){
-          if(u.cd<=0){ const los=trees.length?!treeBlocks(u.x,u.y,e.x,e.y):true;
-            if(los){u.st='shoot'; u.cd=D.cd; if(Math.random()<mf){shoot(u,e); sides[u.side][ak]--;}} else {u.st='block'; u.cd=1;} }   // ★사격 성공 시 부대 탄약 1 차감(화살/돌)
-        } else { u.st='adv'; const dd=d||1,ms=D.spd*(0.55+0.45*mf)*fSpd; u.x+=(e.x-u.x)/dd*ms*dt; u.y+=(e.y-u.y)/dd*ms*dt; }
-      } else {   // ★화살 소진: 적 근접(15m)이면 단검 백병, 멀면 진영 뒤 후퇴
-        if(d<15){ u.st='melee'; const dd=d||1,ms=(D.chg||D.spd)*(0.55+0.45*mf)*fSpd; if(d>D.reach){u.x+=(e.x-u.x)/dd*ms*dt; u.y+=(e.y-u.y)/dd*ms*dt;} else if(u.cd<=0){u.cd=D.cd; if(Math.random()<mf)hurt(e,D.mAtk,u.x,u.y,'melee',D.shBrk);} }
-        else { u.st='adv'; const gx=u.side==='A'?-40:WORLD_W+40,dd=Math.abs(gx-u.x)||1; u.x+=(gx-u.x)/dd*D.spd*fSpd*dt; }   // 후퇴(화살 없어 사실상 이탈)
-      }
-      sep(u,dt); continue;
-    }
-    // ── 근접(창·단검): 리치까지 전진 후 타격 ──
-    if(d>D.reach){ u.st='adv'; let gx=e.x,gy=e.y;   // 동요 시 머뭇거리며 접근 · 대형속도 반영
-      if(u.form!=='wall'&&u.form!=='circle'&&UNITS[e.type].ranged===0&&e.form!=='wall'&&e.form!=='circle'&&frontBlocked(u,e)){   // ★정면 포화 → 측/후면 우회(포위). 방패벽·원형은 대열 유지. 궁수·방패벽·방진(전방위) 표적엔 우회 무의미 → 정면 집중(파쇄로 뚫음)
-        const efx=Math.cos(e.face),efy=Math.sin(e.face),rx=u.x-e.x,ry=u.y-e.y,sd=(rx*(-efy)+ry*efx)>0?1:-1;   // u에 가까운 쪽 측면 선택
-        gx=e.x+(-efy*sd)*2.4-efx*0.9; gy=e.y+(efx*sd)*2.4-efy*0.9;   // 측면(+약간 후면) 접근점
-      }
-      const asp=(D.chg||D.spd)*((u.type==='greataxe'&&(UNITS[e.type].shield>0||e.form==='wall'))?1.25:1);   // ★접근=돌격(chg<비전투5). 도끼=방패 표적에 돌진 부스트(방패 사이 파고들어 파쇄), 무방비엔 일반 → 장창>도끼 유지. 적 없음만 walk(<2)
-      const dd=Math.hypot(gx-u.x,gy-u.y)||1,ms=asp*(0.55+0.45*mf)*fSpd; u.x+=(gx-u.x)/dd*ms*dt; u.y+=(gy-u.y)/dd*ms*dt; }   // 주력=최저속도 동기화·석검=자유·도끼=접촉 돌진
-    else { u.st='melee'; if(u.cd<=0){u.cd=D.cd; const amb=(concealed(u)&&!concealed(e))?1.5:1; const atk=u.broken?D.mAtk*0.5:D.atk*amb; if(Math.random()<mf)hurt(e,atk,u.x,u.y,'melee',u.broken?4:D.shBrk); if(!u.broken&&Math.random()<(BREAK_P[u.type]||0))u.broken=true;}   // 동요 헛손질·★매복 기습1.5×·★무기 파손(확률→맨손: 공격/파쇄 급락)
-      // ★리치 우위 유닛(장창)=적 리치권 밖으로 물러서며 찌름. 후퇴 0.6×라 더 빠른 적은 결국 파고듦(무한 카이팅 방지, 리치는 접근 지연분만큼만 이득)
-      if(D.standoff){const eR=UNITS[e.type].reach; if(eR<D.reach-0.3 && d<eR+0.5){const dd=d||1,sb=(D.chg||D.spd)*0.85; u.x-=(e.x-u.x)/dd*sb*fSpd*dt; u.y-=(e.y-u.y)/dd*sb*fSpd*dt;}}   // 리치 유지 후퇴=돌격 속도 기반(walk면 느려 파고들림)
-    }
-    sep(u,dt);
-  }
-  // ── 화살: 비행 투사체(세그먼트 충돌 — 터널링 방지·중간 장애물/유닛 차단·빗맞으면 사거리까지 날아가 뒤를 맞힘) ──
-  for(let i=arrows.length-1;i>=0;i--){const ar=arrows[i]; ar.px=ar.x; ar.py=ar.y; const mx=ar.vx*dt,my=ar.vy*dt; ar.x+=mx; ar.y+=my; ar.trav+=Math.hypot(mx,my); let done=false;
-    if((trees.length||buildings.length)&&treeBlocks(ar.px,ar.py,ar.x,ar.y))done=true;   // 나무·건물이 사선 막음(통과 불가)
-    if(!done){const dx=ar.x-ar.px,dy=ar.y-ar.py,L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L; const bx=Math.floor(ar.x/BK),by=Math.floor(ar.y/BK); let hu=null,hd=1e9;
-      for(let ix=bx-1;ix<=bx+1;ix++)for(let iy=by-1;iy<=by+1;iy++){const c=_grid.get(((ix+256)*8192)+(iy+256));if(!c)continue;
-        for(const o of c){if(o.hp<=0||o===ar.sh)continue; const ox=o.x-ar.px,oy=o.y-ar.py,t=ox*ux+oy*uy; if(t<-0.25||t>L+0.35)continue; const perp=Math.abs(ox*uy-oy*ux); const rr=UNITS[o.type].r+0.22; if(perp<rr&&t<hd&&(o.side!==ar.side||ar.trav>6.0)){hd=t;hu=o;}}}   // 세그먼트상 첫 유닛. 발사 직후 6m 내 아군 통과(옆 궁수 간격) → 전열(18m앞)은 막힘, 같은 열 궁수끼리는 통과
-      if(hu){ if(hu.side!==ar.side){ hurt(hu,ar.dmg,hu.x,hu.y,'arrow',0);   // 적=명중
-          const hbx=Math.floor(hu.x/BK),hby=Math.floor(hu.y/BK);
-          for(let ix=hbx-1;ix<=hbx+1;ix++)for(let iy=hby-1;iy<=hby+1;iy++){const c=_grid.get(((ix+256)*8192)+(iy+256));if(!c)continue;for(const en of c){if(en.side!==ar.side&&en.hp>0){const ex=en.x-hu.x,ey=en.y-hu.y;if(ex*ex+ey*ey<SUP_R*SUP_R)en.mrl=Math.max(0,(en.mrl||1)-SUP_ARROW);}}}   // 제압(적만)
-        } done=true; }   // ★아군=막힘(무데미지) — 사용자 선택(고증): 곡사 없어 앞 아군 못 넘김
-    }
-    if(done||ar.trav>=ar.range)arrows.splice(i,1);
-  }
-  // ── 종료 판정: 교전 가능(생존·비궤주) 수 기반 — 전군 궤주/전멸 시 결판 ──
-  const la=units.filter(u=>u.side==='A'&&u.hp>0).length, lb=units.filter(u=>u.side==='B'&&u.hp>0).length;
-  const fa=units.filter(u=>u.side==='A'&&u.hp>0&&!u.routing).length, fb=units.filter(u=>u.side==='B'&&u.hp>0&&!u.routing).length;
-  if(!result){
-    if(fa===0&&fb>0)result={win:'B'};        // A 전원 궤주/전멸 → B가 전장 장악
-    else if(fb===0&&fa>0)result={win:'A'};
-    else if(fa===0&&fb===0)result={win:la>lb?'A':lb>la?'B':'무'};   // 상호 붕괴 = 잔존 많은 쪽
-    else if(tick>120)result={win:la>lb?'A':lb>la?'B':'무'};   // ★교착 안전판(2분): 결판 안 나면 잔존 우세로(무한 카이팅·재규합 진동 방지)
-    if(result){running=false; document.getElementById('playBtn').textContent='▶ 전투 시작';}
-  }
-  // 시체 페이드
-  for(const c of corpses)c.rot=Math.max(0,c.rot-dt*0.03);
-}
-function shoot(u,e){const D=UNITS[u.type]; const dist=Math.hypot(e.x-u.x,e.y-u.y);
-  const ft=dist/D.arrowV; const lx=e.x+(e._vx||0)*ft, ly=e.y+(e._vy||0)*ft;   // 리드(예측 조준)
-  const scatter=(0.015+dist*0.0022)*(D.spread||1);   // 거리 비례 산포 — 곡사 구분 폐지(고대 부족=곡사 일제사격 없음, 개별 직사). 멀수록 부정확. ★투석병 spread>1=명중↓(궁수는 spread 없음→동일)
-  const ang=Math.atan2(ly-u.y,lx-u.x)+(Math.random()-0.5)*2*scatter;
-  arrows.push({x:u.x,y:u.y,px:u.x,py:u.y,vx:Math.cos(ang)*D.arrowV,vy:Math.sin(ang)*D.arrowV,dmg:D.atk,side:u.side,range:D.ranged*1.5,trav:0,sh:u});}   // ★비행 투사체: range=감지1.5배(평사 오버슈트 고증 — 조준40m 화살은 낙하 전 ~60m). px/py=이전위치(세그먼트), sh=발사자
-function sep(u,dt){let sx=0,sy=0,n=0; const bx=Math.floor(u.x/BK),by=Math.floor(u.y/BK);   // ★3×3 버킷만 조회(sep반경1.0<BK2.5라 이웃 전부 포함) — O(N)
-  for(let ix=bx-1;ix<=bx+1;ix++)for(let iy=by-1;iy<=by+1;iy++){const c=_grid.get(((ix+256)*8192)+(iy+256)); if(!c)continue;
-    for(const o of c){if(o===u||o.hp<=0)continue; const dx=u.x-o.x,dy=u.y-o.y,d2=dx*dx+dy*dy; if(d2<1.0*1.0&&d2>1e-4){const d=Math.sqrt(d2);sx+=dx/d;sy+=dy/d;n++;}}}
-  if(n){u.x+=sx/n*1.0*dt; u.y+=sy/n*1.0*dt;}
-  if(trees.length)for(const t of trees){const dx=u.x-t.x,dy=u.y-t.y,d2=dx*dx+dy*dy,rr=t.r+0.5; if(d2<rr*rr&&d2>1e-4){const d=Math.sqrt(d2);u.x=t.x+dx/d*rr;u.y=t.y+dy/d*rr;}}   // ★나무 관통 불가(우회 → 대형 붕괴·기동 방해)
-  if(buildings.length)for(const b of buildings){const dx=u.x-b.x,dy=u.y-b.y,hx=b.w/2+0.45,hy=b.h/2+0.45; if(Math.abs(dx)<hx&&Math.abs(dy)<hy){const ox=hx-Math.abs(dx),oy=hy-Math.abs(dy);
-    const gx=(u.tgt&&u.tgt.hp>0)?u.tgt.x:u.x, gy=(u.tgt&&u.tgt.hp>0)?u.tgt.y:u.y;   // ★벽 슬라이딩: 목표(적) 쪽으로 벽을 타고 미끄러져 모서리 우회(경로탐색 없이 볼록 건물 회피 — 코 박음 방지)
-    if(ox<oy){u.x=b.x+(dx<0?-hx:hx); u.y+=Math.sign(gy-u.y||1)*Math.min(2.6*dt,hy+0.2);}   // x벽에 막힘 → y로 슬라이드
-    else {u.y=b.y+(dy<0?-hy:hy); u.x+=Math.sign(gx-u.x||1)*Math.min(2.6*dt,hx+0.2);}}}}   // y벽에 막힘 → x로 슬라이드
-// ★창발 사기: 국지 우열 + 전염(옆 아군 도망) + 족장 앵커 + 상대적 사상비 → 확률적 개별 궤주/재규합. O(N)(3×3 버킷)
-function updateMorale(dt){
-  for(const u of units)u._rPrev=u.routing;   // ★프레임 시작 스냅샷 — 전염을 처리순서와 무관하게(A 먼저 처리 편향 제거)
-  const relA=sides.A.start?sides.A.dead/sides.A.start:0, relB=sides.B.start?sides.B.dead/sides.B.start:0;
-  const ord=units.slice(); for(let i=ord.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;const t=ord[i];ord[i]=ord[j];ord[j]=t;}   // ★순서 무작위 — 이탈 판정 RNG가 A 먼저 소비되던 계통편향 제거(사기 양성피드백이 이를 증폭했음)
-  for(const u of ord){if(u.hp<=0)continue;
-    const bx=Math.floor(u.x/BK),by=Math.floor(u.y/BK); let fN=0,eN=0,rN=0,champ=0,dMin2=1e9;
-    for(let ix=bx-1;ix<=bx+1;ix++)for(let iy=by-1;iy<=by+1;iy++){const c=_grid.get(((ix+256)*8192)+(iy+256));if(!c)continue;
-      for(const o of c){if(o===u||o.hp<=0)continue; if(o.side===u.side){fN++; if(o._rPrev)rN++; if(o.type==='champion')champ=1;} else {eN++; const dx=u.x-o.x,dy=u.y-o.y,dd=dx*dx+dy*dy; if(dd<dMin2)dMin2=dd;}}}
-    const myRel=u.side==='A'?relA:relB, enRel=u.side==='A'?relB:relA;
-    const commit=u.st==='melee'?1:(dMin2<COMMIT_D*COMMIT_D?1-Math.sqrt(dMin2)/COMMIT_D:0);   // 접촉 깊이(접근하며 상승) — firming
-    const wound=1-u.hp/u.maxHp;
-    let tgt=(MRL0[u.type]||0.8)+M_KODDS*(fN-eN)/(fN+eN+1)-M_KCONTAG*rN+M_KCHAMP*champ+M_KRELCAS*(enRel-myRel)-M_KABS*myRel
-      +M_KCOMMIT*commit-M_KWOUND*wound*(1-commit)+M_KDESP*wound*commit
-      +(u.form==='wall'?0.30:u.form==='circle'?0.15:u.form==='open'?-0.08:0) - (u.broken?0.18:0);   // ★대형 응집(방패벽·원형 버팀) − 무기 파손 시 불안(이탈↑)
-    if(tgt<0)tgt=0;else if(tgt>1)tgt=1;
-    u.mrl+=(tgt-u.mrl)*Math.min(1,M_RATE*dt);
-    if(u.mrl<0)u.mrl=0;else if(u.mrl>1)u.mrl=1;
-    if(!u.routing){ if(u.mrl<M_BREAK && Math.random()<(M_BREAK-u.mrl)*M_BREAKRATE*dt)u.routing=true; }   // 사기 낮을수록 이탈 확률↑(절벽 아닌 곡선)
-    else if(u.mrl>M_RALLY && eN===0)u.routing=false;   // 안전(근처 적 없음) + 사기 회복 → 재규합
-  }
-}
-
-// ═══════════ 렌더 (탑다운 — 이식 시 여기만 아이소로) ═══════════
+// ═══════════ 렌더(07-10 그대로 — 상태는 코어에서 읽는다) ═══════════
 function draw(){
+  const units=BC.units, arrows=BC.arrows, corpses=BC.corpses;
   ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,cv.width,cv.height);
-  // 전장 배경
   const [x0,y0]=project(0,0),[x1,y1]=project(WORLD_W,WORLD_H);
   ctx.fillStyle='#2b3122'; ctx.fillRect(x0,y0,x1-x0,y1-y0);
-  ctx.lineWidth=1;   // 1셀(1m) 미세격자 — 옅게, 그룹 1패스
+  ctx.lineWidth=1;
   ctx.strokeStyle='rgba(255,255,255,0.045)'; ctx.beginPath();
   for(let gx=0;gx<=WORLD_W;gx++){const[px]=project(gx,0);ctx.moveTo(px,y0);ctx.lineTo(px,y1);}
   for(let gy=0;gy<=WORLD_H;gy++){const[,py]=project(0,gy);ctx.moveTo(x0,py);ctx.lineTo(x1,py);}
   ctx.stroke();
-  ctx.strokeStyle='rgba(255,255,255,0.13)'; ctx.beginPath();   // 10셀(10m) 주격자 — 진하게
+  ctx.strokeStyle='rgba(255,255,255,0.13)'; ctx.beginPath();
   for(let gx=0;gx<=WORLD_W;gx+=10){const[px]=project(gx,0);ctx.moveTo(px,y0);ctx.lineTo(px,y1);}
   for(let gy=0;gy<=WORLD_H;gy+=10){const[,py]=project(0,gy);ctx.moveTo(x0,py);ctx.lineTo(x1,py);}
   ctx.stroke();
   ctx.setLineDash([4,4]);ctx.strokeStyle='rgba(255,255,255,0.12)';const[mx]=project(WORLD_W/2,0);ctx.beginPath();ctx.moveTo(mx,y0);ctx.lineTo(mx,y1);ctx.stroke();ctx.setLineDash([]);
-  // 건물(마을) — 지붕 사각 + 그림자 + 용마루
   for(const b of buildings){const[px,py]=project(b.x-b.w/2,b.y-b.h/2),[px2,py2]=project(b.x+b.w/2,b.y+b.h/2),w=px2-px,h=py2-py,big=b.w>=8;
     ctx.fillStyle='rgba(0,0,0,0.28)';ctx.fillRect(px+3,py+3,w,h);
     ctx.fillStyle=big?'#6d5a42':'#5a4a38';ctx.fillRect(px,py,w,h);
     ctx.strokeStyle='#2a2018';ctx.lineWidth=1.6;ctx.strokeRect(px,py,w,h);
     ctx.strokeStyle='rgba(0,0,0,0.32)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(px,py+h/2);ctx.lineTo(px2,py+h/2);ctx.stroke();}
-  // 나무(숲) — 수관 + 그늘
   for(const t of trees){const[px,py]=project(t.x,t.y);const R=t.r*view.z;
     ctx.fillStyle='#274a2b';ctx.beginPath();ctx.arc(px,py,R*1.15,0,7);ctx.fill();
     ctx.fillStyle='#38663d';ctx.beginPath();ctx.arc(px-R*0.15,py-R*0.15,R*0.8,0,7);ctx.fill();}
-  // 시체
   for(const c of corpses){if(c.rot<=0)continue;const[px,py]=project(c.x,c.y);ctx.globalAlpha=0.15+0.35*c.rot;ctx.fillStyle='#5a4a3a';ctx.beginPath();ctx.ellipse(px,py,1.1*view.z,0.5*view.z,0.5,0,7);ctx.fill();ctx.globalAlpha=1;}
-  // 화살
   ctx.strokeStyle='#e8d8a0';ctx.lineWidth=Math.max(1,0.12*view.z);
   for(const ar of arrows){const[px,py]=project(ar.x,ar.y);const bl=0.9*view.z,dd=Math.hypot(ar.vx,ar.vy)||1;ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px-ar.vx/dd*bl,py-ar.vy/dd*bl);ctx.stroke();}
-  // 유닛
   for(const u of units){if(u.hp<=0)continue;const D=UNITS[u.type];const[px,py]=project(u.x,u.y);const R=D.r*view.z;
-    if((trees.length||buildings.length)&&concealed(u)){ctx.fillStyle='rgba(70,130,70,0.30)';ctx.beginPath();ctx.arc(px,py,R*1.75,0,7);ctx.fill();}   // ★은폐(엄폐물 뒤)=매복 가능·기습 1.5× 상태 표시
-    // 몸통(속=병종색, 테두리=소속색)
-    ctx.beginPath();ctx.arc(px,py,R,0,7);ctx.fillStyle=u.st==='rout'?'#7a7a7a':D.col;ctx.globalAlpha=u.st==='rout'?0.55:(u.mrl<0.45?0.72:1);ctx.fill();ctx.globalAlpha=1;   // 동요(사기<0.45)=흐릿
+    if((trees.length||buildings.length)&&concealed(u)){ctx.fillStyle='rgba(70,130,70,0.30)';ctx.beginPath();ctx.arc(px,py,R*1.75,0,7);ctx.fill();}   // 은폐(매복 가능)
+    ctx.beginPath();ctx.arc(px,py,R,0,7);ctx.fillStyle=u.st==='rout'?'#7a7a7a':D.col;ctx.globalAlpha=u.st==='rout'?0.55:(u.mrl<0.45?0.72:1);ctx.fill();ctx.globalAlpha=1;
     ctx.lineWidth=Math.max(1.2,R*0.32);ctx.strokeStyle=SIDE_COL[u.side];ctx.stroke();
-    // 방향(무기 지시)
-    ctx.strokeStyle='rgba(0,0,0,0.6)';ctx.lineWidth=Math.max(1,R*(D.shBrk>=20?0.34:0.22));const wl=D.reach*0.85*view.z;   // 무기선 길이 ∝ 리치(장창 김)·굵기 ∝ 파쇄력(도끼 굵음)
+    ctx.strokeStyle='rgba(0,0,0,0.6)';ctx.lineWidth=Math.max(1,R*(D.shBrk>=20?0.34:0.22));const wl=D.reach*0.85*view.z;
     ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px+Math.cos(u.face)*wl,py+Math.sin(u.face)*wl);ctx.stroke();
-    // 방패(정면 호) — 내구 남았을 때만, 상할수록 흐려짐
     if(D.shield>0&&u.shp>0){const sf=u.shp/(u.shMax||1);ctx.strokeStyle='rgba(220,225,240,'+(0.3+0.55*sf).toFixed(2)+')';ctx.lineWidth=Math.max(1.4,R*0.4);ctx.beginPath();ctx.arc(px,py,R*1.15,u.face-0.9,u.face+0.9);ctx.stroke();}
-    if(D.champ){ctx.strokeStyle='#ffd23f';ctx.lineWidth=Math.max(1,R*0.24);ctx.beginPath();ctx.arc(px,py,R*1.5,0,7);ctx.stroke();}   // ★청동전사(족장)=금테
-    if(u.cmd){ctx.strokeStyle='#ffe14d';ctx.lineWidth=Math.max(2,R*0.5);ctx.beginPath();ctx.arc(px,py,R*1.9,0,7);ctx.stroke(); if(view.z>2.5){ctx.fillStyle='#ffe14d';ctx.font='bold '+(2.2*view.z).toFixed(0)+'px sans-serif';ctx.textAlign='center';ctx.fillText('★',px,py-R*3);ctx.textAlign='left';}}   // ★지휘관(플레이어)=굵은 금테+별
-    // 체력바
+    if(D.champ){ctx.strokeStyle='#ffd23f';ctx.lineWidth=Math.max(1,R*0.24);ctx.beginPath();ctx.arc(px,py,R*1.5,0,7);ctx.stroke();}
+    if(u.cmd){ctx.strokeStyle='#ffe14d';ctx.lineWidth=Math.max(2,R*0.5);ctx.beginPath();ctx.arc(px,py,R*1.9,0,7);ctx.stroke(); if(view.z>2.5){ctx.fillStyle='#ffe14d';ctx.font='bold '+(2.2*view.z).toFixed(0)+'px sans-serif';ctx.textAlign='center';ctx.fillText('지휘',px,py-R*2.4);ctx.textAlign='left';}}
     if(u.hp<u.maxHp){ctx.fillStyle='rgba(0,0,0,0.55)';ctx.fillRect(px-R,py-R*2.1,R*2,R*0.42);ctx.fillStyle=u.hp/u.maxHp>0.4?'#5ad06a':'#e05252';ctx.fillRect(px-R,py-R*2.1,R*2*Math.max(0,u.hp)/u.maxHp,R*0.42);}
-    // 상태점
-    if(view.z>3.5){const s=u.st==='rout'?'🏃':(u.mrl<0.4?'❗':u.st==='shoot'?'🏹':u.st==='melee'?'⚔':null);if(s){ctx.font=(1.6*view.z).toFixed(0)+'px sans-serif';ctx.textAlign='center';ctx.fillText(s,px,py-R*2.6);ctx.textAlign='left';}}
+    if(view.z>3.5){const s=u.st==='rout'?'궤':(u.mrl<0.4?'!':u.st==='shoot'?'사':u.st==='melee'?'백':null);if(s){ctx.fillStyle='#e8ecf2';ctx.font=(1.6*view.z).toFixed(0)+'px sans-serif';ctx.textAlign='center';ctx.fillText(s,px,py-R*2.6);ctx.textAlign='left';}}
   }
-  // ── 축척 바: 격자 1칸=10m(=10셀)·보병 ≈2셀/초 명시 — 격자 1칸을 1셀로 오해 방지 ──
   const _sb=10*view.z,_sx=16,_sy=cv.height-20;
   ctx.strokeStyle='rgba(232,236,242,0.92)';ctx.lineWidth=2;ctx.beginPath();
   ctx.moveTo(_sx,_sy);ctx.lineTo(_sx+_sb,_sy);ctx.moveTo(_sx,_sy-5);ctx.lineTo(_sx,_sy+5);ctx.moveTo(_sx+_sb,_sy-5);ctx.lineTo(_sx+_sb,_sy+5);ctx.stroke();
   ctx.fillStyle='rgba(232,236,242,0.92)';ctx.font='12px sans-serif';ctx.textAlign='left';
   ctx.fillText('미세격자=1m(1셀) · 굵은격자=10m · 보병 ≈2m/s',_sx,_sy-8);
 }
-// ★유닛 속도 추적(궁수 리드사격용) — 프레임 위치차
-function trackVel(dt){for(const u of units){if(u.hp<=0)continue;u._vx=((u.x-(u._px||u.x))/dt)||0;u._vy=((u.y-(u._py||u.y))/dt)||0;u._px=u.x;u._py=u.y;}}
 
-// ═══════════ 루프·컨트롤 ═══════════
+// ═══════════ 루프 · 조작 ═══════════
 let _last=0;
+// 한 판 진행(큰 dt 는 0.05 초로 잘게 — 07-10 그대로). 지형 어댑터를 단 판은 코어가 판 결과를 안 내므로(존 규약) 판 뒤에 코어 judge 를 부른다.
+function advance(dt){ const steps=Math.max(1,Math.ceil(dt/0.05)), sdt=dt/steps;
+  for(let i=0;i<steps;i++){ BC.trackVel(sdt); BC.stepBattle(sdt); if(BC._defaultCtx.world&&!BC.result)BC.judge(); if(BC.result)break; } }
 function loop(t){_raf=requestAnimationFrame(loop);const rdt=Math.min(0.05,(t-_last)/1000);_last=t;
-  if(running&&!result){const sp=+document.getElementById('speed').value;let dt=rdt*sp;
-    // 큰 dt는 잘게(고속 안정)
-    const steps=Math.max(1,Math.ceil(dt/0.05));const sdt=dt/steps;
-    for(let i=0;i<steps;i++){trackVel(sdt);stepBattle(sdt);}
-  }
+  if(running&&!BC.result)advance(rdt*(+document.getElementById('speed').value));
   draw(); updStat();
 }
-function togglePlay(){if(playerMode){playerMode=false;document.getElementById('cmdBtn').textContent='🎮 지휘 모드(WASD)';deploy();}if(result)deploy();running=!running;document.getElementById('playBtn').textContent=running?'⏸ 일시정지':'▶ 전투 시작';}
-function toggleCommand(){playerMode=!playerMode; deploy(); running=playerMode;   // ★지휘 모드: playerMode 토글 → deploy가 지휘관·슬롯 세팅, 즉시 진행
-  document.getElementById('cmdBtn').textContent=playerMode?'🎮 지휘 중 — WASD 이동':'🎮 지휘 모드(WASD)';
-  document.getElementById('playBtn').textContent=running?'⏸ 일시정지':'▶ 전투 시작';}
-function updStat(){const st=document.getElementById('stat');
+function togglePlay(){if(BC.playerMode){BC.setPlayerMode(false);document.getElementById('cmdBtn').textContent='지휘 모드(WASD)';deploy();}if(BC.result)deploy();running=!running;document.getElementById('playBtn').textContent=running?'일시정지':'전투 시작';}
+function toggleCommand(){BC.setPlayerMode(!BC.playerMode); deploy(); running=BC.playerMode;
+  document.getElementById('cmdBtn').textContent=BC.playerMode?'지휘 중 — WASD 이동':'지휘 모드(WASD)';
+  document.getElementById('playBtn').textContent=running?'일시정지':'전투 시작';}
+function updStat(){const st=document.getElementById('stat'); const units=BC.units, sides=BC.sides, result=BC.result;
   const cnt=(s,t)=>units.filter(u=>u.side===s&&u.type===t&&u.hp>0).length;
   const rt=s=>units.filter(u=>u.side===s&&u.hp>0&&u.routing).length;
   const la=units.filter(u=>u.side==='A'&&u.hp>0).length, lb=units.filter(u=>u.side==='B'&&u.hp>0).length;
-  const ex=s=>`${cnt(s,'slinger')?'·투'+cnt(s,'slinger'):''}${cnt(s,'militia')?'·민'+cnt(s,'militia'):''}`;   // 투석병·민병(있을 때만)
+  const ex=s=>`${cnt(s,'slinger')?'·투'+cnt(s,'slinger'):''}${cnt(s,'militia')?'·민'+cnt(s,'militia'):''}`;
   let h=`<b style="color:#7ab0ff">A</b> <span style="color:#8a94a4">[${FORM_KO[sides.A.form]||'선형'}]</span> 생존 ${la}/${sides.A.start} (창${cnt('A','spear')}·장${cnt('A','pike')}·도${cnt('A','greataxe')}·석${cnt('A','dagger')}·궁${cnt('A','archer')}${ex('A')}${sides.A.hadChamp?'·족'+cnt('A','champion'):''})`;
   h+=` ${rt('A')?'<span style="color:#ff5252">궤주 '+rt('A')+'</span>':''}<br>`;
   h+=`<b style="color:#ff8a7a">B</b> <span style="color:#8a94a4">[${FORM_KO[sides.B.form]||'선형'}]</span> 생존 ${lb}/${sides.B.start} (창${cnt('B','spear')}·장${cnt('B','pike')}·도${cnt('B','greataxe')}·석${cnt('B','dagger')}·궁${cnt('B','archer')}${ex('B')}${sides.B.hadChamp?'·족'+cnt('B','champion'):''})`;
   h+=` ${rt('B')?'<span style="color:#ff5252">궤주 '+rt('B')+'</span>':''}<br>`;
-  h+=`시간 ${tick.toFixed(1)}s · 사상 A${sides.A.dead}·B${sides.B.dead}`;
-  if((sides.A.arrows||0)+(sides.B.arrows||0)>0||cnt('A','archer')+cnt('B','archer')>0)h+=` · 🏹A${sides.A.arrows||0}·B${sides.B.arrows||0}`;   // 부대 화살 재고(소진 시 궁수 백병/후퇴)
-  if((sides.A.stones||0)+(sides.B.stones||0)>0||cnt('A','slinger')+cnt('B','slinger')>0)h+=` · 🪨A${sides.A.stones||0}·B${sides.B.stones||0}`;   // 부대 돌 재고(소진 시 투석병 백병/후퇴)
-  if(result)h+=`<br><b style="font-size:15px;color:${result.win==='A'?'#7ab0ff':result.win==='B'?'#ff8a7a':'#ccc'}">${result.win==='무'?'⚑ 무승부':result.win+'군 승리!'}</b> (▶ 다시)`;
+  h+=`시간 ${BC.tick.toFixed(1)}s · 사상 A${sides.A.dead}·B${sides.B.dead}`;
+  if((sides.A.arrows||0)+(sides.B.arrows||0)>0||cnt('A','archer')+cnt('B','archer')>0)h+=` · 화살 A${sides.A.arrows||0}·B${sides.B.arrows||0}`;
+  if((sides.A.stones||0)+(sides.B.stones||0)>0||cnt('A','slinger')+cnt('B','slinger')>0)h+=` · 돌 A${sides.A.stones||0}·B${sides.B.stones||0}`;
+  if(result)h+=`<br><b style="font-size:15px;color:${result.win==='A'?'#7ab0ff':result.win==='B'?'#ff8a7a':'#ccc'}">${result.win==='무'?'무승부':result.win+'군 승리'}</b> (전투 시작 = 다시)`;
   st.innerHTML=h;}
 
-// 슬라이더 라이브 값 + 리셋
-['a_spear','a_pike','a_axe','a_dagger','a_archer','a_slinger','a_militia','a_champ','b_spear','b_pike','b_axe','b_dagger','b_archer','b_slinger','b_militia','b_champ'].forEach(id=>{
-  const el=document.getElementById(id);el.addEventListener('input',()=>{document.getElementById(id+'_v').textContent=el.value; if(!running)deploy();});});
-['a_form','b_form','terrain'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('change',()=>{if(!running)deploy();});});   // 대형·지형 변경 시 재배치
-{const rb=document.getElementById('regenBtn');if(rb)rb.addEventListener('click',()=>{_regenTerrain=true;if(!running)deploy();});}   // 같은 지형 새로 뽑기(유닛 수만 바꿀 땐 유지되므로 명시적 재생성 버튼)
-// ★지휘 모드 WASD 입력
-window.addEventListener('keydown',e=>{const k=e.key.toLowerCase(); if(k==='w'||k==='a'||k==='s'||k==='d'){keys[k]=true; if(playerMode)e.preventDefault();}});
-window.addEventListener('keyup',e=>{const k=e.key.toLowerCase(); if(k==='w'||k==='a'||k==='s'||k==='d')keys[k]=false;});
-// 휠 줌 / 드래그 팬
+['a','b'].forEach(s=>KEYS.concat(['q']).forEach(k=>{const id=s+'_'+k, el=document.getElementById(id); if(!el)return;
+  el.addEventListener('input',()=>{document.getElementById(id+'_v').textContent=el.value; if(!running)deploy();});}));
+{const el=document.getElementById('r_n'); if(el)el.addEventListener('input',()=>{document.getElementById('r_n_v').textContent=el.value;});}
+['a_form','b_form','terrain'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('change',()=>{if(!running)deploy();});});
+{const rb=document.getElementById('regenBtn');if(rb)rb.addEventListener('click',()=>{_regenTerrain=true;if(!running)deploy();});}
+window.addEventListener('keydown',e=>{const k=e.key.toLowerCase(); if(k==='w'||k==='a'||k==='s'||k==='d'){BC.keys[k]=true; if(BC.playerMode)e.preventDefault();}});
+window.addEventListener('keyup',e=>{const k=e.key.toLowerCase(); if(k==='w'||k==='a'||k==='s'||k==='d')BC.keys[k]=false;});
 cv.addEventListener('wheel',e=>{e.preventDefault();const r=cv.getBoundingClientRect();const mx=(e.clientX-r.left)*(cv.width/r.width),my=(e.clientY-r.top)*(cv.height/r.height);const wx=(mx-view.ox)/view.z,wy=(my-view.oy)/view.z;const f=e.deltaY<0?1.12:1/1.12;view.z=Math.max(cv.width/WORLD_W*0.9,Math.min(30,view.z*f));view.ox=mx-wx*view.z;view.oy=my-wy*view.z;},{passive:false});
 let _drag=null;
 cv.addEventListener('mousedown',e=>{const r=cv.getBoundingClientRect();_drag={x:(e.clientX-r.left)*(cv.width/r.width),y:(e.clientY-r.top)*(cv.height/r.height),ox:view.ox,oy:view.oy};});
