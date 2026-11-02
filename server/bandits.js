@@ -84,7 +84,7 @@ const T577_WALK = process.env.T577_CAND_WALK === '1';
 //     걷던 몸이 단의 몸이 된다(호스트 `t1039Join` — 은거지 곁 새 몸 0). 가는 동안 단은 `GANGS` 밖이다 — 습격 0 · 토벌 표적 0 · 절망 이탈 합류 0 · 유지비 0(길 위 장부 · T765 정본 그 꼴 — 회부).
 //     부팅 실체화(다시 뜸 · 몸은 비영속)는 종전 그대로 은거지에 세운다.
 //   `spawn` — 단 · 단 몸은 종전 그대로 그날 선다 · 단 몸이 서는 그 틱에 단이 된 사람 몫의 마을 몸을 거둔다(호스트 `t1039Leave` — 떠남 표 · 순간이동 0 · 걷는 몸 0).
-const T1039_BODY = typeof process !== 'undefined' && !!process.env ? (process.env.T1039_BANDIT_BODY || '') : '';
+const T1039_BODY = (() => { const v = typeof process !== 'undefined' && !!process.env ? process.env.T1039_BANDIT_BODY : undefined; return v == null || v === '' ? 'walk' : (v === '0' ? '' : v); })();   // ★[PM land1038 · ★재민 11-01 "걸어간 몸이 단"] 켬 기본 = walk · 종전 = `=0` · 대조 `=spawn`
 const T1039_WALK = T1039_BODY === 'walk', T1039_SPAWN = T1039_BODY === 'spawn';
 const T577_RAMP = process.env.T577_RAMP !== '0';   // ★[T577 추신] 기본 켬
 function _t577Hash(name) { let h = 0; const s = String(name || ''); for (let i = 0; i < s.length; i++) h = (Math.imul(h, 31) + s.charCodeAt(i)) | 0; return h >>> 0; }
