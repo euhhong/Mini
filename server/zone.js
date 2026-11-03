@@ -6379,7 +6379,17 @@ const server = http.createServer((req, res) => {
 server.keepAliveTimeout = Math.max(5000, parseInt(process.env.ZONE_KEEPALIVE_MS || '30000', 10) || 30000);
 server.headersTimeout = server.keepAliveTimeout + 10000;
 
-const wss = new WebSocket.Server({ server });
+// ★★[T1125 2026-11-03 · ★재민 11-03 실기 "한반도 → 닛폰 넘기는 바로 됐는데 그 뒤 약 40초 먹통"] 손잡이 `T1125_WS_DEFLATE`(켬 기본 후보 · 되돌림 `=0` = 종전 — 압축 없음).
+//   도쿄 promote · 서울 ACK 는 바로 섰다. 그 뒤 welcome(라이브 약 1.7 MB · 도쿄 diag `sendBuf` 1,683 ~ 1,710 KB)이 느린 길(학교 망 → 도쿄)에서 10초 안에 다 못 갔고,
+//   클라 감시견(틱 10초 · pong 15초)이 **받는 중인 소켓**을 좀비로 끊었다 — 다시 붙으면 같은 바이트를 처음부터 다시 보냈다(손님 열쇠로 네 번 · pong 은 그 뒤에 줄 선다).
+//   그 바이트의 7할이 `hardcodedTerrain`(존 정적 지형 — 한반도 836 KB · 닛폰 635 KB)이다(`scripts/t1125-welcome-bytes.js` · 보고/T1125 ①).
+//   켬 = 존 WebSocket 에 permessage-deflate — **큰 메시지만**(`T1125_BIG` · 기본 64 KB = 카드 ② 수) · 작은 줄(틱 · pong · 알림)은 그대로 보낸다.
+//     ⚠ws 는 문턱을 **서버 문맥 이어 쓰기를 끈 때만** 본다(`ws/lib/sender.js` — 이어 쓰기면 모든 메시지를 압축한다) ⇒ `serverNoContextTakeover: true`
+//       (큰 메시지는 한 통씩 따로 압축 · 이어 쓸 문맥이 없다). 압축 · 풀기는 ws · 브라우저 몫 — JSON 글자 무변(하네스가 보는 프레임 글자도 같다).
+//     브라우저가 확장을 안 내놓으면(협상 없음) 종전 그대로 간다. CPU · 메모리 표 = 보고/T1125 ②(`scripts/t1125-deflate-cost.js`).
+const T1125_WS_DEFLATE = process.env.T1125_WS_DEFLATE !== '0';
+const T1125_BIG = parseInt(process.env.T1125_BIG || '', 10) || 64 * 1024;   // 큰 메시지 문턱(바이트) — 압축 문턱 · welcome 머리 문턱(아래 `sendWelcome`) 한 수
+const wss = new WebSocket.Server(T1125_WS_DEFLATE ? { server, perMessageDeflate: { threshold: T1125_BIG, serverNoContextTakeover: true } } : { server });
 
 // ★★[접속 진단 배치 2026-08-30] **조용히 실패하지 않는다.**
 //
@@ -6566,11 +6576,12 @@ async function _acceptConnection(ws, req, C) {
       viewerY: !isNaN(initVy) ? initVy : ZONE.zoneHeight / 2,
       lastSeen: Date.now(),
     });
-    send(ws, {
+    sendWelcome(ws, {   // ★[T1125 ③] 큰 welcome 이면 앞에 머리 한 줄(`sendWelcome`)
       type: 'welcome',
       observer: true,
       zone: zonePublicMeta(),
       hardcodedTerrain: getHardcodedTerrainForZone(),
+      ...(T1125_LEAN_PROMOTE ? { sig: _t1125Mark(ws, true, false) } : {}),   // ★[T1125 ⑥ ⑦] 관측 소켓이 열릴 때 지형을 미리 받는다 — 승격 welcome 은 지형을 다시 안 싣는다
       resources: Array.from(resources.values()),
       claims: Array.from(claims.values()),
       simVillages: SimVillages.clientVillages(), // §4-4 Stage 4A: 마을 영토(경계 셀)·이름·인구 — 1회
@@ -7086,7 +7097,7 @@ async function _acceptConnection(ws, req, C) {
   // 환영 메시지 — 존 정보와 현재 상태 모두 전달
   C.stage = 'welcome'; _connFailPoint('welcome');
   { const _h = _connHangPoint('welcome'); if (_h) await _h; }
-  send(ws, {
+  sendWelcome(ws, {   // ★[T1125 ③] 큰 welcome 이면 앞에 머리 한 줄(`sendWelcome`)
     type: 'welcome',
     pid,
     // ★★[2026-08-03f 배치 13] **내가 누구인지 클라가 알아야 한다.**
@@ -7105,6 +7116,7 @@ async function _acceptConnection(ws, req, C) {
     promoted: _promoted || false,
     zone: zonePublicMeta(),
     hardcodedTerrain: getHardcodedTerrainForZone(),
+    ...(T1125_LEAN_PROMOTE ? { sig: _t1125Mark(ws, true, true) } : {}),   // ★[T1125 ⑥] 판 서명(지형 · 표 일곱) — 이 소켓이 둘 다 받았다
     resources: Array.from(resources.values()),
     claims: Array.from(claims.values()),
     simVillages: SimVillages.clientVillages(), // §4-4 Stage 4A: 마을 영토(경계 셀)·이름·인구 — 1회
@@ -7204,6 +7216,7 @@ async function _acceptConnection(ws, req, C) {
       ...(VillageKin.ON ? { villageOnly: true } : {}),   // [T787] 길드 = 마을(켬 기본) — 클라 무리 패널이 마을 패널이 된다 · `T785_VILLAGE_ONLY=0` 이면 칸이 없다(옛 길드 패널)
       ...(process.env.T839_SITE_EXIT !== '0' ? { siteExit: true } : {}),   // [T839 · ★T850 켬 기본 — PM 10-22] 터를 놓으면 건축 모드를 끈다(다섯 터 · 클라 `30-n-net.js`) — 되돌림 `T839_SITE_EXIT=0` 이면 칸이 없다(옛 welcome · 건축 모드가 남는다)
       ...(T509_WELL ? { wellAct: true } : {}),   // [T557] 우물 터 잡기 버튼 — 기본 켬 · `T509_WELL=0` 이면 칸이 없어 버튼이 숨는다   // [T507] 첫 30분의 문법(우클릭·이름표·회색) — 기본 켬 · `T507_VERBS=0` 이면 칸이 없다(옛 화면)
+      ...(T1125_KEEP_PRED ? { keepPred: true } : {}),   // [T1125 ⑧ · 켬 기본 후보] 넘기 동안 클라 예측을 멈추지 않는다 — 승격 welcome 은 자리를 적기만 하고 첫 틱(새 pid · ackSeq)이 한 번 보정 · 틱의 내 몸은 그 소켓 welcome 이 준 pid 로만 찾는다(30-n-net)
       coast588: ((v) => (v === '0' ? '0' : (v === 'a' ? 'a' : 'b')))(process.env.T588_COAST),   // [T588 · ★T604 추신3 기본 b] 해안 — 클라가 같은 파일(`public/coast-shape.js`)로 굽는다 · 칸은 늘 실린다('0' = 지금 식 · 클라 `uiCfg` 기본도 'b' — 다르면 welcome 에서 다시 굽는다)
     },
     // ★★[이동 모델 2026-08-30] 손잡이 표를 **서버가 실어 보낸다** — 클라가 표를 들고 있으면
@@ -8532,7 +8545,7 @@ function handleObserverMessage(ws, raw) {
       postJSON(src.host, src.port, '/handoff_ack', { token: msg.token })
         .catch(e => console.warn(`[${ZONE_ID}] promote ACK 실패:`, e.message));
     }
-    send(ws, _promoteWelcome(player, pid, { promoted: true }));   // ★[T1092] 몸 한 벌(`_promoteWelcome`) — 칸 · 차례 종전 그대로
+    sendWelcome(ws, _promoteWelcome(player, pid, { promoted: true }, ws, msg.have));   // ★[T1092] 몸 한 벌(`_promoteWelcome`) — 칸 · 차례 종전 그대로 · ★[T1125 ③] 큰 welcome 이면 앞에 머리 한 줄
     sendCorpsesInit(ws);
     attachPlayerHandlers(ws, player);
     console.log(`[${ZONE_ID}] ✨ promote observer→primary ${player.name} token=${msg.token.slice(0,8)} v=(${player.vx},${player.vy})${_t868hb ? ` — 몸 출처 ${_t868hb.src} · 도구 ${(player.toolItems || []).length}` : ''}`);
@@ -8545,16 +8558,22 @@ function handleObserverMessage(ws, raw) {
 }
 // ★[T1092] 관측 소켓 승격 welcome 한 벌 — 승격(`promoted`)과 넘기 실패 되돌림(`back` · `_t1092Back`)이 같은 꼴을 보낸다(칸 · 차례 종전 그대로 · 사본 0).
 //   promote는 observer ws 재사용 — resources/claims/buildings는 이미 보유·실시간 갱신 중이라 생략. 되돌림도 같다 — 넘기는 동안에도 방송(`broadcast`)은 그 소켓에 갔다.
-function _promoteWelcome(player, pid, flag) {
+//   ★[T1125 ⑥] `ws` · `have` — 켬(`T1125_LEAN_PROMOTE`)이면 지형 · 표 일곱은 그 소켓이 이미 받았거나(`ws._t1125Has` — 이 존이 실어 보낸 서명) 클라가 가졌다고
+//     알린(`promote_to_primary.have`) 서명이 이 존 서명과 같을 때 뺀다 · 모르면 · 다르면 종전대로 싣는다. 끔이면 종전 글자 그대로(칸 · 차례).
+function _promoteWelcome(player, pid, flag, ws, have) {
+  const S = T1125_LEAN_PROMOTE ? _t1125Sig() : null, H = (ws && ws._t1125Has) || {}, C = (have && typeof have === 'object') ? have : {};
+  const skipHt = !!(S && (H.ht === S.ht || C.ht === S.ht)), skipTb = !!(S && (H.tb === S.tb || C.tb === S.tb));
+  if (S && ws) ws._t1125Has = { ht: S.ht, tb: S.tb };   // 이 welcome 뒤엔 그 소켓이 둘 다 가졌다(실었거나 · 이미 가졌거나)
   return Object.assign({ type: 'welcome' }, flag, {
     pid,
     zone: zonePublicMeta(),
-    hardcodedTerrain: getHardcodedTerrainForZone(),
+  }, skipHt ? null : { hardcodedTerrain: getHardcodedTerrainForZone() }, S ? { sig: S } : null, {
     // Phase 5-K4: mobs도 생략 — observer가 tick(visibleMobs)으로 이미 받고 갱신 중.
     inventory: invPayload(player.inventory),
     toolItems: player.toolItems || [], hotkey1: player.hotkey1 || null, equipped: player.equipped || null,
     equipment: player.equipment || [], craftSkill: player.craftSkill || {}, // 플레이어 아이템 인스턴스·숙련
     tools: player.tools,
+  }, skipTb ? null : {
     recipes: RECIPES,
     itemRecipes: ITEM_RECIPES,
     equipmentRecipes: EQUIPMENT_RECIPES, // 플레이어 장비 제작 레시피
@@ -8562,6 +8581,7 @@ function _promoteWelcome(player, pid, flag) {
     buildingRecipes: BUILDING_RECIPES,
     cookRecipes: COOK_RECIPES,
     foodEffects: FOOD_EFFECTS,
+  }, {
     self: { x: player.x, y: player.y, hp: player.hp, maxHp: player.maxHp,
             hunger: Math.round(player.hunger), thirst: Math.round(player.thirst),
             vp: Math.round(player.vp ?? 0),
@@ -16527,7 +16547,7 @@ async function _t1092Back(pid, token, targetZoneId, target, ackGone) {
   _t564Hold(p);
   savePlayer(p, { last_zone: ZONE_ID, last_x: p.x, last_y: p.y });   // 행이 넘기기 전 저장(`last_zone: 받는 존` · 입구)에 머물지 않게 — 몸은 여기 있다
   send(p.ws, { type: 'handoff_back', zone: ZONE_ID, from: targetZoneId });
-  send(p.ws, _promoteWelcome(p, pid, { back: true }));
+  sendWelcome(p.ws, _promoteWelcome(p, pid, { back: true }, p.ws, null));   // ★[T1125 ③] 큰 welcome 이면 앞에 머리 한 줄
   if (!p._t564SaidAt || Date.now() - p._t564SaidAt > 10000) {   // T564 알림과 같은 창(10초에 한 번)
     p._t564SaidAt = Date.now();
     const nm = (ZONES[targetZoneId] && ZONES[targetZoneId].displayName) || targetZoneId;
@@ -16593,6 +16613,46 @@ function send(ws, obj) {
   const str = JSON.stringify(obj && obj.type === 'notice' ? Notice.normalize(obj) : obj);
   if (LATENCY_MS > 0) setTimeout(() => rawSend(ws, str), LATENCY_MS);
   else rawSend(ws, str);
+}
+// ★★[T1125 ③] welcome 한 통 — 손잡이 `T1125_WEL_HEAD`(켬 기본 후보 · 되돌림 `=0` = 종전 `send` 와 같은 바이트 · 머리 없음).
+//   큰 welcome(`T1125_BIG` 이상 — 압축 문턱과 한 수) 바로 앞에 작은 줄 하나 `{ type: 'welcome_head', bytes, waitMs }` — 클라가 "이 소켓은 받는 중"을 안다.
+//   같은 소켓 · 같은 차례라 머리는 늘 그 welcome 바로 앞에 닿는다. waitMs = bytes ÷ `T1125_WEL_KBPS`(기본 42.5 KB/s = 1.7 MB ÷ 40초 — 카드 ★재민 11-03 의
+//   라이브 welcome 바이트 · 먹통 초. 그 몫이 라이브 길이다 — 카드 ④ 의 200 KB/s 로는 압축 없이 머리만 선 판이 42.5 KB/s 길에서 끊겼다 · 보고/T1125 ④) —
+//   클라는 welcome 이 올 때까지(또는 그 몫 + 종전 창이 지날 때까지) 틱 10초 · pong 15초 문이 그 소켓을 끊지 않는다(`30-n-net.js` `_t1125Hold`).
+//   bytes 는 JSON 글자(압축 전) — 압축이 서면 선 위 바이트는 그보다 작다(기다림이 넉넉한 쪽으로 틀린다). 소켓이 닫히거나 오류면 종전대로 다시 붙는다.
+//   welcome 글자 · 칸 · 차례는 종전 그대로(첫 접속 · 관측 · 승격 · T1092 되돌림 — 네 자리가 이 함수를 부른다).
+// ★★[T1125 ⑥ ⑦ ⑧ · ★PM 추신 11-03 — 목표 "사람이 눈치채지 못하는 넘기"(★재민 11-03)] 손잡이 둘(켬 기본 후보 · 되돌림 `=0` = 종전):
+//   `T1125_LEAN_PROMOTE` ⑥ — 승격 welcome 의 98%가 지형(`hardcodedTerrain`)이고 나머지 큰 몫이 레시피 표 일곱이다(둘 다 존 판마다 정적).
+//     판 서명 둘(`sig.ht` 지형 · `sig.tb` 표 일곱 — 그 JSON 의 sha1)을 첫 접속 · 관측 · 승격 · 되돌림 welcome 에 싣고, 존은 소켓마다 실어 보낸 서명을 적는다(`ws._t1125Has`).
+//     승격 · 되돌림 welcome 은 그 소켓이 이미 받았거나 클라가 가졌다고 알린 서명과 같으면 그 칸을 뺀다(`_promoteWelcome`) — 몸 · 짐 · 자리 · 시계만 남는다.
+//     ⑦ 미리 데우기 = 관측 welcome — 관측 소켓은 경계에 다가갈 때 열리고 그때 지형을 받는다 · 넘기는 순간엔 몸만(표 일곱은 존마다 같다 — 서명이 다르면 승격에 실린다).
+//   `T1125_KEEP_PRED` ⑧ — welcome `uiCfg.keepPred`: 클라는 넘기 동안 예측을 멈추지 않는다(승격 welcome 은 자리를 적기만 · 첫 틱이 한 번 보정 — 30-n-net).
+const T1125_LEAN_PROMOTE = process.env.T1125_LEAN_PROMOTE !== '0';
+const T1125_KEEP_PRED = process.env.T1125_KEEP_PRED !== '0';
+const _t1125Sha = (str) => require('crypto').createHash('sha1').update(str).digest('hex');
+let _t1125HtSig = null;   // 지형은 부팅 뒤 정적 — 한 번만 센다(표 일곱은 부를 때마다 — 작다)
+function _t1125Sig() {
+  if (_t1125HtSig === null) _t1125HtSig = _t1125Sha(JSON.stringify(getHardcodedTerrainForZone()));
+  return { ht: _t1125HtSig, tb: _t1125Sha(JSON.stringify([RECIPES, ITEM_RECIPES, EQUIPMENT_RECIPES, EQUIPMENT_META, BUILDING_RECIPES, COOK_RECIPES, FOOD_EFFECTS])) };
+}
+function _t1125Mark(ws, ht, tb) {   // 이 소켓에 지금 실어 보내는 것(지형 · 표)을 적고 서명을 돌려준다
+  const S = _t1125Sig(), H = (ws && ws._t1125Has) || {};
+  if (ws) ws._t1125Has = { ht: ht ? S.ht : (H.ht || null), tb: tb ? S.tb : (H.tb || null) };
+  return S;
+}
+const T1125_WEL_HEAD = process.env.T1125_WEL_HEAD !== '0';
+const T1125_WEL_KBPS = parseFloat(process.env.T1125_WEL_KBPS || '') || 1700 / 40;
+function sendWelcome(ws, obj) {
+  const str = JSON.stringify(obj);
+  const go = () => {
+    const bytes = T1125_WEL_HEAD ? Buffer.byteLength(str) : 0;
+    if (bytes >= T1125_BIG) {
+      rawSend(ws, JSON.stringify({ type: 'welcome_head', bytes, waitMs: Math.ceil(bytes / (T1125_WEL_KBPS * 1024) * 1000) }));
+    }
+    rawSend(ws, str);
+  };
+  if (LATENCY_MS > 0) setTimeout(go, LATENCY_MS);
+  else go();
 }
 function broadcast(obj) {
   const str = JSON.stringify(obj);

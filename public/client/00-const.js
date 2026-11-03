@@ -478,9 +478,18 @@ function cropSprite(stage, crop) {
                    : '서버의 대답을 기다리는 중입니다. 잠시 기다리면 대개 들어가집니다.';
       why = `${_hoFail ? _hoFail + ' · ' : ''}${(el3 / 1000).toFixed(0)}초 경과 · ${connAttempts}번째 시도`;   // ★[T1077] 넘겨받을 존에 못 붙었으면 그 까닭이 맨 앞
     } else if (netStalled) {
-      state = 'lost'; hard = true;
-      title = '연결 끊김 — 재접속 중';
-      why = _hoFail || connReason || '서버 응답 없음';   // ★[T1077] 넘겨받을 존에 못 붙었으면 그 까닭
+      // ★[T1125 ③] 주 소켓이 큰 welcome 을 받는 중(서버 머리 `welcome_head` 뒤)이면 끊긴 것이 아니다 — 노랑 "기다리는 중" · 바이트 · 경과(새로고침 단추 없음).
+      //   받는 중이 아니면(머리 없음 · 서버 끔) 종전 그대로.
+      let _h = null; try { _h = _t1125Hold(conns.get(primaryZoneId)); } catch (e) { _h = null; }   // 30-n-net · 20-r2 가 아직 안 실렸으면 종전
+      if (_h) {
+        state = 'waiting'; hard = false;
+        title = '지역 자료를 받는 중입니다. 잠시 기다리면 들어가집니다.';
+        why = `${Math.round(_h.bytes / 1024)} KB · ${((now - _h.at) / 1000).toFixed(0)}초째`;
+      } else {
+        state = 'lost'; hard = true;
+        title = '연결 끊김 — 재접속 중';
+        why = _hoFail || connReason || '서버 응답 없음';   // ★[T1077] 넘겨받을 존에 못 붙었으면 그 까닭
+      }
     }
 
     if (!state) { el.classList.remove('on'); return; }

@@ -130,7 +130,8 @@ async function person(tag) {   // 게스트 하나 — 짐 · 도구 · kg 를 �
       "ⓢ 받는 존 문 = 그 문(`/handoff_prepare` · `kind: 'drop'`) — 새 라우트 0 · 끔이면 400(모르는 종류)");
     ok(/if \(T1092_HANDOFF_BACK && outgoingHandoffs\.has\(token\)\) return _t1092Back\(pid, token, targetZoneId, target, _ackGone\);[^\n]*\n\s*_ackGone\(\);\n\s*\}, HANDOFF_ACK_MS\);/.test(Z),
       'ⓢ ACK 시한 — 켬이면 `_t1092Back`(못 돌려놓으면 종전 몸통 `_ackGone`) · 끔이면 종전 몸통 그대로');
-    ok((Z.match(/_promoteWelcome\(/g) || []).length === 3 && /send\(ws, _promoteWelcome\(player, pid, \{ promoted: true \}\)\);/.test(Z) && /send\(p\.ws, _promoteWelcome\(p, pid, \{ back: true \}\)\);/.test(Z),
+    //   ★[T1125] 보내는 함수는 `send` 또는 `sendWelcome`(큰 welcome 앞 머리 한 줄 — 손잡이 `T1125_WEL_HEAD` · welcome 글자 무변) · 뒤 두 인자(소켓 · 클라 서명 — `T1125_LEAN_PROMOTE`)
+    ok((Z.match(/_promoteWelcome\(/g) || []).length === 3 && /send(?:Welcome)?\(ws, _promoteWelcome\(player, pid, \{ promoted: true \}(?:, ws, msg\.have)?\)\);/.test(Z) && /send(?:Welcome)?\(p\.ws, _promoteWelcome\(p, pid, \{ back: true \}(?:, p\.ws, null)?\)\);/.test(Z),
       'ⓢ 승격 welcome 한 벌(`_promoteWelcome` — 승격 · 되돌림 둘이 부른다 · 사본 0)');
     ok((Z.match(/_t843Skip\(/g) || []).length === 3 && (Z.match(/function _t564Hold\(player\)/g) || []).length === 1 && (Z.match(/_t564Hold\(/g) || []).length === 3,
       'ⓢ T843 술어 부르는 곳 그대로(정의 · 저장 머리 · 시한 = 3) · 몸 되돌림 한 자리(`_t564Hold` — T564 준비 실패 · T1092 둘)');

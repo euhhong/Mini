@@ -314,13 +314,16 @@
         if (c._t838Ref !== ref) { c._t838Ref = ref; c._t838Frz = ref ? Math.min(_late, Math.max(0, now - ref)) : 0; } else c._t838Frz = (c._t838Frz || 0) + _late;
         _frz = c._t838Frz;
       }
+      // ★[T1125 ③] 받는 중(서버 `welcome_head` 뒤 welcome 전) — 기준을 머리 받은 때로 당기고 창을 서버가 실어 준 몫만큼 늘린다(pong 은 welcome 뒤에 줄 서 있다).
+      //   머리가 없으면(서버 끔 · 작은 welcome) `_h` = null — 아래 두 문은 종전 글자 그대로다.
+      const _h = _t1125Hold(c), _hRef = (t) => (_h ? Math.max(t, _h.at) : t), _hMs = _h ? _h.ms : 0;
       // 초기엔 lastPongAt 없으니까 첫 ping부터 기록 시작
-      if (!c.lastPongAt && c.firstPingAt && now - c.firstPingAt - _frz > 15000) {
+      if (!c.lastPongAt && c.firstPingAt && now - _hRef(c.firstPingAt) - _frz > 15000 + _hMs) {
         console.warn('[recover] ping 후 15초간 pong 한 번도 못 받음 — ws 좀비, 강제 close');
         try { c.ws.close(); } catch (e) {}
         return;
       }
-      if (c.lastPongAt && now - c.lastPongAt - _frz > 7000) {
+      if (c.lastPongAt && now - _hRef(c.lastPongAt) - _frz > 7000 + _hMs) {
         console.warn(`[recover] pong 마지막 ${((now - c.lastPongAt)/1000).toFixed(1)}초 전 — ws 좀비, 강제 close`);
         try { c.ws.close(); } catch (e) {}
         return;
@@ -363,15 +366,19 @@
       //     · `ghostReconnectMs`(10초)  = **끊는다** — 진짜 유령일 때만. 비싸고 되돌릴 수 없다.
       const showAt = Math.max(1000, uiCfg.ghostStallMs | 0);
       const cutAt = Math.max(showAt, uiCfg.ghostReconnectMs | 0);
+      // ★[T1125 ③] 받는 중(서버 `welcome_head` 뒤 welcome 전)이면 끊는 문만 — 기준 = max(마지막 틱, 머리 받은 때) · 창 = 종전 + 서버가 실어 준 몫.
+      //   그 시한까지 welcome 이 안 오면 종전대로 끊는다. 머리가 없으면(서버 끔 · 작은 welcome) 종전 글자 그대로. 말하는 문(딱지 · 예측 정지)은 그대로 서고 글만 바꾼다.
+      const _h = _t1125Hold(c);
+      const gapCut = _h ? Math.max(0, Math.min(gap, now - _h.at)) : gap, cutWin = _h ? cutAt + _h.ms : cutAt;
       const stalled = !!lastTickAt && gap > showAt;
       if (stalled && !netStalled) {
-        console.warn(`[recover] ★서버 틱 ${(gap / 1000).toFixed(1)}초간 없음 — 유령 클라. 예측 정지`);
-        setNetStalled(true, `서버가 ${(gap / 1000).toFixed(0)}초째 대답이 없습니다`);
+        console.warn(`[recover] ★서버 틱 ${(gap / 1000).toFixed(1)}초간 없음 — 유령 클라. 예측 정지${_h ? ' (welcome 받는 중)' : ''}`);
+        setNetStalled(true, _h ? '지역 자료를 받는 중입니다' : `서버가 ${(gap / 1000).toFixed(0)}초째 대답이 없습니다`);
       } else if (!stalled && netStalled) {
         setNetStalled(false);
       }
       // 끊기는 **한 번만**(재연결이 또 틱을 못 받으면 `lastTickAt` 이 그대로라 계속 참이다).
-      if (!!lastTickAt && gap > cutAt && !_ghostCutAt) {
+      if (!!lastTickAt && gapCut > cutWin && !_ghostCutAt) {
         _ghostCutAt = now;
         console.warn(`[recover] ★서버 틱 ${(gap / 1000).toFixed(1)}초 — 소켓 강제 close · 재연결`);
         if (c) { try { c.ws.close(); } catch (e) {} }        // ensurePrimaryConnection 이 다음 프레임에 재연결
@@ -386,7 +393,8 @@
       const now = performance.now();
       const stale = !lastTickAt || (now - lastTickAt > 5000);
       console.log(`[recover] visibilitychange visible — lastTick ${lastTickAt ? Math.round(now - lastTickAt) + 'ms 전' : '없음'} stale=${stale}`);
-      if (stale && primaryZoneId) {
+      const _h = primaryZoneId ? _t1125Hold(conns.get(primaryZoneId)) : null;   // ★[T1125 ③] 받는 중이면 그 몫 + 같은 5초 창 안에선 안 끊는다
+      if (stale && primaryZoneId && !(_h && now - _h.at <= 5000 + _h.ms)) {
         const c = conns.get(primaryZoneId);
         if (c) { try { c.ws.close(); } catch (e) {} }
         // observer ws들도 같이 정리 (얘들도 보통 같이 죽어있음)
@@ -837,6 +845,17 @@
     };
   }
 
+  // ★★[T1125 ③] welcome 을 받는 중인 소켓 — 서버 머리(`welcome_head` · 서버 손잡이 `T1125_WEL_HEAD`)가 선 뒤 그 welcome 이 올 때까지.
+  //   돌려주는 것: null(받는 중 아님 — 감시 셋 종전 그대로) · { at: 머리 받은 때, ms: 서버가 실어 준 기다릴 몫(바이트 ÷ 서버의 바닥 속도), bytes }.
+  //   감시 셋(pong · 서버 틱 · 탭 복귀)은 받는 동안 기준을 max(종전 기준, at) 으로 당기고 창을 ms 만큼 늘린다 — welcome 이 오면 걷힌다(그 소켓이 닫히면 conn 째 사라진다).
+  //   왜: 넘긴 뒤 welcome(라이브 약 1.7 MB)이 느린 길에서 10초를 넘기면 감시견이 **받는 중인 소켓**을 좀비로 끊고, 다시 붙은 소켓에 같은 바이트가 처음부터 다시 왔다(★재민 11-03 · 약 40초).
+  function _t1125Hold(c) { return (c && c._t1125W) || null; }
+  // ★★[T1125 ⑥ ⑧] 판 서명(서버 `T1125_LEAN_PROMOTE`) — 존마다 가진 지형 서명 · 가진 표 일곱 서명. 승격 때 `have` 로 알린다(같으면 서버가 그 칸을 뺀다).
+  //   예측 유지(서버 `T1125_KEEP_PRED` → `uiCfg.keepPred`) — 넘기 동안 예측을 멈추지 않고 승격 welcome 은 자리를 적기만 한다(첫 틱이 한 번 보정).
+  const _t1125Ht = {};
+  let _t1125Tb = null;
+  function _t1125Keep() { return !!(typeof uiCfg !== 'undefined' && uiCfg && uiCfg.keepPred === true); }
+
   // ★[T1077] 넘겨받을 존에 못 붙었다 — 화면에 까닭 한 줄(하십시오체 · 존 이름은 표시 이름 — 서버 T564 알림과 같은 자리)
   function _t1077HoFail(zid) {
     const nm = (zonesMeta[zid] && zonesMeta[zid].displayName) || zid;
@@ -870,6 +889,17 @@
     if (msg.type === 'welcome') {
       // 끊김 측정: promote 보낸 뒤 welcome 도착까지 걸린 시간 + welcome 처리 시간
       const _wStart = performance.now();
+      if (c._t1125W) {   // ★[T1125 ③] 받는 중이 끝났다 — 걸린 때 · 바이트 한 줄(실기 콘솔) · 주 소켓이면 감시 기준을 지금으로(틱 · pong 은 이 welcome 바로 뒤에 줄 서 있다 — T439 승격 규칙과 같은 꼴)
+        const w = c._t1125W; c._t1125W = null;
+        console.log(`[welcome] ${(w.bytes / 1024).toFixed(0)} KB 받음 — 머리 뒤 ${((_wStart - w.at) / 1000).toFixed(1)}초 · ${c.role}`);
+        if (c.role === 'primary') { if (lastTickAt) lastTickAt = _wStart; c.firstPingAt = 0; c.lastPongAt = 0; }   // 틱 기준은 이미 선 때만(첫 접속 — 첫 틱 전엔 틱 감시가 안 도는 종전 그대로)
+      }
+      if (msg.sig) {   // ★[T1125 ⑥] 실려 온 것의 서명을 적는다(빠진 칸 = 서버가 같은 서명을 안다 — 가진 것 그대로)
+        const _sz = c.zoneId || (msg.zone && msg.zone.id);
+        if (msg.hardcodedTerrain && _sz) _t1125Ht[_sz] = msg.sig.ht;
+        if (msg.recipes) _t1125Tb = msg.sig.tb;
+      }
+      if (!msg.observer && msg.pid) c._t1125Pid = msg.pid;   // ★[T1125 ⑧] 이 소켓에서 내 몸의 pid(틱에서 내 몸을 찾는 열쇠)
       if (c._promoteSentAt) {
         console.log('[handoff] promote→welcome gap =', (_wStart - c._promoteSentAt).toFixed(0), 'ms',
           '| entities res=' + (msg.resources?.length||0), 'bld=' + (msg.buildings?.length||0), 'mob=' + (msg.mobs?.length||0));
@@ -1044,8 +1074,14 @@
         const absX = msg.zone.worldOffsetX + msg.self.x;
         const absY = (msg.zone.worldOffsetY || 0) + msg.self.y;
         myAbsPos = { x: absX, y: absY }; myAbsPosAt = performance.now();
+        // ★★[T1125 ⑧] 켬(`uiCfg.keepPred`) · 관측 소켓 승격 welcome · 예측이 서 있고 자리가 가까우면(보정 문 2,000px 안 — `applyServerCorrection` 의 그 수)
+        //   **예측을 멈추지 않는다** — 권위 자리만 적고(위) 첫 틱(새 pid · ackSeq)이 `applyServerCorrection` 으로 한 번 보정한다(앵커 + 미ack 입력 다시 걷기).
+        //   그 틱이 2초 안에 안 오면 고아 파수꾼(`lastTickWithMyPidAt` — 아래)이 다시 붙는다. 그 밖(끔 · 첫 접속 · 재접속 · 되돌림 · 먼 자리)은 종전 앵커 그대로.
+        const _keep = !!(msg.promoted && _t1125Keep() && _renderReady && myAbsPredicted && Math.hypot(absX - myAbsPredicted.x, absY - myAbsPredicted.y) <= 2000);
+        if (_keep) console.log(`[handoff] 예측 유지 — welcome 자리와 ${Math.round(Math.hypot(absX - myAbsPredicted.x, absY - myAbsPredicted.y))}px · 첫 틱이 보정`);
         // welcome = 풀 권위 리싱크(재연결/존이동) → 텔포처럼 취급: 미ack 입력 비우고 앵커.
         // ★유령 클라 fix: 앵커는 어떤 조건으로도 우회되지 않는다(primary welcome = 무조건 재앵커).
+        if (!_keep) {
         pendingInputs.length = 0;
         myVel.vx = 0; myVel.vy = 0;   // ★관성도 끊는다(존 전환/재연결)
         _predAccum = 0;
@@ -1053,6 +1089,7 @@
         _renderPrev = { x: absX, y: absY };
         _renderCurr = { x: absX, y: absY };
         myAbsRender = { x: absX, y: absY };
+        }
         _renderReady = true;
         // 옛 보정 lerp 잔재도 함께 리셋(respawn 경로와 동형) — 앵커 직후 옛 속도로 끌려가지 않게.
         correctionVel = { x: 0, y: 0 };
@@ -1075,6 +1112,10 @@
         const _proc = performance.now() - _wStart;
         if (_proc > 5) console.log('[handoff] welcome 처리 =', _proc.toFixed(0), 'ms');
       }
+    } else if (msg.type === 'welcome_head') {
+      // ★★[T1125 ③] 큰 welcome 이 곧 온다(서버 손잡이 `T1125_WEL_HEAD` — 바이트 · 기다릴 몫) — 이 소켓은 welcome 까지 "받는 중"(`_t1125Hold`)
+      c._t1125W = { at: performance.now(), ms: Math.max(0, +msg.waitMs || 0), bytes: Math.max(0, +msg.bytes || 0) };
+      console.log(`[welcome] ${(c._t1125W.bytes / 1024).toFixed(0)} KB 받는 중 · ${c.role}`);
     } else if (msg.type === 'tick') {
       const now = performance.now();
       if (c.role === 'primary') {
@@ -1085,8 +1126,9 @@
         // 14.49-c: 계단 z (0~32) — 서버 권위 값을 클라가 부드럽게 따라감
         if (typeof msg.selfZ === 'number') myStairZ = msg.selfZ;
       }
+      const _mine = (pid) => pid === myPid && c.role === 'primary' && (!_t1125Keep() || c._t1125Pid === myPid);   // ★[T1125 ⑧] 켬 — 내 몸은 **그 소켓 welcome 이 준 pid** 로만 찾는다(넘긴 뒤 welcome 전 받는 존 틱에 옛 존 pid 와 같은 남의 pid 가 있어도 안 붙는다)
       for (const pp of msg.players) {
-        if (pp.pid === myPid && c.role === 'primary') {
+        if (_mine(pp.pid)) {
           const absX = c.meta.worldOffsetX + pp.x;
           const absY = (c.meta.worldOffsetY || 0) + pp.y;
           myAbsPos = { x: absX, y: absY }; myAbsPosAt = performance.now();
@@ -1648,7 +1690,7 @@
         //   새 존 틱(관측자 틱 — 내가 아직 없다)이 먼저 오는데 창은 **옛 존의 마지막 내 틱**부터 센다 → 부하 아래 welcome 이 2초를 넘으면 끊었다.
         //   ⇒ 끄고 welcome 이 다시 켠다(`player_left` 가지와 같은 문법 · 새 수 0).
         lastTickWithMyPidAt = 0;
-        existingTarget.ws.send(JSON.stringify({ type: 'promote_to_primary', token }));
+        existingTarget.ws.send(JSON.stringify(Object.assign({ type: 'promote_to_primary', token }, (_t1125Ht[target] || _t1125Tb) ? { have: { ht: _t1125Ht[target] || null, tb: _t1125Tb } } : null)));   // ★[T1125 ⑥] 가진 서명(같으면 서버가 지형 · 표를 뺀다)
         existingTarget.role = 'primary';
         // server가 welcome 보낼 거 — 기존 handleMessage('welcome')에서 처리
       } else {

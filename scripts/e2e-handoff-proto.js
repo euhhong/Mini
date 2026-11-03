@@ -29,6 +29,14 @@
 //      서버끼리 인계는 맞다 · 까닭 무관 꼴). 고침(서버 손잡이 `T1092_HANDOFF_BACK` 켬): 보낸 존이 ACK 시한에 받는 존 토큰을 놓게 하고 사람을 넘기 전 자리로
 //      돌려놓는다 — 주 존 한반도 · 들어가 있음(ready) · 까닭 한 줄 "<닛폰 표시 이름> 쪽으로 넘어가지 못했습니다. 저쪽 서버에 닿지 않습니다." · 몸이 걷는다 ·
 //      기다리는 동안 받는 존에 이름 · 열쇠로 다시 붙지 않는다 · 보낸 존 `⚠ ACK timeout` 0. 고치기 전 트리는 멈춤(주 존 닛폰 · 배너) — 빨강 증인 · 사진 한 장.
+//   ★[T1125 2026-11-03 · ★재민 11-03 실기 "닛폰으로 넘긴 뒤 약 40초 먹통"] 판 `slow` — 받는 존(닛폰) 브라우저 소켓만 **느린 길**(하네스 안 TCP 대리 `lib-slow-link` ·
+//      내려가는 쪽 초당 상한 + 왕복 150 ms = 카드 ④ · 길 = 카드 ⑨ 잣대 200 KB/s). 고침(서버 손잡이 넷 — `T1125_WS_DEFLATE` · `T1125_WEL_HEAD` · `T1125_LEAN_PROMOTE` ·
+//      `T1125_KEEP_PRED` 켬 기본 후보 · 클라 `_t1125Hold` · 예측 유지): 넘어간다 · 주 존 닛폰 · 들어가 있음 · [recover] 끊기 0 · 손님 열쇠로 다시 붙기 0 · 압축 협상 ·
+//      머리(`welcome_head`)가 섰다 · 승격 welcome 에 지형 · 표 일곱 0 · 넘기 순간 받는 존 틱 이음 · 그림 틀 · 내 몸 멈춤 < 200 ms(카드 ⑨).
+//      고치기 전 트리는 여기가 빨강(승격 welcome 631 KB · 틱 이음 3초 남짓 — 자명 통과 금지 증인). 라이브 몫 길(1.7 MB ÷ 40초 ≈ 42.5 KB/s — 종전 끊기 · 다시 붙기)은 표 모드.
+//      ★[T1125 추신 ⑥ ⑧ ⑨] 같은 판에서 승격 welcome 이 지형 · 표 일곱 없이 오고(`T1125_LEAN_PROMOTE`) · 넘기 순간 그림 틀 사이 · 멈춰 선 때가 200 ms 안(예측 유지 `T1125_KEEP_PRED`).
+//   ★[T1125] `--slow-table` = 판 `slow` 만 길 둘(카드 200 KB/s · 위 42.5 KB/s) × 손잡이 여섯(끔 · 압축만 · 머리만 · 둘다 · 둘다+가볍게 · 전부)으로 돌려 먹통 초 · 넘기 순간 멈춤 표를 낸다(단언 0 · `--json <파일>` ·
+//      거르개 `--kbps 42.5` · `--knobs 끔,둘다,전부`).
 'use strict';
 process.env.HANDOFF_ACK_MS = process.env.HANDOFF_ACK_MS || '3000'; process.env.HANDOFF_TOKEN_MS = process.env.HANDOFF_TOKEN_MS || '5000';   // ★[PM 11-03] 이 하네스는 종전 넘기 시한(3초 · 5초)으로 잰다 — 제품 기본은 12초 · 15초(server/zone.js HANDOFF_ACK_MS)
 const path = require('path');
@@ -78,7 +86,9 @@ async function runCase(tag, envOf, chromium, C, opt) {   // ★[T1092] opt = { r
     p._name = name; p._out = ''; p.stdout.on('data', (b) => { p._out += String(b); }); p.stderr.on('data', (b) => { p._out += String(b); }); procs.push(p); return p; };
   const D = `/tmp/e2e-hp-${process.pid}-${tag}`; fs.mkdirSync(D, { recursive: true });
   const r = { tag };
+  let link = null;   // ★[T1125] 느린 길(받는 존 브라우저 소켓만)
   try {
+    if (opt && opt.slow) link = await require('./lib-slow-link').slowLink({ listen: opt.slow.port, target: ZONES.nippon.port, kbps: opt.slow.kbps, rttMs: opt.slow.rttMs });
     const c = boot('central', 'central.js', Object.assign({ PORT: '3010', DB_PATH: `${D}/central.db`, PUBLIC_HOST: 'localhost', ENABLED_ZONES: ZIDS.join(',') }, envOf('central')));
     const cu = await FB.waitUp(c, /central server up on/, { name: 'central' });
     const common = { CENTRAL_URL: 'http://localhost:3010', PUBLIC_HOST: 'localhost', ENABLE_VILLAGES: '0', ENABLE_WILDLIFE: '0', ENABLE_BANDITS: '0', ENABLE_ROADS: '0' };
@@ -91,10 +101,16 @@ async function runCase(tag, envOf, chromium, C, opt) {   // ★[T1092] opt = { r
     r.errs = []; page.on('pageerror', (e) => r.errs.push(String(e.message).slice(0, 120)));
     // 소켓으로 들어오는 알림 · handoff 를 적는다(클라 코드 무접촉)
     //   ★[T1092] `rd` = [옛, 새] — 그 글자를 품은 소켓 주소를 바꾼다(받는 존 `wsUrl` 을 닫힌 포트로 · 클라만). 받는 존 쪽 소켓 주소는 `__hpU` 에 적는다.
-    await page.addInitScript((rd) => { window.__hpN = []; window.__hpH = 0; window.__hpB = 0; window.__hpU = []; const W = window.WebSocket; window.WebSocket = function (u, p) {
-      if (rd && String(u).indexOf(rd[0]) >= 0) { u = String(u).split(rd[0]).join(rd[1]); window.__hpU.push(String(u)); }
+    //   ★[T1125] 바꾼 주소의 소켓마다 `__hpS` 한 줄 — 압축 협상(`extensions`) · 머리(`welcome_head`) 수 · 주 welcome 받은 때 · 그 뒤 첫 틱 때 · 넘기(`handoff`) 받은 때 `__hpHt`
+    await page.addInitScript((rd) => { window.__hpN = []; window.__hpH = 0; window.__hpB = 0; window.__hpU = []; window.__hpS = []; window.__hpHt = 0; const W = window.WebSocket; window.WebSocket = function (u, p) {
+      let S = null;
+      if (rd && String(u).indexOf(rd[0]) >= 0) { u = String(u).split(rd[0]).join(rd[1]); window.__hpU.push(String(u)); S = { u: String(u).replace(/token=[^&]+/g, 'token=…'), ext: '', head: 0, welAt: 0, tick1: 0, at: performance.now(), closedAt: 0, tk: [] }; window.__hpS.push(S); }
       const ws = p ? new W(u, p) : new W(u);
-      ws.addEventListener('message', (ev) => { try { const m = JSON.parse(ev.data); if (m && m.type === 'notice') window.__hpN.push(String(m.text || '')); if (m && m.type === 'handoff') window.__hpH++; if (m && m.type === 'handoff_back') window.__hpB++; } catch (e) {} }); return ws; };
+      if (S) { ws.addEventListener('open', () => { S.ext = String(ws.extensions || ''); }); ws.addEventListener('close', () => { S.closedAt = performance.now(); }); }
+      ws.addEventListener('message', (ev) => { try { const m = JSON.parse(ev.data); if (m && m.type === 'notice') window.__hpN.push(String(m.text || '')); if (m && m.type === 'handoff') { window.__hpH++; if (!window.__hpHt) window.__hpHt = performance.now(); } if (m && m.type === 'handoff_back') window.__hpB++;
+        if (S && m) { if (m.type === 'welcome_head') S.head++; else if (m.type === 'welcome' && !m.observer) { S.welAt = performance.now(); S.welBytes = String(ev.data).length; S.welHt = !!m.hardcodedTerrain; S.welTb = !!m.recipes; } else if (m.type === 'tick') { if (S.welAt && !S.tick1) S.tick1 = performance.now(); S.tk.push(performance.now()); if (S.tk.length > 20000) S.tk.splice(0, 5000); } } } catch (e) {} }); return ws; };
+      // ★[T1125 ⑨] 그림 틀마다 [때 · 내 예측 자리 x · y] — 넘기 순간 화면 멈춤(틀 사이) · 멈춰 선 때 · 튐을 잰다(제품 코드 무접촉 · 읽기 훅 `__getMyAbs`)
+      window.__hpF = []; const _f = () => { const q = window.__getMyAbs && window.__getMyAbs(); window.__hpF.push([performance.now(), q ? q.x : NaN, q ? q.y : NaN]); if (window.__hpF.length > 40000) window.__hpF.splice(0, 10000); requestAnimationFrame(_f); }; requestAnimationFrame(_f);
       window.WebSocket.prototype = W.prototype; Object.assign(window.WebSocket, { CONNECTING: 0, OPEN: 1, CLOSING: 2, CLOSED: 3 }); }, (opt && opt.redirect) || null);
     await page.goto('http://localhost:3010/', { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => { const b = document.getElementById('enter'); return !!(b && b.onclick && !b.disabled); }, { timeout: 60000 }).catch(() => {});
@@ -110,11 +126,38 @@ async function runCase(tag, envOf, chromium, C, opt) {   // ★[T1092] opt = { r
       await sleep(150);
       const q = await page.evaluate(() => { const s = window.__getSrvAbs ? window.__getSrvAbs() : null; const p = window.__getMyAbs(); return { z: window.__getPrimaryZoneId(), sx: s ? s.x : null, x: p ? p.x : null }; });
       if (opt && opt.shotBack && !r.shotBack && await page.evaluate(() => (window.__hpB || 0) >= 1)) { await sleep(400); try { fs.mkdirSync(path.dirname(opt.shotBack), { recursive: true }); await page.screenshot({ path: opt.shotBack }); r.shotBack = opt.shotBack; } catch (e) { r.shotBack = 'X'; } }   // ★[T1092] 돌아온 순간 사진(까닭 줄이 떠 있을 때)
+      if (opt && opt.slow && opt.slow.midShot && !r.midShot && await page.evaluate(() => !!(window.__hpHt && window.__netStalled && window.__netStalled()))) { await sleep(800); try { fs.mkdirSync(path.dirname(opt.slow.midShot), { recursive: true }); await page.screenshot({ path: opt.slow.midShot }); r.midShot = opt.slow.midShot; r.midBanner = await page.evaluate(() => { const e = document.getElementById('netLost'); return e ? `${e.dataset.state}|${(e.querySelector('.nl-txt') || {}).textContent || ''}|${(e.querySelector('.nl-why') || {}).textContent || ''}` : ''; }); } catch (e) { r.midShot = 'X'; } }   // ★[T1125] 넘긴 뒤 딱지가 선 순간(먹통 한가운데) 사진
       if (q.sx != null) { maxSx = Math.max(maxSx, q.sx); if (prevSx != null && q.z === 'hanbando') maxBack = Math.max(maxBack, prevSx - q.sx); prevSx = q.sx; }
       if (!tSeam && ((q.sx != null && q.sx >= C.seam - 32) || q.z === 'nippon')) tSeam = Date.now();
     }
     for (const k of ['s', 'd']) await page.keyboard.up(k);
     await sleep(4000);   // ACK 3초 창을 지나서 본다(유령이면 이 사이에 보낸 존이 몸을 지운다)
+    if (opt && opt.slow) {   // ★[T1125] 느린 길 — 닛폰에 들어가 첫 틱이 설 때까지(상한 opt.slow.capMs) · 먹통 = 넘기 받은 때 → 그 첫 틱
+      const sq = async () => page.evaluate(() => ({ z: window.__getPrimaryZoneId(), ph: window.__connState ? window.__connState().phase : '', s: window.__hpS.slice(), ht: window.__hpHt, now: performance.now() }));
+      let x = await sq(); const tw = Date.now();
+      while (Date.now() - tw < opt.slow.capMs && !(x.z === 'nippon' && x.ph === 'ready' && x.s.some((y) => y.tick1 && !y.closedAt))) { await sleep(500); x = await sq();
+        if (opt.slow.midShot && !r.midShot && await page.evaluate(() => !!(window.__netStalled && window.__netStalled()))) { await sleep(800); try { fs.mkdirSync(path.dirname(opt.slow.midShot), { recursive: true }); await page.screenshot({ path: opt.slow.midShot }); r.midShot = opt.slow.midShot; r.midBanner = await page.evaluate(() => { const e = document.getElementById('netLost'); return e ? `${e.dataset.state}|${(e.querySelector('.nl-txt') || {}).textContent || ''}|${(e.querySelector('.nl-why') || {}).textContent || ''}` : ''; }); } catch (e) { r.midShot = 'X'; } } }
+      const live = x.s.filter((y) => y.tick1 && !y.closedAt).pop();
+      // ★[T1125 ⑨] 넘기 순간 — 그림 틀 사이 최대(ms) · 멈춰 선 최대(넘기 받은 때 → welcome 뒤 0.8초 · 자리가 그대로인 이음) · 튐 최대(welcome 앞 0.2초 → 뒤 0.8초 · 틀 하나 사이 자리 차)
+      const F = await page.evaluate(() => window.__hpF.slice());
+      const m9 = { tickGapMax: null, frameMax: null, stallMax: null, jumpMax: null };
+      if (live && x.ht) {   // 틱 이음 최대 = 받는 존 소켓(관측 → 승격) 틱이 안 온 가장 긴 사이(넘기 앞 0.5초 → 승격 뒤 첫 틱 + 2초) — 화면의 세계가 멈춘 때
+        const T = [].concat(...x.s.map((y) => y.tk || [])).filter((t) => t >= x.ht - 500 && t <= live.tick1 + 2000).sort((p1, p2) => p1 - p2);
+        for (let i = 1; i < T.length; i++) m9.tickGapMax = Math.max(m9.tickGapMax || 0, T[i] - T[i - 1]);
+        const a0 = live.welAt - 200, a1 = live.welAt + 800; let st = 0, prev = null, seen = false;
+        for (const f of F) {
+          if (prev && f[0] >= a0 && f[0] <= a1) { m9.frameMax = Math.max(m9.frameMax || 0, f[0] - prev[0]); m9.jumpMax = Math.max(m9.jumpMax || 0, Math.hypot(f[1] - prev[1], f[2] - prev[2])); }
+          if (prev && f[0] >= x.ht && f[0] <= a1) { seen = true; if (Math.hypot(f[1] - prev[1], f[2] - prev[2]) < 0.01) { st += f[0] - prev[0]; m9.stallMax = Math.max(m9.stallMax || 0, st); } else st = 0; }
+          prev = f;
+        }
+        if (seen && m9.stallMax == null) m9.stallMax = 0;   // 틀은 있었는데 멈춰 선 이음이 하나도 없다 = 0 ms(null 은 틀 0 일 때만)
+        for (const k of Object.keys(m9)) if (m9[k] != null) m9[k] = Math.round(m9[k]);
+      }
+      r.slow = Object.assign({ z: x.z, ph: x.ph, sockets: x.s.length, freezeMs: (live && x.ht) ? Math.round(live.tick1 - x.ht) : null, head: x.s.reduce((a, y) => a + y.head, 0),
+        ext: x.s.map((y) => y.ext), down: link ? link.stats.down : null, linkConns: link ? link.stats.conns : null,
+        welKB: live && live.welBytes ? Math.round(live.welBytes / 1024 * 10) / 10 : null, welHt: live ? !!live.welHt : null, welTb: live ? !!live.welTb : null }, m9);
+      if (opt.shot) { try { fs.mkdirSync(path.dirname(opt.shot), { recursive: true }); await page.screenshot({ path: opt.shot }); r.shot = opt.shot; } catch (e) { r.shot = 'X ' + e.message; } }
+    }
     const tail = await page.evaluate(() => ({ z: window.__getPrimaryZoneId(), n: window.__hpN.slice(), h: window.__hpH,
       cs: window.__connState ? window.__connState() : null,   // ★[T1077] 배너 상태 · 넘김 실패 까닭
       why: ((document.querySelector('#netLost .nl-why') || {}).textContent || ''), on: !!(document.getElementById('netLost') && document.getElementById('netLost').classList.contains('on')) }));
@@ -122,6 +165,7 @@ async function runCase(tag, envOf, chromium, C, opt) {   // ★[T1092] opt = { r
     r.maxBack = Math.round(maxBack);   // 동쪽으로 걷는 동안 서버 x 가 한 표본에 뒤로 간 가장 큰 폭 — 되끌림(튕김)
     r.reached = !!tSeam; r.maxOver = Math.round(maxSx - C.seam); r.z = tail.z; r.handoffMsgs = tail.h; r.notices = tail.n.filter((t) => /못 넘어간다|모른다/.test(t));
     r.recover = clog.filter((l) => /\[recover\]/.test(l)).length;
+    r.cut = clog.filter((l) => /\[recover\].*(강제 close|좀비|primary 재연결)/.test(l)).length;   // ★[T1125] 감시견이 끊은 줄(틱 · pong · 재연결) — 딱지 줄(예측 정지)은 안 센다
     if (opt && opt.back) {   // ★[T1092] 되돌림 판 — 사람이 옛 존(한반도)에 들어가 있나(시도 하나가 날던 중이면 끝날 때까지) · 사진 · 몸이 걷나
       const st = async () => page.evaluate(() => ({ z: window.__getPrimaryZoneId(), ph: window.__connState ? window.__connState().phase : '',
         on: !!(document.getElementById('netLost') && document.getElementById('netLost').classList.contains('on')), b: window.__hpB, n: window.__hpN.slice(), u: window.__hpU.slice() }));
@@ -138,6 +182,7 @@ async function runCase(tag, envOf, chromium, C, opt) {   // ★[T1092] opt = { r
     }
     await browser.close();
   } finally {
+    if (link) { try { await link.close(); } catch (e) {} }
     for (const p of procs) { r['log_' + p._name] = p._out; try { p.kill('SIGKILL'); } catch (e) {} }
     await sleep(1500);
     try { fs.rmSync(D, { recursive: true, force: true }); } catch (e) {}
@@ -162,6 +207,33 @@ async function runCase(tag, envOf, chromium, C, opt) {   // ★[T1092] opt = { r
     // ★[T1077] central 만 닛폰 주소가 틀렸다(존 둘은 PUBLIC_HOST=localhost 그대로 — 존↔존 인계는 맞다)
     ['host', (k) => (k === 'central' ? { ZONE_HOSTS: JSON.stringify({ hanbando: 'localhost', nippon: 'nippon.invalid' }) } : { T1092_HANDOFF_BACK: '0' })],   // ★[PM land1039] ⓗ 는 T1092 앞 꼴(ACK 시한 · 배너)을 재현하는 판 — T1092 켬 기본 뒤엔 존을 끔으로(되돌림 꼴은 판 back 이 잰다)
   ];
+  // ★[T1125] 느린 길 — 카드 ④ 왕복 150 ms · 길 = 1.7 MB ÷ 40초(카드 ★재민 11-03 의 welcome 바이트 · 먹통 초) ≈ 42.5 KB/s · 표 모드는 카드 200 KB/s 도
+  const SLOW = 3998, SLOW_CARD = 200, SLOW_KBPS = 1700 / 40, SLOW_RTT = 150, SLOW_CAP = 90000;   // 카드 ④ ⑨ 200 KB/s · 라이브 몫 1.7 MB ÷ 40초
+  const slowOpt = (kbps, shot) => ({ redirect: [`:${ZONES.nippon.port}/`, `:${SLOW}/`], slow: { port: SLOW, kbps, rttMs: SLOW_RTT, capMs: SLOW_CAP, midShot: shot.replace(/\.png$/, '-mid.png') }, shot });
+  if (process.argv.includes('--slow-table')) {   // 단언 0 — 먹통 초 표(길 둘 × 손잡이 여섯)
+    ok(await portFree(SLOW), `ⓒ 전제: 느린 길 대리 포트 ${SLOW} 가 비어 있다`);
+    //   손잡이 줄 — ②③ 넷(끔 · 압축만 · 머리만 · 둘 다 — ⑥⑧ 끔) + 추신 ⑥⑧ 둘(⑥ 승격 welcome 가볍게 · 전부 = ⑧ 예측 유지까지)
+    const OFF68 = { T1125_LEAN_PROMOTE: '0', T1125_KEEP_PRED: '0' };
+    const KN = [['끔', Object.assign({ T1125_WS_DEFLATE: '0', T1125_WEL_HEAD: '0' }, OFF68)], ['압축만', Object.assign({ T1125_WS_DEFLATE: '1', T1125_WEL_HEAD: '0' }, OFF68)],
+      ['머리만', Object.assign({ T1125_WS_DEFLATE: '0', T1125_WEL_HEAD: '1' }, OFF68)], ['둘다', Object.assign({ T1125_WS_DEFLATE: '1', T1125_WEL_HEAD: '1' }, OFF68)],
+      ['둘다+가볍게', { T1125_WS_DEFLATE: '1', T1125_WEL_HEAD: '1', T1125_LEAN_PROMOTE: '1', T1125_KEEP_PRED: '0' }], ['전부', { T1125_WS_DEFLATE: '1', T1125_WEL_HEAD: '1', T1125_LEAN_PROMOTE: '1', T1125_KEEP_PRED: '1' }]];
+    const T = [], av = (k) => { const i = process.argv.indexOf(k); return i > 0 ? String(process.argv[i + 1]).split(',') : null; }, onlyK = av('--kbps'), onlyN = av('--knobs');   // 거르개(예 `--kbps 42.5 --knobs 끔`)
+    for (const kbps of [SLOW_CARD, SLOW_KBPS]) for (const [kn, env] of KN) {
+      if ((onlyK && !onlyK.some((v) => Math.abs(+v - kbps) < 0.05)) || (onlyN && !onlyN.includes(kn))) continue;
+      const tag = `tb${Math.round(kbps)}-${T.length}`; console.log(`\n[표 ${kbps.toFixed(1)} KB/s · ${kn}]`);
+      const x = await runCase(tag, (k) => (k === 'central' ? {} : env), chromium, C, slowOpt(kbps, `/tmp/e2e-handoff-proto-shots/slow-${Math.round(kbps)}-${T.length}.png`));
+      const q = x.slow || {}, NP = String(x.log_nippon || '');
+      const row = { kbps: +kbps.toFixed(1), knobs: kn, z: q.z, ph: q.ph, freezeMs: q.freezeMs, cut: x.cut, rejoin: (NP.match(/WS CONN attempt: observer=false url=\/\?[^\n]*guest_token=/g) || []).length,
+        sockets: q.sockets, head: q.head, deflate: (q.ext || []).some((e) => /permessage-deflate/.test(e)), downKB: q.down != null ? Math.round(q.down / 1024) : null, reached: x.reached, errs: (x.errs || []).length, shot: x.shot, midShot: x.midShot || null, midBanner: x.midBanner || null,
+        welKB: q.welKB, welHt: q.welHt, welTb: q.welTb, tickGapMax: q.tickGapMax, frameMax: q.frameMax, stallMax: q.stallMax, jumpMax: q.jumpMax };
+      T.push(row); console.log('  ·', JSON.stringify(row));
+    }
+    console.log('\n=== 먹통 초 표(T1125 ④ · 넘기 받은 때 → 닛폰 첫 틱 · 왕복 150 ms · 하네스 꼴 세계) ===');
+    console.log('길 KB/s | 손잡이 | 먹통 ms | 끊기 | 손님 열쇠 다시 붙기 | 닛폰 소켓 | 머리 | 압축 | 내려간 KB | 승격 welcome KB | 틱 이음 최대 ms | 틀 최대 ms | 멈춤 최대 ms | 튐 최대 px | 끝');
+    for (const t of T) console.log(`${t.kbps} | ${t.knobs} | ${t.freezeMs} | ${t.cut} | ${t.rejoin} | ${t.sockets} | ${t.head} | ${t.deflate ? 'O' : 'X'} | ${t.downKB} | ${t.welKB} | ${t.tickGapMax} | ${t.frameMax} | ${t.stallMax} | ${t.jumpMax} | ${t.z}·${t.ph}`);
+    const ji = process.argv.indexOf('--json'); if (ji > 0) { fs.mkdirSync(path.dirname(process.argv[ji + 1]), { recursive: true }); fs.writeFileSync(process.argv[ji + 1], JSON.stringify({ card: 'T1125', made: new Date().toISOString().slice(0, 10), rttMs: SLOW_RTT, rows: T }, null, 1) + '\n'); }
+    process.exit(0);
+  }
   const R = {};
   for (const [tag, envOf] of cases) { console.log(`\n[판 ${tag}]`); R[tag] = await runCase(tag, envOf, chromium, C);
     const x = R[tag]; console.log(`  · 기동 ${x.up} · 선에 닿음 ${x.reached} · 선 넘은 서버 x ${x.maxOver} · 되끌림 ${x.maxBack}px · 주 존 ${x.z} · handoff 수신 ${x.handoffMsgs} · 알림 ${JSON.stringify(x.notices)} · recover ${x.recover}`); }
@@ -169,6 +241,10 @@ async function runCase(tag, envOf, chromium, C, opt) {   // ★[T1092] opt = { r
   { const CLOSED = 3999; ok(await portFree(CLOSED), `ⓒ 전제: 닫힌 포트 ${CLOSED} 에 아무도 없다(브라우저 소켓이 곧 거절된다)`);
     console.log('\n[판 back]'); R.back = await runCase('back', () => ({}), chromium, C, { redirect: [`:${ZONES.nippon.port}/`, `:${CLOSED}/`], back: true, shot: '/tmp/e2e-handoff-proto-shots/back.png', shotBack: '/tmp/e2e-handoff-proto-shots/back-moment.png' });
     const x = R.back; console.log(`  · 기동 ${x.up} · 선에 닿음 ${x.reached} · handoff 수신 ${x.handoffMsgs} · 끝 ${JSON.stringify(x.back ? { z: x.back.z, ph: x.back.ph, on: x.back.on, b: x.back.b } : null)} · 걸음 ${x.backMove} · 사진 ${x.shot}`); }
+  // ★[T1125] 판 slow — 받는 존 브라우저 소켓만 느린 길(제품 기본 = 손잡이 둘 켬)
+  { ok(await portFree(SLOW), `ⓒ 전제: 느린 길 대리 포트 ${SLOW} 가 비어 있다`);
+    console.log('\n[판 slow]'); R.slow = await runCase('slow', () => ({}), chromium, C, slowOpt(SLOW_CARD, '/tmp/e2e-handoff-proto-shots/slow.png'));   // ★[T1125 ⑨] 잣대 길 = 카드 200 KB/s · 왕복 150 ms
+    const x = R.slow; console.log(`  · 기동 ${x.up} · 선에 닿음 ${x.reached} · handoff 수신 ${x.handoffMsgs} · 끝 ${JSON.stringify(x.slow || null)} · 끊기 ${x.cut} · 사진 ${x.shot}`); }
   const L = (x, z) => String(x['log_' + z] || '');
   const cnt = (s, re) => (s.match(re) || []).length;
   console.log('\n[ⓟ 규약 판 다름]');
@@ -215,6 +291,21 @@ async function runCase(tag, envOf, chromium, C, opt) {   // ★[T1092] opt = { r
     ok(x.notices.length === 0, 'ⓗ [재현] 서버 알림 0 — 서버는 이 실패를 모른다(사람에게 말할 자리는 클라뿐)', JSON.stringify(x.notices));
     ok(x.z === 'nippon' && !!x.cs && x.cs.phase !== 'ready' && x.bannerOn, 'ⓗ [상황] 주 존은 닛폰으로 넘어간 채 들어가지 못했다 — 배너가 섰다', `주 존 ${x.z} · ${x.cs ? x.cs.phase : '-'} · 배너 ${x.bannerOn}`);
     ok(!!x.cs && x.cs.hoFail === NM && x.why.startsWith(NM), 'ⓗ ★★⑤ 화면에 까닭 한 줄 — "<닛폰 표시 이름> 서버에 연결하지 못했습니다"(하십시오체 · 배너 why 맨 앞)', JSON.stringify(x.why)); }
+  console.log('\n[ⓛ 느린 길 — 넘긴 뒤 먹통(T1125)]');
+  { const x = R.slow, q = x.slow || {}, rejoin = cnt(L(x, 'nippon'), /WS CONN attempt: observer=false url=\/\?[^\n]*guest_token=/g);
+    ok(x.up && x.reached && x.handoffMsgs >= 1, 'ⓒ ⓛ 걸음이 선에 닿았고 넘기(handoff)가 왔다', `handoff ${x.handoffMsgs}`);
+    ok(q.z === 'nippon' && q.ph === 'ready', 'ⓛ ★★넘어가 들어간다 — 주 존 닛폰 · 들어가 있음', `주 존 ${q.z} · ${q.ph}`);
+    ok(x.cut === 0, 'ⓛ ★받는 중인 소켓을 감시견이 끊지 않는다 — [recover] 끊기 줄 0(틱 · pong 좀비 · 재연결)', `${x.cut}`);
+    ok(rejoin === 0, 'ⓛ ★닛폰에 손님 열쇠로 다시 붙기 0(라이브 = 네 번)', `${rejoin}`);
+    ok(q.freezeMs != null && q.freezeMs < 10000, 'ⓛ ★먹통(넘기 받은 때 → 닛폰 첫 틱) < 틱 감시 창 10초', `${q.freezeMs} ms · 길 ${SLOW_CARD} KB/s · 왕복 ${SLOW_RTT} ms`);
+    ok((q.ext || []).some((e) => /permessage-deflate/.test(e)), 'ⓛ 받는 존 소켓이 압축을 협상했다(permessage-deflate)', JSON.stringify(q.ext || []));
+    ok(q.head >= 1, 'ⓛ 큰 welcome 앞에 머리(welcome_head)가 섰다', `${q.head}`);
+    // ★[T1125 ⑥ ⑨ · PM 추신] 눈치 못 채는 넘기 — 승격 welcome 엔 지형 · 표 일곱이 없다(같은 소켓이 관측 welcome 으로 받았다 · 클라가 가진 서명) · 넘기 순간 그림 틀 · 멈춤 < 200 ms
+    ok(q.welHt === false && q.welTb === false, 'ⓛ ★⑥ 승격 welcome 이 가볍다 — 지형 · 표 일곱 0(몸 · 짐 · 자리 · 시계만)', `${q.welKB} KB · 지형 ${q.welHt} · 표 ${q.welTb}`);
+    ok(q.tickGapMax != null && q.tickGapMax < 200, 'ⓛ ★★⑨ 넘기 순간 화면의 세계가 멈춘 최대 < 200 ms — 받는 존 소켓 틱 이음 최대(관측 → 승격 · 넘기 앞 0.5초 → 승격 뒤 첫 틱 + 2초)', `${q.tickGapMax} ms`);
+    ok(q.frameMax != null && q.frameMax < 200 && q.stallMax != null && q.stallMax < 200, 'ⓛ ★⑨ 그림 틀 사이 최대 · 내 몸이 멈춰 선 최대 < 200 ms(넘기 받은 때 → welcome 뒤 0.8초)',
+      `틀 ${q.frameMax} ms · 멈춤 ${q.stallMax} ms · 튐 ${q.jumpMax} px`);
+    ok((x.errs || []).length === 0, 'ⓔ ⓛ 클라 pageerror 0', JSON.stringify(x.errs || [])); }
   console.log(`\n=== ${pass + fail}건 중 PASS ${pass} · FAIL ${fail} ===\n`);
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error('하네스 실패:', e); process.exit(1); });
