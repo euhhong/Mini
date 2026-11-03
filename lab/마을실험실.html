@@ -10346,13 +10346,23 @@ const T924_DEBT_CAP = !(typeof process !== 'undefined' && process.env && process
 //     · FD_DEATH_DAYS 14 — 카드(★재민) · 빚 > 14 **이고** 그날도 적자인 사람 가운데 가장 늙은 1명/일
 //   갚기 하루 상한은 출처 수를 못 찾아 두지 않았다(그날 남은 식량이 갚을 수 있는 만큼 · 회부) — 빚은 곳간이 빈 날에만 생기므로 갚는 몫은 그 뒤 들어온 식량이다.
 const T1074_FOOD_DEBT = (typeof process !== 'undefined' && process.env && process.env.T1074_FOOD_DEBT === '1');
-const FD_ADAPT_MAX = 0.40, FD_ADAPT_DOWN_DAYS = 24 * 7, FD_ADAPT_UP_DAYS = 20 * 7, FD_DEATH_DAYS = 14;
+// ★★[T1117 2026-11-03 · T1106 고증 `설계/고증_굶주림.md`] 고증 상수 — 손잡이 `T1117_FD_EVID`(켬 기본 · `=0` = T1074 상수 그대로 = T1074 착지 바이트 · T1074 끔이면 아무도 안 읽는다).
+//     · FD_ADAPT_MAX 0.155 — Keys 1950 pp. 328–329(Troscianko 2016 인용): 24주 BMR −40%(사람당) 가운데 **활성 조직 단위당 −15.5%** — 몸 크기로 설명 안 되는 적응 몫.
+//       게임 몸은 굶어도 작아지지 않는다(몸무게 칸 없음 · 일관된 몸) ⇒ 작아진 몸의 몫(−40% 의 나머지)은 짝이 없다 · 적응 몫만 싣는다(가정 — 보고 T1117 §1).
+//       (같은 몫 다른 인용: Weyer 외 2000 AJCN 72:946 서론 −16% · 대사 활성 조직 kg 당)
+//     · FD_ADAPT_DOWN_DAYS 168 · FD_ADAPT_UP_DAYS 140 — T1074 수 그대로(반기아 24주 · 재활 R20 — T1106 ①-1 · ①-2 와 같은 출처 수 · 바꿀 출처 수 없음)
+//     · FD_REPAY_KCAL 1,600 — 회복기 하루 갚기 상한(사람마다): 미네소타 제한 재활 네 무리 중 가장 큰 덤 +1,600 kcal(Keys 1950 — Troscianko 2016 인용 · T1106 ①-5)
+//       ÷ `DAY_KCAL` 2,450(하루치 1 · 위 576 줄 주석) = 하루치 약 0.653. 자유 재급식 섭취는 확인 못 해(T1106 회부 2) 더 큰 상한은 안 둔다.
+const T1117_FD_EVID = !(typeof process !== 'undefined' && process.env && process.env.T1117_FD_EVID === '0');
+const FD_DAY_KCAL = 2450, FD_REPAY_KCAL = 1600;   // ★[T1117] 출처 수(위 줄) — 하루치 열량(`DAY_KCAL` 정본 값 · 576 줄) · 재활 덤
+const FD_ADAPT_MAX = T1117_FD_EVID ? 0.155 : 0.40, FD_ADAPT_DOWN_DAYS = 24 * 7, FD_ADAPT_UP_DAYS = 20 * 7, FD_DEATH_DAYS = 14;
+const FD_REPAY_MAX = T1117_FD_EVID ? DAILY_FOOD_CONSUMPTION * FD_REPAY_KCAL / FD_DAY_KCAL : Infinity;   // 사람마다 하루 갚기 상한(하루치 단위 · 끔 = 상한 없음 = T1074)
 // 그날 먹을 사람(원정 중 제 짐을 먹는 병사는 빠진다 — `_t423EatN` 과 같은 잣대 · 그들의 빚은 제 짐이 정한다)
 function _fdEaters(v) { return v.npcs.filter((p) => !(p._warPack && p._warDraft)); }
 // 하루 몫 — 그날 필요량(적응만큼 덜) · 갚을 빚 합
 function _fdNeed(eaters) {
   let need = 0, debt = 0;
-  for (const p of eaters) { need += DAILY_FOOD_CONSUMPTION * (1 - (p._fdA || 0)); debt += (p._fd || 0); }
+  for (const p of eaters) { need += DAILY_FOOD_CONSUMPTION * (1 - (p._fdA || 0)); debt += Math.min(p._fd || 0, FD_REPAY_MAX); }   // ★[T1117] 오늘 갚을 몫 = 사람마다 상한까지(끔 = Infinity = 빚 전부 = T1074)
   return { need, debt };
 }
 // 먹은 몫을 나눈다 — 하루 몫 먼저(모자라면 모두 같은 비율로 · 부분 식사는 부분만 빚) · 남은 것만 빚을 갚는다(열량 1:1 · 빚 비례) · 적응을 한 걸음
@@ -10364,7 +10374,7 @@ function _fdSettle(eaters, need, debt, eaten) {
     const n = DAILY_FOOD_CONSUMPTION * (1 - (p._fdA || 0));
     const short = n * shortFrac;
     let d = (p._fd || 0);
-    d = d - d * payFrac + short;
+    d = d - Math.min(d, FD_REPAY_MAX) * payFrac + short;   // ★[T1117] 갚는 몫 = 오늘 갚을 몫(상한까지) × 남은 식량 비율(끔 = d × payFrac = T1074)
     p._fd = d > 1e-9 ? d : 0;
     p._fdS = short;
     p._fdA = p._fd > 0 ? Math.min(FD_ADAPT_MAX, (p._fdA || 0) + FD_ADAPT_MAX / FD_ADAPT_DOWN_DAYS)
@@ -15432,7 +15442,7 @@ module.exports = {
   _autoSwitchJobForTest: autoSwitchJob, _switchNPCJobForTest: switchNPCJob,   // ★[T1085] 하네스가 자율 전환 그 함수를 부른다(시험 이름 · 사본 0)
   T1075_HAPPY_EQ, HAPPY_EQ_HALF_DAYS,   // ★[T1075] 행복 평형 손잡이 · 반감기(평형 함수는 `sim/equilibrium.js` 하나 — T1076 과 같이 쓴다)
   foodDebtOf, T1074_FOOD_DEBT,   // ★[T1074] 식량 빚 읽는 함수 하나(T1075 가 읽는다)
-  __t1074: { _fdEaters, _fdNeed, _fdSettle, _fdDeathIdx, FD_ADAPT_MAX, FD_ADAPT_DOWN_DAYS, FD_ADAPT_UP_DAYS, FD_DEATH_DAYS },   // 하네스 훅(test-t1074-food-debt)
+  __t1074: { _fdEaters, _fdNeed, _fdSettle, _fdDeathIdx, FD_ADAPT_MAX, FD_ADAPT_DOWN_DAYS, FD_ADAPT_UP_DAYS, FD_DEATH_DAYS, FD_REPAY_MAX, T1117_FD_EVID },   // 하네스 훅(test-t1074-food-debt)
   T860_ON, CATCH_FROM, PRESERVE_FROM, _preserveSurplus, _t860Begin, _t860Dry, T877_ON, _t860Unit, PRESERVED_FOODS, PRESERVE_YIELD, PRESERVE_FOOD_FACTOR, FORAGE_FOOD_FACTOR,   // ★[T860] 잡은 날 말리기 — 손잡이 · 잡은 칸 표(하네스가 spoil 정본과 대조한다 · 사본 0) · 갈무리 한 걸음
   STONE_NET_STOCK,   // ★[T180] STONE_NET 1차 문턱 — v2 수출 게이트가 읽는다(사본 0)
   STONE_FLOOR_LAND,   // ★[T1049] 돌 바닥(livelihood FLOOR.stone) — v2 수출 게이트가 읽는다(사본 0)

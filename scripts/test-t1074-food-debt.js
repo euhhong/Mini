@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // @regress   ← 통합 러너가 이 표를 보고 자기 목록을 만든다(표 없으면 안 돈다)
 // === scripts/test-t1074-food-debt.js — 굶주림 = 사람마다 식량 빚 · 적응 · 14일 [T1074 · ★재민 11-02] ===
-//   잰다: ① 부분 식사는 부분만 빚 ② 남은 식량만 빚을 갚는다(열량 1:1) ③ 적응은 빚 있는 동안 내려가고(최대 −40%) 빚 0 이면 돌아온다
+//   잰다: ① 부분 식사는 부분만 빚 ② 남은 식량만 빚을 갚는다(열량 1:1) ③ 적응은 빚 있는 동안 내려가고(최대 — ★T1117 고증 −15.5% · `T1117_FD_EVID=0` −40%) 빚 0 이면 돌아온다 · ★T1117 사람마다 하루 갚기 상한(1,600 kcal ÷ 2,450)
 //         ④ 죽음 = 빚 > 14 이고 그날도 적자인 사람 가운데 가장 늙은 1명 · 제 몫을 다 먹은 날엔 안 죽는다 · 징발 중은 안 죽는다
 //         ⑤ 원정 중 제 짐을 먹는 병사는 마을 식사 명부에서 빠진다 ⑥ 끔 = 칸이 안 선다(손잡이 기본 끔)
 //         ⑦ econ 하루를 실제로 돌린 판 — 곳간 0 마을은 빚이 쌓이고 14일 넘긴 날부터 하루 1명 · 옛 굶주림 두 줄은 0
@@ -32,7 +32,7 @@ if (process.env.T1074_CHILD) {
   // ⑤ 징발 짐 병사
   { const v = { npcs: [mk(30), mk(31, { _warDraft: 2, _warPack: 1 }), mk(32, { _warDraft: 2 })] }; out.eaters = H._fdEaters(v).length; }
   out.knob = E.T1074_FOOD_DEBT; out.fd = typeof E.foodDebtOf === 'function' ? E.foodDebtOf({ npcs: [mk(1, { _fd: 2 }), mk(2, { _fd: 16 })] }) : null;
-  out.consts = { max: H.FD_ADAPT_MAX, down: H.FD_ADAPT_DOWN_DAYS, up: H.FD_ADAPT_UP_DAYS, die: H.FD_DEATH_DAYS };
+  out.consts = { max: H.FD_ADAPT_MAX, down: H.FD_ADAPT_DOWN_DAYS, up: H.FD_ADAPT_UP_DAYS, die: H.FD_DEATH_DAYS, repay: H.FD_REPAY_MAX === Infinity ? 'inf' : H.FD_REPAY_MAX, evid: H.T1117_FD_EVID };
   // ⑦ econ 하루를 실제로 — 곳간을 비운 마을 하나(켬 판에서만 의미)
   try {
     const v = E.createVillage({ name: '빚마을', initialPop: 20, fertility: 0.0, arable: 0, game: 0, wood: 0.5, stone: 0.3, ore: 0 });
@@ -56,12 +56,19 @@ if (process.env.T1074_CHILD) {
 const run = (env) => JSON.parse(execFileSync(process.execPath, [__filename], { env: Object.assign({}, process.env, { T1074_CHILD: '1' }, env), encoding: 'utf8', maxBuffer: 1 << 24 }).trim().split('\n').pop());
 console.log('\n=== T1074 식량 빚 하네스 ===\n');
 const on = run({ T1074_FOOD_DEBT: '1' }), off = run({ T1074_FOOD_DEBT: '' });
+const old = run({ T1074_FOOD_DEBT: '1', T1117_FD_EVID: '0' });   // ★[T1117] T1074 상수 갈래(`=0`) — 늘 같이 본다
+// ★[T1117] 고증 상수(켬 기본) — 적응 최대 0.155(Keys 활성 조직당 −15.5%) · 하루 갚기 상한 1,600 ÷ 2,450 하루치 · 168 · 140 · 14 그대로
+const EV = { max: 0.155, repay: 1600 / 2450 }, R = (c) => (c.repay === 'inf' ? Infinity : c.repay);
 ok(on.knob === true && off.knob === false, '⑥ 손잡이 — `T1074_FOOD_DEBT=1` 만 켬 · 기본 끔');
-ok(on.consts.max === 0.4 && on.consts.down === 168 && on.consts.up === 140 && on.consts.die === 14, '수 넷 — 적응 −40% · 168일(24주) · 140일(R20) · 14일', JSON.stringify(on.consts));
+ok(on.consts.evid === (process.env.T1117_FD_EVID !== '0') && on.consts.down === 168 && on.consts.up === 140 && on.consts.die === 14
+  && (on.consts.evid ? (on.consts.max === EV.max && Math.abs(R(on.consts) - EV.repay) < 1e-12) : (on.consts.max === 0.4 && R(on.consts) === Infinity)),
+  '수 — 적응 최대(고증 0.155 · `T1117_FD_EVID=0` 0.40) · 갚기 상한(고증 1,600/2,450 · `=0` 없음) · 168일(24주) · 140일(R20) · 14일', JSON.stringify(on.consts));
+ok(old.consts.evid === false && old.consts.max === 0.4 && R(old.consts) === Infinity && old.consts.down === 168 && old.consts.up === 140 && old.consts.die === 14, '[T1117] `T1117_FD_EVID=0` = T1074 수 그대로(−40% · 갚기 상한 없음)', JSON.stringify(old.consts));
+ok(Math.abs(old.pay.d - 1) < 1e-9 && Math.abs(old.pay.paid - 2) < 1e-9 && Math.abs(old.adapt.a200 - 0.4) < 1e-9, '[T1117] `=0` 갈래 — 남은 2 로 빚 3 → 1 · 적응 −40% 에서 멈춤(T1074 꼴 그대로)', JSON.stringify({ pay: old.pay, a200: old.adapt.a200 }));
 ok(Math.abs(on.half.d0 - 0.5) < 1e-9 && Math.abs(on.half.d1 - 0.5) < 1e-9 && Math.abs(on.half.short - 1) < 1e-9, '★① 반만 먹은 날 — 사람마다 반 끼 빚(부분 식사는 부분만)', JSON.stringify(on.half));
 ok(on.half.a > 0, '① 빚이 생긴 날 적응이 한 걸음 내려간다', on.half.a);
-ok(Math.abs(on.pay.need - 0.9) < 1e-9 && Math.abs(on.pay.d - 1) < 1e-9 && Math.abs(on.pay.paid - 2) < 1e-9 && on.pay.s === 0, '★② 하루 몫(적응만큼 덜 · 0.9)을 다 먹고 남은 2 만 빚을 갚는다(3 → 1 · 열량 1:1)', JSON.stringify(on.pay));
-ok(Math.abs(on.adapt.a200 - 0.4) < 1e-9 && Math.abs(on.adapt.mn - 0.6) < 1e-9, '★③ 빚 있는 날이 이어지면 적응은 −40% 에서 멈춘다(그 아래로 안 간다)', JSON.stringify(on.adapt));
+{ const pd = Math.min(2, R(on.consts)); ok(Math.abs(on.pay.need - 0.9) < 1e-9 && Math.abs(on.pay.d - (3 - pd)) < 1e-9 && Math.abs(on.pay.paid - pd) < 1e-9 && on.pay.s === 0, '★② 하루 몫(적응만큼 덜 · 0.9)을 다 먹고 남은 2 만 빚을 갚는다(열량 1:1 · 사람마다 하루 갚기 상한까지)', JSON.stringify(on.pay)); }
+ok(Math.abs(on.adapt.a200 - on.consts.max) < 1e-9 && Math.abs(on.adapt.mn - (1 - on.consts.max)) < 1e-9, '★③ 빚 있는 날이 이어지면 적응은 최대(고증 −15.5% · `=0` −40%)에서 멈춘다(그 아래로 안 간다)', JSON.stringify(on.adapt));
 ok(on.adapt.a1 < on.adapt.a200 && on.adapt.back === 0, '★③ 빚이 0 이면 적응이 천천히 돌아와 0 이 된다', JSON.stringify(on.adapt));
 ok(on.death === 0, '★④ 죽음 — 빚 > 14 이고 그날도 적자인 사람 가운데 가장 늙은 1명(60 · 50 살 가운데 60) · 그날 다 먹은 70 살 · 빚 13 인 80 살 · 징발 중 90 살은 아니다',
   on.death === 0 ? '' : `고른 자리 ${on.death}`);
