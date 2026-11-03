@@ -69,12 +69,12 @@ function handleChat(player, text) {
           : r && r.reason === 'already_member' ? `${name} 님은 이미 우리 마을 사람입니다.`
           : r && r.reason === 'in_other_tribe' ? `${name} 님은 다른 마을 사람입니다. 먼저 그 마을에서 나와야 합니다.`
           : r && r.reason === 'self' ? '자기 자신은 부를 수 없습니다.'
-          : '지금은 못 불렀다 — 잠시 뒤 다시');
+          : '지금은 부르지 못했습니다. 잠시 뒤 다시 해 보십시오.');
         return;
       }
       say(`${r.name} 님을 ${r.tribe}(으)로 불렀습니다. 상대가 \`/수락\`이라고 적으면 마을에 듭니다.`);
       if (H.tellPlayer) H.tellPlayer(r.player_id, calledLine(r.tribe), 'guild');
-    }).catch(() => say('지금은 못 불렀다 — 잠시 뒤 다시'));
+    }).catch(() => say('지금은 부르지 못했습니다. 잠시 뒤 다시 해 보십시오.'));
     return true;
   }
 
@@ -89,22 +89,22 @@ function handleChat(player, text) {
       H.central.tribeInviteAccept(me, tribeId).then((r) => {
         if (!r || !r.ok) {
           say(r && r.reason === 'no_invite' ? '당신을 부른 마을이 없습니다.'
-            : r && r.reason === 'already_in_tribe' ? '이미 마을 사람이다 — 먼저 `/탈퇴`'
-            : '지금은 못 들었다 — 잠시 뒤 다시');
+            : r && r.reason === 'already_in_tribe' ? '이미 마을 사람입니다. 먼저 `/탈퇴` 하십시오.'
+            : '지금은 들지 못했습니다. 잠시 뒤 다시 해 보십시오.');
           return;
         }
         say(`${r.name}에 들었습니다.${(r.more | 0) > 0 ? ` 다른 부름 ${r.more}건은 지웠습니다.` : ''}`);
         if (H.refreshTribe) H.refreshTribe(me);
-      }).catch(() => say('지금은 못 들었다 — 잠시 뒤 다시'));
+      }).catch(() => say('지금은 들지 못했습니다. 잠시 뒤 다시 해 보십시오.'));
     };
     if (!want) { go(null); return true; }        // 안 고르면 종전 그대로(가장 최근)
     H.central.tribeInvites(me).then((r) => {
       const list = (r && r.ok && Array.isArray(r.invites)) ? r.invites : [];
       if (!list.length) { say('당신을 부른 마을이 없습니다.'); return; }
       const pick = list.find((x) => String(x.name || '').trim() === want);
-      if (!pick) { say(`[${want}] 은(는) 자네를 부르지 않았다 — 부른 곳: ${list.map((x) => `[${x.name}]`).join(' ')}`); return; }
+      if (!pick) { say(`[${want}] 은(는) 당신을 부르지 않았습니다. 부른 곳: ${list.map((x) => `[${x.name}]`).join(' ')}`); return; }
       go(pick.tribe_id);
-    }).catch(() => say('지금은 못 들었다 — 잠시 뒤 다시'));
+    }).catch(() => say('지금은 들지 못했습니다. 잠시 뒤 다시 해 보십시오.'));
     return true;
   }
 
@@ -117,11 +117,11 @@ function handleChat(player, text) {
       if (!r || !r.ok) {
         say(r && r.reason === 'not_leader' ? '촌장만 드는 문을 정할 수 있습니다.'
           : r && r.reason === 'not_in_tribe' ? '마을 사람만 쓸 수 있습니다.'
-          : '지금은 못 바꿨다 — 잠시 뒤 다시');
+          : '지금은 바꾸지 못했습니다. 잠시 뒤 다시 해 보십시오.');
         return;
       }
       say(r.mode === 'invite' ? `${r.name}은(는) 이제 **부름을 받아야** 들 수 있습니다.` : `${r.name}은(는) 이제 아무나 들 수 있습니다.`);
-    }).catch(() => say('지금은 못 바꿨다 — 잠시 뒤 다시'));
+    }).catch(() => say('지금은 바꾸지 못했습니다. 잠시 뒤 다시 해 보십시오.'));
     return true;
   }
 
@@ -132,12 +132,12 @@ function handleChat(player, text) {
       if (!r || !r.ok) {
         say(r && r.reason === 'not_leader' ? '촌장만 소개를 쓸 수 있습니다.'
           : r && r.reason === 'not_in_tribe' ? '마을 사람만 쓸 수 있습니다.'
-          : '지금은 못 썼다 — 잠시 뒤 다시');
+          : '지금은 쓰지 못했습니다. 잠시 뒤 다시 해 보십시오.');
         return;
       }
       _introBust();                       // ★그 자리에서 비운다 — 다음 시작 화면이 새 문장을 본다
       say(r.intro ? `${r.name} 소개를 적었습니다. "${r.intro}"` : `${r.name} 소개를 지웠습니다.`);
-    }).catch(() => say('지금은 못 썼다 — 잠시 뒤 다시'));
+    }).catch(() => say('지금은 쓰지 못했습니다. 잠시 뒤 다시 해 보십시오.'));
     return true;
   }
 }

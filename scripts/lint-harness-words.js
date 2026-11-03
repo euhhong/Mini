@@ -21,6 +21,7 @@
 //      판정 글자가 그 파일 안에서 닫히는 하네스(입력 픽스처 문장 → 기대값 — `test-notice`)는 `ALLOW` 에 이유와 함께 둔다.
 //      `--old <ref>` 를 주면 태어난 커밋 대신 그 ref 하나와 견준다(예: 말투 카드 앞 main). 그 판엔 **줄어듦**(노랑 · 나감에 안 듦)도 낸다 —
 //      지금도 어딘가 있지만 그 ref 보다 나오는 자리가 준 조각(다른 문장에 같은 글자가 남아 "있다"가 되는 꼴 · 말투 카드 손 점검 목록).
+//   ⑥ 망 0(T1112) — git 은 전송 금지로만 부른다. 지역에 태어난 판이 없는 줄(얇은 · 부분 클론)은 **건너뜀**으로 세어 끝 줄에 적는다.
 //   ⑤ 끝 줄 하나: `LINT-HARNESS-WORDS PASS · …`(나감 0) · `LINT-HARNESS-WORDS FAIL · 빨강 N · …`(나감 1). `--json <파일>` · `--list ref` 로 참고 목록.
 //
 // 쓰는 법:  node scripts/lint-harness-words.js [--root <레포>] [--old <ref>] [--json <out>] [--list ref]
@@ -38,7 +39,11 @@ const HAN = /[가-힣]/;
 const PROD_TOPS = ['server', 'public', 'sim', 'lab', 'tools', 'scripts'];
 const PROD_EXT = /\.(js|mjs|html|json|css|txt|sh|py)$/;
 const isHarness = (rel) => /^scripts\/(test|e2e)-[^/]*\.js$/.test(rel);
-const git = (args, o) => execFileSync('git', ['-C', ROOT, ...args], Object.assign({ encoding: 'utf8', maxBuffer: 1 << 28, stdio: ['ignore', 'pipe', 'ignore'] }, o || {}));
+//   ★[T1112 · PM land1039 추신] **망 0** — 부분 · 얇은 클론(`blob:none` 약속 원격)에선 `blame` · `grep <ref>` · `show` 가 없는 옛 블롭을 원격에서 하나씩
+//   받아 왔다(`test-harness-lint` 20분+ · 망 의존). 모든 git 부름에 전송 금지(`protocol.allow=never` · `GIT_NO_LAZY_FETCH=1`)를 걸어, 지역에 없는 옛 판은
+//   **그 줄을 건너뛴다**(건너뜀 수를 끝 줄에 적는다 — 조용히 초록 아님 · 빨강도 아님).
+const GIT_ENV = Object.assign({}, process.env, { GIT_NO_LAZY_FETCH: '1', GIT_TERMINAL_PROMPT: '0' });
+const git = (args, o) => execFileSync('git', ['-c', 'protocol.allow=never', '-C', ROOT, ...args], Object.assign({ encoding: 'utf8', maxBuffer: 1 << 28, stdio: ['ignore', 'pipe', 'ignore'], env: GIT_ENV }, o || {}));
 
 // ── 제품 글자: 파일 원문 → 주석 뺀 글자 → 한글 토막 집합에 더한다
 function stripText(rel, src) {
@@ -153,25 +158,54 @@ for (const f of files) {
   }
 }
 // ── 지금 없는 것 → 태어난 커밋(또는 --old)에서 다시
-const byRef = new Map();
-for (const L of lits) {
-  if (L.state) continue;
-  let ref = OLD;
-  if (!ref) {
-    try { const b = git(['blame', '--porcelain', '-L', `${L.line},${L.line}`, '--', 'scripts/' + L.f]); ref = b.split(' ')[0]; } catch (e) { ref = 'HEAD'; }
-    if (/^0+$/.test(ref)) ref = 'HEAD';   // 아직 커밋 안 된 줄 — 지금 트리와 같은 판
+//   태어난 커밋 = `git blame --porcelain` — 파일마다 한 번(`-L n,n` 여럿 · 줄마다 부르지 않는다)
+//   ★지역에 옛 판이 있나 — 부분 클론(약속 원격)은 옛 블롭이 없어 `blame` 이 하나에 3초씩 헛돈다(전송 금지로 끝내 실패). 한 번 떠 보고 없으면 통째로 건너뛴다.
+//   얇은 클론은 경계 커밋에 매긴다 — 빨강이 참고로 숨을 수 있어 머리 줄에 적는다(T1097 회부 2).
+const repoNote = [];
+let noHistory = false;
+try { if (git(['rev-parse', '--is-shallow-repository']).trim() === 'true') repoNote.push('얇은 클론 — 경계 판에 매김(빨강이 참고로 숨을 수 있다 · `git fetch --unshallow`)'); } catch (e) {}
+try {
+  let partial = false;
+  try { partial = /\S/.test(git(['config', '--get-regexp', '^(remote\\..*\\.promisor|extensions\\.partialclone)$'])); } catch (e) { partial = false; }
+  if (partial && lits.some((L) => !L.state)) {
+    const f0 = lits.find((L) => !L.state).f;
+    const cs = git(['rev-list', '-n', '2', 'HEAD', '--', 'scripts/' + f0]).split('\n').filter(Boolean);
+    if (cs.length > 1) { try { git(['cat-file', '-e', `${cs[1]}:scripts/${f0}`]); } catch (e) { noHistory = true; } }
+    if (noHistory) repoNote.push('부분 클론 — 옛 블롭이 지역에 없어 태어난 판을 못 본다(망 0 · 그 줄은 건너뜀)');
   }
-  L.ref = ref;
-  if (!byRef.has(ref)) byRef.set(ref, []);
-  byRef.get(ref).push(L);
+} catch (e) {}
+const byRef = new Map();
+const byFile = new Map();
+for (const L of lits) { if (L.state) continue; if (!byFile.has(L.f)) byFile.set(L.f, []); byFile.get(L.f).push(L); }
+for (const [f, Ls] of byFile) {
+  const at = new Map();
+  if (!OLD && !noHistory) {
+    const ls = [...new Set(Ls.map((L) => L.line))];
+    try {
+      const b = git(['blame', '--porcelain', ...ls.flatMap((n) => ['-L', `${n},${n}`]), '--', 'scripts/' + f]);
+      for (const l of b.split('\n')) { const m = /^([0-9a-f]{40}) \d+ (\d+)/.exec(l); if (m) at.set(+m[2], m[1]); }
+    } catch (e) { /* 지역에 옛 판이 없다(얇은 · 부분 클론) — 아래에서 건너뛴다 */ }
+  }
+  for (const L of Ls) {
+    if (noHistory && !OLD) { L.state = 'skip'; continue; }
+    let r = OLD || at.get(L.line) || null;
+    if (r && /^0+$/.test(r)) r = 'HEAD';   // 아직 커밋 안 된 줄 — 지금 트리와 같은 판
+    if (!r) { L.state = 'skip'; continue; }
+    L.ref = r;
+    if (!byRef.has(r)) byRef.set(r, []);
+    byRef.get(r).push(L);
+  }
 }
 const pathspec = ['--', ...PROD_TOPS, ':(exclude)scripts/test-*', ':(exclude)scripts/e2e-*'];
+//   태어난 판 훑기는 글자 파일만(소리 · 그림 · 큰 지형 json 을 안 읽는다 — 판마다 0.5초 → 0.2초) · json 은 이름 · 자료라 말투가 사는 자리가 아니다
+const pathspecText = ['--', ...PROD_TOPS.flatMap((t) => ['js', 'mjs', 'html', 'sh', 'py', 'txt', 'css'].map((e) => `:(glob)${t}/**/*.${e}`)), ':(exclude)scripts/test-*', ':(exclude)scripts/e2e-*'];
+//   옛 판 제품 글자(정밀) — 그 조각이 든 파일만 꺼내 주석을 정본(`code-only.js`)으로 뺀다. `--old` 판(줄어듦 셈)이 쓴다.
 function prodAt(ref, need) {
   const set = [];
   const tmp = path.join(require('os').tmpdir(), `lhw-${process.pid}.txt`);
   fs.writeFileSync(tmp, need.join('\n') + '\n');
   let list = '';
-  try { list = git(['grep', '-l', '-F', '-f', tmp, ref, ...pathspec]); } catch (e) { list = ''; }   // 없으면 1 로 나간다
+  try { list = git(['grep', '-l', '-F', '-f', tmp, ref, ...pathspec]); } catch (e) { if (e.status !== 1) { fs.unlinkSync(tmp); return null; } list = ''; }   // 1 = 없음 · 그 밖 = 옛 판 자료 없음
   fs.unlinkSync(tmp);
   for (const line of list.split('\n').filter(Boolean)) {
     const rel = line.slice(line.indexOf(':') + 1);
@@ -181,30 +215,57 @@ function prodAt(ref, need) {
   }
   return set;
 }
+//   옛 판 제품 글자(빠름 · 태어난 판들) — `git grep` 한 번이 그 조각이 든 **줄**만 낸다. 주석은 줄 단위로 뺀다
+//   (줄 머리 `//` · `*` · `#` · 따옴표 밖 ` //` 뒤). 정본 토크나이저보다 거칠다 — 옛 판에서 주석에만 있던 글자를 "있었다"로 읽으면 빨강이 늘 쪽이다(숨지 않는다).
+function prodLinesAt(ref, need) {
+  const tmp = path.join(require('os').tmpdir(), `lhw-${process.pid}.txt`);
+  fs.writeFileSync(tmp, need.join('\n') + '\n');
+  let out = '', list = '';
+  //   ① `-l` 로 그 조각이 든 파일만(파일마다 첫 맞음에서 멈춘다 — 빠르다) ② 그 파일들만 줄로
+  try { list = git(['grep', '-l', '-I', '-F', '-f', tmp, ref, ...pathspecText]); } catch (e) { if (e.status !== 1) { fs.unlinkSync(tmp); return null; } list = ''; }
+  const rels = list.split('\n').filter(Boolean).map((l) => l.slice(ref.length + 1)).filter((rel) => PROD_EXT.test(rel) && !isHarness(rel));
+  if (rels.length) { try { out = git(['grep', '-I', '-F', '-f', tmp, ref, '--', ...rels]); } catch (e) { if (e.status !== 1) { fs.unlinkSync(tmp); return null; } out = ''; } }
+  fs.unlinkSync(tmp);
+  const set = [];
+  for (const raw of out.split('\n')) {
+    const i = raw.indexOf(':', ref.length + 1); if (i < 0) continue;
+    const rel = raw.slice(ref.length + 1, i); if (!PROD_EXT.test(rel) || isHarness(rel)) continue;
+    let t = raw.slice(i + 1);
+    const tt = t.trim();
+    if (/^(\/\/|\*|\/\*)/.test(tt) || (/\.(sh|py)$/.test(rel) && /^#(?!!)/.test(tt))) continue;
+    if (/\.(js|mjs|html)$/.test(rel)) { let q = null; for (let k = 0; k < t.length; k++) { const c = t[k]; if (q) { if (c === '\\') k++; else if (c === q) q = null; } else if (c === "'" || c === '"' || c === '`') q = c; else if (c === '/' && t[k + 1] === '/' && (k === 0 || /\s/.test(t[k - 1]))) { t = t.slice(0, k); break; } } }
+    if (HAN.test(t)) set.push(t.trim());
+  }
+  return set;
+}
+if (process.env.LHW_DEBUG) console.error(`[lhw] 태어난 판 ${byRef.size} · 줄 ${[...byRef.values()].reduce((a, b) => a + b.length, 0)}`);
 for (const [ref, Ls] of byRef) {
   const need = [...new Set(Ls.flatMap((L) => L.alts.flat()))];
-  let set = [];
-  if (ref !== 'HEAD' || OLD) set = prodAt(ref, need);
+  if (ref === 'HEAD' && !OLD) { for (const L of Ls) { L.drift = []; L.state = 'ref'; } continue; }
+  const set = OLD ? prodAt(ref, need) : prodLinesAt(ref, need);
+  if (set == null) { for (const L of Ls) L.state = 'skip'; continue; }   // 옛 판 자료가 지역에 없다 — 건너뜀
   const hasOld = makeHas(set);
   //   빨강 = 지금 없는 토막 하나라도 그때는 있었다(낱말이 하네스 밑에서 사라졌다). 그때도 없던 토막(조사가 붙은 런타임 이름 "돌칼이" 등)은 가르지 않는다.
-  for (const L of Ls) { L.drift = (ref === 'HEAD' && !OLD) ? [] : L.missing.filter((r) => hasOld(r)); L.state = L.drift.length ? 'red' : 'ref'; }
+  for (const L of Ls) { L.drift = L.missing.filter((r) => hasOld(r)); L.state = L.drift.length ? 'red' : 'ref'; }
 }
-const red = lits.filter((L) => L.state === 'red'), ref = lits.filter((L) => L.state === 'ref');
+const red = lits.filter((L) => L.state === 'red'), ref = lits.filter((L) => L.state === 'ref'), skip = lits.filter((L) => L.state === 'skip');
 //   ★`--old <ref>` 판만: **줄어듦**(노랑 · 빨강 아님) — 지금도 어딘가 있지만 그 ref 보다 나오는 자리가 줄었다.
 //     말투 카드 꼴: `/너무 멀/` 은 다른 문장("너무 멀어")에 남아 "있다"가 되지만, 고친 문장 몫만큼 자리가 준다(PM land1038 이 고친 일곱이 이 꼴이었다 — 보고 T1097).
 const yellow = [];
 if (OLD) {
   const okNow = all.filter((L) => okWith(L.alts, hasNow));
-  const hasO = makeHas(prodAt(OLD, [...new Set(okNow.flatMap((L) => L.alts.flat()))]));
+  const hasO = makeHas(prodAt(OLD, [...new Set(okNow.flatMap((L) => L.alts.flat()))]) || []);
   for (const L of okNow) { const d = [...new Set(L.alts.flat())].filter((c) => hasNow.count(c) < hasO.count(c)).map((c) => `${c} ${hasO.count(c)}→${hasNow.count(c)}`); if (d.length) yellow.push(Object.assign(L, { state: 'yellow', drop: d })); }
 }
 const show = (L) => `  ${L.state === 'red' ? '✗' : '·'} ${L.f}:${L.line} ${L.why || ''} ${JSON.stringify(L.text).slice(0, 90)} — 지금 없음 ${L.missing ? L.missing.join(' · ') : ''}${L.drift && L.drift.length ? ` (그때 있음 ${L.drift.join(' · ')})` : ''}${L.ref ? ` · 태어난 판 ${String(L.ref).slice(0, 8)}` : ''}`;
-console.log(`=== 하네스 판정 글자 ↔ 제품 소스 — 하네스 ${files.length} · 파싱 ${parsed} · 한글 판정 리터럴 ${judged} · 지금 없음 ${lits.length}(빨강 ${red.length} · 참고 ${ref.length})${OLD ? ` · ${OLD} 보다 줄어듦 ${yellow.length}` : ''} ===`);
+console.log(`=== 하네스 판정 글자 ↔ 제품 소스 — 하네스 ${files.length} · 파싱 ${parsed} · 한글 판정 리터럴 ${judged} · 지금 없음 ${lits.length}(빨강 ${red.length} · 참고 ${ref.length}${skip.length ? ` · 건너뜀 ${skip.length}` : ''})${OLD ? ` · ${OLD} 보다 줄어듦 ${yellow.length}` : ''} ===`);
+if (skip.length && !noHistory) repoNote.push(`부분 클론 · 옛 판 자료 없음 — 태어난 판을 지역에서 못 읽은 줄 ${skip.length}(망 0 · 건너뜀)`);
+for (const n of repoNote) console.log(`  ⚠ ${n}`);
 for (const L of red) console.log(show(L));
 for (const L of yellow) console.log(`  ~ ${L.f}:${L.line} ${L.why || ''} ${JSON.stringify(L.text).slice(0, 90)} — 줄어듦 ${L.drop.join(' · ')}(${OLD} → 지금)`);
 if (LIST === 'ref') for (const L of ref) console.log(show(L));
-if (JOUT) fs.writeFileSync(JOUT, JSON.stringify({ files: files.length, parsed, judged, old: OLD, red, ref, yellow }, null, 1));
+if (JOUT) fs.writeFileSync(JOUT, JSON.stringify({ files: files.length, parsed, judged, old: OLD, red, ref, skip, yellow }, null, 1));
 const ok = red.length === 0 && parsed === files.length;
-console.log(ok ? `LINT-HARNESS-WORDS PASS · 빨강 0 · 한글 판정 리터럴 ${judged} · 참고 ${ref.length}(하네스 제 글자 · 런타임 이름)`
+console.log(ok ? `LINT-HARNESS-WORDS PASS · 빨강 0 · 한글 판정 리터럴 ${judged} · 참고 ${ref.length}(하네스 제 글자 · 런타임 이름)${skip.length ? ` · 건너뜀 ${skip.length}(태어난 판이 지역에 없음 — 얇은 · 부분 클론 · 망 0)` : ''}`
   : `LINT-HARNESS-WORDS FAIL · 빨강 ${red.length}${parsed !== files.length ? ` · 파싱 실패 ${files.length - parsed}` : ''} · ${red.slice(0, 4).map((L) => `${L.f}:${L.line} ${(L.drift && L.drift.length ? L.drift : L.missing).join('·')}`).join(' ; ')}`);
 process.exit(ok ? 0 : 1);

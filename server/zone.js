@@ -2531,7 +2531,7 @@ function butcherCorpse(player, cid) {
   const corpse = corpses.get(cid);
   if (!corpse) { send(player.ws, { type: 'notice', text: '주검이 없습니다.' }); return; }
   const dist = Math.hypot(player.x - corpse.x, player.y - corpse.y);
-  if (dist > 80) { send(player.ws, { type: 'notice', text: '너무 멀어' }); return; }
+  if (dist > 80) { send(player.ws, { type: 'notice', text: '너무 멉니다.' }); return; }
   // drop → 인벤
   const parts = [];
   for (const [item, amt] of Object.entries(corpse.drops)) {
@@ -5727,7 +5727,7 @@ function followChat(player, text) {
   if (t.startsWith('/숨기')) {
     const arg = t.slice('/숨기'.length).trim();
     if (arg === '끝') { player._hidden = false; say('이제 벗들에게 내 자리가 보입니다.'); return true; }
-    if (arg) { say('자리를 숨긴다 — `/숨기` · 되돌리려면 `/숨기 끝`'); return true; }
+    if (arg) { say('자리를 숨기려면 `/숨기`, 되돌리려면 `/숨기 끝`이라고 적으십시오.'); return true; }
     player._hidden = true;
     say('자리를 숨겼습니다. 벗들에게는 "다른 곳"으로만 보입니다. `/숨기 끝`이라고 적으면 되돌립니다.');
     return true;
@@ -7380,7 +7380,7 @@ function handlePlayerInput(player, raw) {
     const tx = Math.max(0, Math.min(ZONE.zoneWidth  - 1, msg.x | 0));
     const ty = Math.max(0, Math.min(ZONE.zoneHeight - 1, msg.y | 0));
     if (typeof isTerrainBlockedLocal === 'function' && isTerrainBlockedLocal(tx, ty)) {
-      send(ws, { type: 'notice', text: '🌊 강·바다 위로는 텔레포트 불가' });
+      send(ws, { type: 'notice', text: '강·바다 위로는 텔레포트할 수 없습니다.' });
       return;
     }
     player.x = tx;
@@ -7692,7 +7692,7 @@ function handlePlayerInput(player, raw) {
     const door = String(msg.door || '');
     const reply = (p2) => p2
       .then((d) => send(player.ws, { type: 'central_result', door, ok: !!(d && (d.ok || d.order_id !== undefined)), data: d || null }))
-      .catch(() => send(player.ws, { type: 'central_result', door, ok: false, data: { error: '지금은 못 물어봤다 — 잠시 뒤 다시' } }));
+      .catch(() => send(player.ws, { type: 'central_result', door, ok: false, data: { error: '지금은 물어보지 못했습니다. 잠시 뒤 다시 해 보십시오.' } }));
     //   ⚠게스트는 거래소·길드를 못 쓴다(central 이 `anon_` 을 막는 그 규약 그대로 · 여기서 다시 안 정한다).
     if (door === 'market/order') reply(central.marketOrder(player.playerId, msg.order || {}));
     else if (door === 'market/cancel') reply(central.marketCancel(player.playerId, msg.order_id));
@@ -8071,7 +8071,7 @@ function tryHarvest(player) {
   // ★★[T108 2026-09-05] **옛 베리 농지 갈래를 지웠다.** 여기가 `readyAt` 을 읽어 60초 밭을 거두고
   //   **농지를 통째로 지우던** 자리다(T58b 회부 3 — "수확하면 사라진다"는 그 레거시).
   //   승격(`_promoteLegacyFarm`)이 옛 행을 빈 밭으로 바꿔 올리므로 이 갈래에 닿을 행이 이제 없다.
-  send(player.ws, { type: 'notice', text: '빈 밭이다 — 씨앗을 들고 심어라(E)' });
+  send(player.ws, { type: 'notice', text: '빈 밭입니다. 씨앗을 들고 E를 눌러 심으십시오.' });
 }
 
 // === 음식 먹기 ===
@@ -8470,7 +8470,7 @@ function handleObserverMessage(ws, raw) {
   else if (msg.type === 'promote_to_primary' && msg.token && !pendingHandoffs.has(msg.token)) {
     //   ★[T564] 모르는 토큰 — 종전엔 **말없이** 버렸다(클라는 주 존이 바뀐 줄 알고 몸 없이 걷는다). 이제 한 줄 로그 + 그 소켓에 알림.
     console.warn(`[${ZONE_ID}] ✗ promote 토큰 모름 token=${String(msg.token).slice(0, 8)} — handoff_prepare 가 안 왔거나(안 문 · 주소) 5초가 지났다`);
-    send(ws, { type: 'notice', text: `${ZONE.displayName || ZONE_ID} 쪽이 이 넘기를 모른다 — 경계를 못 넘었다(서버 사이 연결 문제)` });
+    send(ws, { type: 'notice', text: `${ZONE.displayName || ZONE_ID} 쪽이 이 넘기를 모릅니다. 서버 사이 연결 문제로 경계를 넘지 못했습니다.` });
   }
   else if (msg.type === 'promote_to_primary' && msg.token && pendingHandoffs.has(msg.token)) {
     // === Observer→Primary in-place 승격 ===
@@ -10098,11 +10098,11 @@ function mineOreCell(player) {
     const id = _mineIdentify(player, mineral, isOre, lvlF);   // ★감정은 xp 적립 *전*에 — 방금 캔 덩이가 자기 xp 덕을 보면 안 된다
     player.craftSkill = player.craftSkill || {};
     player.craftSkill.mining = (player.craftSkill.mining || 0) + 1;   // 덩이 1개 = xp 1 = 1 게임시간
-    msg = `⛏ 돌덩이 ${kg.toFixed(1)}kg${id ? ' — ' + id : ' · 무엇인지 모름(마을에서 가려야 함)'}`;
+    msg = `⛏ 돌덩이 ${kg.toFixed(1)}kg${id ? ' — ' + id : ' · 무엇인지는 마을에서 가려야 합니다'}`;
   } else {
     const dp = Specialty.mineDepthP(f);
     msg = `⛏ 캐는 중 ${Math.round(rec.w)}/${Math.round(need)}`
-      + (need > Specialty.MINE_SWINGS_PER * 1.5 ? ` (깊다 · 품위 ×${dp.toFixed(2)})` : '');
+      + (need > Specialty.MINE_SWINGS_PER * 1.5 ? ` (깊은 자리 · 품위 ×${dp.toFixed(2)})` : '');
   }
   _oreSave(key, rec, _chunk);   // ★[T735] 덩이를 떨군 1타는 바로 쓴다(손 · 몸 저장이 같은 순간 — 아래 `savePlayer`) · 타수 진척만인 1타는 모은다(끄면 인수 무시 · 종전 그대로)
   send(player.ws, { type: 'notice', text: msg + ` · 남은 광맥 ${Math.round(rec.s)}` });
@@ -12325,7 +12325,7 @@ const SHELTER_SPEC = {
     if (!vil) return _claimFootprint(player, x0, y0, x1, y1);
     const f = vil.econ && vil.econ.founder;
     const tid = vil._tribeId || null;
-    if (!f) return { err: '오래된 마을엔 이미 쉼터가 있다 — 여긴 지을 자리가 아니다' };   // NPC 마을은 백필 소관
+    if (!f) return { err: '오래된 마을에는 이미 쉼터가 있습니다. 여기는 지을 자리가 아닙니다.' };   // NPC 마을은 백필 소관
     if (VillageKin.ON) return _kinIsMemberOf(player, vil.dbId) ? { tribeId: null, vid: vil.dbId | 0 } : { err: '이 마을 사람이 아니어서 쉼터를 지을 수 없습니다.' };   // ★[T786 C2] 켬 = 그 마을 사람
     const mine = (f === player.playerId) || (tid && player.tribeId && tid === player.tribeId);
     if (!mine) return { err: '이 마을의 관리자가 아니어서 쉼터를 지을 수 없습니다.' };
@@ -16493,7 +16493,7 @@ function _t564HandoffFail(player, targetZoneId, target, e) {
   if (!player._t564SaidAt || Date.now() - player._t564SaidAt > 10000) {
     player._t564SaidAt = Date.now();
     const nm = (ZONES[targetZoneId] && ZONES[targetZoneId].displayName) || targetZoneId;
-    send(player.ws, { type: 'notice', text: `${nm}(으)로 못 넘어간다 — ${w.say}` });
+    send(player.ws, { type: 'notice', text: `${nm}(으)로 넘어가지 못했습니다. ${w.say}` });
   }
 }
 

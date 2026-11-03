@@ -249,15 +249,15 @@ function handleChat(player, text) {
     const calls = player._kinCall instanceof Map ? player._kinCall : null;
     const ids = calls ? [...calls.keys()].filter((v) => !!_vil(v)) : [];
     if (!ids.length) { _send(player, '당신을 부른 마을이 없습니다.', 'guild'); return true; }
-    if (H.Membership && H.Membership.memberOf && H.Membership.memberOf(player)) { _send(player, '이미 마을 사람이다 — 먼저 `/탈퇴`', 'guild'); return true; }
+    if (H.Membership && H.Membership.memberOf && H.Membership.memberOf(player)) { _send(player, '이미 마을 사람입니다. 먼저 `/탈퇴` 하십시오.', 'guild'); return true; }
     let vid = ids[ids.length - 1];
     if (arg) {
       const pick = ids.find((v) => String((_vil(v) || {}).name || '') === arg);
-      if (pick == null) { _send(player, `[${arg}] 은(는) 자네를 부르지 않았다 — 부른 곳: ${ids.map((v) => `[${(_vil(v) || {}).name || v}]`).join(' ')}`, 'guild'); return true; }
+      if (pick == null) { _send(player, `[${arg}] 은(는) 당신을 부르지 않았습니다. 부른 곳: ${ids.map((v) => `[${(_vil(v) || {}).name || v}]`).join(' ')}`, 'guild'); return true; }
       vid = pick;
     }
     const r = (H.Membership && H.Membership.seatByInvite) ? H.Membership.seatByInvite(player, vid) : { ok: false };
-    if (!r || !r.ok) { _send(player, '지금은 못 들었다 — 잠시 뒤 다시', 'guild'); return true; }
+    if (!r || !r.ok) { _send(player, '지금은 들지 못했습니다. 잠시 뒤 다시 해 보십시오.', 'guild'); return true; }
     const more = ids.length - 1;
     player._kinCall = null;
     _send(player, `${(_vil(vid) || {}).name || ''}에 들었습니다.${more > 0 ? ` 다른 부름 ${more}건은 지웠습니다.` : ''}`, 'guild');

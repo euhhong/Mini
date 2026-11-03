@@ -7,6 +7,7 @@
 //   node scripts/t1069-text-census.js              → 파일마다 말투 갈래 표(markdown)
 //   node scripts/t1069-text-census.js --rows [파일…] → 한 줄 한 문구(파일:줄 · 자리 · 갈래 · 지금 문장)
 //   node scripts/t1069-text-census.js --emoji      → 문구 안 이모지 남은 자리
+//   node scripts/t1069-text-census.js --inner      → [T1112] 사람에게 보이는 자리 문구의 **마디 안** 해라 · 반말 깃발(끝 갈래가 놓치는 "~다 — 잠시 뒤 다시")
 //
 // 무엇을 세나: 서버 `server/*.js` · 클라 `public/client/*.js` · `public/index.html` 의 인라인 스크립트 —
 //   **한글이 든 문자열 · 템플릿 리터럴** 가운데 주석 · 로그(console.*) · 객체 키 · require · 비교(=== '…')
@@ -157,6 +158,22 @@ if (require.main === module) {
     console.log('| 파일:줄 | 자리 | 갈래 | 지금 문장 |');
     console.log('|---|---|---|---|');
     for (const r of all) console.log(`| \`${r.file}:${r.line}\` | ${r.place} | ${r.tone}${r.emoji ? ' · 이모지' : ''} | ${r.text.replace(/\|/g, '\\|').slice(0, 160)} |`);
+  } else if (mode === '--inner') {
+    // ★[T1112] 문장 **안** 끝맺음 — 끝 갈래만 보면 "지금은 못 들었다 — 잠시 뒤 다시"(끝 = 명사형)의 해라체를 못 본다.
+    //   사람에게 보이는 자리(알림 · 오류 · 말 · 툴팁 · 판 · 이유 목록)의 문구를 " — " · ". " · "! " · "? " 에서 끊어 마디마다 끝맺음을 본다.
+    //   깃발 = 해라("~다" · "~라" · "~자" — "니다" 빼고) · 반말("~어 · ~아 · ~야 · ~해"). 하오하게(NPC 정본 — 군 · 네 · 게 · 세)는 깃발이 아니다.
+    //   자료 · 이름 · 로그 자리(`prop:ev` · `prop:note` 고증 · `ko` 이름 · 로그 · throw)는 뺀다 — 판정 0, 표만.
+    const VIS = /^(prop:(text|err|error|say|msg|hint|why|reason|title|label|line|desc|tip|body)|call:(say|_say|send|_send|showNotice|push|unshift|notice|toast|reply|vvT)|set:(innerHTML|textContent|title|msg|h|html|text|why)|return|var:(text|msg|h|html|txt|line))$/;
+    const SKIPF = /^server\/(events|onboarding|rumor)\.js$/;   // NPC 말(하게체 정본)
+    const HAERA = /(?<!니)(?<!습)다$|[^가-힣\s]?(?<![니세])라$|(?<![하])자$/, BANMAL = /(멀어|[가-힣](었|았|였)어|해)$/;
+    let n = 0;
+    for (const r of all) {
+      if (!VIS.test(r.place) || SKIPF.test(r.file)) continue;
+      const clauses = r.text.replace(/<[^>]+>/g, ' ').split(/ — |[.!?](?=\s|$)|\n/).map((x) => x.replace(/[\s"'`)(\]*·]+$/g, '').trim()).filter(Boolean);
+      const bad = clauses.filter((c) => /[가-힣]$/.test(c) && (HAERA.test(c) || BANMAL.test(c)) && !/(니다|이다\)?)$/.test(c));
+      if (bad.length) { n++; console.log(`${r.file}:${r.line}\t${r.place}\t${bad.map((c) => c.slice(-16)).join(' / ')}\t${r.text.slice(0, 110)}`); }
+    }
+    console.log(`문장 안 해라 · 반말 깃발 ${n}`);
   } else if (mode === '--emoji') {
     for (const r of all.filter((x) => x.emoji)) console.log(`${r.file}:${r.line}\t${r.place}\t${r.text.slice(0, 120)}`);
   } else if (mode === '--json') {

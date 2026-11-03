@@ -75,7 +75,7 @@ function eligibility(vid) {
   if (!ready()) { why.push('아직 준비가 되지 않았습니다'); return out; }
   const vil = H.villageOf ? H.villageOf(vid) : null;
   if (!vil || !vil.econ) { why.push('그런 마을이 없습니다'); return out; }
-  if (!vil.econ.founder) { why.push('사람이 세운 마을이 아니다'); return out; }
+  if (!vil.econ.founder) { why.push('사람이 세운 마을이 아닙니다'); return out; }
   // ① 쉼터 — **시설**과 **먹일 것**, 둘 다다.
   //   ★★[T62 2026-09-03] §9.3 자격 첫 항 *"쉼터 보유"* 가 이제 시설로 존재한다
   //     (`server/villages.js` `shelterOf` 가 좌표 정본 · T43 이송과 온보딩 안내가 같은 문을 쓴다).
@@ -95,10 +95,10 @@ function eligibility(vid) {
   out.foodDays = foodOk ? +(foodEq / Math.max(1, pop)).toFixed(1) : null;
   if (pop < CFG.MIN_POP) why.push('아직 사람이 살지 않습니다');
   else if (!foodOk) why.push('곳간을 읽지 못했습니다');
-  else if (out.foodDays < CFG.MIN_FOOD_DAYS) why.push(`곳간이 얇다 (자립 ${out.foodDays}일)`);
+  else if (out.foodDays < CFG.MIN_FOOD_DAYS) why.push(`곳간이 얇습니다(자립 ${out.foodDays}일)`);
   // ② 길드 벌점 — 길드가 없으면 벌점도 없다(무길드를 죄로 삼지 않는다)
   const r = _remote.get(vid | 0) || null;
-  if (r && r.vp != null) { out.vp = +r.vp.toFixed(1); if (r.vp >= CFG.MAX_GUILD_VP) why.push(`명성 벌점이 높다 (${out.vp})`); }
+  if (r && r.vp != null) { out.vp = +r.vp.toFixed(1); if (r.vp >= CFG.MAX_GUILD_VP) why.push(`명성 벌점이 높습니다(${out.vp})`); }
   // ③ 최근 활동 — 창설자가 얼마나 안 왔나
   if (r && r.idleDays != null) {
     out.idleDays = +r.idleDays.toFixed(1);

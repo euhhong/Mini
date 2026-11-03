@@ -228,7 +228,7 @@ if (ON.kin) {
   ok(ON.wdH.took > 0, '★[켬 T785] central 불가여도 촌장(창설자)은 꺼낸다 — 촌장 판정이 central 을 안 묻는다', `${ON.wdH.took} · ${ON.wdH.note}`);
 } else {
 ok(ON.wdG.took > 0 && ON.wdX.took === 0 && /촌장/.test(ON.wdX.note), '★길드 마을 — central `leader_id` 가 촌장(맞으면 ok · 아니면 거절)', `${ON.wdG.took} · ${ON.wdX.note}`);
-ok(ON.wdH.took === 0 && /확인하지 못했다/.test(ON.wdH.note), '★central 불가 = 거절(빼는 문은 닫힌 쪽)', ON.wdH.note);
+ok(ON.wdH.took === 0 && /확인하지 못(했다|해)/.test(ON.wdH.note), '★central 불가 = 거절(빼는 문은 닫힌 쪽)', ON.wdH.note);
 }
 if (ON.kin) ok(ON.wdG.prom === false && ON.wdX.prom === false && ON.wdG2.prom === false && ON.wdF1 && ON.wdF1.prom === false && ON.cAsk === 0,
   '★[켬 T785] 촌장 판정은 늘 그 자리에서(동기) — central 묻기 0 · 캐시 창 없음',

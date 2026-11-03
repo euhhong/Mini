@@ -119,7 +119,7 @@ async function runCase(tag, envOf, chromium, C, opt) {   // ★[T1092] opt = { r
       why: ((document.querySelector('#netLost .nl-why') || {}).textContent || ''), on: !!(document.getElementById('netLost') && document.getElementById('netLost').classList.contains('on')) }));
     r.cs = tail.cs; r.why = tail.why; r.bannerOn = tail.on;
     r.maxBack = Math.round(maxBack);   // 동쪽으로 걷는 동안 서버 x 가 한 표본에 뒤로 간 가장 큰 폭 — 되끌림(튕김)
-    r.reached = !!tSeam; r.maxOver = Math.round(maxSx - C.seam); r.z = tail.z; r.handoffMsgs = tail.h; r.notices = tail.n.filter((t) => /못 넘어간다|모른다/.test(t));
+    r.reached = !!tSeam; r.maxOver = Math.round(maxSx - C.seam); r.z = tail.z; r.handoffMsgs = tail.h; r.notices = tail.n.filter((t) => /못 넘어간다|넘어가지 못했습니다|모른다|모릅니다/.test(t));
     r.recover = clog.filter((l) => /\[recover\]/.test(l)).length;
     if (opt && opt.back) {   // ★[T1092] 되돌림 판 — 사람이 옛 존(한반도)에 들어가 있나(시도 하나가 날던 중이면 끝날 때까지) · 사진 · 몸이 걷나
       const st = async () => page.evaluate(() => ({ z: window.__getPrimaryZoneId(), ph: window.__connState ? window.__connState().phase : '',

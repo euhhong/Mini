@@ -1464,7 +1464,7 @@ const server = http.createServer(async (req, res) => {
       if (!name) return jsonResp(res, 400, { error: '마을 이름을 적으십시오.' });
       const p = stmtGetPlayer.get(playerId);
       if (!p) return jsonResp(res, 404, { error: 'player not found' });
-      if (p.tribe_id) return jsonResp(res, 400, { error: '이미 마을 사람이다 — 먼저 탈퇴' });
+      if (p.tribe_id) return jsonResp(res, 400, { error: '이미 마을 사람입니다. 먼저 탈퇴하십시오.' });
       try {
         const r = db.prepare('INSERT INTO tribes (name, leader_id, created_at) VALUES (?, ?, ?)').run(name, playerId, Date.now());
         const newId = Number(r.lastInsertRowid);

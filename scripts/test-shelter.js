@@ -84,7 +84,7 @@ console.log('\n① ★§0 — "쉼터"가 가리키던 여섯 자리가 이제 �
   ok(/H\.shelterOf/.test(osrc), '①ⓑ 온보딩 안내도 같은 문을 쓴다 — 좌표를 다시 고르지 않는다');
   ok(/잘 자리가 없습니다/.test(nsrc), '①ⓑ 자격 거절 문장이 사람 말이다');
   // ⓒ ★대체 술어를 **버리지 않았다** — 쉼터 ∧ (인구 ∧ 자립)
-  ok(/out\.shelter = /.test(nsrc) && /곳간이 얇다/.test(nsrc),
+  ok(/out\.shelter = /.test(nsrc) && /곳간이 얇습니다/.test(nsrc),
     '①ⓒ ★쉼터 항을 더하되 **econ 대체 술어를 버리지 않았다**(지붕만으론 못 먹인다)');
   // ⓓ 실체는 움집 정본 하나가 세운다(사본 금지)
   ok((vsrc.match(/_liveHut6x4\(/g) || []).length >= 3,
