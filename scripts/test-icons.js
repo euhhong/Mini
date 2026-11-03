@@ -690,6 +690,55 @@ console.log('\n[⑬ T1088 그림 없던 품목 이어서 — `props_render.py IT
   }
 }
 
+console.log('\n[⑭ T1099 셋째 묶음 — `props_render.py ITEMS_T1099`]');
+{
+  // ★★[T1099] ⑫ · ⑬ 과 같은 물음 — 키는 굽는 표에서 뽑는다(사본 금지).
+  //   서버 품목인가: 무게 정본 또는 손 제작 표의 손잡이 줄(`T1065` 막대 낚싯대는 켬 판에만 `RECIPES` 에 서고 무게 줄이 없다 — 소스에서 그 줄을 찾는다).
+  const py = fs.readFileSync(RENDER_PY, 'utf8');
+  const blk = py.match(/^ITEMS_T1099 = \[([\s\S]*?)^\]/m);
+  ok(!!blk, 'props_render.py 에서 ITEMS_T1099 표를 읽었다');
+  const NK = blk ? [...blk[1].matchAll(/\('([a-z_]+)',\s*m_/g)].map(m => m[1]) : [];
+  ok(NK.length === 29 && new Set(NK).size === NK.length, `T1099 스물아홉 · 겹침 0 (실측 ${NK.length} · 겹침 ${NK.length - new Set(NK).size})`);
+  ok(/^ITEMS \+= ITEMS_T1099$/m.test(py), '굽는 고리가 이 표를 돈다(`ITEMS += ITEMS_T1099`)');
+  const W5 = require(path.join(ROOT, 'server', 'weights.js'));
+  const ZSRC = fs.readFileSync(path.join(ROOT, 'server', 'zone.js'), 'utf8');
+  const csrc = fs.readFileSync(CLIENT_ICON, 'utf8');
+  const tbl = csrc.match(/const ICON_RENDERED = new Set\(\[([\s\S]*?)\]\);/);
+  const wanted = new Set(tbl ? [...tbl[1].matchAll(/'([\w]+)'/g)].map(m => m[1]) : []);
+  let bad = 0; const notSrv = [], notWired = [];
+  for (const k of NK) {
+    const q = path.join(ICON_DIR, k + '.png');
+    if (!fs.existsSync(q)) { ok(false, `${k}.png 이 없다`); bad++; continue; }
+    const m = pngMeta(q);
+    if (!(m.w === 96 && m.h === 96)) { ok(false, `${k}.png ${m.w}×${m.h} (96 아님)`); bad++; }
+    else if (!(m.clear > 200 && m.solid > 200)) { ok(false, `${k}.png 알파가 죽었다 (투명 ${m.clear} · 불투명 ${m.solid})`); bad++; }
+    if (W5.kgOf(k) == null && !new RegExp('^\\s*RECIPES\\.' + k + ' = \\{', 'm').test(ZSRC)) notSrv.push(k);
+    if (!wanted.has(k)) notWired.push(k);
+  }
+  ok(bad === 0, `${NK.length}장 전수 — 96×96 · 알파 살아 있음 (어긋남 ${bad})`);
+  ok(notSrv.length === 0, `키 ${NK.length}개가 전부 서버 품목이다(무게 정본 · 손 제작 표 줄) ${notSrv.length ? '— 아닌 것: ' + notSrv.join(', ') : ''}`);
+  ok(notWired.length === 0, `${NK.length}키 전부 ICON_RENDERED 에 올랐다 ${notWired.length ? '— 안 오른 것: ' + notWired.join(', ') : ''}`);
+  // ★같은 함수 묶음 — 종만 다른 것은 **같은 모델 함수**(빛만 다르다 · ⑫ 날것/익힌 것 · ⑬ 흙과 같은 물음).
+  const fnOf = (k) => (py.match(new RegExp('^def m_' + k + '\\(\\):\\s*(?:"""[\\s\\S]*?"""\\s*)?_(\\w+)\\(', 'm')) || [])[1];
+  for (const grp of [['pine_log', 'oak_log', 'birch_log', 'cedar_log'], ['ebony_log', 'mahogany_log', 'teak_log']]) {
+    const fs_ = grp.map(fnOf);
+    ok(fs_.every((f) => f && f === fs_[0]), `${grp.join(' · ')}: 같은 모델 함수 _${fs_[0] || '?'}`);
+  }
+  // ★막대 낚싯대는 조잡한 연장 셋과 **같은 재질**(자루 `bark2` · 끈 `fiber`)이다 — 같은 재료는 같은 그림.
+  const rod = (py.match(/^def m_crude_rod\(\):[\s\S]*?(?=^def )/m) || [''])[0];
+  ok(/M\['bark2'\]/.test(rod) && /M\['fiber'\]/.test(rod), '막대 낚싯대 = 조잡한 연장과 같은 재질(bark2 · fiber)');
+  // ★갈래 표가 낡지 않았다(⑬ 과 같은 물음) — 남은 빌림은 같은 이름표 판정 셋뿐이어야 한다.
+  const LOCK = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'assets', 'icons.lock.json'), 'utf8'));
+  const borrow = []; for (const v of Object.values(LOCK['_갈래'] || {})) if (v && Array.isArray(v.items)) borrow.push(...v.items);
+  ok(borrow.every((k) => !fs.existsSync(path.join(ICON_DIR, k + '.png'))), `\`_갈래\` 빌림 ${borrow.length}키 — 제 그림 있는 키 0`);
+  // ★짐 창에서 갈리는가 — ⑩ · ⑫ · ⑬ 과 **같은 자 · 같은 문턱**.
+  for (const k of NK) {
+    if (!fs.existsSync(path.join(ICON_DIR, k + '.png'))) continue;
+    const { best, who } = nearestIcon(k);
+    ok(best >= ICON_FLOOR, `${k}: 가장 닮은 아이콘 ${who} 와 |Δ| ${best.toFixed(1)} ≥ ${ICON_FLOOR}`);
+  }
+}
+
 if (SELFTEST) {
   console.log('\n[--selftest] ②가 오염(투명 화소 0)을 잡았어야 한다.');
   console.log('결과: ' + (fail ? 'PASS(검사기가 오염을 잡았다)' : 'FAIL(자명 통과 — 검사기가 눈멀었다)'));
