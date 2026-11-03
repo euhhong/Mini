@@ -117,7 +117,7 @@
   const NATURE_SPRITES = {};
   let _natureLoaded = 0;
   (() => {
-    const add = (cls, name, n) => { const a = (NATURE_SPRITES[cls] = NATURE_SPRITES[cls] || []); for (let i = 1; i <= n; i++) { const im = new Image(); im.onload = () => _natureLoaded++; im.src = '/assets/nature/' + name + String(i).padStart(2, '0') + '.png'; a.push(im); } };
+    const add = (cls, name, n) => { const a = (NATURE_SPRITES[cls] = NATURE_SPRITES[cls] || []); for (let i = 1; i <= n; i++) { const im = new Image(); im.onload = () => _natureLoaded++; _gsrc(im, '/assets/nature/' + name + String(i).padStart(2, '0') + '.png'); a.push(im); } };
     add('rock', 'rock', 6); add('rock', 'mossrock', 6); add('ore', 'ore', 6); add('bush', 'bush', 6); add('herb', 'herb', 6);
   })();
   const NATURE_BASE_W = { rock: 44, mossrock: 44, ore: 42, bush: 40, herb: 30 };   // ★인게임 기준 폭(px) — 대형안[사용자 확정]: 그리기=×1.5(약초 ×1.25) → 바위 66·광맥 63·덤불 60·약초 38px(나무 ~78px과 동급). 자산 해상도 무관 화면 크기 고정
@@ -144,7 +144,7 @@
                      'yard_hearth', 'yard_jar1', 'yard_jar2', 'yard_garden',      // ★10차: 마당 소품(화덕·장독2·텃밭)
                      'mkt_mat', 'mkt_basket', 'mkt_jar', 'mkt_hide',              // ★10차 T4: 장마당 좌판(멍석·바구니·항아리·가죽)
                      'ditch_x', 'ditch_y', 'ditch_c']) {                          // ★11차 T3: 환호 도랑(가로·세로·모서리)
-      const im = new Image(); im.onload = () => _bridgeLoaded++; im.src = '/assets/bridge/' + k + '.png';
+      const im = new Image(); im.onload = () => _bridgeLoaded++; _gsrc(im, '/assets/bridge/' + k + '.png');   // ★[T1123] 게임 그림 문
       BRIDGE_SPRITES[k] = im;
     }
   })();
@@ -173,7 +173,7 @@
     _img.onload = () => { _treeSpritesLoaded++;
       // ★다 로드되면 산 청크를 한 번 비운다 — 안 그러면 '나무 없는' 상태로 구워진 채 남는다
       if (_treeSpritesLoaded === 12) { try { _mt3Chunk.clear(); _mt3Sig = ''; } catch (e) {} } };
-    _img.src = '/assets/trees/tree' + String(_ti).padStart(2, '0') + '.png';
+    _gsrc(_img, '/assets/trees/tree' + String(_ti).padStart(2, '0') + '.png');   // ★[T1123] 게임 그림 문(00-const `_gsrc`)
     TREE_SPRITES.push(_img);
   }
 
@@ -195,7 +195,7 @@
   const _spriteCache = new Map();                     // 이름 → Image (한 번만 만든다)
   function _sprite(name) {
     let im = _spriteCache.get(name);
-    if (!im) { im = new Image(); im.src = '/assets/trees/' + name + '.png'; _spriteCache.set(name, im); }
+    if (!im) { im = new Image(); _gsrc(im, '/assets/trees/' + name + '.png'); _spriteCache.set(name, im); }
     return im;
   }
   // ★열매가 달린 판의 키 이름은 **표가 들고 있다**. 지금 표엔 `autumn` 뿐이지만 오디는 여름에 익는다 —
@@ -216,7 +216,7 @@
     };
     window.__treeSpeciesTable = () => (TREE_SPECIES.ok ? Object.keys(TREE_SPECIES.byId) : null);
     try {
-      fetch('/assets/trees/tree_species.json').then((r) => r.json()).then((j) => {
+      _gfetch('/assets/trees/tree_species.json').then((r) => r.json()).then((j) => {
         if (!j || !j.species) return;
         TREE_SPECIES.byId = j.species; TREE_SPECIES.ok = true;
         // 표가 말하는 그림만 미리 만든다(열다섯 + 가을판 + 묘목 여덟) — 이름을 여기서 짓지 않는다.
@@ -270,7 +270,7 @@
   // ★★[T148-B] 여기 있던 `SAP_SPECIES` 여덟 줄(표의 사본)을 **지웠다.** 묘목은 이제 `sp` 로 고른다 —
   //   위 주석이 스스로 적어 둔 그 자리다: *"종은 아직 하나라 묘목은 성목과 같은 해시로 고른다."*
   //   종 축이 왔으므로 해시가 아니라 **그 나무의 종**이 답이다(같은 자리가 자라면 같은 종이다).
-  const STUMP_SPRITE = (() => { const im = new Image(); im.src = '/assets/trees/stump01.png'; return im; })();
+  const STUMP_SPRITE = (() => { const im = new Image(); _gsrc(im, '/assets/trees/stump01.png'); return im; })();
   const _regrowDraw = { stump: 0, sapling: 0 };   // 하네스용 — 실제로 그린 횟수
 
   //   ★그리는 문법은 나무와 **같다**(줄기 밑면을 (x,y)에 앵커 · h 로 스케일 · 그림자 타원).

@@ -38,6 +38,28 @@ const CROP_SPR = {
 //     `drawImage(im, x - im._ox, y - im._oy)` 한 줄뿐이다. 48/64 같은 눈대중 수를 다시 적지 않는다.
 //   ⓘ 앵커가 아직 안 왔으면 `cropSprite()` 가 **null** 을 준다 — 부르는 쪽은 이미 점선 빈 칸을
 //     그린다(T66 "렌더 없음"). 폴백 좌표를 지어내면 그게 두 번째 정본이 된다.
+// ★★[T1123 2026-11-03] **게임 그림 문** — 로비는 로비에 드는 것만 받는다(재민 11-03 Safari "첫 화면 렉" · 로비 하나에 요청 322개 · 20.8 MB · PM 잼).
+//   손잡이 `T1123_LOBBY_LAZY`(central `/zones` 칸 `lobbyLazy` · `!== '0'` 켬 기본 · 되돌림 `=0` = 칸 없음 = /zones 받는 즉시 다 받는다 — 종전 꼴 · 때만 /zones 뒤).
+//   게임 그림(나무 · 산 · 자연물 · 지면 · 밭 · 건물 · 다리 · 아이콘)과 그 앵커 json · `terrain.json` 이 이 문을 지난다:
+//     `_gsrc(im, url)` = 문이 열렸으면 곧바로 `im.src = url` · 아니면 줄에 선다 · `_gfetch(url)` = 문이 열린 뒤 fetch.
+//   문이 열리는 때(먼저 오는 하나): ⓐ /zones 에 칸이 없다(끔) · ⓑ 로비가 다 떴다(오른쪽 판 마을 카드가 그려짐 · 70-lobby `onbRefresh`) ·
+//     ⓒ 시작 화면 정보를 못 받음(같은 자리 — 오른쪽 판이 비어도 문은 연다) · ⓓ 「나루터로 간다」 눌림(30-n-net).
+//   켬이면 줄에 섰던 그림은 낮은 차례(`fetchPriority = 'low'`)로 건다. 그림 · 차례 · 새 수 0. 보는 법: 콘솔 `__gimg()`.
+const _gimg = { open: false, q: [], w: [], why: null, at: null, lazy: null };
+function _gsrc(im, url) { if (_gimg.open) im.src = url; else _gimg.q.push([im, url]); }
+function _gwait() { return _gimg.open ? Promise.resolve() : new Promise((r) => _gimg.w.push(r)); }
+function _gfetch(url, opt) { return _gwait().then(() => fetch(url, opt)); }
+function _gimgOpen(why) {
+  if (_gimg.open) return;
+  _gimg.open = true; _gimg.why = why; _gimg.at = performance.now(); window.__gimg = _gimgReport;
+  const low = _gimg.lazy === true, q = _gimg.q, w = _gimg.w;
+  _gimg.q = []; _gimg.w = [];
+  for (const [im, u] of q) { if (low) { try { im.fetchPriority = 'low'; } catch (e) {} } im.src = u; }
+  for (const r of w) r();
+}
+function _gimgCfg(lazy) { window.__gimg = _gimgReport; if (_gimg.lazy !== null) return; _gimg.lazy = !!lazy; if (!_gimg.lazy) _gimgOpen('끔(/zones 칸 없음)'); }
+function _gimgReport() { return { open: _gimg.open, why: _gimg.why, at: _gimg.at == null ? null : Math.round(_gimg.at), queued: _gimg.q.length, lazy: _gimg.lazy }; }   // 훅(읽기 전용) — `_gimgCfg` 가 건다(최상위 실행문 0 · test-client-globals)
+
 let _cropSprLoaded = 0;
 (function preloadCropSprites() {
   if (typeof Image !== 'function') return;
@@ -45,12 +67,12 @@ let _cropSprLoaded = 0;
     for (let i = 0; i < 4; i++) {
       const im = new Image();
       im.onload = () => { _cropSprLoaded++; };
-      im.src = '/assets/crops/' + ser + '_' + i + '.png';
+      _gsrc(im, '/assets/crops/' + ser + '_' + i + '.png');   // ★[T1123] 게임 그림 문
       CROP_SPR[ser][i] = im;
     }
   }
   if (typeof fetch !== 'function') return;
-  fetch('/assets/crops/crops_anchors.json').then((r) => (r.ok ? r.json() : null)).then((a) => {
+  _gfetch('/assets/crops/crops_anchors.json').then((r) => (r.ok ? r.json() : null)).then((a) => {
     if (!a) return;
     CROP_SPR._anch = a;
     for (const k in a) {                       // 키는 JSON 이 준다 — 손으로 적은 목록이 없다
@@ -1215,7 +1237,7 @@ function cropSprite(stage, crop) {
   const GTEX = {};
   let _gtexReady = 0;
   for (const k of ['grass_angled', 'dry_angled', 'mud_angled', 'rock_angled']) {
-    const im = new Image(); im.onload = () => { _gtexReady++; _groundTiles.clear(); }; im.src = '/assets/terrain/' + k + '.png';
+    const im = new Image(); im.onload = () => { _gtexReady++; _groundTiles.clear(); }; _gsrc(im, '/assets/terrain/' + k + '.png');   // ★[T1123] 게임 그림 문
     GTEX[k] = im;
   }
   // ═══════════════════════════════════════════════════════════════════════════

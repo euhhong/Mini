@@ -77,6 +77,7 @@
     const res = await fetch('/zones');
     const data = await res.json();
     _lob.mk.zones = performance.now();   // ★[T962] 때 표시
+    _gimgCfg(data.lobbyLazy === true);   // ★[T1123] 손잡이 `T1123_LOBBY_LAZY`(central /zones 칸 · 켬 기본) — 칸이 없으면 게임 그림 문을 곧바로 연다(00-const `_gimgCfg`)
     zonesMeta = data.zones;
     marketplaceUrl = data.marketplaceUrl || '';
     handoffCommit = (typeof data.handoffCommit === 'number' && data.handoffCommit > 0) ? data.handoffCommit : 0;
@@ -229,6 +230,7 @@
     { const tO = performance.now(); onbLobbyInit(); _lobStep('시작 화면(onbLobbyInit)', tO); }
     document.getElementById('enter').onclick = async () => {
       _ldOpen();   // ★[T920] 첫 접속 표 — 눌림(첫 번만)
+      _gimgOpen('나루터로 간다');   // ★[T1123] 게임 그림 문 ⓓ(이미 열렸으면 아무 일 없음)
       const inputName = document.getElementById('name').value.trim();
       const inputPw = document.getElementById('password').value;
       // ★★[T363] **제출 때 한 번** — 이름이 이미 있나 · 있다면 어디로 가야 하나.

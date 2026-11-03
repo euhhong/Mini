@@ -1,0 +1,361 @@
+{
+ "browser": "WebKit 26.0 (playwright-core 1.56.1 · build 2215 · linux arm64 맥 VM · 영속 문맥 = 캐시 켬)",
+ "mode": "central 만(존 없음 — 오른쪽 판은 비고 그림 문은 「시작 화면 정보 없음」에서 연다) · 망 조임 0",
+ "base": "main fe002463 · 가지 wip 71d57dcc(제품 코드 = 이 커밋과 같음)",
+ "runs": [
+  {
+   "knob": "main",
+   "out": [
+    {
+     "visit": "첫",
+     "req": 321,
+     "tx": 20837075,
+     "fcp": 329,
+     "dcl": 194,
+     "load": 282,
+     "g": null,
+     "game": 271,
+     "gameFirst": 91,
+     "lastEnd": 398,
+     "srv": {
+      "200": 321
+     }
+    },
+    {
+     "visit": "둘째",
+     "req": 321,
+     "tx": 20837076,
+     "fcp": 214,
+     "dcl": 172,
+     "load": 222,
+     "g": null,
+     "game": 271,
+     "gameFirst": 116,
+     "lastEnd": 310,
+     "srv": {
+      "200": 321
+     }
+    }
+   ]
+  },
+  {
+   "knob": "off",
+   "out": [
+    {
+     "visit": "첫",
+     "req": 321,
+     "tx": 20840471,
+     "fcp": 262,
+     "dcl": 115,
+     "load": 170,
+     "g": {
+      "why": "끔(/zones 칸 없음)",
+      "at": 178
+     },
+     "game": 271,
+     "gameFirst": 178,
+     "lastEnd": 364,
+     "srv": {
+      "200": 321
+     }
+    },
+    {
+     "visit": "둘째",
+     "req": 321,
+     "tx": 20840471,
+     "fcp": 278,
+     "dcl": 95,
+     "load": 148,
+     "g": {
+      "why": "끔(/zones 칸 없음)",
+      "at": 155
+     },
+     "game": 271,
+     "gameFirst": 155,
+     "lastEnd": 269,
+     "srv": {
+      "200": 321
+     }
+    }
+   ]
+  },
+  {
+   "knob": "on",
+   "out": [
+    {
+     "visit": "첫",
+     "req": 321,
+     "tx": 18316956,
+     "fcp": 288,
+     "dcl": 113,
+     "load": 171,
+     "g": {
+      "why": "시작 화면 정보 없음",
+      "at": 185
+     },
+     "game": 271,
+     "gameFirst": 187,
+     "lastEnd": 407,
+     "srv": {
+      "200": 321
+     }
+    },
+    {
+     "visit": "둘째",
+     "req": 321,
+     "tx": 84993,
+     "fcp": 226,
+     "dcl": 77,
+     "load": 125,
+     "g": {
+      "why": "시작 화면 정보 없음",
+      "at": 447
+     },
+     "game": 271,
+     "gameFirst": 448,
+     "lastEnd": 621,
+     "srv": {
+      "200": 2,
+      "304": 279
+     }
+    }
+   ]
+  },
+  {
+   "knob": "main",
+   "out": [
+    {
+     "visit": "첫",
+     "req": 321,
+     "tx": 20837076,
+     "fcp": 387,
+     "dcl": 290,
+     "load": 314,
+     "g": null,
+     "game": 271,
+     "gameFirst": 180,
+     "lastEnd": 379,
+     "srv": {
+      "200": 321
+     }
+    },
+    {
+     "visit": "둘째",
+     "req": 321,
+     "tx": 20837076,
+     "fcp": 275,
+     "dcl": 112,
+     "load": 189,
+     "g": null,
+     "game": 271,
+     "gameFirst": 74,
+     "lastEnd": 247,
+     "srv": {
+      "200": 321
+     }
+    }
+   ]
+  },
+  {
+   "knob": "off",
+   "out": [
+    {
+     "visit": "첫",
+     "req": 321,
+     "tx": 20840471,
+     "fcp": 277,
+     "dcl": 94,
+     "load": 147,
+     "g": {
+      "why": "끔(/zones 칸 없음)",
+      "at": 152
+     },
+     "game": 271,
+     "gameFirst": 154,
+     "lastEnd": 276,
+     "srv": {
+      "200": 321
+     }
+    },
+    {
+     "visit": "둘째",
+     "req": 321,
+     "tx": 20840471,
+     "fcp": 247,
+     "dcl": 99,
+     "load": 153,
+     "g": {
+      "why": "끔(/zones 칸 없음)",
+      "at": 159
+     },
+     "game": 271,
+     "gameFirst": 161,
+     "lastEnd": 286,
+     "srv": {
+      "200": 321
+     }
+    }
+   ]
+  },
+  {
+   "knob": "on",
+   "out": [
+    {
+     "visit": "첫",
+     "req": 321,
+     "tx": 18316956,
+     "fcp": 287,
+     "dcl": 99,
+     "load": 153,
+     "g": {
+      "why": "시작 화면 정보 없음",
+      "at": 185
+     },
+     "game": 271,
+     "gameFirst": 186,
+     "lastEnd": 615,
+     "srv": {
+      "200": 321
+     }
+    },
+    {
+     "visit": "둘째",
+     "req": 321,
+     "tx": 84993,
+     "fcp": 252,
+     "dcl": 135,
+     "load": 137,
+     "g": {
+      "why": "시작 화면 정보 없음",
+      "at": 146
+     },
+     "game": 271,
+     "gameFirst": 146,
+     "lastEnd": 366,
+     "srv": {
+      "200": 2,
+      "304": 279
+     }
+    }
+   ]
+  },
+  {
+   "knob": "main",
+   "out": [
+    {
+     "visit": "첫",
+     "req": 321,
+     "tx": 20837076,
+     "fcp": 295,
+     "dcl": 125,
+     "load": 201,
+     "g": null,
+     "game": 271,
+     "gameFirst": 69,
+     "lastEnd": 246,
+     "srv": {
+      "200": 321
+     }
+    },
+    {
+     "visit": "둘째",
+     "req": 321,
+     "tx": 20837076,
+     "fcp": 264,
+     "dcl": 147,
+     "load": 286,
+     "g": null,
+     "game": 271,
+     "gameFirst": 121,
+     "lastEnd": 270,
+     "srv": {
+      "200": 321
+     }
+    }
+   ]
+  },
+  {
+   "knob": "off",
+   "out": [
+    {
+     "visit": "첫",
+     "req": 321,
+     "tx": 20840469,
+     "fcp": 279,
+     "dcl": 102,
+     "load": 154,
+     "g": {
+      "why": "끔(/zones 칸 없음)",
+      "at": 161
+     },
+     "game": 271,
+     "gameFirst": 161,
+     "lastEnd": 282,
+     "srv": {
+      "200": 321
+     }
+    },
+    {
+     "visit": "둘째",
+     "req": 321,
+     "tx": 20840471,
+     "fcp": 258,
+     "dcl": 85,
+     "load": 135,
+     "g": {
+      "why": "끔(/zones 칸 없음)",
+      "at": 141
+     },
+     "game": 271,
+     "gameFirst": 142,
+     "lastEnd": 257,
+     "srv": {
+      "200": 321
+     }
+    }
+   ]
+  },
+  {
+   "knob": "on",
+   "out": [
+    {
+     "visit": "첫",
+     "req": 321,
+     "tx": 18316953,
+     "fcp": 269,
+     "dcl": 94,
+     "load": 144,
+     "g": {
+      "why": "시작 화면 정보 없음",
+      "at": 154
+     },
+     "game": 271,
+     "gameFirst": 163,
+     "lastEnd": 582,
+     "srv": {
+      "200": 321
+     }
+    },
+    {
+     "visit": "둘째",
+     "req": 321,
+     "tx": 84993,
+     "fcp": 311,
+     "dcl": 128,
+     "load": 129,
+     "g": {
+      "why": "시작 화면 정보 없음",
+      "at": 137
+     },
+     "game": 271,
+     "gameFirst": 137,
+     "lastEnd": 564,
+     "srv": {
+      "200": 2,
+      "304": 279
+     }
+    }
+   ]
+  }
+ ]
+}

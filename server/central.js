@@ -26,6 +26,7 @@ function _t927Sv(tj) { if (tj == null) return null; try { const o = JSON.parse(t
 const { DatabaseSync } = require('node:sqlite');
 const { ZONES, publicZoneMap, HANDOFF_COMMIT } = require('./zone-config');
 const httpClient = require('http');
+const StaticServe = require('./static-serve');   // ★[T1123] 정적 응답(캐시 · 304 · gzip) 한 자리
 const economy = require('../sim/economy-sim');
 const economyV2 = require('../sim/economy-sim-v2');  // Phase 4d-13: canadia world 전용 — 진짜 부분균형 시장 모델
 
@@ -801,6 +802,7 @@ const server = http.createServer(async (req, res) => {
         ...(process.env.T937_GT_PREWARM !== '0' ? { gtPrewarm: true } : {}),   // [T937 · ★T948 켬 기본 — PM 10-27] 클라가 **로비에서** 지면 굽기의 한 번짜리 준비 둘(맨땅 마스크 `_gtMask` · 풀 잎 가르기 `_grassSplit`)을 미리 한다(첫 그림에서 뺀다 · 00-const `_gtPrewarm`) · 되돌림 `T937_GT_PREWARM=0` 이면 칸이 없다(옛 /zones · 첫 타일이 한다) · ★welcome 이 아니라 /zones 인 까닭: 로비는 welcome 전이다
         ...(process.env.T962_VIL_SLICE !== '0' ? { vilSlice: true } : {}),   // [T962 · ★T982 켬 기본 — PM 10-28] 클라가 로비의 마을 그림 굽기를 판당 8ms 로 나눠 돈다(20-r2 `_bakeVilArtSliced` · 화소 같음) · 되돌림 `T962_VIL_SLICE=0` 이면 칸이 없다(한 판에 다 — 종전 꼴 · 때는 /zones 뒤) · /zones 인 까닭: T937 과 같다(로비는 welcome 전)
         ...(process.env.T991_GT_SLICE !== '0' ? { gtSlice: true } : {}),
+        ...(process.env.T1123_LOBBY_LAZY !== '0' ? { lobbyLazy: true } : {}),   // [T1123 · 켬 기본 후보] 클라가 게임 그림(나무 · 산 · 자연물 · 지면 · 아이콘 · terrain.json)을 로비가 다 뜬 뒤(또는 「나루터로 간다」 뒤) 낮은 차례로 받는다(00-const `_gsrc` · `_gfetch` · `_gimgOpen`) · 되돌림 `T1123_LOBBY_LAZY=0` 이면 칸이 없다(/zones 받는 즉시 다 받는다 — 종전 꼴 · 때만 /zones 뒤)
         ...(process.env.T1024_FIRST_WAIT !== '0' ? { firstWait: true } : {}),   // [T1024 · 켬 기본 — PM 10-31] 클라 첫 재시도도 백오프 간격(확정 오류 15초 · 아니면 1초부터 지수)을 기다린다(33-m-conn `ensurePrimaryConnection`) · 되돌림 `T1024_FIRST_WAIT=0` 이면 칸이 없다(종전 — 첫 재시도는 곧바로)   // [T991 · ★T1003 켬 기본 — PM 10-30] 로비 지면 데우기 둘(`gtPrewarm`)을 판당 8ms 로 쪼갠다(00-const `_gtPrewarmSliced` · 생성기 `_gtMaskGen` · `_grassSplitGen` · 값 같음) · 되돌림 `T991_GT_SLICE=0` 이면 칸이 없다(T991 앞 /zones · 둘을 한 판씩)
         handoffCommit: HANDOFF_COMMIT,   // ★[T604 추신3] 핸드오프 겹침 띠(px) — 클라 해안 평행이동의 경계 앞 바다 지킴이 읽는다(서버 chunk.js 와 같은 수 · 박힌 수 0)
       });
@@ -1539,6 +1541,8 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && req.url.split('?')[0] === '/terrain.json') {
       const tPath = path.join(__dirname, 'hanbando-terrain.json');
       if (fs.existsSync(tPath)) {
+        // ★[T1123 ②] 손잡이 `T1123_STATIC_CACHE`(켬 기본) — ETag · 304 · gzip(990 KB 가 그대로 가던 자리) · 끔 = 이 줄 앞 머리 그대로
+        if (StaticServe.on()) return StaticServe.serve(req, res, tPath, req.url, 'application/json');
         res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' });
         return fs.createReadStream(tPath).pipe(res);
       }
@@ -1553,16 +1557,9 @@ const server = http.createServer(async (req, res) => {
       // /zones, /auth 등은 위에서 처리됨. 여기는 정적.
       const filePath = path.join(__dirname, '..', 'public', urlPath);
       if (filePath.startsWith(path.join(__dirname, '..', 'public')) && fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-        const ext = path.extname(filePath).toLowerCase();
-        const mime = { '.html':'text/html', '.js':'application/javascript', '.css':'text/css', '.png':'image/png', '.ico':'image/x-icon' }[ext] || 'application/octet-stream';
-        // 캐시 끄기 — 개발 중이라 매 deploy마다 새 파일 받게
-        res.writeHead(200, {
-          'Content-Type': mime,
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0',
-        });
-        return fs.createReadStream(filePath).pipe(res);
+        // ★★[T1123 ②] 정적 응답은 `server/static-serve.js` 한 자리 — 손잡이 `T1123_STATIC_CACHE`(켬 기본 · ETag · 304 · `?v=<내용 sha1>` 이면 immutable · gzip).
+        //   끔(`=0`) = 종전 머리 그대로(캐시 끄기 — `no-cache, no-store` · 형식 표 다섯) — 같은 함수의 끔 갈래다.
+        return StaticServe.serve(req, res, filePath, req.url);
       }
     }
 

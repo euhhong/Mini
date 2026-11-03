@@ -71,7 +71,7 @@
 // @@moved-begin:600
   (async () => {
     try {
-      const r = await fetch('/terrain.json');
+      const r = await _gfetch('/terrain.json');   // ★[T1123] 게임 그림 문 — 지형 1 MB 는 로비가 다 뜬 뒤(00-const `_gfetch`)
       if (!r.ok) return;
       const all = await r.json();
       if (!window.Terrain || !window.Terrain.setHardcoded) return;
@@ -115,7 +115,7 @@
 // @@moved-begin:2207
   (async () => {
     try {
-      const r = await fetch('/assets/mountains/mountain_anchors.json');
+      const r = await _gfetch('/assets/mountains/mountain_anchors.json');   // ★[T1123] 게임 그림 문(산 webp 는 앵커 뒤에 건다)
       if (!r.ok) return;
       _mtAnchors = await r.json();
       const names = Object.keys(_mtAnchors); _mtWanted = names.length;
@@ -445,7 +445,7 @@
       const im = new Image();
       im.onload = () => { ITEM_ICON_IMG[k] = im; _iconImgLoaded++; done(); };
       im.onerror = () => { done(); };
-      im.src = '/assets/icons/' + k + '.png';
+      _gsrc(im, '/assets/icons/' + k + '.png');   // ★[T1123] 게임 그림 문
     }
   };
 // @@moved-end:12454

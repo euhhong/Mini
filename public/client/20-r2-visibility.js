@@ -149,7 +149,7 @@
     for (const k in A) {
       const im = new Image();
       im.onload = () => { im._ox = A[k][0]; im._oy = A[k][1]; _bldSpr[k] = im; };
-      im.src = '/assets/buildings/' + k + '.png';
+      _gsrc(im, '/assets/buildings/' + k + '.png');   // ★[T1123] 게임 그림 문
     }
   })();
 // @@moved:5153
