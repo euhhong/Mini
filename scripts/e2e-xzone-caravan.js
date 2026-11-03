@@ -27,6 +27,7 @@
 //
 // 실행: node scripts/e2e-xzone-caravan.js     (env: XZ_DAYMS 마을 하루 ms · 기본 3000 · XZ_WAIT_S 왕복 기다림 상한 · 기본 600)
 'use strict';
+process.env.HANDOFF_ACK_MS = process.env.HANDOFF_ACK_MS || '3000'; process.env.HANDOFF_TOKEN_MS = process.env.HANDOFF_TOKEN_MS || '5000';   // ★[PM 11-03] 이 하네스는 종전 넘기 시한(3초 · 5초)으로 잰다 — 제품 기본은 12초 · 15초(server/zone.js HANDOFF_ACK_MS)
 const path = require('path');
 const fs = require('fs');
 const net = require('net');

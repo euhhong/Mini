@@ -21,6 +21,7 @@
 // 실행: node scripts/test-guest-identity.js
 //   central + zone(마을 OFF — 이 검사의 대상이 아니다)을 임시 DB·설정 포트로 띄운다.
 'use strict';
+process.env.HANDOFF_ACK_MS = process.env.HANDOFF_ACK_MS || '3000'; process.env.HANDOFF_TOKEN_MS = process.env.HANDOFF_TOKEN_MS || '5000';   // ★[PM 11-03] 이 하네스는 종전 넘기 시한(3초 · 5초)으로 잰다 — 제품 기본은 12초 · 15초(server/zone.js HANDOFF_ACK_MS)
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');

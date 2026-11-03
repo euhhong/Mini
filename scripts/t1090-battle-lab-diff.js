@@ -23,7 +23,7 @@ const ORIG = path.join(ROOT, 'lab', '원본', '전투실험실_0710.html');
 const NOW = path.join(ROOT, 'lab', '전투실험실.html');
 const scripts = (f) => [...fs.readFileSync(f, 'utf8').matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
 const S_ORIG = scripts(ORIG), S_NOW = scripts(NOW);
-if (S_NOW.length !== 2) { console.log(`지금 판 스크립트가 둘(코어 · 랩)이 아니다: ${S_NOW.length}`); process.exit(1); }
+if (S_NOW.length < 2 || !S_NOW[0].includes('BattleCore')) { console.log(`지금 판 첫 스크립트가 코어가 아니다(${S_NOW.length}개)`); process.exit(1); }   // ★[T1100] 코어 · (평형 · 원정 사기) · 랩
 const __mr = (s) => { let a = (s * 2654435761) >>> 0 || 1; return function () { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
 
 // 판본: 지금 코어 글자를 메모리에서 7월로 되돌린다(하나씩 더해 가며)
@@ -50,9 +50,9 @@ const mkctx = () => new Proxy({}, { get: (t, p) => (p in t ? t[p] : () => ({ wid
 function run(srcs, env, vals, seed) {
   const els = {};
   const el = (id) => els[id] || (els[id] = { value: vals[id] != null ? String(vals[id]) : (id.endsWith('_form') ? 'line' : id === 'terrain' ? 'plain' : id === 'speed' ? '1' : id.endsWith('_q') ? '0.5' : '0'),
-    textContent: '', innerHTML: '', style: {}, getContext: () => mkctx(), width: 760, height: 760, addEventListener: () => {}, getBoundingClientRect: () => ({ left: 0, top: 0, width: 760, height: 760 }) });
+    textContent: '', innerHTML: '', style: {}, firstChild: { style: {} }, getContext: () => mkctx(), width: 760, height: 760, addEventListener: () => {}, getBoundingClientRect: () => ({ left: 0, top: 0, width: 760, height: 760 }) });
   const M = Object.create(Math); M.random = Math.random;
-  const sb = { document: { getElementById: el }, requestAnimationFrame: () => 0, cancelAnimationFrame: () => {}, performance: { now: () => 0 }, console, Math: M, process: { env } };
+  const sb = { document: { getElementById: el, querySelectorAll: () => [] }, requestAnimationFrame: () => 0, cancelAnimationFrame: () => {}, performance: { now: () => 0 }, console, Math: M, process: { env } };
   sb.window = sb; sb.globalThis = sb; sb.addEventListener = () => {};
   vm.createContext(sb);
   vals = Object.assign({}, vals); const ter = vals.terrain || 'plain';
@@ -61,7 +61,7 @@ function run(srcs, env, vals, seed) {
   M.random = __mr(seed);                                    // ★씨 — 지형 뽑기 · 병사 놓기 · 판이 이 뒤로 같은 차례
   el('terrain').value = ter;
   vm.runInContext('deploy()', sb);
-  const probe = srcs.length === 2
+  const probe = srcs.length >= 2
     ? '(()=>{const B=window.BattleCore;let k=0;while(!B.result&&k++<8000){B.trackVel(0.05);B.stepBattle(0.05);if(B._defaultCtx.world&&!B.result)B.judge();}return {win:B.result&&B.result.win,t:+B.tick.toFixed(2),a:B.sides.A.dead,b:B.sides.B.dead,na:B.sides.A.start,nb:B.sides.B.start};})()'
     : '(()=>{let k=0;while(!result&&k++<8000){trackVel(0.05);stepBattle(0.05);}return {win:result&&result.win,t:+tick.toFixed(2),a:sides.A.dead,b:sides.B.dead,na:sides.A.start,nb:sides.B.start};})()';
   return vm.runInContext(probe, sb);
@@ -94,7 +94,7 @@ for (const sc of SCEN) {
   console.log(`\n▸ ${sc.name}  (병력 A ${O[0].na} · B ${O[0].nb})`);
   console.log(`   원본 07-10      A승 ${so.aWin} · B승 ${so.bWin} · 시간 ${so.t}s · 사상 A ${so.a} · B ${so.b}`);
   for (const V of VARIANTS.concat(sc.vals.terrain === 'village' ? [V4] : [])) {
-    const R = seeds.map((s) => run([V.core, S_NOW[1]], V.env, sc.vals, s));
+    const R = seeds.map((s) => run([V.core].concat(S_NOW.slice(1)), V.env, sc.vals, s));
     const s2 = sum(R), sm = same(R);
     row.v[V.key] = { name: V.name, sum: s2, same: sm, runs: R };
     console.log(`   ${V.key} ${V.name.padEnd(10)} A승 ${s2.aWin} · B승 ${s2.bWin} · 시간 ${s2.t}s · 사상 A ${s2.a} · B ${s2.b} · 원본과 같은 판 ${sm}/${NSEED}`);

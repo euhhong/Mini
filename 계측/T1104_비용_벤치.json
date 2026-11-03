@@ -1,0 +1,26 @@
+{
+ "raid-off": {
+  "tickMs": 4.956,
+  "dayMsMean": 1.3927,
+  "walkTicks": 0
+ },
+ "raid-on": {
+  "tickMs": 11.418,
+  "dayMsMean": 1.4359,
+  "walkTicks": 8700
+ },
+ "sup-off": {
+  "tickMs": 13.998,
+  "dayMsMean": 1.0754,
+  "walkTicks": 0
+ },
+ "sup-on": {
+  "tickMs": 20.724,
+  "dayMsMean": 1.2271,
+  "walkTicks": 13500
+ },
+ "raid-perBodyTickUs": 0.743,
+ "raid-dayMsDelta": 0.0432,
+ "sup-perBodyTickUs": 0.498,
+ "sup-dayMsDelta": 0.1517
+}

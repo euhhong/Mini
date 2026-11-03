@@ -248,7 +248,7 @@ if [ "$RB" = 1 ]; then
   for x in "$S central $SD" "$S hanbando $SD" "$T nippon $TD"; do set -- $x
     out="$(ssh -n "$1" "cd $3 && bash scripts/reset-world.sh $2 --live" 2>&1)"; rc=$?
     echo "$out" | grep -vE '^== ' | ind
-    { [ "$rc" = 0 ] && ! echo "$out" | grep -q '관측자 줄을 못 읽었다'; } || stop "$2 관측(--live rc $rc)" "도쿄 코드 · 스탬프 · live-lag"
+    { [ "$rc" = 0 ] && ! grep -q '관측자 줄을 못 읽었다' <<< "$out"; } || stop "$2 관측(--live rc $rc)" "도쿄 코드 · 스탬프 · live-lag"
   done
   # 도쿄 코드 트리 = 지금 도는 닛폰 이미지의 커밋(서울은 git 을 안 건드린다 — 기록만)
   TC="$(img_commit "$T" durango-zone-nippon)"; TH="$(ssh -n "$T" "cd $TD && git rev-parse HEAD" 2>/dev/null || true)"
@@ -315,7 +315,7 @@ else
     out="$(ssh -n "$S" "cd $SD && bash scripts/reset-world.sh $1 --drop-prev" 2>&1)"; rc=$?
     echo "$out" | grep -vE '^== ' | ind
     [ "$rc" = 0 ] || stop "서울 $1 고정 떼기(rc $rc)" "서울 재배포 · 도쿄 전부"
-    echo "$out" | grep -q '를 뗐다' && did "서울 $1 :prev-$1 뗌"
+    grep -q '를 뗐다' <<< "$out" && did "서울 $1 :prev-$1 뗌"
   done
 fi
 
@@ -328,7 +328,7 @@ if grep -q '할 일이 없다' "$TMP/seoul"; then :; else did "서울 재배포(
 for tg in central hanbando; do
   out="$(ssh -n "$S" "cd $SD && bash scripts/reset-world.sh $tg --live" 2>&1)"; rc=$?
   echo "$out" | grep -vE '^== ' | ind
-  { [ "$rc" = 0 ] && ! echo "$out" | grep -q '관측자 줄을 못 읽었다'; } || stop "서울 $tg 관측(--live rc $rc)" "도쿄 전부"
+  { [ "$rc" = 0 ] && ! grep -q '관측자 줄을 못 읽었다' <<< "$out"; } || stop "서울 $tg 관측(--live rc $rc)" "도쿄 전부"
 done
 
 # ④ 도쿄 코드 받기(차분)
@@ -345,7 +345,7 @@ if [ "$PINALL" = 1 ]; then
   out="$(ssh -n "$T" "cd $TD && bash scripts/reset-world.sh nippon $([ "$TZ" = 1 ] && echo --pin-prev || echo --drop-prev)" 2>&1)"; rc=$?
   echo "$out" | grep -vE '^== ' | ind
   [ "$rc" = 0 ] || stop "도쿄 nippon 고정(rc $rc)" "도쿄 재배포"
-  [ "$TZ" = 1 ] && did "도쿄 nippon :prev-nippon 고정" || { echo "$out" | grep -q '를 뗐다' && did "도쿄 nippon :prev-nippon 뗌"; }
+  [ "$TZ" = 1 ] && did "도쿄 nippon :prev-nippon 고정" || { grep -q '를 뗐다' <<< "$out" && did "도쿄 nippon :prev-nippon 뗌"; }
 fi
 
 # ⑤ 도쿄 재배포(판정이 1 일 때만) — §8 의 env 그대로 · 비밀은 도쿄 셸 env 로만
@@ -376,7 +376,7 @@ fi
 # ⑥ 도쿄 관측 → 스탬프
 out="$(ssh -n "$T" "cd $TD && bash scripts/reset-world.sh nippon --live" 2>&1)"; rc=$?
 echo "$out" | grep -vE '^== ' | ind
-{ [ "$rc" = 0 ] && ! echo "$out" | grep -q '관측자 줄을 못 읽었다'; } || stop "도쿄 nippon 관측(--live rc $rc)" "도쿄 스탬프 · 렉 판정"
+{ [ "$rc" = 0 ] && ! grep -q '관측자 줄을 못 읽었다' <<< "$out"; } || stop "도쿄 nippon 관측(--live rc $rc)" "도쿄 스탬프 · 렉 판정"
 if [ "$TZ" = 1 ]; then ssh -n "$T" "git -C $TD rev-parse HEAD > $TSTAMP" && did "도쿄 스탬프 ${TH1:0:12}"; fi
 
 # ⑦ 렉 판정

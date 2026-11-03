@@ -22,6 +22,7 @@
 //   ⓢ 소스 — 손잡이 한 자리 · 문 `kind: 'drop'` · 승격 welcome 한 벌(`_promoteWelcome`) · T843 술어 부르는 곳 그대로
 // 실행: node scripts/test-t1092-handoff-back.js
 'use strict';
+process.env.HANDOFF_ACK_MS = process.env.HANDOFF_ACK_MS || '3000'; process.env.HANDOFF_TOKEN_MS = process.env.HANDOFF_TOKEN_MS || '5000';   // ★[PM 11-03] 이 하네스는 종전 넘기 시한(3초 · 5초)으로 잰다 — 제품 기본은 12초 · 15초(server/zone.js HANDOFF_ACK_MS)
 const path = require('path');
 const fs = require('fs');
 const net = require('net');
@@ -127,7 +128,7 @@ async function person(tag) {   // 게스트 하나 — 짐 · 도구 · kg 를 �
       "ⓢ 손잡이 한 자리 — `T1092_HANDOFF_BACK`(`!== '0'` · 켬 기본 후보 · 되돌림 `=0`)");
     ok(/else if \(data\.kind === 'drop' && T1092_HANDOFF_BACK\) out = _t1092Drop\(data\);/.test(Z) && !/req\.url === '\/handoff_drop'/.test(Z),
       "ⓢ 받는 존 문 = 그 문(`/handoff_prepare` · `kind: 'drop'`) — 새 라우트 0 · 끔이면 400(모르는 종류)");
-    ok(/if \(T1092_HANDOFF_BACK && outgoingHandoffs\.has\(token\)\) return _t1092Back\(pid, token, targetZoneId, target, _ackGone\);[^\n]*\n\s*_ackGone\(\);\n\s*\}, 3000\);/.test(Z),
+    ok(/if \(T1092_HANDOFF_BACK && outgoingHandoffs\.has\(token\)\) return _t1092Back\(pid, token, targetZoneId, target, _ackGone\);[^\n]*\n\s*_ackGone\(\);\n\s*\}, HANDOFF_ACK_MS\);/.test(Z),
       'ⓢ ACK 시한 — 켬이면 `_t1092Back`(못 돌려놓으면 종전 몸통 `_ackGone`) · 끔이면 종전 몸통 그대로');
     ok((Z.match(/_promoteWelcome\(/g) || []).length === 3 && /send\(ws, _promoteWelcome\(player, pid, \{ promoted: true \}\)\);/.test(Z) && /send\(p\.ws, _promoteWelcome\(p, pid, \{ back: true \}\)\);/.test(Z),
       'ⓢ 승격 welcome 한 벌(`_promoteWelcome` — 승격 · 되돌림 둘이 부른다 · 사본 0)');

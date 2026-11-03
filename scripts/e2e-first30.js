@@ -25,9 +25,18 @@
 //   ⚠텔레포트 0 · 지급(`__e2e_give`) 0 · 몸 세우기(`__e2e_body`) 0. 테스트 문은 **계절 시계 하나**(`__e2e_clock {day}`) —
 //     `night` 를 안 주므로 몸·날씨의 낮밤은 세계 시계 그대로 돈다(기온은 그날 정오/자정 두 점 — 얼린 시계의 옛 규약 · 보고에 적는다).
 // ★세계는 `e2e-onboarding` 과 같은 판이다(VILLAGE_MAX 4 · 야생·도적·길 끔) — 단 **하루를 줄이지 않는다**(VILLAGE_DAY_MS 없음).
+// ★★[T1093 2026-11-03] land1038 실기 막힘 셋(17.7분 [잠자리] · 29.8분 [움집] "화면에 안 보여" · 30분 [첫 잠자리] "쉼터를 봤으나 못 감(stuck×8)")의 **자 몫** 고침:
+//   ⓐ 도구 문 사다리 — 맨손으로 못 따는 돌 · 나무가 모자라면 급조 돌괭이 · 돌도끼부터(`toolFirst` · 레시피는 존 정본)
+//   ⓑ 이름 바로 — 도구 문에 걸려 고르지 않은 소스가 화면에 있으면 "화면엔 있으나 도구 문에 걸림(…)" · 찾으면 탐색 누적 0부터
+//   ⓒ 벽 = 변 표(경로 정본 `stepBlocked` 간선 술어) · 도랑 = 안 푸는 칸 · 갇힘 풀기는 걸려 본 칸만(진짜 막힘을 풀어 stuck×8 을 돌던 고리)
+//   ⓓ 쉼터 길 한 번 실패 = 영영 포기 → 3분 쉬고 다시(걸려 본 칸 비움) · 실패마다 걸린 자리 · 벽 변 · 도랑을 적는다
+//   ⓔ 입 셋 — `--shots <dir>`(막힘 순간 사람 창 한 장 + 「지금 할 일」 글자) · `--reach <px,…>`(쉼터 길 시험) · `--old-bot`(T1093 앞 손으로 실기 막힘 다시 세우기)
+//   서버 손잡이 `T1093_SHELTER_ROOF`(쉼터 지붕 선언)는 자의 "쉼터를 알아본 길"(지붕 선언 · 이름표만)로 잰다.
 //
 // 실행: node scripts/e2e-first30.js --season spring|summer|winter --start day|night [--cap 30] [--out /tmp/t511/x.json]
 //          [--chief] [--quest-fixture] [--warm-db <초>] [--vid <n>] [--econ-days <n>] [--no-align] [--headed]
+//          [--shots <디렉터리>] [--shot-size 1280x800] [--old-bot]
+//        node scripts/e2e-first30.js --no-align --reach 448,704,960 [--reach-dirs 8] [--shots <dir>]   (쉼터 길 시험 — 본판 대신 · T1093)
 //        node scripts/e2e-first30.js --table <json…|디렉터리>        (표 입 — 세계를 안 띄운다)
 //        node scripts/e2e-first30.js --shelters                     (쉼터 입 — 한 존 전수 50곳의 쉼터↔도착점 거리 표 · 걷지 않는다)
 //   ⚠포트는 정본(central 3010 · 존 3020)이어야 한다 — central 은 존의 **설정 포트**를 로비에 광고한다(`zone-config publicZoneMap`).
@@ -77,6 +86,17 @@ const HEADED = argv.includes('--headed');
 //     (줌 1 · 같은 사영식 `__s2w`/`__w2s` — 화면 중심 ±640×±400). 사람의 눈은 그대로, 계측기의 붓만 가볍게.
 const VW = +val('--vw', '320'), VH = +val('--vh', '200');
 const SIGHT = String(val('--sight', '1280x800')).split('x').map(Number);
+// ★[T1093 ④] `--shots <디렉터리>` — 막힘이 적히는 그 순간(그리고 쉼터 길이 끊긴 순간) 화면을 사람 창 크기로 한 장 찍고
+//   「지금 할 일」 칸이 그때 한 말(자리 · 할 일 · 설명)을 그대로 적는다(읽기만 · 창은 찍는 동안만 `--shot-size` 로 키운다).
+//   기본 크기 = 자의 눈 넓이(`--sight` · 1280×800) — 1280×720 이면 "화면엔 있으나" 바위가 위아래 40px 띠 · 패널 밑에 숨는다(T1093 실측).
+const SHOTS = val('--shots', null);
+const SHOT = String(val('--shot-size', SIGHT.join('x'))).split('x').map(Number);
+// ★[T1093 ①-ⓒ] `--reach <px,…>` — 쉼터 길 시험(본판 대신): 마을마다 쉼터 문 앞 둘레 `--reach-dirs` 방향 × 그 거리에서 문까지 걷는다(아래 판 머리)
+const REACH_D = val('--reach', null) == null ? [] : String(val('--reach', '384')).split(',').map(Number).filter((n) => n > 0);
+const REACH_K = +val('--reach-dirs', '16');
+// ★[T1093] `--old-bot` — T1093 앞 손(돌괭이 사다리 0 · 쉼터 한 번 실패 = 영영 포기)으로 돈다. 눈 · 이름표 · 사진은 새 것 그대로 —
+//   land1038 실기 막힘을 **같은 손으로 다시 세우고** 그 순간을 찍어 귀속하는 판(보고 ① · ④). 기본은 새 손.
+const OLDBOT = argv.includes('--old-bot');
 const CPORT = PB, ZPORT = PB + 10, IPORT = PB + 47;
 const TAG = `${SEASON}-${START}${CHIEF ? '-chief' : ''}${QFIX ? 'Q' : ''}${ECON_DAYS ? 'E' + ECON_DAYS : ''}${WARMDB ? 'L' + WARMDB : ''}`;
 const say = (s) => process.stdout.write(s + '\n');
@@ -234,8 +254,8 @@ function waterKind(cx, cy) { const k = ck(cx, cy); let v = _water.get(k); if (v 
 const N4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];   // ★`tryGather` 가 물을 보는 순서 그대로(+x, −x, +y, −y)
 
 // ── 결과 그릇 ─────────────────────────────────────────────────────────────────
-const R = { tag: TAG, season: SEASON, seasonDay: SDAY, start: START, chief: CHIEF, questFixture: QFIX, econDays: ECON_DAYS, warmDbSec: WARMDB, pickVid: PICK, capMin: CAP_MIN, gate: C.GATE, keep: KEEP,
-  consts: C, milestones: {}, blockers: [], breaches: [], samples: [], stage1: {}, legs: [], notes: [], errors: [], explore: { legs: 0, sec: 0 } };
+const R = { tag: TAG, oldBot: OLDBOT, season: SEASON, seasonDay: SDAY, start: START, chief: CHIEF, questFixture: QFIX, econDays: ECON_DAYS, warmDbSec: WARMDB, pickVid: PICK, capMin: CAP_MIN, gate: C.GATE, keep: KEEP,
+  consts: C, milestones: {}, blockers: [], breaches: [], samples: [], stage1: {}, legs: [], notes: [], errors: [], explore: { legs: 0, sec: 0 }, shots: [] };
 let T0 = 0;                                   // 도착 순간(실시각 ms)
 const tSec = () => (T0 ? +((Date.now() - T0) / 1000).toFixed(1) : 0);
 const timeUp = () => T0 && (Date.now() - T0) >= CAP_MIN * 60000;
@@ -245,11 +265,13 @@ function mark(name, extra) {
   say(`  ◆ ${String(R.milestones[name].min).padStart(5)}분  ${name}${extra ? '  ' + JSON.stringify(extra).slice(0, 140) : ''}`);
   return true;
 }
+const _shotQ = [];   // ★[T1093 ④] 찍을 차례(막힘 · 쉼터 길 끊김) — 손이 비면 `flushShots` 가 찍는다
 function block(need, reason, extra) {
   const k = need + '|' + reason;
   if (R.blockers.some((b) => b.k === k)) return;
   R.blockers.push(Object.assign({ k, need, reason, t: tSec() }, extra || {}));
   say(`  ✗ ${(tSec() / 60).toFixed(2)}분  막힘 [${need}] ${reason}`);
+  if (SHOTS) _shotQ.push({ label: `막힘-${need}`, need, reason });
 }
 
 // ── 아이 띄우기 ───────────────────────────────────────────────────────────────
@@ -291,6 +313,32 @@ async function setKeys(want) {
 }
 async function press(k, n = 1, gap = 0) { for (let i = 0; i < n; i++) { await page.keyboard.press(k); if (gap) await sleep(gap); } }
 let walkedPx = 0, walkedSec = 0;
+// ★[T1093 ④] 찍기 — 창을 사람 크기로 잠깐 키워 한 장 · 「지금 할 일」 칸의 글자(자리 · 할 일 · 설명) · 몸 자리 · 그때의 낮밤을 적는다(읽기만)
+async function flushShots() {
+  if (!SHOTS || !_shotQ.length || !page) return;
+  const q = _shotQ.splice(0);
+  await setKeys(new Set()).catch(() => {});
+  try {
+    fs.mkdirSync(SHOTS, { recursive: true });
+    await page.setViewportSize({ width: SHOT[0], height: SHOT[1] });
+    await sleep(1200);
+    for (const it of q) {
+      const panel = await ev(() => {
+        const g = (id) => { const e = document.getElementById(id); return e ? String(e.innerText || e.textContent || '').replace(/\s+/g, ' ').trim() : null; };
+        const el = document.getElementById('onbNext');
+        return { shown: !!(el && !el.classList.contains('hidden')), place: g('onbNextPlace'), item: g('onbNextItem'), guide: g('onbNextGuide') };
+      }).catch(() => null);
+      const f = path.join(SHOTS, `${TAG}-${String(R.shots.length + 1).padStart(2, '0')}-${it.label.replace(/[^\w가-힣-]+/g, '_')}.png`);
+      await page.screenshot({ path: f });
+      const at = await meL().catch(() => null);
+      R.shots.push({ t: tSec(), label: it.label, need: it.need || null, reason: it.reason || null, file: path.basename(f), panel,
+        at: at ? { x: Math.round(at.x), y: Math.round(at.y) } : null, night: ZC.isNight(Date.now()), phase: +ZC.worldPhase(Date.now()).toFixed(3) });
+      say(`  ▣ ${(tSec() / 60).toFixed(2)}분  사진 ${path.basename(f)} — 칸 ${panel && panel.shown ? `「${panel.item}」 ${panel.guide}` : '안 보임'}`);
+    }
+  } catch (e) { R.errors.push('shot: ' + String(e && e.message || e).slice(0, 120)); }
+  await page.setViewportSize({ width: VW, height: VH }).catch(() => {});
+  await sleep(400);
+}
 
 // ── 눈: 화면에 보이는 것 ───────────────────────────────────────────────────────
 let RES = [];            // 알려진 자연물 전부(클라가 받은 것) — {id,t,x,y,r,on}
@@ -333,14 +381,25 @@ async function look() {
     // ★환호(도랑) — 클라 미러 `_ditchAbs`(서버 `DITCH_CELLS` 를 welcome 으로 받은 것 · 절대 칸). 안쪽 존은 마을을 안 켜서 모른다.
     const ditch = (typeof _ditchAbs !== 'undefined' && !window.__t511DitchSent) ? [..._ditchAbs] : null;
     if (ditch && ditch.length) window.__t511DitchSent = true;
-    return { res, corners, blds, walls, ditch, oxc: Math.round(ox / 32), oyc: Math.round(oy / 32), me: { x: m.x - ox, y: m.y - oy } };
+    const B0 = 40, w0x = Math.floor(m.x / 32) - Math.round(ox / 32), w0y = Math.floor(m.y / 32) - Math.round(oy / 32);
+    return { res, corners, blds, walls, ditch, oxc: Math.round(ox / 32), oyc: Math.round(oy / 32), me: { x: m.x - ox, y: m.y - oy }, win: [w0x - B0, w0y - B0, w0x + B0, w0y + B0] };
   }, SIGHT);
   if (!o) return null;
   RES = o.res; POLY = o.corners; BLDS = o.blds;
-  if (o.ditch) for (const k of o.ditch) { const [ax, ay] = k.split(',').map(Number); WALLC.add(ck(ax - o.oxc, ay - o.oyc)); R.ditchCells = (R.ditchCells || 0) + 1; }
-  for (let i = 0; i + 2 < o.walls.length; i += 3) {   // 벽 변의 양쪽 칸 · 울타리 칸을 막는다(보수적 — 집 안으로는 안 들어간다)
-    const x = o.walls[i], y = o.walls[i + 1], f = o.walls[i + 2];
-    WALLC.add(ck(x, y)); if (f & 1) WALLC.add(ck(x + 1, y)); if (f & 2) WALLC.add(ck(x, y + 1));
+  if (o.ditch) for (const k of o.ditch) { const [ax, ay] = k.split(',').map(Number); (OLDBOT ? WALLC : HARDC).add(ck(ax - o.oxc, ay - o.oyc)); R.ditchCells = (R.ditchCells || 0) + 1; }
+  if (OLDBOT) {
+    for (let i = 0; i + 2 < o.walls.length; i += 3) {   // 벽 변의 양쪽 칸 · 울타리 칸을 막는다(보수적 — 집 안으로는 안 들어간다)
+      const x = o.walls[i], y = o.walls[i + 1], f = o.walls[i + 2];
+      WALLC.add(ck(x, y)); if (f & 1) WALLC.add(ck(x + 1, y)); if (f & 2) WALLC.add(ck(x, y + 1));
+    }
+  } else {
+    // ★[T1093 ①-ⓒ] 벽은 **변**이다 — 본 창(±40칸)의 변 표 · 울타리 칸을 지금 것으로 갈아 끼운다(지어지고 헐리는 것을 따라간다)
+    const [x0, y0, x1, y1] = o.win;
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { const k = ck(x, y); EDGE_E.delete(k); EDGE_S.delete(k); FENCEC.delete(k); }
+    for (let i = 0; i + 2 < o.walls.length; i += 3) {
+      const k = ck(o.walls[i], o.walls[i + 1]), f = o.walls[i + 2];
+      if (f & 1) EDGE_E.add(k); if (f & 2) EDGE_S.add(k); if (f & 4) FENCEC.add(k);
+    }
   }
   keepPrep(o.me);
   if (!shelterSeen && T0) for (const b of BLDS) {   // 한 번 본 쉼터는 기억한다(사람이 그렇듯)
@@ -360,7 +419,26 @@ async function look() {
 }
 let BLDS = [];
 let shelterSeen = null;   // 처음 화면에 보인 공용 쉼터 {x,y,t,keep}
-const WALLC = new Set();   // 벽·울타리로 막힌 칸(존 로컬 · 누적 — 벽은 30분 안에 안 사라진다)
+const WALLC = new Set();   // 벽·울타리로 막힌 칸(존 로컬 · 누적 — 벽은 30분 안에 안 사라진다) — ★[T1093] `--old-bot` 만 쓴다
+// ★★[T1093 ①-ⓒ 2026-11-03] 벽은 **변**이다(서버 `isBlockedByWall` = 변 · `findCellFence` = 칸 · 도랑 = 지형 `_terrBlocked0`).
+//   종전 자는 벽 변의 양쪽 칸을 통째로 막고(보수적), 길이 없으면 둘레 3칸의 막힌 칸을 **진짜 막힘까지** 풀었다(`갇힘 풀기`) —
+//   그래서 도랑 · 문 없는 곳간 벽 앞에서 "풀고 → 걸리고 → 또 풀고"를 여덟 번 돌아 stuck×8 을 냈다(T1093 쉼터 길 시험 — 종전 손 167회 중 2회 ·
+//   걸린 자리 x 가 칸 경계 1px 앞에 박힘 · 도랑 칸 곁). land1038 실기 "쉼터를 봤으나 못 감(stuck×8)" 의 한 길이다.
+//   새 손: 벽 변은 변 표(EDGE_E = 그 칸 동쪽 변 · EDGE_S = 그 칸 남쪽 변)로 길찾기 간선 술어(`stepBlocked`)에 넣고,
+//   도랑 칸은 안 푸는 칸(HARDC) · 울타리 칸은 창마다 갈아 끼우는 칸(FENCEC), 갇힘 풀기는 걸려 본 칸(`dyn`)만 푼다.
+const EDGE_E = new Set(), EDGE_S = new Set(), HARDC = new Set(), FENCEC = new Set();
+function edgeHit(fx, fy, tx, ty) {   // 직교 한 칸 걸음의 변이 벽인가(클라 `clEdgeBlockedStep` 미러를 읽은 변 표 · 서버 `edgeBlockedStep` 과 같은 뜻)
+  if (tx === fx + 1) return EDGE_E.has(ck(fx, fy));
+  if (tx === fx - 1) return EDGE_E.has(ck(tx, ty));
+  if (ty === fy + 1) return EDGE_S.has(ck(fx, fy));
+  if (ty === fy - 1) return EDGE_S.has(ck(tx, ty));
+  return false;
+}
+function stepEdge(fx, fy, tx, ty) {   // 한 칸 걸음(8방) — 대각은 두 L 길이 **둘 다** 열려야(서버는 하나면 통과 · 자는 몸 반경 모서리 긁힘을 피해 보수적으로)
+  const dx = tx - fx, dy = ty - fy;
+  if (dx && dy) return edgeHit(fx, fy, fx + dx, fy) || edgeHit(fx + dx, fy, tx, ty) || edgeHit(fx, fy, fx, fy + dy) || edgeHit(fx, fy + dy, tx, ty);
+  return edgeHit(fx, fy, tx, ty);
+}
 function polyBox() { const xs = POLY.map((p) => p.x), ys = POLY.map((p) => p.y); return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) }; }
 function inPoly(x, y) {   // 볼록 사각형(화면 → 월드 사영) — 부호 일관
   let s = 0;
@@ -401,7 +479,8 @@ function obstacleCells() {
 }
 let OBS = new Set();
 function blockedCell(cx, cy) {
-  if (terrBlocked(cx, cy) || OBS.has(ck(cx, cy)) || dyn.has(ck(cx, cy)) || WALLC.has(ck(cx, cy))) return true;
+  const k0 = ck(cx, cy);
+  if (terrBlocked(cx, cy) || OBS.has(k0) || dyn.has(k0) || WALLC.has(k0) || HARDC.has(k0) || FENCEC.has(k0)) return true;   // ★[T1093] HARDC(도랑) · FENCEC(울타리) — 새 손만 찬다
   const c = ctr(cx, cy), k = keepState(c.x, c.y);
   if (k === 2 || (k === 1 && !startInKeep)) return true;
   return false;
@@ -410,10 +489,12 @@ function planTo(from, goals) {
   const s = cellOf(from);
   const cand = goals.filter((g) => !blockedCell(g.x, g.y)).map((g) => ({ g, d: Math.hypot(g.x - s.x, g.y - s.y) })).sort((a, b) => a.d - b.d).slice(0, 5);
   let best = null;
+  const nb = (x, y) => (x === s.x && y === s.y) ? false : blockedCell(x, y);
   for (const { g } of cand) {
     if (g.x === s.x && g.y === s.y) return [s];
     const p = PathCore.routePath(s.x, s.y, g.x, g.y, {
-      blocked: (x, y) => (x === s.x && y === s.y) ? false : blockedCell(x, y),
+      blocked: nb,
+      stepBlocked: OLDBOT ? undefined : (fx, fy, tx, ty) => nb(tx, ty) || stepEdge(fx, fy, tx, ty),   // ★[T1093] 벽 변 = 간선 술어(경로 정본 `stepBlocked` 문)
       costMul: (x, y) => { const c = ctr(x, y); return keepState(c.x, c.y) === 1 ? 40 : 1; },
       maxPops: 120000 });
     if (p && (!best || p.length < best.length)) best = p;
@@ -449,9 +530,15 @@ async function follow(pathCells, tol) {
 // 직선으로 가도 되나 — 선분을 8px 마다 짚고, 몸 반경(±8px) 네 귀퉁이 칸이 전부 열려 있어야 한다
 function canPass(ax, ay, bx, by) {
   const A = ctr(ax, ay), B = ctr(bx, by), L = Math.hypot(B.x - A.x, B.y - A.y), n = Math.max(1, Math.ceil(L / 8));
+  const prev = [null, null, null, null];   // ★[T1093] 새 손 — 네 귀퉁이 선이 칸을 넘을 때마다 그 변(또는 대각 L 길)이 벽이 아닌가
   for (let i = 0; i <= n; i++) {
     const x = A.x + (B.x - A.x) * i / n, y = A.y + (B.y - A.y) * i / n;
-    for (const [ox, oy] of [[-8, -8], [8, -8], [-8, 8], [8, 8]]) { const c = cellOf({ x: x + ox, y: y + oy }); if (blockedCell(c.x, c.y) && !(c.x === ax && c.y === ay)) return false; }
+    const OFF = [[-8, -8], [8, -8], [-8, 8], [8, 8]];
+    for (let j = 0; j < 4; j++) {
+      const c = cellOf({ x: x + OFF[j][0], y: y + OFF[j][1] });
+      if (blockedCell(c.x, c.y) && !(c.x === ax && c.y === ay)) return false;
+      if (!OLDBOT) { const q = prev[j]; if (q && (q.x !== c.x || q.y !== c.y) && stepEdge(q.x, q.y, c.x, c.y)) return false; prev[j] = c; }
+    }
   }
   return true;
 }
@@ -463,8 +550,9 @@ async function walkTo(goals, tol = 10) {
     let pth = planTo(from, goals);
     if (!pth) {   // ★갇힘 풀기 — 벽 곁 칸은 양쪽을 다 막아 두었다(보수적) · 제 움집 안에 서면 그 둘레가 전부 막힌 칸이 된다.
       //   몸 둘레 3칸의 벽 칸·걸려 본 칸만 한 번 풀고 다시 묻는다(문간은 실제로 열려 있다 — 콜라이더가 판정한다).
+      //   ★[T1093] 새 손은 벽을 변 표로 들고 도랑은 HARDC 라 **걸려 본 칸(dyn)만** 푼다 — 진짜 막힘(도랑 · 닫힌 벽)은 안 푼다.
       const c0 = cellOf(from), freed = [];
-      for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) { const k = ck(c0.x + dx, c0.y + dy); if (WALLC.delete(k)) freed.push(['w', k]); if (dyn.delete(k)) freed.push(['d', k]); }
+      for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) { const k = ck(c0.x + dx, c0.y + dy); if (OLDBOT && WALLC.delete(k)) freed.push(['w', k]); if (dyn.delete(k)) freed.push(['d', k]); }
       pth = planTo(from, goals);
       if (!pth) { for (const [t, k] of freed) (t === 'w' ? WALLC : dyn).add(k); return { ok: false, reason: 'nopath' }; }
       R.notes.push(`${tSec()}s 갇힘 풀기 — 둘레 ${freed.length}칸`);
@@ -474,9 +562,23 @@ async function walkTo(goals, tol = 10) {
     if (r.ok) return r;
     if (r.reason === 'stuck' && r.cell) {
       R.stucks = R.stucks || [];
-      if (R.stucks.length < 60) R.stucks.push({ t: tSec(), at: { x: Math.round(r.at.x), y: Math.round(r.at.y) }, cell: r.cell,
-        near: RES.filter((q) => Math.hypot(q.x - r.at.x, q.y - r.at.y) < 48).map((q) => `${q.t}@${Math.round(q.x - r.at.x)},${Math.round(q.y - r.at.y)}`).slice(0, 4),
-        terr: terrBlocked(r.cell.x, r.cell.y) });
+      if (R.stucks.length < 60) {
+        // ★[T1093] 걸린 자리의 진짜 막힘 — 몸 칸 둘레 3×3 의 벽 변(E/S) · 울타리 · 도랑(클라 미러 그대로 · 읽기만)
+        const wl = await ev(([ax, ay]) => {
+          const out = []; const bx = Math.floor(ax / 32), by = Math.floor(ay / 32);
+          for (let y = by - 1; y <= by + 1; y++) for (let x = bx - 1; x <= bx + 1; x++) {
+            let f = '';
+            if (typeof clEdgeBlockedStep === 'function') { if (clEdgeBlockedStep(x, y, 1, 0, 0)) f += 'E'; if (clEdgeBlockedStep(x, y, 0, 1, 0)) f += 'S'; }
+            if (typeof clHasFenceAt === 'function' && clHasFenceAt(x, y, 0)) f += 'F';
+            if (typeof _ditchAbs !== 'undefined' && _ditchAbs.has(x + ',' + y)) f += 'D';
+            if (f) out.push(`${x - bx},${y - by}:${f}`);
+          }
+          return out.join(' ');
+        }, [r.at.x + WOX, r.at.y + WOY]).catch(() => '?');
+        R.stucks.push({ t: tSec(), at: { x: Math.round(r.at.x), y: Math.round(r.at.y) }, cell: r.cell,
+          near: RES.filter((q) => Math.hypot(q.x - r.at.x, q.y - r.at.y) < 48).map((q) => `${q.t}@${Math.round(q.x - r.at.x)},${Math.round(q.y - r.at.y)}`).slice(0, 4),
+          terr: terrBlocked(r.cell.x, r.cell.y), wall: wl });
+      }
       dyn.add(ck(r.cell.x, r.cell.y));
       const c = cellOf(r.at); dyn.delete(ck(c.x, c.y));
       continue;
@@ -588,12 +690,30 @@ const byDist = (me, arr, f) => arr.map((a) => ({ a, d: Math.hypot(f(a).x - me.x,
 
 // ── 탐색 다리 — 안 보이면 걸어서 찾는다 ─────────────────────────────────────────
 //   ★예산은 **일감마다 누적 6분**이다(자 안의 약속). 넘으면 그 일감은 막힘으로 적고 3분 쉬었다 다시 본다.
+//   ★[T1093] 단 **찾으면 0부터** — 그 일감이 탐색해 찾던 것(`need` 의 품목)을 손에 넣으면 누적을 비운다. 종전은 찾은 뒤에도 쌓여서
+//     돌을 셋 찾은 판도 "못 찾음(stone)" 으로 적혔다(T1093 실측 · 돌괭이 뒤 돌 3/5 · 20.5분). 끔 판 자(`--old-bot`)는 종전 그대로 쌓는다.
 let CUR = '시작';
 const exploreSec = {}, skipUntil = {};
+const exploreFor = {};   // ★[T1093] 일감 → 지금 탐색해 찾는 품목들(마지막 `explore(need)` 의 need)
 async function explore(need) {
   const cat = CUR;
-  if ((exploreSec[cat] || 0) > 360) { block(cat, `화면에 안 보여 탐색 누적 6분 — 못 찾음(${need})`); skipUntil[cat] = Date.now() + 180000; return false; }
+  if ((exploreSec[cat] || 0) > 360) {
+    // ★[T1093 ①] "화면에 안 보여"는 **화면에 그 소스가 하나도 없을 때만** 맞는 말이다 — 도구 문(T1065)에 걸려 고르지 않은 소스가
+    //   화면에 있으면 그 수를 같이 적는다(보이는데 손에 맞는 도구가 없다 · 같은 6분 막힘의 다른 까닭).
+    const types = new Set(String(need).split('+').flatMap((it) => (SRC[it] ? SRC[it].res : [])));
+    const gv = {}; for (const r of RES) if (r.on && types.has(r.t) && gatedOut(r)) gv[r.t] = (gv[r.t] || 0) + 1;
+    const gs = Object.entries(gv).map(([t, n]) => `${t} ${n}`).join(' · ');
+    block(cat, `화면에 안 보여 탐색 누적 6분 — 못 찾음(${need})${gs ? ` · 화면엔 있으나 도구 문에 걸림(${gs})` : ''}`, gs ? { gatedVisible: gv } : undefined);
+    skipUntil[cat] = Date.now() + 180000; return false;
+  }
   const t0 = Date.now();
+  exploreFor[cat] = new Set(String(need).split('+'));
+  {   // ★[T1093 ①] 탐색을 떠나는 순간 — 찾는 품목의 소스가 화면에 있는데 도구 문에 걸려 안 고른 것이 몇이었나(다리마다 · 막힘 귀속의 증인)
+    const types = new Set(String(need).split('+').flatMap((it) => (SRC[it] ? SRC[it].res : [])));
+    let g = 0; for (const r of RES) if (r.on && types.has(r.t) && gatedOut(r)) g++;
+    const G = R.gatedSeen || (R.gatedSeen = {}); const e = G[need] || (G[need] = { legs: 0, legsWithGated: 0, maxGated: 0 });
+    e.legs++; if (g) { e.legsWithGated++; e.maxGated = Math.max(e.maxGated, g); }
+  }
   const me = await meL();
   let best = null;
   for (let k = 0; k < 16; k++) {
@@ -617,6 +737,8 @@ async function explore(need) {
 // 처음 손에 든 것 — 어느 갈래로 들어왔든(덤불·갈대·바위·나무·줍기) 그 순간을 적는다
 function noteGains(d, how) {
   if (!d) return;
+  // ★[T1093] 찾으면 0부터 — 지금 일감이 탐색해 찾던 품목을 얻었으면 그 일감의 탐색 누적을 비운다(`--old-bot` = 종전)
+  if (!OLDBOT && exploreFor[CUR] && Object.entries(d).some(([k, v]) => v > 0 && exploreFor[CUR].has(k))) { if ((exploreSec[CUR] || 0) > 0) R.notes.push(`${tSec()}s [${CUR}] 찾음(${Object.keys(d).filter((k) => d[k] > 0 && exploreFor[CUR].has(k)).join('+')}) — 탐색 누적 ${Math.round(exploreSec[CUR])}초 → 0`); exploreSec[CUR] = 0; }
   if (d.berry > 0) mark('첫 열매', { how, berry: d.berry });
   if (d.fiber > 0 && how === '갈대') mark('첫 갈대', { fiber: d.fiber });
   if (d.fiber > 0) mark('첫 섬유', { how });
@@ -728,10 +850,32 @@ async function fetchOne(item) {
   if (src.forage === 'fiber') return goReeds(99);
   return goForage(src.forage);
 }
+// ★[T1093 ①-ⓑ] 도구 문 사다리 — 맨손으로 못 따는 재료(나무 · 돌)가 모자라고 그 도구가 없으면 **급조 도구부터** 만든다.
+//   사람은 맨손 채석 거절 한 줄("조잡한 돌괭이가 있어야 돌을 캘 수 있습니다. 자갈 3개, 잔가지 1개, 풀 2개로 제작 창에서 …
+//   자갈은 바위 곁에서 맨손으로 주울 수 있습니다." — 존 `_t1065Gate` 정본)을 읽고 이 일을 한다. 종전 자는 바위를 목표에서
+//   빼기만 하고(T1065) 돌괭이를 몰라 화면의 바위를 두고 "화면에 안 보여"로 6분을 걸었다(land1038 실기 17.7분 [잠자리] · 29.8분 [움집]).
+//   레시피 · 도구 이름은 존 정본(`RECIPES` · `T1065_NEED` 와 같은 짝)에서 읽는다 — 사본 0. 끔(`T1065_TOOL_GATE=0`)이면 무동작(null).
+const LADDER = { wood: { has: ['axe', 'crude_axe'], make: 'crude_axe' }, stone: { has: ['pickaxe', 'crude_pick'], make: 'crude_pick' } };
+async function toolFirst(miss) {   // → null(사다리 몫 없음) | true/false(한 걸음 했다/못 했다)
+  if (!GATE || OLDBOT) return null;
+  for (const it of miss) {
+    const L = LADDER[it]; if (!L || _has(L.has)) continue;
+    const rc = Z.RECIPES[L.make] && Z.RECIPES[L.make].cost; if (!rc) continue;
+    const s = await state();
+    if (Object.entries(rc).every(([k, n]) => (s.inv[k] || 0) >= n)) {
+      if (await craft('craft', L.make, (q) => toolHas(q, L.make))) mark(`${Z.RECIPES[L.make].label || L.make}(손 제작 · ${it})`);
+      else block(CUR, `craft ${L.make} 가 안 됐다`);
+      return true;
+    }
+    return fetchMissing(rc);   // 재료(자갈 · 잔가지 · 풀)는 맨손으로 딴다 — 사다리 칸이 아니라 무한 되부름 0
+  }
+  return null;
+}
 async function fetchMissing(need) {   // need = {item: n} — 모자란 것 중 가장 가까운 것 하나를 딴다
   const s = await state();
   const miss = Object.entries(need).filter(([k, n]) => (s.inv[k] || 0) < n).map(([k]) => k);
   if (!miss.length) return false;
+  { const tf = await toolFirst(miss); if (tf !== null) return tf; }   // ★[T1093 ①-ⓑ] 도구 문 사다리(맨손으로 못 따는 재료면 급조 도구부터)
   await look(); OBS = obstacleCells();
   const me = await meL();
   let best = null;
@@ -781,12 +925,20 @@ async function warmUp(sev) {
 //   ⚠이름표 없이 그 집이 쉼터인지 알아보는가는 이 자가 못 잰다(T507 ③ 커서 이름표 몫) — 자는 "길이 있나"만 잰다.
 async function sleepStep() {
   await look();
+  // ★[T1093 ①-ⓒ] 쉼터 길이 한 번 끊겼다고 영영 버리지 않는다 — 사람은 둘러 가서 다시 가 본다.
+  //   종전 자는 첫 실패(stuck×8 등) 한 번에 `fail` 을 박고 30분 끝까지 쉼터를 다시 안 봤다(land1038 실기 "쉼터를 봤으나 못 감(stuck×8)" ·
+  //   그 뒤 잠자리 일감이 움집 사다리로 떨어져 "[잠자리] … 못 찾음" 이 된다). ⇒ 탐색 막힘과 같은 쉼(3분 · `skipUntil` 의 그 수) 뒤 다시 간다 —
+  //   그때 걸려 본 칸(`dyn` · 30분 내내 쌓이기만 했다)을 비우고 새로 본다. 실패마다 걸린 자리(문 앞 기준)를 다리에 적는다.
+  if (!OLDBOT && shelterSeen && shelterSeen.fail && shelterSeen.retryAt && Date.now() >= shelterSeen.retryAt) { shelterSeen.fail = null; dyn.clear(); }
   if (shelterSeen && !shelterSeen.keep && !shelterSeen.fail) {
-    const t0 = Date.now();
+    const t0 = Date.now(); R.stucks = R.stucks || []; const st0 = R.stucks.length;
     const w = await walkTo(standAround(shelterSeen.x, shelterSeen.y, 40).filter((g) => !blockedCell(g.x, g.y)), 14);
-    R.legs.push({ t: tSec(), kind: 'shelter', ok: w.ok, reason: w.reason || null, sec: +((Date.now() - t0) / 1000).toFixed(1) });
-    if (w.ok) { mark('첫 잠자리', { how: '공용 쉼터(보고 찾음 · 촌장 문 밖)' }); return true; }
-    shelterSeen.fail = w.reason; return true;
+    const st = R.stucks.slice(st0).map((q) => ({ t: q.t, at: { x: q.at.x - Math.round(shelterSeen.x), y: q.at.y - Math.round(shelterSeen.y) }, near: q.near, terr: q.terr, wall: q.wall }));
+    R.legs.push({ t: tSec(), kind: 'shelter', ok: w.ok, reason: w.reason || null, sec: +((Date.now() - t0) / 1000).toFixed(1), try: (shelterSeen.tries || 0) + 1, stucks: st });
+    if (w.ok) { mark('첫 잠자리', { how: '공용 쉼터(보고 찾음 · 촌장 문 밖)', try: (shelterSeen.tries || 0) + 1 }); return true; }
+    shelterSeen.fail = w.reason; shelterSeen.tries = (shelterSeen.tries || 0) + 1; shelterSeen.retryAt = Date.now() + 180000;
+    if (SHOTS) _shotQ.push({ label: '쉼터-못감', need: '첫 잠자리', reason: w.reason });   // ★[T1093 ④] 길이 끊긴 그 자리
+    return true;
   }
   return hutStep();
 }
@@ -980,6 +1132,64 @@ async function sampleOnce() {
   await look();
   R.view = POLY ? { corners: POLY.map((p) => ({ x: Math.round(p.x - arr.x), y: Math.round(p.y - arr.y) })) } : null;
 
+  // ── ★[T1093 ①-ⓒ] 쉼터 길 시험(`--reach`) — 본판 대신. 마을마다 쉼터 문 앞(서버 `shelterOf`) 둘레 여러 자리에서 그 문까지 걷는다 ──
+  //   "쉼터를 봤으나 못 감(stuck×8)" 이 **어디서 · 왜** 나는지를 30분 판을 기다리지 않고 잰다. 시작 자리만 디버그 문(`teleport_debug` ·
+  //   물 · 바위 위는 서버가 거절)으로 놓고, 걷기는 본판 그 `walkTo`(같은 눈 · 같은 길찾기 · WASD · 존 콜라이더)다. 촌장 문 고리 안 시작은 건너뛴다.
+  if (REACH_D.length) {
+    const want = new Set(VILS.map((v) => v.vid));
+    let rows = [];
+    for (let i = 0; i < 120; i++) { const sh = await jget(`http://localhost:${ZPORT}/shelterdbg`); rows = sh && sh.rows ? sh.rows.filter((r) => want.has(r.vid) && r.shelter) : []; if (rows.length === want.size) break; await sleep(5000); }
+    R.reach = []; R.roof = [];
+    for (const row of rows) {
+      const door = { x: row.shelter.x, y: row.shelter.y };
+      // ★[T1093 ②] 사람 눈의 쉼터 — `--shots` 면 문 앞 남쪽 여섯 칸에 서서 사람 창 한 장(지붕 그림이 쉼터 것인가) · 클라가 받은 선언 칸을 같이 적는다
+      if (SHOTS) {
+        await send({ type: 'teleport_debug', x: Math.round(door.x), y: Math.round(door.y + 6 * CELL) });
+        await sleep(2500); await look();
+        const hb = BLDS.filter((b) => b.sh && Math.abs(b.sh[2] - (Math.round(door.x / CELL + 2.5))) <= 0 && b.sh[3] + 2 === Math.round(door.y / CELL + 0.5));
+        R.roof.push({ vid: row.vid, name: row.name, parts: hb.length, flag: hb.filter((b) => b.shBy === 'flag').length, byName: hb.filter((b) => b.shBy === 'name').length });
+        _shotQ.push({ label: `쉼터-${row.name}`, need: '쉼터 지붕', reason: `선언 ${hb.filter((b) => b.shBy === 'flag').length}/${hb.length}` });
+        await flushShots();
+      }
+      for (const dist of REACH_D) for (let k = 0; k < REACH_K; k++) {
+        const a = (k / REACH_K) * Math.PI * 2, sx = door.x + Math.cos(a) * dist, sy = door.y + Math.sin(a) * dist;
+        const sc = cellOf({ x: sx, y: sy });
+        const base = { vid: row.vid, name: row.name, k, deg: +(k * 360 / REACH_K).toFixed(1), dist };
+        if (terrBlocked(sc.x, sc.y)) { R.reach.push(Object.assign(base, { skip: 'terr' })); continue; }
+        await send({ type: 'teleport_debug', x: Math.round(sx), y: Math.round(sy) });
+        //   ★몸을 세운다(`__e2e_body` — 존 `E2E_GIVE` 문 안 · 이 시험만) — 길 시험은 먹고 마시지 않아 40분 무렵 쓰러져
+        //     제자리 stuck×8 을 냈다(T1093 시험 셋째 판 실측 · 허기 · 갈증 0). 본판은 몸 세우기 0 그대로다.
+        await send({ type: '__e2e_body', hunger: 90, thirst: 90, hp: 100 });
+        let ok0 = false;
+        for (let i = 0; i < 40 && !ok0; i++) { await sleep(200); const p = await meL(); ok0 = Math.hypot(p.x - sx, p.y - sy) < 24; }
+        await sleep(1500);   // 청크 · 건물 · 자연물이 들어올 때까지
+        dyn.clear(); R.stucks = [];
+        await look();
+        if (!ok0) { R.reach.push(Object.assign(base, { skip: 'tp' })); continue; }
+        if (keepState(sx, sy) >= 1) { R.reach.push(Object.assign(base, { skip: 'keep' })); continue; }
+        const t0 = Date.now();
+        const goals = standAround(door.x, door.y, 40).filter((g) => !blockedCell(g.x, g.y));
+        const w = goals.length ? await walkTo(goals, 14) : { ok: false, reason: 'nogoal' };
+        const p1 = await meL();
+        R.reach.push(Object.assign(base, { ok: w.ok, reason: w.reason || null, sec: +((Date.now() - t0) / 1000).toFixed(1), goals: goals.length,
+          end: { x: Math.round(p1.x - door.x), y: Math.round(p1.y - door.y) }, stucks: (R.stucks || []).map((s) => ({ at: { x: s.at.x - door.x, y: s.at.y - door.y }, cell: s.cell, near: s.near, terr: s.terr, wall: s.wall })) }));
+        say(`  ⌂ ${row.name} ${base.deg}° ${dist}px → ${w.ok ? '닿음' : '못 감 ' + w.reason} (${((Date.now() - t0) / 1000).toFixed(0)}초 · 걸림 ${(R.stucks || []).length})`);
+      }
+    }
+    say('\n| 마을 | 시도 | 닿음 | 못 감(까닭) | 건너뜀(물 · 고리 · 이동) |');
+    say('|---|---|---|---|---|');
+    for (const row of rows) {
+      const rs = R.reach.filter((x) => x.vid === row.vid), tr = rs.filter((x) => !x.skip), ok = tr.filter((x) => x.ok);
+      const why = {}; for (const x of tr.filter((y) => !y.ok)) why[x.reason] = (why[x.reason] || 0) + 1;
+      say(`| ${row.name} | ${tr.length} | ${ok.length} | ${Object.entries(why).map(([k2, n]) => `${k2} ${n}`).join(' · ') || '0'} | ${rs.filter((x) => x.skip).length} |`);
+    }
+    if (OUT) { fs.mkdirSync(path.dirname(OUT), { recursive: true }); fs.writeFileSync(OUT, JSON.stringify(R, null, 1)); say(`   → ${OUT}`); }
+    clearInterval(sampler);
+    await browser.close().catch(() => {});
+    cleanup();
+    process.exit(0);
+  }
+
   // ── 촌장 판 머리: 인사 → 첫 의뢰 → 납품 → 밥 → 쉼터 ─────────────────────────
   if (CHIEF) {
     CUR = '촌장';
@@ -1078,6 +1288,7 @@ async function sampleOnce() {
         did = await n.run(s, x);
         break;
       }
+      await flushShots();   // ★[T1093 ④] 방금 적힌 막힘 자리를 찍는다(없으면 무동작)
       if (!ran) { if (fire) await warmUp(1); await sleep(3000); did = true; }
     } catch (e) {
       R.errors.push(String(e && e.message || e).slice(0, 160));
@@ -1093,7 +1304,7 @@ async function sampleOnce() {
     const r3 = sh3 && sh3.rows ? sh3.rows.find((r) => r.vid === V.vid) : null;
     if (r3 && r3.shelter) R.shelter = { x: r3.shelter.x, y: r3.shelter.y, toAnchor: Math.round(Math.hypot(r3.shelter.x - R.village.anchor.x, r3.shelter.y - R.village.anchor.y)), inTerr: !!r3.inTerr, wake: r3.wake || null };
   }
-  if (!R.milestones['첫 잠자리'] && !CHIEF) block('첫 잠자리', R.shelter && R.shelter.toAnchor < C.GATE ? `공용 쉼터가 촌장 문 안(중심에서 ${R.shelter.toAnchor}px < ${C.GATE}px)` : (shelterSeen ? `쉼터를 봤으나 못 감(${shelterSeen.fail || '?'})` : '공용 쉼터가 한 번도 화면에 안 보였다'));
+  if (!R.milestones['첫 잠자리'] && !CHIEF) block('첫 잠자리', R.shelter && R.shelter.toAnchor < C.GATE ? `공용 쉼터가 촌장 문 안(중심에서 ${R.shelter.toAnchor}px < ${C.GATE}px)` : (shelterSeen ? `쉼터를 봤으나 못 감(${shelterSeen.fail || '?'}${shelterSeen.tries > 1 ? ` · ${shelterSeen.tries}번` : ''})` : '공용 쉼터가 한 번도 화면에 안 보였다'));   // ★[T1093] 다시 간 횟수
   if (!(site && site.done)) {
     const hs = ['곡괭이(손 제작)', '움집터(① 굴착)', '도끼(손 제작)', '움집 ② 단계', '움집 ③ 단계'].filter((k) => R.milestones[k]);
     R.hutReach = hs.length ? hs[hs.length - 1] : '곡괭이 전';
@@ -1101,6 +1312,7 @@ async function sampleOnce() {
   }
   for (const k of ['물', '첫 도구', '첫 밥', '첫 불']) if (!R.milestones[k]) block(k, '30분 안 미도달');
   if (!R.milestones['첫 열매'] && !R.milestones['첫 갈대']) block('첫 열매/갈대', '30분 안 미도달');
+  await flushShots();   // ★[T1093 ④] 끝에 적힌 막힘(첫 잠자리 등)은 30분 끝 자리에서 찍는다
   R.walk = { px: Math.round(walkedPx), sec: +walkedSec.toFixed(1), pxPerSec: walkedSec ? +(walkedPx / walkedSec).toFixed(1) : null };
   R.notices = (await ev(() => (window.__t511Log || []).map((n) => ({ t: n.t, x: n.x.slice(0, 90) }))).catch(() => [])).map((n) => ({ t: +((n.t - T0) / 1000).toFixed(1), x: n.x }));
   R.final = await state().catch(() => null);
