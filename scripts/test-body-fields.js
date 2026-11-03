@@ -33,12 +33,14 @@ const FROZEN = {
     '_t561Hall', '_t561Wd', 'currentJob'],
 };
 
+// ★[T1140 ③-가] 켬 리터럴 머리 줄 — `T1140_HOT_ORDER ? _t1140Lit(…) : ` 가 앞에 붙을 수 있다(같은 칸 · 차례만 — 아래 ⑤ 가 잰다)
+function litHead(Z) { const m = /  const player = (?:T1140_HOT_ORDER \? _t1140Lit\([^)]*\) : )?T806_HOT_INOBJ \? \{[^\n]*\n/.exec(Z); return m ? { i: m.index, n: m[0].length } : { i: -1, n: 0 }; }
 function known(Z) {
   const i = Z.indexOf('function _t671Shape(p) {'), j = Z.indexOf('\n}\n', i);
   const shape = new Set([...Z.slice(i, j).matchAll(/p\.([A-Za-z_$][\w$]*) = undefined/g)].map((m) => m[1]));
   // ★[T806 ③] 스폰 리터럴이 둘이 됐다(`T806_HOT_INOBJ` 켬 = 걸음 몸통 칸을 객체 안에) — 둘의 차는 아래 따로 잰다
   //   ★[T818 ①] 켬 기본 — 규약은 **기본 리터럴(켬 · 첫째)** 로 뜬다(끔 리터럴은 켬 리터럴의 부분집합이라 — 아래 ③ 이 잰다 — 끔 판의 쓰기 자리도 같이 덮인다)
-  const k0 = Z.indexOf('  const player = T806_HOT_INOBJ ? {\n');
+  const k0 = litHead(Z).i;
   const k = k0 > 0 ? k0 : Z.indexOf('  const player = {\n    pid, playerId'), l = Z.indexOf('  if (T671_SHAPE) _t671Shape(player);', k);
   const lit = new Set([...Z.slice(k, l).matchAll(/(?:^|[\s{,])([A-Za-z_$][\w$]*)\s*[:,]/g)].map((m) => m[1]));
   for (const m of Z.slice(k, l).matchAll(/player\.([A-Za-z_$][\w$]*)\s*=/g)) lit.add(m[1]);
@@ -77,10 +79,10 @@ ok(bad.length === 0, '★몸 필드 규약 — `npc.` 에 쓰는 이름이 전�
 }
 // ★[T806 ③] 켬 리터럴 = 끔 리터럴 + 걸음 몸통 칸(값 `undefined`) — 끔 리터럴에 없는 이름은 전부 `_t671Shape` · 스폰 대입 · 정한 다섯 안
 {
-  const a = Z.indexOf('  const player = T806_HOT_INOBJ ? {\n'), b = Z.indexOf('  } : {\n    pid, playerId', a);
+  const H = litHead(Z), a = H.i, b = Z.indexOf('  } : {\n    pid, playerId', a);
   if (a > 0 && b > a) {
     const keysOf = (t) => new Set([...t.replace(/\/\/.*$/gm, '').matchAll(/(?:^|[\s{,])([A-Za-z_$][\w$]*)\s*[:,]/g)].map((m) => m[1]));
-    const on = keysOf(Z.slice(a + '  const player = T806_HOT_INOBJ ? {\n'.length, b)), off = keysOf(Z.slice(b + 6, Z.indexOf('\n  };\n', b)));
+    const on = keysOf(Z.slice(a + H.n, b)), off = keysOf(Z.slice(b + 6, Z.indexOf('\n  };\n', b)));
     on.delete('undefined');
     const extra = [...on].filter((x) => !off.has(x)), miss = [...off].filter((x) => !on.has(x));
     const FIVE = new Set(['simEvacUntil', 'canadiaVillage', 'canadiaTask', 'harvestTarget', 'fightTarget']);
@@ -89,6 +91,23 @@ ok(bad.length === 0, '★몸 필드 규약 — `npc.` 에 쓰는 이름이 전�
     ok(miss.length === 0 && extra.length > 20 && stray.length === 0 && undef === extra.length, '★[T806 ③] 켬 리터럴 = 끔 리터럴 + 걸음 몸통 칸(전부 `undefined` · 모양 · 대입 · 정한 다섯 안)',
       `더한 칸 ${extra.length} · 빠진 칸 ${miss.length} · 목록 밖 ${stray.join(',') || 0}`);
   } else ok(true, '[T806 ③] 리터럴 하나(손잡이 없는 판)');
+}
+// ★[T1140 ③-가] `T1140_HOT_ORDER` 리터럴(`_t1140Lit`) = T806 켬 리터럴과 같은 칸 · 칸마다 같은 값 글자 · 차례만 다르다
+{
+  const H = litHead(Z), b = Z.indexOf('  } : {\n    pid, playerId', H.i), f = Z.indexOf('function _t1140Lit('), g = f > 0 ? Z.indexOf('\n  };\n}', f) : -1;
+  if (H.i > 0 && b > H.i && f > 0 && g > f) {
+    const parts = (t) => { t = t.replace(/\/\/.*$/gm, ''); let d = 0, c = '', o = []; for (const ch of t) { if (ch === '{' || ch === '[') d++; if (ch === '}' || ch === ']') d--; if (ch === ',' && d === 0) { o.push(c.trim().replace(/\s+/g, ' ')); c = ''; } else c += ch; } if (c.trim()) o.push(c.trim().replace(/\s+/g, ' ')); return o; };
+    const P806 = parts(Z.slice(H.i + H.n, b)), P1140 = parts(Z.slice(Z.indexOf('return {\n', f) + 'return {\n'.length, g)), key = (x) => x.split(':')[0].trim();
+    const m806 = new Map(P806.map((x) => [key(x), x])), m1140 = new Map(P1140.map((x) => [key(x), x]));
+    const ST = ['_t1140Sx', '_t1140Sy', '_t1140Sa'];   // ③-다 막힘 칸 셋 — 차례 리터럴에만(값 `undefined` · `_t671Shape` 의 켬 줄과 같은 이름)
+    const diff = [...new Set([...m806.keys(), ...m1140.keys()])].filter((k) => !ST.includes(k) && m806.get(k) !== m1140.get(k));
+    const stOk = ST.every((k) => m1140.get(k) === k + ': undefined' && !m806.has(k) && K.shape.has(k));
+    const moved = P806.map(key).join() !== P1140.map(key).filter((k) => !ST.includes(k)).join();
+    ok(diff.length === 0 && stOk && P806.length + ST.length === P1140.length && P806.length > 50 && moved, '★[T1140 ③-가] 차례 리터럴 = T806 켬 리터럴 + 막힘 칸 셋(`undefined` · `_t671Shape` 이름) — 같은 칸 · 같은 값 글자 · 차례만 다르다', `칸 ${P806.length} · ${P1140.length} · 다른 칸 ${diff.join(',') || 0} · 막힘 칸 ${stOk ? '○' : '✗'}`);
+    // 미끼 — 값 하나를 바꾸면 문다
+    const bait = new Map(m1140); bait.set('nextDecisionAt', 'nextDecisionAt: 1');
+    ok([...m806.keys()].some((k) => m806.get(k) !== bait.get(k)), '★[T1140 ③-가] 자명 통과 금지 — 값 하나(`nextDecisionAt: 1`)를 바꾸면 문다');
+  } else ok(true, '[T1140 ③-가] 차례 리터럴 없음(손잡이 없는 판)');
 }
 console.log(`\n=== ${pass} 통과 / ${fail} 실패 ===\n`);
 process.exit(fail ? 1 : 0);

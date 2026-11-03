@@ -17,7 +17,7 @@ if (process.env.T791_LINES && require('worker_threads').isMainThread) {
   function analyze(P) {
     const par = new Map(), byId = new Map();
     for (const n of P.nodes) { byId.set(n.id, n); if (n.children) for (const c of n.children) par.set(c, n.id); }
-    const self = {}, call = {}; let tot = 0, dec = 0, ns = 0, nsSelf = 0;
+    const self = {}, call = {}, incl = {}, reqBy = {}; let tot = 0, dec = 0, ns = 0, nsSelf = 0;   // ★[T1140] incl = npcStep 아래 함수 포함 표본(인라인된 함수는 부른 쪽 틀에 묻힌다)
     for (const n of P.nodes) if (isStep(n.callFrame) && n.positionTicks) for (const t of n.positionTicks) self[t.line] = (self[t.line] || 0) + t.ticks;
     //   ★[T791 ①-b] 몸통이 부른 함수 안쪽 — npcStep 아래 나무의 노드마다 자기 줄 표(함수 이름@정의 줄 · 줄) · 두 층 부름 사슬(포함 표본)
     const deep = {}, call2 = {};
@@ -29,9 +29,12 @@ if (process.env.T791_LINES && require('worker_threads').isMainThread) {
     for (const id0 of P.samples) {
       tot++;
       let id = id0, below = null, below2 = null, hitStep = false, hitDec = false, cat = null;
+      const fr = [];   // ★[T1140] npcStep 아래 틀(잎 → 위) — 함수마다 포함 표본(한 표본에 한 번)
       while (id != null) {
         const nd = byId.get(id); if (!nd) break; const cf = nd.callFrame;
-        if (!hitStep && isStep(cf)) { hitStep = true; cat = below ? (below.functionName || '(anon)') + ':' + (below.lineNumber + 1) : null;
+        if (!hitStep && !isStep(cf)) { fr.push((cf.functionName || '(anon)') + '@' + (cf.url || '').replace(/^.*\//, ''));
+          if (!/^node:|^$/.test(cf.url || '') && fr.length > 1 && /^(require|_load|wrapModuleLoad)@/.test(fr[fr.length - 2]) && !/^(require|_load|wrapModuleLoad|\(anon\))@/.test(fr[fr.length - 1])) { const k = fr[fr.length - 1] + ':' + (cf.lineNumber + 1); reqBy[k] = (reqBy[k] || 0) + 1; } }   // ★[T1140] 걸음 안 `require()` 를 부른 함수
+        if (!hitStep && isStep(cf)) { hitStep = true; for (const k of new Set(fr)) incl[k] = (incl[k] || 0) + 1; cat = below ? (below.functionName || '(anon)') + ':' + (below.lineNumber + 1) : null;
           if (below && below2) { const k2 = cat + '>' + (below2.functionName || '(anon)') + ':' + (below2.lineNumber + 1); call2[k2] = (call2[k2] || 0) + 1; } }
         below2 = below;
         if (cf.functionName === '_decOne') hitDec = true;
@@ -40,7 +43,7 @@ if (process.env.T791_LINES && require('worker_threads').isMainThread) {
       if (hitDec) dec++;
       if (hitStep) { ns++; if (cat === null) nsSelf++; else call[cat] = (call[cat] || 0) + 1; }
     }
-    return { t0: P.startTime, t1: P.endTime, iv: IV, tot, dec, ns, nsSelf, self, call, deep, call2 };
+    return { t0: P.startTime, t1: P.endTime, iv: IV, tot, dec, ns, nsSelf, self, call, deep, call2, incl, reqBy };
   }
   let busy = false;
   async function cycle() {

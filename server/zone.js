@@ -3659,6 +3659,28 @@ function _t671Shape(p) {
   p._t717L = undefined;   // ★[PM 10-14 · T717 ②] 손에 남긴 통나무 몫(villages.js `_t325Deliver` · `_t717NewWood` — test-body-fields 규약)
   p._t733F = undefined;   // ★[T733 ②] 손에 남긴 걷는 채집 몫(villages.js `_t347Deliver` · `_t733NewForage` — 손잡이 `T733_FELL_LOOT` 켬일 때만 값이 든다)
   p._t724Site = undefined; p._t724T = undefined;   // ★[T724] 광부 몸의 그날 셀 · 선 때(villages.js `_t724BodyStep` — 손잡이 `T724_MINE_ACT` 켬일 때만 값이 든다)
+  if (T1140_STUCK_INLINE && !T1140_HOT_ORDER) { p._t1140Sx = undefined; p._t1140Sy = undefined; p._t1140Sa = undefined; }   // ★[T1140 ③-다] 막힘 칸 셋(차례 리터럴엔 이미 있다 · 끔 = 이 줄 무동작)
+}
+// ★★[T1140 ③-가 2026-11-04 · 손잡이 `T1140_HOT_ORDER`(기본 끔 · `'1'` 만 켬 · 끔 = 아래 함수가 안 불린다 = 종전 글자)] **걸음 머리 칸을 x · y 곁에** — T791 회부 2 의 남은 몫.
+//   T806 ③ 이 걸음 몸통 칸을 객체 안(리터럴)에 넣었다. 그 칸들은 리터럴 **뒤쪽**(30 번째 칸 뒤)에 있다 — 틱 머리 공간 색인이 몸마다 이미 짚는 x · y 칸(앞 줄)과 다른 캐시 줄이다.
+//   T1140 ① 표본: 걸음 문 첫 줄(결정 문 `canadiaVillage` · `nextDecisionAt` 읽기 · zone.js `npcStep` 머리)이 `npcStep` 의 18 % — 셈이 아니라 그 틱에 처음 짚는 칸 몫이다.
+//   켬이면 T806 켬 리터럴과 **같은 칸 · 같은 값 · 같은 평가 차례(값 식 중 부르는 것은 `Date.now()` 하나)** 를 차례만 바꿔 짓는다: 걸음 머리 · 막힘 · 길 · 따라가기가 짚는 칸을 맨 앞에.
+//   다른 것은 키 차례뿐이다 — 몸 키를 차례로 도는 · `in` · 펼침 · `JSON.stringify(몸)` 자리 0(T671 §2 · T806 §3 그 전수 · T1140 다시 grep 0). 새 수 0 · 새 몸 칸 0.
+const T1140_HOT_ORDER = process.env.T1140_HOT_ORDER === '1';
+const T1140_STUCK_INLINE = process.env.T1140_STUCK_INLINE === '1';   // ★[T1140 ③-다] 막힘 칸을 몸 안에(`_t1140Detect` 머리 주석 · 끔 = 종전 `_stuckPos`)
+//   ★[T1140 ③-다] `_t1140Sx` · `_t1140Sy` · `_t1140Sa` 세 칸은 `T1140_STUCK_INLINE` 의 막힘 칸이다(아래 `_t1140Detect`) — 이 리터럴엔 늘 둔다(끔이면 값 `undefined` 그대로 · 읽는 자리 0).
+function _t1140Lit(pid, npcId, name, color, cx, cy, opts) {
+  return {
+    pid, x: cx, y: cy, vx: 0, vy: 0, isNpc: true, canadiaVillage: undefined, nextDecisionAt: 0,
+    _t540StepAt: undefined, simEvacUntil: undefined, simLonOff: undefined, behavior: 'wander', canadiaTask: undefined, targetX: cx, targetY: cy, path: undefined,
+    pathIndex: undefined, _t791P: undefined, _t791Pn: undefined, _t791Px: undefined, _t791Py: undefined, _stuckPos: undefined, _stuckN: undefined, _t1140Sx: undefined, _t1140Sy: undefined, _t1140Sa: undefined, _t670TkX: undefined,
+    _t670TkY: undefined, _t670Tk: undefined, _pathFor: undefined, _pathAt: undefined, _huntSpd: undefined, gatherTarget: undefined, harvestTarget: undefined, fightTarget: undefined,
+    npcHomeX: undefined, npcHomeY: undefined, npcBedX: undefined, npcBedY: undefined, _t720: undefined, simVillageId: undefined, _lifeAct: undefined, _lifeActAt: undefined,
+    playerId: npcId, ws: null, name, color, inventory: { wood: 0, stone: 0, berry: 0, fiber: 0, meat_raw: 0, hide: 0, seed_berry: 2 }, tools: {}, equipped: null, equipment: [],
+    equipSlots: {}, craftSkill: {}, hp: PLAYER_MAX_HP, maxHp: PLAYER_MAX_HP, hunger: HUNGER_MAX, thirst: THIRST_MAX, vp: 0, tribeId: opts.villageId || null,
+    tribeName: opts.villageName || null, pvpEnabled: false, lastAttackAt: 0, lastDamagedAt: 0, handingOff: false, lastSeen: Date.now(), npcJob: undefined, myClaim: undefined,
+    simJob: undefined,
+  };
 }
 function spawnNpc(opts = {}) {
   // 위치: opts.x/y 우선, 없으면 zone 내부 랜덤 (클레임 충돌 안 나는 곳)
@@ -3703,7 +3725,7 @@ function spawnNpc(opts = {}) {
   //   객체 밖 속성 배열에 살아, 틱마다 그 배열을 처음 짚는 몫이 줄 하나 ≈0.13 µs 였다. 켬이면 그 칸들을 리터럴에 미리 둔다(값 `undefined` = 없을 때와 같은 읽기 ·
   //   몸 키를 차례로 도는 · `in` · `delete` · 펼침 자리 0 — 보고/T806 §3) — 값 · 판정 무변 · 키 차례만 다르다(넷째 줄 아래 · `_t671Shape` 가 세우는 칸은 같은 값 그대로 ·
   //   켬에서 키가 늘어나는 것은 다섯 — `simEvacUntil` · `canadiaVillage` · `canadiaTask` · `harvestTarget` · `fightTarget`(값 `undefined` · 없는 칸 읽기와 같은 답)).
-  const player = T806_HOT_INOBJ ? {
+  const player = T1140_HOT_ORDER ? _t1140Lit(pid, npcId, name, color, cx, cy, opts) : T806_HOT_INOBJ ? {   // ★[T1140 ③-가] 켬 = 같은 칸 · 차례만(위 함수)
     pid, playerId: npcId, ws: null,
     name, color,
     x: cx, y: cy, vx: 0, vy: 0,
@@ -4636,6 +4658,32 @@ function followNpcPath(npc, speedMult) {
 //     stuck 감지는 종전대로 작동한다.
 // ★[T670 ①] `_stuckPos` 를 **제자리에서 덮어쓴다**(새 객체 0) — 이 객체를 읽는 곳은 `detectStuck` 하나뿐이다(서버 전체 `_stuckPos` 6자리 · 바깥 참조 0) ⇒ 값·순서 같다.
 function _t670Stuck(npc, now) { const S = npc._stuckPos; if (S) { S.x = npc.x; S.y = npc.y; S.at = now; } else npc._stuckPos = { x: npc.x, y: npc.y, at: now }; }
+// ★★[T1140 ③-다 2026-11-04 · 손잡이 `T1140_STUCK_INLINE`(기본 끔 · `'1'` 만 켬 · 끔 = 아래 두 함수가 안 불린다 = 종전 글자)] **막힘 칸을 몸 안에** — T700 회부 2(뜨거운 칸)의 한 손.
+//   종전 `_stuckPos` 는 몸 밖 객체 하나({x, y, at}) — 서 있는 몸이 틱마다 그 객체를 짚고(쓰기 셋) 걷는 몸이 읽는다. T700 은 그릇을 `Float64Array(3)` 로 바꿨다(역시 몸 밖 객체 · 값 0).
+//   켬이면 같은 세 수를 몸 칸 셋(`_t1140Sx` · `_t1140Sy` · `_t1140Sa` — 차례 리터럴(`T1140_HOT_ORDER`)에서는 막힘 판정이 짚는 칸 곁)에 둔다.
+//   같은 답인 까닭: `_stuckPos` 를 읽고 쓰는 자리는 서버 전체에서 `_t670Stuck` · `detectStuck` 둘(+ 모양 선언)뿐이다 — 그 둘을 같은 차례 · 같은 수로 옮겼다.
+//     "없음"(`!npc._stuckPos`) = `_t1140Sa === undefined`(`now` 는 늘 수). 값은 그릇 변환 없이 그대로(−0 · NaN · `undefined` 위치까지 같다 — T700 의 Float64Array 와 달리 `undefined` 도 그대로).
+function _t1140St(npc, now) { npc._t1140Sx = npc.x; npc._t1140Sy = npc.y; npc._t1140Sa = now; }
+function _t1140Detect(npc, now) {
+  if (npc.targetX != null && npc.targetY != null
+      && (!npc.path || npc.pathIndex >= (npc.path === npc._t791P ? npc._t791Pn : npc.path.length))
+      && _t671Lt(npc.x - npc.targetX, npc.y - npc.targetY, 12)) {
+    _t1140St(npc, now);
+    npc._stuckN = 0;
+    return false;
+  }
+  if (npc._t1140Sa === undefined) { _t1140St(npc, now); return false; }
+  if (_t671Gt(npc.x - npc._t1140Sx, npc.y - npc._t1140Sy, 5)) {
+    _t1140St(npc, now);
+    npc._stuckN = 0;
+    return false;
+  }
+  if (now - npc._t1140Sa > 1500) {
+    _t1140St(npc, now);
+    return true;
+  }
+  return false;
+}
 function detectStuck(npc, now) {
   if (npc.targetX != null && npc.targetY != null
       && (!npc.path || npc.pathIndex >= (npc.path === npc._t791P ? npc._t791Pn : npc.path.length))   // ★[T791 ②] 길 거울(끔 = 배열 길이 그대로)
@@ -4659,6 +4707,7 @@ function detectStuck(npc, now) {
   }
   return false;
 }
+if (T1140_STUCK_INLINE) detectStuck = _t1140Detect;   // ★[T1140 ③-다] 켬 = 같은 세 수 · 몸 칸(위 `_t1140Detect` · 부르는 자리 · `detectStuck` 글자 무변 — 끔 = 이 줄 무동작)
 // stuck 해소: path·target 비우고 짧은 wander 방향 + 다음 decide 트리거
 // ★[생활 층 100% ①] 주민은 목표 유지·즉시 재경로(랩엔 랜덤 회피가 없다 — 경로가 벽 변을 인지하니 재탐색이 정답).
 //   A* 쿨다운·경로 캐시를 무효화해 다음 틱에 새 경로(스무딩 포함). 3연속 stuck만 현행 랜덤 회피 폴백(만능 방어).
