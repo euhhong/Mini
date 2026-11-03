@@ -964,7 +964,7 @@ function neighborPart() {
 // ════════════════════════════════════════════════════════════════════════════
 function armsPart() {
   const prevK = process.env.T403_ARMS_LEDGER;
-  const setK = (on) => { if (on) process.env.T403_ARMS_LEDGER = '1'; else delete process.env.T403_ARMS_LEDGER; };
+  const setK = (on) => { process.env.T403_ARMS_LEDGER = on ? '1' : '0'; };   // ★[T1094] T403 켬 기본 — 끈 판은 명시 `=0`
   // 한 원정 — 같은 씨로 세계를 짓고(곳간 무기 wA·wD) 동원 → (결판) → 귀환 도착까지. 끈 팔/켠 팔을 같은 씨로 나란히.
   const expedition = (on, cfg) => {
     setK(on);
