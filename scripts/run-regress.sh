@@ -38,9 +38,15 @@ TIMEOUT_SEC="${TIMEOUT_SEC:-2400}"
 #   랩 둘은 단독 판이 2,042초(mining) · 1,468초(psite)라 기본 2,400초와 여유가 적다(다른 판과 같이 돌면 넘는다 · T735 회부 4).
 #   ~~`@regress` 표식은 안 붙인다 — 야간 목록은 그대로고, 이름을 주고 돌릴 때만 이 표가 쓰인다.~~
 #   ★[T830 2026-10-21 · PM 10-20 결정] 칠하기 끔(T799 · `fixture-lab-clock` `noPaint`) 뒤 두 판에 `@regress` 를 다시 붙였다 — 전수·야간 단위에 든다 · 이 표(3,600초)는 그대로.
+#   ★[T1121 2026-11-03] 지금 판(2코어 · 혼자): mining 1,601 → 1,018초(표시만 하는 토글 둘 끔 · `leanDraw`) · psite 1,105 → 664초(판 넷 둘씩 나란히). 이 표(3,600초)는 그대로.
 declare -A TIMEOUT_OF=( [test-lab-mining.js]=3600 [test-lab-psite.js]=3600 )
 FAILED=()
 PASSED=()
+# ★[T1121 2026-11-03] **걸린 시간도 러너가 말한다.** 야간 11-02 묶음 A 가 4시간 33분 · PM 착지 게이트(하네스 96)가 7시간을 넘었는데
+#   하네스별 시간은 어디에도 안 남았다 — 야간 보고는 실패 칸에만 '소요'(분)가 있고, 러너는 아예 안 찍었다(긴 판을 아무도 못 짚었다).
+#   ⇒ 하네스마다 `[소요] N초` 한 줄(판정 줄 바로 앞 · 벽시계 · **판정에 안 든다**) · 요약에 상위 열.
+#   판정 문법(`##### f #####` · `✓ RC=0` / `✗ RC=n …`)은 한 글자도 안 바뀐다(`nightly-report.js` 가 읽는 줄 그대로).
+TIMES=()
 
 # ★★[T773 2026-10-16] **러너도 남의 판을 죽이지 않는다 — 내가 띄운 것만.** (T765 회부 7 · T764 §0)
 #   종전 `drain` 은 하네스 사이마다 이름으로 일괄 죽이기(`server/zone.js` · `central.js` 를 이름으로 찾아 죽였다)라
@@ -60,10 +66,12 @@ run_one() {
   local out rc
   local t="$TIMEOUT_SEC"; [ -n "${TIMEOUT_OF[$f]:-}" ] && [ "${TIMEOUT_OF[$f]}" -gt "$t" ] && t="${TIMEOUT_OF[$f]}"
   local tmp; tmp="$(mktemp)"
+  local t0=$SECONDS   # ★[T1121] 걸린 시간 — bash 내장 초 시계(포크 0)
   timeout "$t" node "scripts/$f" > "$tmp" 2>&1 < /dev/null &
   local tp=$!
   wait "$tp"
   rc=$?
+  local el=$(( SECONDS - t0 ))
   kill -KILL -- "-$tp" 2>/dev/null || true   # ★[T773] 내가 띄운 무리만 — 남은 아이(존 · central)까지 · 남의 판은 무접촉
   out="$(cat "$tmp")"; rm -f "$tmp"
   # ★실패한 줄이 **자기 이름을 말하게** 한다 [2026-08-26] —
@@ -82,6 +90,8 @@ run_one() {
   marks="$(echo "$out" | grep -cE '^[[:space:]]*(✓|✔|✗|✘)')"
   words="$(echo "$out" | grep -cE '통과|PASS|FAIL|실패|결과')"
   summary=$(( marks + words ))
+  echo "  [소요] ${el}초"   # ★[T1121] 판정 줄 바로 앞 — 판정에 안 든다(✓/✗ 로 시작하지 않는다 · 보고기의 판정 문법 밖)
+  TIMES+=("$el $f")
   if [ "$rc" -ne 0 ] || [ "$summary" -eq 0 ]; then
     echo "  ✗ RC=$rc · 결과줄 ${summary}개 → **실패로 센다**"
     FAILED+=("$f(rc=$rc)")
@@ -194,4 +204,11 @@ echo
 echo "=== 러너 요약 ==="
 echo "  통과 ${#PASSED[@]}: ${PASSED[*]:-없음}"
 echo "  실패 ${#FAILED[@]}: ${FAILED[*]:-없음}"
+# ★[T1121] 걸린 시간 상위 열(초 · 긴 것부터 · 같으면 이름순) · 하네스 합 · 러너 전체 — 판정에 안 든다
+if [ "${#TIMES[@]}" -gt 0 ]; then
+  _sum=0; for _x in "${TIMES[@]}"; do _sum=$(( _sum + ${_x%% *} )); done
+  _top="$(printf '%s\n' "${TIMES[@]}" | LC_ALL=C sort -k1,1nr -k2,2 | head -10 | while read -r _s _n; do printf '%s %s · ' "$_n" "$_s"; done)"
+  echo "  걸린 시간 상위(초): ${_top% · }"
+  echo "  걸린 시간 합: 하네스 ${_sum}초 · 러너 전체 ${SECONDS}초(그 사이 = 배수 · 정리 기다림 · 머리)"
+fi
 [ "${#FAILED[@]}" -eq 0 ] || exit 1

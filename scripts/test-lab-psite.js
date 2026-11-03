@@ -84,6 +84,21 @@ const SNAP = () => {
   };
 };
 
+// ★[T1121 2026-11-03] **판 넷을 둘씩 나란히** — B · A · A′ · B′ 는 서로 안 닿는다(판마다 브라우저 따로 · 가상시계 · 씨 고정 · 프레임은 하네스가 민다).
+//   종전엔 넷을 차례로 돌려 한 판(1,468초 · run-regress 머리)의 거의 전부가 기다림이었다(2코어 상자에서 한 코어가 놀았다).
+//   ⇒ 같은 판 넷을 상자 코어 수만큼 나란히 띄우고, **받는 차례 · 찍는 차례 · 단언은 종전 그대로**(B → A → A′ → B′).
+//   증명 = 줄이기 전후 출력이 바이트 같다(지문 넷 · 표 · 단언 줄) — 보고 T1121 §3. `LAB_LANES=1` = 종전 차례 그대로(견줌용).
+const os = require('os');
+const LANES = Math.max(1, parseInt(process.env.LAB_LANES || String(os.cpus().length), 10) || 1);
+//   판을 먼저 띄우고 나중에 받는다 — 먼저 끝난 판이 실패해도 '처리 안 된 거절'로 죽지 않게 받을 자리를 미리 단다(던지는 자리는 종전 그대로 받는 줄).
+function lanes(jobs, n) {
+  const box = jobs.map(() => { let ok, no; const p = new Promise((a, b) => { ok = a; no = b; }); p.catch(() => {}); return { p, ok, no }; });
+  let next = 0;
+  const go = () => { if (next >= jobs.length) return; const i = next++; jobs[i]().then(box[i].ok, box[i].no).finally(go); };
+  for (let k = 0; k < Math.min(n, jobs.length); k++) go();
+  return box.map((b) => b.p);
+}
+
 async function runOnce(withPlayerSite, prng, decoy) {
   prng = prng || '0x9e3779b9';
   const browser = await chromium.launch(CHROME ? { executablePath: CHROME, args: ['--no-sandbox'] } : { args: ['--no-sandbox'] });
@@ -175,8 +190,10 @@ async function runOnce(withPlayerSite, prng, decoy) {
   console.log('=== 10차 T3 · 랩 플레이어 의뢰 집 건설(B안) 헤드리스 검증 ===');
   console.log(`설정: 마을 ${NVIL}개 · 초기인구 ${POP} · seed ${SEED} · 속도 ${SPEED}×(slow) · 결정론(Math.random+가상시계 고정 · 프레임은 하네스가 민다) · 관측 ${RUN_DAYS}일`);
 
+  // ★[T1121] 넷을 한꺼번에 줄 세운다(나란히 `LANES` 판) — 받는 차례는 아래 종전 자리 그대로
+  const [pB, pA, pA2, pD] = lanes([() => runOnce(true), () => runOnce(false, '0x9e3779b9'), () => runOnce(false, '0x51ed2701'), () => runOnce(true, undefined, true)], LANES);
   console.log('\n[B런 — 플레이어 집터 지정]');
-  const B = await runOnce(true);
+  const B = await pB;
   console.log('  지정 결과: ' + JSON.stringify({ cx: B.placed.cx, cy: B.placed.cy, day: B.placed.day, 자재스텁: B.placed.cost, 모드해제: B.placed.modeAfter === false }));
   console.log(`  시계: 지정 = 프레임 ${B.placeFrame}(랩 날 ${B.placed.day} 의 첫 프레임) · 끝 = 프레임 ${B.endFrame}(랩 날 ${B.last.day} 의 첫 프레임) — 실시간 0`);
   console.log('  후보 ' + B.placed.cand + '칸 훑는 동안의 거절 사유 분포: ' + JSON.stringify(B.placed.rejects));
@@ -213,8 +230,8 @@ async function runOnce(withPlayerSite, prng, decoy) {
   chk(B.cerrs.length === 0, 'console error ' + B.cerrs.length + '건' + (B.cerrs.length ? ': ' + B.cerrs.slice(0, 2).join(' | ') : ''));
 
   console.log('\n[A런 — 플레이어 집터 없음(회귀 대조)] / [A′런 — A와 같되 난수 씨앗만 다름(잡음 대조군)]');
-  const A = await runOnce(false, '0x9e3779b9');
-  const A2 = await runOnce(false, '0x51ed2701');     // ★잡음 대조군: 플레이어 집과 무관한 순수 카오스 편차의 크기를 잰다
+  const A = await pA;
+  const A2 = await pA2;     // ★잡음 대조군: 플레이어 집과 무관한 순수 카오스 편차의 크기를 잰다(씨 0x51ed2701)
   chk(A.errs.length === 0, 'A런 pageerror ' + A.errs.length + '건');
   chk(A2.errs.length === 0, 'A′런 pageerror ' + A2.errs.length + '건');
 
@@ -258,7 +275,7 @@ async function runOnce(withPlayerSite, prng, decoy) {
   }
   // ★[T649 → T1056] 자명 통과 금지 — 지키는 대상(마을 몫이 안 깎인다)을 **일부러 깬** 판에서는 같은 자가 빨개야 한다.
   //   B 와 같은 판(같은 난수 · 같은 지정 프레임)에 미끼만 얹는다. 크루가 붙은 날이 남아 있어야(crewed>0) 빨강이 "몫을 못 받았다"는 뜻이다.
-  const D = await runOnce(true, undefined, true);
+  const D = await pD;   // 미끼 판(B 와 같은 씨 · 같은 지정 프레임 · 미끼만 얹음)
   const cd = capStat(D, true), cdAll = capStat(D);
   console.log(`  [미끼 B′] 의뢰 집이 서 있는 동안 마을 크루를 하나 빼앗음 — 지정 (${D.placed.cx},${D.placed.cy}) 프레임 ${D.placeFrame} · 몫 다 받은 날(서 있는 날) ${cd.full}/${cd.crewed}(평균 오른 단계 ${cd.mean}) · (표) 창 전부 ${cdAll.full}/${cdAll.crewed}`);
   chk(cd.crewed > 0 && !sat8(cd),

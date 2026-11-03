@@ -72,6 +72,21 @@ const noPaint = async (page) => { if (!RENDER) await page.addInitScript(NO_PAINT
 //     시계 정본 규약 그대로 마감을 없앤다(`timeout: 0` = 끔 · 수 없음). 적재가 끝났는지는 뒤의 `waitForFunction`(랩 함수가 섰나)이 본다.
 const gotoLab = (page, url) => page.goto(url, { timeout: 0 });
 const paintTag = () => (RENDER ? '칠함' : '칠하기 끔');
+// ★[T1121 2026-11-03] 칠하기 끔 판의 **표시만 하는 토글 둘** — 랩 `draw()` 안에서만 읽는 체크(`tTerr` 영역 표시 · `tGame` 사냥감 밀도 · 둘 다 기본 켬 ·
+//   onchange=draw · 랩 글자에서 읽는 자리 각 1곳 = draw 머리). CDP 프로파일(T1121 · 광산 판 이틀 1,452 프레임): 칠하기를 꺼도 draw() 의 JS 가 판의 83% 이고,
+//   그 절반 넘게(53.6%)가 이 두 토글 아래 고리다(영역 바깥선 = 영역 셀마다 이웃 넷을 글자로 셈 · 사냥감 밀도 = 셀 훑기). 그 고리는 **읽기만** 한다(세계 무접촉) —
+//   칠하기를 끈 판에선 셀 것도 칠할 것도 없다.
+//   ⚠draw() 의 상태 자리(위 T799 머리: 길 `roadLevel` 게으른 감쇠 · `life/V` 초점 · 마을 순회)는 토글 **밖**이라 그대로 돈다(새 수 0 · 시계 무접촉).
+//   증명 = 날마다 지문(`fp`) 접은 값 · 단언 줄이 끄기 전 판과 바이트 같음(보고 T1121 §3). `LAB_RENDER=1`(칠함)이면 아무것도 안 바꾼다(종전 판 그대로).
+//   덮음: 두 고리가 던지는 pageerror 는 이 토글을 안 끄는 랩 하네스(`test-lab-psite` — 기본 켬 그대로)가 쥔다.
+//   돌려주는 값 = 실제로 끈 토글 이름(이미 꺼져 있거나 없으면 빠진다 — 하네스가 찍는다).
+const LEAN_TOGGLES = ['tTerr', 'tGame'];
+const leanDraw = async (page) => (RENDER ? [] : page.evaluate((ids) => ids.filter((id) => {
+  const el = document.getElementById(id);
+  if (!el || !el.checked) return false;
+  el.checked = false;   // ★change 사건을 안 쏜다(onchange=draw 한 번도 안 부른다) — 다음 프레임의 draw 가 읽는다
+  return true;
+}), LEAN_TOGGLES));
 
 // 프레임 지문 — 지금 프레임의 세계를 글로 펴 FNV-1a 32비트. 숫자는 String() 전 자리(부동소수 끝자리까지).
 //   마을 전부: 날 · 인구 · 주민(px·py·job·state·_mp·work) · 광맥 재고(셀별) · 집(built·builtFloors·player) · econ.land(ore·stone·size)·counts
@@ -94,4 +109,4 @@ const fp = (page) => page.evaluate(FP);
 /** 날별 지문 목록을 한 번 더 접은 값(8자) */
 const fold = (list) => { let h = 0x811c9dc5; for (const c of list.join('/')) { h ^= c.charCodeAt(0); h = Math.imul(h, 0x01000193) >>> 0; } return ('00000000' + h.toString(16)).slice(-8); };
 
-module.exports = { FRAME_MS, init, untilDay, noPaint, gotoLab, paintTag, fp, fold };
+module.exports = { FRAME_MS, init, untilDay, noPaint, gotoLab, paintTag, leanDraw, LEAN_TOGGLES, fp, fold };

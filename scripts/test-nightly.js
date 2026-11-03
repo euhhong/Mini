@@ -91,7 +91,10 @@ ok(/\| `test-tick-slicer` \|.*\*\*상시\(기계 의존\)\*\*/.test(A), 'ⓐ 상
 ok(/\| `e2e-cold` \|.*★\*\*단독 초록\*\*/.test(A), 'ⓑ 단독 재실행에서 초록이 된 것은 **단독 초록** 으로 적힌다');
 ok(/\| `test-imaginary` \|.*\*\*귀속: 모델 몫\*\*/.test(A), 'ⓒ 상시 목록에 **없는** 빨강만 귀속이 비어 있다');
 ok(/## 4\. 아침에 세션으로 넘길 빨강[\s\S]*`test-imaginary`/.test(A), '§4 가 그 하나만 넘긴다');
-ok(!/## 4\.[\s\S]*`test-tick-slicer`/.test(A), '★상시는 §4 에 **안** 올라간다 (아침에 볼 것은 모델 몫뿐)');
+// ★[T1121] §4 를 **그 절 안으로** 자른다 — 종전 자(`## 4.` 뒤 끝까지)는 §4 가 맨 끝 백틱 이름 절일 때만 맞았다. §6 걸린 시간 표(뒤에 붙음 · 빨강도 든다)가 생겨
+//   같은 이름이 §6 에 서면 '§4 에 올라갔다'로 오독한다. 뜻 무변: 종전에도 §4 뒤엔 백틱 이름 절이 없었다(§5 는 코드 덩이 · 백틱 0).
+const secOf = (md, n) => { const i = md.indexOf(`\n## ${n}. `); if (i < 0) return ''; const j = md.indexOf('\n## ', i + 1); return md.slice(i, j < 0 ? undefined : j); };
+ok(secOf(A, 4).length > 0 && !/`test-tick-slicer`/.test(secOf(A, 4)), '★상시는 §4 에 **안** 올라간다 (아침에 볼 것은 모델 몫뿐)');
 ok(/## 3\. 미측정 1종[\s\S]*e2e-neverran/.test(A), '목록에 있는데 안 돈 것이 **미측정**으로 센다', '1종');
 ok(/끊김[\s\S]*e2e-cutoff/.test(A), '열렸는데 안 닫힌 것은 **끊김**이다(빨강 아님)');
 ok(/시작 \*\*04:00\*\* → 종료 \*\*05:30\*\* \(1시간 30분\)/.test(A), '시작·종료·소요를 **로그 도장**에서 읽는다');
@@ -104,6 +107,7 @@ ok(!/test-imaginary/.test(B), '②의 보고에 ①의 이름이 안 샌다 (로
 const C = md(f1, knownNoSlicer);
 ok(/상시 밖 빨강 2건\*\*/.test(C) && /\| `test-tick-slicer` \|.*\*\*귀속: 모델 몫\*\*/.test(C),
    '★상시 목록에서 한 줄을 빼면 그 하네스가 **모델 몫**으로 옮겨 간다 (목록을 진짜로 읽는다)', '1건 → 2건');
+ok(/`test-tick-slicer`/.test(secOf(C, 4)), '★[T1121] 자명 통과 금지 — 상시에서 뺀 판은 같은 자르기(`secOf`)로 §4 에 **선다**(위 §4 자가 무언가를 지킨다)');
 
 console.log('\n=== ③ 결정적인가 — 같은 로그면 바이트가 같다 ===');
 const A2 = md(f1);
@@ -315,6 +319,50 @@ console.log('\n=== ⑪ [T1038] §1b 상시 점검 — 상시 줄 연속 초록 1
   ok(/\| `A` \| 상시\(기계 의존\) \| 초록 \*\*10밤\*\*.*\*\*뺄 차례\*\*\(T1038 규칙 · 10밤/.test(S), '★`--streaks` — 로그 없이 그 밤 보고까지 읽어 **10밤 → 뺄 차례**', (S.split('\n').find((l) => l.startsWith('| `A`')) || '').slice(0, 90));
   ok(/\| `B` \| 상시\(기계 의존\) \| 초록 \*\*1\d밤\*\* · 2026-09-01 보고에서 멈춤/.test(S), '★못 읽는 꼴의 보고에서 **멈췄다고 말한다**(조용히 이어 세지 않는다)', (S.split('\n').find((l) => l.startsWith('| `B`')) || '').slice(0, 100));
   ok(run(['--log', fl, '--base', 'x', '--known', kn, '--prev-dir', dir]) === run(['--log', fl, '--base', 'x', '--known', kn, '--prev-dir', dir]), '같은 로그 + 같은 보고 칸 → 같은 바이트');
+}
+
+console.log('\n=== ⑫ [T1121] §6 걸린 시간 표 — 도장으로 잰 초 · 긴 것부터 · 끊김은 셈 밖 · 다음 밤 연속 셈 오염 0 ===');
+{
+  // 초까지 찍는 도장 — 러너가 실제로 찍는 꼴(`nightly-run.sh` 의 `%Y-%m-%dT%H:%M:%S%z`)
+  const LS = (day, hh, mm, ss, s) => `2026-09-${day}T${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}+0900 ${s}`;
+  const tlog = (day, durs) => {   // durs: [이름, 초 | null(끊김), 초록?]
+    const out = [LS(day, 4, 0, 0, '===== nightly-run 시작 · TZ=Asia/Seoul · base=deadbeef ====='), LS(day, 4, 0, 0, `  [오늘] 묶음 A · ${durs.length}종`),
+      LS(day, 4, 0, 0, `  [목록] ${durs.map((d) => d[0]).join(' ')} `)];
+    let t = 4 * 3600 + 10;
+    const at = (x, s) => LS(day, Math.floor(x / 3600), Math.floor(x / 60) % 60, x % 60, s);
+    for (const [n, sec, g] of durs) {
+      out.push(at(t, `##### ${n} #####`));
+      if (sec == null) { t += 50; continue; }   // 끊김 — 판정 줄 없음
+      t += sec;
+      out.push(at(t, g ? '  ✓ RC=0' : '  ✗ RC=1 · 결과줄 3개 → **실패로 센다**'));
+      t += 8;                                     // 사이 배수(러너의 DRAIN_SEC)
+    }
+    out.push(at(t, '===== 본 판 끝 ====='));
+    return out.join('\n') + '\n';
+  };
+  const go = (txt, nm, prevDir) => { const f = path.join(TMP, nm); fs.writeFileSync(f, txt); fs.writeFileSync(f + '.retry', '');
+    return run(['--log', f, '--base', 'x', '--known', known, ...(prevDir ? ['--prev-dir', prevDir] : [])]); };
+  const T1 = go(tlog('14', [['test-a.js', 30, true], ['test-b.js', 240, true], ['e2e-c.js', null, true], ['test-d.js', 2, false], ['test-e.js', 240, true]]), 't1.log');
+  const sec6 = T1.slice(T1.indexOf('## 6.'));
+  const rows = sec6.split('\n').filter((l) => /^\| \d+ \| `/.test(l));
+  ok(rows.length === 4 && /^\| 1 \| `test-b` \| 240 \| 46\.9% \| 초록 \|$/.test(rows[0]) && /^\| 2 \| `test-e` \| 240 \|/.test(rows[1]) && /^\| 3 \| `test-a` \| 30 \|/.test(rows[2]) && /^\| 4 \| `test-d` \| 2 \| 0\.4% \| 빨강 \|$/.test(rows[3]),
+    '★긴 것부터 · 같은 초는 이름순 · 몫 = 하네스 합(512초)의 % · 판정은 글자로(초록 · 빨강)', rows.map((r) => r.split('|')[2].trim() + ' ' + r.split('|')[3].trim()).join(' · '));
+  ok(!/e2e-c/.test(sec6), '★끊긴 판(판정 줄 없음)은 셈 밖이다 — 안 잰 것을 재었다고 안 쓴다');
+  ok(/잰 판 \*\*4\*\* · 하네스 합 \*\*512초\*\* · 위 4 합 512초\(100\.0%\) · 판 전체 \*\*604초\*\* · 그 사이\(배수 · 정리 기다림 · 머리\) 92초 · 끊김 1은 셈 밖/.test(sec6),
+    '★합 · 판 전체 · 그 사이(배수)를 도장에서 센다', (sec6.split('\n').find((l) => l.startsWith('· 잰 판')) || '').slice(0, 120));
+  ok(/· 걸린 시간\(§6 · T1121\) — 1위 `test-b` \*\*240초\*\* · 하네스 합 512초 · 판 전체 604초/.test(T1), '머리 한 줄에 1위 · 합 · 판 전체');
+  // ★자명 통과 금지 — 같은 이름에 다른 초를 주면 순위가 **바뀐다**(표가 도장을 진짜로 읽는다)
+  const T2 = go(tlog('14', [['test-a.js', 3001, true], ['test-b.js', 5, true], ['test-d.js', 2, false]]), 't2.log');
+  const r2 = T2.slice(T2.indexOf('## 6.')).split('\n').filter((l) => /^\| \d+ \| `/.test(l));
+  ok(/^\| 1 \| `test-a` \| 3,001 \|/.test(r2[0] || '') && /^\| 2 \| `test-b` \| 5 \|/.test(r2[1] || ''), '★자명 통과 금지 — 초를 바꾸면 1위가 바뀐다 · 천 단위 쉼표(로캘 0)', (r2[0] || '').slice(0, 40));
+  ok(go(tlog('14', [['test-a.js', 30, true], ['test-b.js', 240, true], ['e2e-c.js', null, true], ['test-d.js', 2, false], ['test-e.js', 240, true]]), 't1.log') === T1, '같은 로그 → 같은 바이트(§6 포함 · 같은 자리에 다시 써서)');
+  // ★다음 밤 연속 셈 오염 0 — §6 의 초록 줄(`| 1 | \`test-b\` |`)을 다음 밤이 **빨강으로 읽으면 안 된다**(직전 밤 보고를 읽는 두 자 · `prevNight` · `nightStatus`)
+  const nd = path.join(TMP, 'n6'); fs.mkdirSync(nd, { recursive: true });
+  fs.writeFileSync(path.join(nd, '야간러너_2026-09-14.md'), T1);
+  const T3 = go(tlog('15', [['test-b.js', 9, false], ['test-d.js', 9, false]]), 't3.log', nd);
+  ok(/\| `test-b` \| 연속 \*\*1밤\*\*/.test(T3) && /\| `test-d` \| 연속 \*\*2밤\*\*/.test(T3),
+    '★§6 의 초록 줄은 다음 밤 연속 셈에 **안 든다**(test-b 1밤) · §1 빨강 줄은 든다(test-d 2밤 — 자명 통과 금지)',
+    ['test-b', 'test-d'].map((n) => ((T3.split('\n').find((l) => l.startsWith(`| \`${n}\` | 연속`)) || '').match(/연속 \*\*\d+밤\*\*/) || ['?'])[0]).join(' · '));
 }
 
 console.log(`\n=== ${pass + fail}건 중 PASS ${pass} · FAIL ${fail} ===`);

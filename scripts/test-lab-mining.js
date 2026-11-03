@@ -137,6 +137,10 @@ const SNAP = () => {
 
   // ── 부팅 ──
   console.log('③~⑥ 실행 (마을 ' + NVIL + ' — 광산촌 대상 · 인구 ' + POP + ' · ' + RUN_DAYS + ' 게임일 · 랩 env ' + (LAB_QS || '없음(기본)') + ')');   // ★[T758] 어느 세계인지 찍는다
+  // ★[T1121 2026-11-03] 칠하기 끔 판 — 표시만 하는 토글 둘을 끈다(시계 정본 `fixture-lab-clock` `leanDraw` · 까닭 · 증명은 거기 머리말 · 세계 무접촉).
+  //   이 판의 벽시계 거의 전부가 draw() 의 JS 였다(T1121 프로파일 83%). 끈 뒤에도 날마다 지문 · 단언 줄이 끄기 전 판과 바이트 같다(보고 T1121 §3) · `LAB_RENDER=1` 이면 안 끈다.
+  const lean = await LC.leanDraw(page);
+  console.log('    [T1121] 표시만 하는 토글 끔: ' + (lean.length ? lean.join(' · ') : '없음(칠함 판이거나 이미 꺼짐)') + ' — draw() 만 읽는 체크 · 세계 무접촉(지문으로 견줌)');
   await page.evaluate(({ nv, pop, seed, sp }) => {
     document.getElementById('nvil').value = String(nv);
     document.getElementById('pop').value = String(pop);
