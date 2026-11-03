@@ -269,6 +269,27 @@ function sub(name, env) {
     '⑦ 받는 마을 가시 몸이 상한(`VILLAGE_NPC_CAP`)이면 그 몸은 종전처럼 거둔다 — 사람은 econ 에 붙는다(9)', JSON.stringify({ walkers: c && c.walkers, left: c && c.left, e2: c && c.e2, bodies2: c && c.bodies2, capped: c && c.stat && c.stat.capped }));
 }
 
+// ── ⑨ ★[T1109] 불행 이탈 한 사람(T1075) — 해체 남은 사람과 같은 걷기 문(`walkToVillage`)으로 몸이 걷는다 ────────────────
+{
+  const T = world(8, 4);
+  const npc = T.e.npcs[T.e.npcs.length - 1], n0 = T.e.npcs.length, e20 = T.e2.npcs.length, b0 = T.bcast.length;
+  const took = B._t765Probe.leave(T.e, npc, T.W.day);
+  const L = B._t765Probe.ledger(), w = L[0];
+  ok(took === true && T.e.npcs.length === n0 - 1 && !T.e.npcs.includes(npc), '⑨ 문이 그 사람 하나를 명부에서 뺀다(econ 줄은 이미 빠졌는지 보고 두 번 안 뺀다)', `${n0} → ${T.e.npcs.length}`);
+  ok(L.length === 1 && w.npc === npc && w.t1075 === 1 && w.to === T.other.dbId && w.pid != null && T.players.has(w.pid), '⑨ 길 위 장부 한 줄 · 표지 `t1075` · 몸이 같이 떠난다(새 몸 0)', w ? `pid ${w.pid} · to ${w.to}` : '없음');
+  B._t765Probe.save(T.W.day);
+  const row = JSON.parse(T.db.rows[T.db.rows.length - 1].json);
+  ok(row.walk && row.walk.length === 1 && row.walk[0].t1075 === 1, '⑨ 저장 줄 하나(`_walkRow`)에 표지가 선다');
+  const eta = w.d0 + Math.ceil((w.len - 0.5) / w.ppd), c = clk(T); T.H.tickBodyExits(c.t);
+  let got = 0, early = 0, n = 0;
+  while (B._t765Probe.ledger().length && n < 800000) { step(T, c, 100, (day) => { const k = B._t765Probe.arrive(day); if (day < eta) early += k; got += k; }); n++; }
+  ok(early === 0 && got === 1 && T.e2.npcs.includes(npc) && T.e2.npcs.length === e20 + 1, '⑨ 닿는 날 받는 마을 econ 에 붙는다(그 전엔 안 붙는다 · 순간이동 0)', `닿은 날 ${T.W.day} · 닿을 날 ${eta}`);
+  ok(T.other.npcPids.includes(w.pid) && leftAt(T.bcast, b0).indexOf(w.pid) < 0, '⑨ 걷던 몸이 그 마을 주민이 된다(거둠 0 · 소멸 0)');
+  const T2 = world(8, 4); B._t765Probe.setHost({ villages: [T2.vil, T2.other], noteBodyExit: T2.H.noteBodyExit }, T2.db); B._t765Probe.reset();
+  const m0 = T2.e.npcs.length;
+  ok(B._t765Probe.leave(T2.e, T2.e.npcs[0], T2.W.day) === false && T2.e.npcs.length === m0 && B._t765Probe.ledger().length === 0, '⑨ 몸 문이 없는 판은 아무도 안 떠난다(몸 없는 옮김 갈래로 안 간다)');
+}
+
 // ── ⑧ 글자 — 끔 = main 바이트(켬 문만 새 줄) ────────────────────────────────────────────────────────
 {
   const BS = fs.readFileSync(path.join(ROOT, 'server', 'bandits.js'), 'utf8');
