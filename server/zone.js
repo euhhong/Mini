@@ -8406,6 +8406,7 @@ function doPreserve(player, recipeKey, amount) {
   };
   // ★[T767] 켬이면 넣은 레코드마다 그 순간 신선도를 대기열 주문에 싣는다(건물 저장에 같이 실린다) — 수령 때 그 신선도로 선다(`_t767Land`)
   if (Spoil.T767_CARRY) _pvJob.lotFresh = { [r.out]: Spoil.carryOf(r.from, got.ages, today) };
+  if (Spoil.T1118_RACK) _pvJob.rack = { from: r.from, put: Date.now() };   // ★[T1118] 넣은 순간 · 원물 품목 — 앞 주문을 기다리는 동안은 원물 곡선(`_t1118Land`) · 끄면 이 칸이 없다
   const rk = Facility.enqueue(fc.b, _pvJob, Date.now());
   if (!rk.ok) {
     // ★위에서 자리를 미리 봤으니 여기는 사실상 도달 불가다 — 그래도 방어한다(재료를 삼키지 않는다).
@@ -9039,6 +9040,36 @@ function _t767Land(player, item, carry, d, kDone) {
   if (recs.length) Lots.moveIn(player, item, recs, T732_MOMENT ? zoneGameDay() : d, 0, 'carry');
   return recs.length;
 }
+// ★★[T1118 2026-11-03 · ★PM 11-03 캐논(판정대기 문 11 = ㄱ) · 손잡이 `T1118_RACK_AGE`(spoil.js · 켬 기본 후보 · `=0` = 위 두 길 그대로)] **시설 위 날도 늙는다** — 보존 주문만(`kind 'preserve'`).
+//   종전: 산출 로트는 다 된 순간(`_d` · `_kDone`)부터 늙었다 — 말리기 3일 · 훈제 1일 · 절임 2일과 앞 주문을 기다린 날이 나이에서 빠졌다(시설 = 정지 상자).
+//   켬: 레코드의 정산 순간 `t` = 가공이 시작되는 순간(대기열 `startAt`) · 노출 `e` = 그 순간의 산출 곡선 자리(`Spoil.rackLand` — 넣은 순간 신선도에서 기다린 날만큼 원물 곡선으로 늙힌 값) —
+//     받을 때 `moveIn` 정산이 `t` 부터 지금까지(가공 날 + 다 된 뒤 기다린 날)를 시설 자리 배율(`ground`)로 센다 · 얻은 순간 `k` · 날 `d` 는 다 된 순간 그대로(화면 "N일 전" · 차례).
+//   T767 끔(리셋)이면 가공이 시작되는 순간에 갓 만든 것(f 1)으로 선다(종전 리셋을 그 순간으로 · 개수는 그 갈래의 수 그대로).
+//   넣은 순간(`j.rack.put`)이 없는 옛 주문(켜기 전에 건 것)은 기다린 날을 모른다 — 가공이 시작되는 순간부터만 센다.
+function _t1118T(ms) { return T732_MOMENT ? zoneGameMsAt(ms) / _SEASON_DAY_MS : _gameDayAt(ms); }   // 같은 자 — 순간 로트면 소수 날 · 날 로트면 날
+function _t1118On(j) { return !!(Spoil.T1118_RACK && j && j.kind === 'preserve' && Number.isFinite(+j.startAt)); }
+function _t1118Land(player, item, carry, n, j, d, kDone) {
+  const st = _t1118T(+j.startAt), rk = j.rack || null, from = (carry && rk) ? rk.from : null;
+  const pt = (rk && Number.isFinite(+rk.put)) ? _t1118T(Math.min(+rk.put, +j.startAt)) : st;
+  const recs = [];
+  for (const c of (carry || [{ n, f: 1 }])) {
+    const q = Number(c && c.n) || 0;
+    if (!(q > 0)) continue;
+    const x = Spoil.rackLand(from, item, c.f, pt, st, 0);
+    recs.push(T732_MOMENT ? { d, k: kDone, n: q, e: x.e, t: x.t, m: x.m, w: x.w } : { d, n: q, e: x.e, t: x.t, m: x.m, w: x.w });
+  }
+  if (recs.length) Lots.moveIn(player, item, recs, T732_MOMENT ? zoneGameDay() : d, 0, 'carry');
+  return recs.length;
+}
+// 나오면 신선도(화면) — 지금 넣으면: 앞 주문이 끝날 때까지 원물로 기다리고(`Facility.enqueue` 의 그 식 · 시설은 하나씩) 소요일만큼 산출 곡선으로 늙은 값
+function _t1118Peek(recipeKey, r, fPut, b) {
+  const now = Date.now();
+  let startAt = now;
+  if (b) for (const q of Facility.view(b, now)) if (q.doneAt > startAt) startAt = q.doneAt;
+  const doneAt = startAt + Spoil.preserveMs(recipeKey, _SEASON_DAY_MS);
+  const x = Spoil.rackLand(r.from, r.out, fPut, _t1118T(now), _t1118T(startAt), 0);
+  return Spoil.freshnessOf(r.out, Spoil.exposureAt({ e: x.e, t: x.t, m: x.m, w: x.w }, _t1118T(doneAt), 0));
+}
 // 수령 — 끝난 것만, 내 것만, 시설 앞에서.
 function doCraftCollect(player, buildingId) {
   ensurePlayerItems(player);
@@ -9071,6 +9102,8 @@ function doCraftCollect(player, buildingId) {
         const _kDone = T732_MOMENT ? zoneGameMsAt(j.doneAt || Date.now()) : undefined;   // ★[T732] 다 된 **순간**(끄면 날)
         for (const [k, n] of Object.entries(j.lotItems)) {
           if (!Lots.isLot(k)) continue;
+          // ★[T1118] 켬이면 보존 주문은 가공이 시작되는 순간부터 센다(기다린 날 = 원물 곡선 · 가공 날 = 산출 곡선) — 끄면 이 줄을 안 탄다(아래 두 줄 그대로)
+          if (_t1118On(j)) { _t1118Land(player, k, (j.lotFresh && Array.isArray(j.lotFresh[k]) && j.lotFresh[k].length) ? j.lotFresh[k] : null, n, j, _d, _kDone); continue; }
           // ★[T767] 주문이 신선도를 실었으면(켬에서 건 것) 그 신선도로 선다 — 끔에서 건 주문엔 이 칸이 없다(= 종전 · 갓 만든 것)
           if (j.lotFresh && Array.isArray(j.lotFresh[k]) && j.lotFresh[k].length) { _t767Land(player, k, j.lotFresh[k], _d, _kDone); continue; }
           Lots.note(player, k, n, _d, 'carry', _kDone);
@@ -10362,7 +10395,7 @@ function markBuildingDirty(b) {
 // ★★[재민 확정 2026-08-29 · §8.5] **제작창 = 시설의 창.**
 //   전 레시피 대목록을 만들지 않는다 — 내 곁의 시설이 **자기 레시피만** 편다.
 //   정렬 기본은 "지금 가능 / **재료 하나 모자람**" — 뒤엣것이 오늘의 할 일이고, 장에 갈 이유다.
-function _facilityRecipes(player, kind) {
+function _facilityRecipes(player, kind, b) {   // ★[T1118] `b` = 그 시설(나오면 신선도가 앞 주문을 기다린다 — 없으면 지금 시작)
   const inv = player.inventory || {};
   const rows = [];
   const push = (r) => {
@@ -10421,6 +10454,8 @@ function _facilityRecipes(player, kind) {
              yieldPct: (have > 0 && !Spoil.T767_CARRY) ? Math.round(Spoil.yieldMult(off.fresh) * 100) : null };
       // ★[T767] 켬이면 "수율 %" 대신 **나올 것의 신선도**(이어받은 값) — 만들기 단추가 보내는 한 개(오래된 것부터 · `doPreserve` 의 그 차례)의 값을 미리 본다
       if (Spoil.T767_CARRY && have > 0) { const o1 = Spoil.peekOffer(r.from, Lots.of(player, r.from), 1, today); _pvRow.outFresh = o1.fresh; _pvRow.outStage = Spoil.stageOf(o1.fresh); }
+      // ★[T1118] 켬이면 "나오면" = 지금 넣었을 때 다 되는 순간의 신선도(앞 주문 기다림 = 원물 · 소요일 = 산출 곡선 — 받는 문 `_t1118Land` 와 같은 식) · 끄면 이 줄을 안 탄다
+      if (Spoil.T1118_RACK && _pvRow.outFresh != null) { _pvRow.outFresh = _t1118Peek(id, r, _pvRow.outFresh, b); _pvRow.outStage = Spoil.stageOf(_pvRow.outFresh); }
       push(_pvRow);
       // ★상한 재료는 **버튼이 꺼져 있어야** 한다 — 눌러 보고 거절당하는 건 화면이 거짓말한 것이다.
       //   (`doPreserve` 가 서버 게이트로 다시 막는다 — 화면은 게이트가 아니라 안내다.)
@@ -10463,7 +10498,7 @@ function sendFacility(player) {
   send(player.ws, { type: 'facility',
     near: near ? { bid: near.b.id, btype: near.b.type, ko: near.ko, kind: near.kind, mine,
                    craftMs: Facility.CRAFT_MS[near.kind] || 0, ...(near.b.hearth ? { hearth: near.b.hearth } : {}) } : null,   // ★[T1066] 움집 화덕이면 그 자리(마당 · 실내) — 클라가 창을 저절로 안 연다(마을을 지날 때마다 뜨지 않게)
-    recipes: near && mine ? _facilityRecipes(player, near.kind) : [],
+    recipes: near && mine ? _facilityRecipes(player, near.kind, near.b) : [],
     queue: craftQueuePayload(player) });
 }
 function _forageCtx(player) {
@@ -13119,6 +13154,7 @@ function __testBind() {
     doCraftEquipment, EQUIPMENT_RECIPES, Facility, facilityFor, _facilityMine, doCraftCollect,
     T1066_VILLAGE_FIRE, isNearCampfire, _facilityById,   // ★[T1066] 움집 화덕 하네스(`test-t1066-village-fire` · 내보내기만)
     sendFacility, _facilityRecipes, craftQueuePayload, BUILDING_COST, BUILDING_RECIPES, PlayerItems,
+    _t1118T, _t1118On,   // ★[T1118] 시설 위 날 — 하네스(`test-t1118-rack-age`)가 같은 자(순간 · 날)로 기대값을 센다(내보내기만)
     playerCraftLevel, doShopBuy,
     // ── 주기 저장 비용 실측(2026-08-26) ── 하네스가 저장 건수·누적 ms 를 그대로 읽는다
     _saveStats: () => ({ ..._saveStats, intervalMs: SAVE_INTERVAL_MS }),
