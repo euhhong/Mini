@@ -37,6 +37,10 @@
 //   그 한 칸(읽기 훅 `__t1064Next().step` — 만들기 · 손에 들기 · 맨손 줍기 · 캐기)을 그대로 한다. 알림 글자는 안 읽는다(끔 ↔ 켬 차이가 칸에서만 나게).
 //   맨손으로 못 따는 소스(도구 문에 걸린 바위 · 나무)만 화면에 있으면 **한 번** 눌러 본다(사람이 바위를 우클릭 채굴해 보는 그 한 번 — 서버 거절이 칸에 막힘을 싣는다).
 //   `--shots` 면 칸이 새 막힘 한 칸을 처음 말한 순간도 찍는다.
+// ★[T1126 2026-11-04] 캐기는 **모자란 만큼만** — 서버 손잡이 `T1126_ROCK_YIELD` 켬이면 바위가 칠 때마다 돌을 낸다(바위 하나 = 돌 수백 · 부서지기 전에도 손에 든다).
+//   종전 손은 소스가 사라질 때까지(상한 14타) 쳤다 — 켬 판에서는 쓸 데 없는 돌을 짐 상한 넘게 지고 걷는다. 사람은 「지금 할 일」의 "지금 돌 n개"가
+//   찬 그 타에 멈춘다 ⇒ `gatherRes(r, want)` 는 짐이 `want`({품목: 수} — 모자란 재료 · 칸이 말한 만들 것의 레시피)를 채우면 멈춘다.
+//   끔 판은 전리품이 부서질 때만 나오므로 멈추는 타가 종전과 같다(쓸 데 있는 셈 한 번이 타마다 붙을 뿐).
 //
 // 실행: node scripts/e2e-first30.js --season spring|summer|winter --start day|night [--cap 30] [--out /tmp/t511/x.json]
 //          [--chief] [--quest-fixture] [--warm-db <초>] [--vid <n>] [--econ-days <n>] [--no-align] [--headed]
@@ -622,7 +626,8 @@ async function equipFor(t) {
   const want = t === 'tree' ? pick(['axe', 'crude_axe']) : (t === 'rock' ? pick(['pickaxe', 'crude_pick']) : null);
   if (want && s.eq !== want.id) { await send({ type: 'equip', toolItemId: want.id }); await sleep(250); }
 }
-async function gatherRes(r) {
+const wantMet = (inv, want) => !!want && Object.keys(want).length > 0 && Object.entries(want).every(([k, v]) => (inv[k] || 0) >= v);   // ★[T1126] 모자란 것이 다 찼나
+async function gatherRes(r, want) {   // ★[T1126] want = {품목: 수} — 짐이 채우면 그 타에 멈춘다(없으면 종전 — 소스가 사라질 때까지 · 14타)
   const w = await walkTo(standAround(r.x, r.y, STAND).filter((g) => !blockedCell(g.x, g.y)), 10);
   if (!w.ok) { unreach.add(r.id); return { ok: false, reason: w.reason }; }
   await equipFor(r.t);
@@ -632,6 +637,7 @@ async function gatherRes(r) {
     await send({ type: 'gather', resId: r.id });   // ★우클릭 메뉴가 보내는 그 한 줄(T90 지목) — 1초 간격도 메뉴 반복과 같다
     await sleep(1000);
     if (!(await hasRes(r.id))) { await sleep(150); break; }
+    if (want && wantMet((await state()).inv, want)) break;   // ★[T1126] 칠 때마다 손에 드는 돌 — 찼으면 멈춘다(사람이 칸의 "지금 돌 n개"를 보고 멈추는 그 타)
   }
   const d = diffInv(inv0, (await state()).inv);
   if (!Object.keys(d).length) unreach.add(r.id);
@@ -838,7 +844,7 @@ const SRC = {
   wood: { res: ['tree'], forage: null },
   herb: { res: ['herb'], forage: null },
 };
-async function fetchOne(item) {
+async function fetchOne(item, want) {   // ★[T1126] want — 칸이 말한 만들 것의 레시피(그만큼 차면 캐기를 멈춘다 · 없으면 종전)
   await look(); OBS = obstacleCells();
   const me = await meL();
   const src = SRC[item];
@@ -849,7 +855,7 @@ async function fetchOne(item) {
   const o = cand[0].a;
   if (o.r) {
     const t0 = Date.now();
-    const g = await gatherRes(o.r);
+    const g = await gatherRes(o.r, want);
     R.legs.push({ t: tSec(), kind: 'gather', item, res: o.r.t, ok: g.ok, d: g.d || null, reason: g.reason || null, sec: +((Date.now() - t0) / 1000).toFixed(1) });
     return true;
   }
@@ -893,7 +899,7 @@ async function fetchMissing(need) {   // need = {item: n} — 모자란 것 중 
   if (!best) { if (PANELBOT && await tryGated(miss)) return true; return explore(miss.join('+')); }   // ★[T1120] 맨손으로 못 따는 소스만 있으면 한 번 눌러 본다
   if (best.r) {
     const t0 = Date.now();
-    const g = await gatherRes(best.r);
+    const g = await gatherRes(best.r, { [best.it]: need[best.it] });   // ★[T1126] 이 소스에서 따는 그 품목이 모자란 만큼만
     R.legs.push({ t: tSec(), kind: 'gather', item: best.it, res: best.r.t, ok: g.ok, d: g.d || null, reason: g.reason || null, sec: +((Date.now() - t0) / 1000).toFixed(1) });
     return true;
   }
@@ -941,7 +947,8 @@ async function followPanel(n) {
     if (inst) { await send({ type: 'equip', toolItemId: inst.id }); await sleep(300); }   // ★가방에서 골라 손에 드는 그 한 줄
     return true;
   }
-  return fetchOne(st.what);   // fetch(맨손 줍기) · gather(손에 든 도구로 캐기) — 그 품목을 가장 가까운 소스에서
+  const mk = st.make && Z.RECIPES[st.make] && Z.RECIPES[st.make].cost;   // ★[T1126] 칸이 말한 만들 것의 레시피 — 그만큼 차면 멈춘다
+  return fetchOne(st.what, mk ? { [st.what]: mk[st.what] || 1 } : null);   // fetch(맨손 줍기) · gather(손에 든 도구로 캐기) — 그 품목을 가장 가까운 소스에서
 }
 
 // ── 불·쉼·집 ─────────────────────────────────────────────────────────────────

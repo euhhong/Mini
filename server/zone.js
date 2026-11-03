@@ -4952,7 +4952,9 @@ function npcStep(npc, dt, now) {
       const r = resources.get(npc.gatherTarget);
       if (r && Math.hypot(r.x - npc.x, r.y - npc.y) < GATHER_RANGE) {
         // 직접 채집 (tryGather 로직 간소화)
+        const _hp0 = r.hp;   // ★[T1126] 친 앞 hp
         r.hp -= 1;
+        { const _y = _t1126HitYield(r, _hp0); if (_y > 0) _t1126Give(npc, _y); _t1126Note(npc, r, _y); }   // ★[T1126] 바위 hp 한 점 = 돌 하나 — 플레이어 `gatherResource` 와 같은 문(정본 하나) · 계측 한 줄(켬 · 끔 둘 다 — 세계 0)
         if (r.hp <= 0) {
           const loot = _t495Rest(r, lootOfResource(r));   // ★정본 하나 — 플레이어와 같은 표를 쓴다(사본 금지) · ★[T495] 남은 단위만(장부 없으면 그 객체 그대로)
           for (const [k, v] of Object.entries(loot)) { npc.inventory[k] = (npc.inventory[k] || 0) + v; if (T732_MOMENT) Lots.note(npc, k, v, zoneGameDay()); }   // ★[T732] NPC 손도 얻은 순간(곁 장부 — 몸 필드 0)
@@ -7261,6 +7263,7 @@ async function _acceptConnection(ws, req, C) {
       ...(process.env.T1064_NEXT_STEP !== '0' ? { nextStep: true } : {}),   // [T1064 · 켬 기본 후보] 「지금 할 일」 칸 하나 — 서버가 이미 보내는 대본 상태(onboarding_state · 촌장 첫 인사 · 도착 기록)에서 클라가 다음 행동 한 줄과 그 쪽을 지도 판 밑에 그린다(70-lobby `onbNextRender` · 서버 동작 무변) · 되돌림 `T1064_NEXT_STEP=0` 이면 칸이 없다(옛 welcome · 종전 화면)
       ...(process.env.T1086_FIRST_JOIN !== '0' ? { firstJoin: { cost: CLAIM_COST.personal } } : {}),
       ...(T1120_NEXT_TOOL ? { nextTool: _t1120Cfg() } : {}),   // [T1120 · 켬 기본 후보] 다음 막힘 — 거절 알림의 `need` 칸을 「지금 할 일」이 잇는 데 쓰는 표(도구 문 `T1065_NEED` · 재료 → 그 일 · 자연물 — 서버 정본을 옮긴 꼴 · 클라 상수 0) · 되돌림 `T1120_NEXT_TOOL=0` 이면 칸이 없다(옛 welcome · T1064 · T1086 칸 그대로)   // [T1086 · 켬 기본 후보] 첫 의뢰 = 빈터 + 마을 사람 권함(onboarding · membership) — 「지금 할 일」 칸이 가입 · 터 잡기 · 집 짓기 단계와 단추를 낸다 · 터 값은 서버 정본(`CLAIM_COST.personal` — 클라 상수 0) · 되돌림 `T1086_FIRST_JOIN=0` 이면 칸 없음(종전 K-2 · T1064 칸)
+      ...(T1126_ROCK_YIELD ? { rockYield: { n: RESOURCE_HP_TABLE.rock } } : {}),   // [T1126 · 켬 기본 후보] 바위 하나 = 돌 n 개(hp 한 점 = 돌 하나) — 클라가 남은 hp 비율로 바위 그림을 줄인다(단계 셋 · 새 그림 0) · 되돌림 `T1126_ROCK_YIELD=0` 이면 칸 없음(종전 그림)
       ...(process.env.T970_CUT_NEAR !== '0' ? { cutNear: true } : {}),   // [T970 · ★T981 켬 기본 — PM 10-28] 클라 산 가르기 붙듦(`_mtCutHold` — 가르기 조각을 만든 띠)을 카메라 둘레(이번 판 산 수집 창의 청크 · 그 청크의 지금 띠)만 남긴다(11-r1-mountain `_mtCutHoldSweep` · 상한 64/48 그대로) · 되돌림 `T970_CUT_NEAR=0` 이면 칸이 없다(옛 welcome · 종전 붙듦)
       ...(process.env.T981_MT_NEAR !== '0' ? { mtNear: true } : {}),   // [T981 · ★T997 켬 기본 — PM 10-29] 클라 산 굽다 만 청크(`_mt3Jobs`)를 이번 판 산 수집 창 것만 남기고 · 가르기 붙듦이 비면 가르기 판 둘(`_mtMaskCv` · `_mtStripCv`)을 만들 때 크기로 되돌린다(11-r1-mountain `_mtNearSweep` · T970 회부 2) · 되돌림 `T981_MT_NEAR=0` 이면 칸이 없다(옛 welcome · 종전 그대로)
       ...(_streamOn() ? { streams: Streams.wireOf(ZONE_ID) ? Streams.wireOf(ZONE_ID).ver : true, streamSlow: Streams.STREAM_SLOW0 } : {}),   // [T585] 개울 — 클라가 `/streams.bin` 을 받아 그리고 걸음 예측에 쓴다(배율도 서버 정본 수)
@@ -11005,9 +11008,13 @@ function gatherResource(player, best) {
     dmg += Math.round(toolEq.attrs.efficiency * TOOL_EQUIP_EFF_SCALE);
     wearEquipment(player, 'tool', 1);
   }
+  const _hp0 = best.hp;   // ★[T1126] 친 앞 hp — 깎인 점 수만큼 그 자리에서 돌(바위만 · 끔 = 0)
   best.hp -= dmg;
   // 장착 도구 내구도 -1
   if (eqInst) consumeEquippedDurability(player, 1);
+  const _t1126Y = _t1126HitYield(best, _hp0);   // ★[T1126] 정본 하나(NPC 직접 채집과 같은 문)
+  if (_t1126Y > 0) _t1126Give(player, _t1126Y);
+  _t1126Note(player, best, _t1126Y);   // ★[T1126] 계측 한 줄(켬 · 끔 둘 다 — 세계 0)
   if (best.hp <= 0) {
     // 자원 종류별 산출물 — ★정본 하나(`lootOfResource`). NPC 채집도 같은 표를 쓴다.
     const loot = _t495Rest(best, lootOfResource(best, { day: zoneGameDay() }));   // ★[작물 층] 플레이어 채집만 계절 씨앗을 본다 · ★[T495] 남은 단위만(장부 없으면 그 객체 그대로)
@@ -11029,6 +11036,7 @@ function gatherResource(player, best) {
     if (best.dbId) db.updateResourceHp(best.dbId, best.hp);
     else _t978Note(best);   // ★[T978] 시드 개체(행 없음)는 남은 hp 장부로
     broadcast({ type: 'resource_update', id: best.id, hp: best.hp });
+    if (_t1126Y > 0) { sendInventory(player); savePlayer(player); }   // ★[T1126] 친 그 자리에서 손에 든 돌(부서진 타는 위 갈래가 이미 보낸다)
   }
 }
 
@@ -13147,6 +13155,7 @@ function __testBind() {
     T1032_NPC_KILL, T1025_EV_CORPSE,   // ★[T1032] 같은 하네스가 판을 읽는다(내보내기만)
     T1065_TOOL_GATE, _t1065Gate, t1065Stat: _t1065Stat, PLAYER_ATTACK_DAMAGE, arrows,   // ★[T1065] 도구 문 하네스(`test-t1065-tool-gate` · 내보내기만)
     T1120_NEXT_TOOL, _t1120Cfg, tryHutStart,   // ★[T1120] 다음 막힘 하네스(`test-t1120-next-tool` — 거절 알림 `need` · welcome 표 · 움집 터파기 문 · 내보내기만)
+    T1126_ROCK_YIELD, T1126_ROCK_HP0, _t1126Rho, _t1126RockStones, _t1126HitYield, _t1126Give, t1126Stat: () => Object.assign({}, _t1126Stat),   // ★[T1126] 바위 하나에서 돌 여러 개 하네스(`test-t1126-rock-yield` — 내보내기만)
     // ── ★[T636] 사체 드롭 kg E2E(test-drop-kg.js) ── 실서버 spawnCorpse/butcherCorpse 를 그대로 쓴다(읽기·부르기만)
     spawnCorpse, butcherCorpse, corpses, t1025Corpse: _t1025Corpse,   // ★[T1025] 사체 장부 미룸 셈(탐침이 읽는다)
     // ── 조업 진척 계약 E2E(2026-08-02e ⑤) ── 시간은 벽시계라 하네스가 job.until 을 당겨 검증한다
@@ -14825,6 +14834,52 @@ function isBlockedByStairSide(newX, newY, oldX, oldY, entityFloor = 0) {
 const PLAYER_BODY_R = 6;
 const TRUNK_COLLIDER_MAX = 9;   // 줄기 충돌 반경 상한 — 캐노피가 커도 줄기는 가늘다(스프라이트 줄기와 정합). r은 occlusion용(최대 20).
 const ROCK_COLLIDER_R = 14;     // ★바위·광맥 차단 반경(대형 스프라이트 66px의 코어) — 나무와 동형의 물리 실체 [사용자 확정]. 클라 미러 동일 상수.
+// ★★[T1126 2026-11-04 · ★재민 11-03 판정 ⓐ "바위 = 큰 덩어리"를 몸으로 — 칠 때마다 돌이 1개씩 · 바위는 작아지다 다 캐면 사라진다(유한)]
+//   T1120 실측(「지금 할 일」을 따르는 손 · 30분 판 둘): 첫 움집 0/2 — 바위 하나 = 돌 1(부서질 때 한 번 · `lootOfResource`)이라
+//   곡괭이 5 + 도끼 2 = 바위 일곱을 찾아 걷는 데 30분이 다 갔다.
+//   손잡이 `T1126_ROCK_YIELD`(켬 기본 후보 · `=0` = 종전 바이트 — 바위 hp 4 · 부서질 때 돌 1 · 그림 그대로 · welcome 칸 없음):
+//   ① 바위 하나 = 돌 N개 — 바위 몸(반경 `ROCK_COLLIDER_R` · 1칸 = 1m = `BUILDING_SIZE` px 캐논)의 구 부피 × 돌 밀도 ÷ 돌 한 개 무게(`weights.kgOf('stone')` 가공용 석괴).
+//      돌 밀도는 정본 하나(`hut-stages.HUT_PLINTH_SRC.gcm3` — 화강암 평균 2.65~2.75 g/㎤ · 출처 보고/T517 §ⓐ · 그 파일 `plinthKg` 처럼 가운데 값) — 새 수 0.
+//      바위 hp 정본(`chunk.RESOURCE_HP_TABLE.rock` — 스폰 · 군락 · 재생이 다 그 표로 hp 를 준다)을 N 으로 둔다 ⇒ hp 한 점 = 돌 하나 ·
+//      바위가 작아지다 사라지는 것 = hp 가 0 이 되는 것(새 상태 0). 광맥(`ore`) · 운철은 이 카드 밖(그대로).
+//      ⚠유도 값(236)은 카드 목표 범위(돌 3 ~ 5)를 크게 넘는다 — 바위 몸(지름 0.875 m · 약 0.95 t)이 돌 한 개(4 kg)의 수백 배라서다. 보고 회부.
+//   ② 친 그 자리에서 — 깎인 hp 한 점마다 돌 하나(`_t1126HitYield` 하나 · 플레이어 `gatherResource` · NPC 직접 채집이 둘 다 부른다 · 사본 0).
+//      부서지는 마지막 한 점의 돌은 종전 전리품(`lootOfResource` rock → 돌 1 · 자갈 2)이 낸다 ⇒ 바위 하나 = 돌 N개 + 자갈 2(부서질 때 그대로).
+//   ③ 클라 — welcome `uiCfg.rockYield` 가 있으면 남은 hp 비율로 바위 그림이 작아진다(단계 셋 · 남은 부피 → 길이 = 세제곱근 · 새 그림 0 · 40-r2 `rockShrinkK`).
+const T1126_ROCK_YIELD = process.env.T1126_ROCK_YIELD !== '0';
+// 돌 밀도 kg/m³ — 정본 g/㎤ 범위의 가운데(× 1000 은 단위 바꿈)
+function _t1126Rho() {
+  const g = HutStages.HUT_PLINTH_SRC && HutStages.HUT_PLINTH_SRC.gcm3;
+  return (Array.isArray(g) && g.length === 2) ? (g[0] + g[1]) / 2 * 1000 : 0;
+}
+// 바위 하나 = 돌 몇 개 — 구 부피(반경 = 바위 몸) × 밀도 ÷ 돌 한 개 kg(내림 · 적어도 1)
+function _t1126RockStones() {
+  const kg = Weights.kgOf('stone') || 0, rM = ROCK_COLLIDER_R / BUILDING_SIZE, rho = _t1126Rho();
+  if (!(kg > 0) || !(rM > 0) || !(rho > 0)) return RESOURCE_HP_TABLE.rock;
+  return Math.max(1, Math.floor(rho * (4 / 3) * Math.PI * rM * rM * rM / kg));
+}
+const T1126_ROCK_HP0 = RESOURCE_HP_TABLE.rock;   // 종전 표 값(하네스 · 보고가 읽는다 — 끔이면 이 값 그대로)
+if (T1126_ROCK_YIELD) RESOURCE_HP_TABLE.rock = _t1126RockStones();
+// 이번 타에 그 자리에서 나오는 돌 — 깎인 hp 점 수(부서진 타는 마지막 한 점을 뺀다 — 그 돌은 부서질 때 전리품이 낸다). 바위만 · 끔이면 0.
+function _t1126HitYield(r, hp0) {
+  if (!T1126_ROCK_YIELD || !r || r.type !== 'rock') return 0;
+  const cut = Math.max(0, Math.min(hp0, hp0 - Math.max(0, r.hp)));
+  return Math.max(0, cut - (r.hp <= 0 ? 1 : 0));
+}
+// 계측 전용(세계 0 · 켬 · 끔 둘 다) — 바위를 친 타 · 그 자리 돌 · 부서진 바위(사람 · NPC 따로) — 하네스 · 서버 판 표가 읽는다(`t1126Stat`)
+//   NPC 가 바위에서 가져간 돌 = 그 자리 돌(nStone) + 부서질 때 전리품 돌 1(nBreak) — 끔이면 앞 항이 0 이다.
+const _t1126Stat = { pHit: 0, pStone: 0, pBreak: 0, nHit: 0, nStone: 0, nBreak: 0 };
+function _t1126Note(body, r, y) {
+  if (!r || r.type !== 'rock') return;
+  const S = _t1126Stat;
+  if (body && body.isNpc) { S.nHit++; S.nStone += y; if (r.hp <= 0) S.nBreak++; } else { S.pHit++; S.pStone += y; if (r.hp <= 0) S.pBreak++; }
+}
+// 그 돌을 손에 — 사람 · NPC 같은 칸(`inventory.stone`) · ★[T732] 얻은 순간(전리품 줄과 같은 두 줄)
+function _t1126Give(body, n) {
+  if (!body || !body.inventory || !(n > 0)) return;
+  body.inventory.stone = (body.inventory.stone || 0) + n;
+  if (T732_MOMENT) Lots.note(body, 'stone', n, zoneGameDay());
+}
 // ★[T194] **막은 원을 돌려준다.** 판정은 한 글자도 안 바뀐다 — `isBlockedByTree` 가 이 함수의
 //   불리언 껍데기가 됐을 뿐이다(사본 0). 접선을 그리려면 중심과 반지름이 필요하고, 그 둘은
 //   이미 이 루프가 쥐고 있었는데 버려지고 있었다.
