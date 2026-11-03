@@ -1,0 +1,344 @@
+{
+ "judge": {
+  "off": {
+   "n": 4,
+   "base": {
+    "seeds": 3,
+    "fam365": 232,
+    "fd365": 0,
+    "fdShield365": 0,
+    "famAll": 4415,
+    "fdAll": 0,
+    "empty": 3,
+    "pop400": 7592,
+    "popEnd": 13337,
+    "dissolved": 4,
+    "starvingMax": 0,
+    "debtMeanMax": 0,
+    "q2": {
+     "pins": 0,
+     "wipes": 0,
+     "phantom": 0
+    }
+   },
+   "band": {
+    "fam365": [
+     199,
+     232
+    ],
+    "fd365": [
+     0,
+     0
+    ],
+    "famAll": [
+     3580,
+     4463
+    ],
+    "fdAll": [
+     0,
+     0
+    ],
+    "empty": [
+     0,
+     3
+    ],
+    "dissolved": [
+     4,
+     6
+    ],
+    "pop400": [
+     7151,
+     7697
+    ],
+    "popEnd": [
+     13337,
+     14450
+    ]
+   },
+   "pins": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "wipes": [
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "old": {
+   "n": 4,
+   "base": {
+    "seeds": 3,
+    "fam365": 93,
+    "fd365": 0,
+    "fdShield365": 27,
+    "famAll": 3137,
+    "fdAll": 118,
+    "empty": 0,
+    "pop400": 7541,
+    "popEnd": 14398,
+    "dissolved": 0,
+    "starvingMax": 35,
+    "debtMeanMax": 26.802,
+    "q2": {
+     "pins": 0,
+     "wipes": 0,
+     "phantom": 0
+    }
+   },
+   "band": {
+    "fam365": [
+     62,
+     93
+    ],
+    "fd365": [
+     0,
+     0
+    ],
+    "famAll": [
+     2362,
+     3137
+    ],
+    "fdAll": [
+     27,
+     118
+    ],
+    "empty": [
+     0,
+     0
+    ],
+    "dissolved": [
+     0,
+     1
+    ],
+    "pop400": [
+     7213,
+     7541
+    ],
+    "popEnd": [
+     13561,
+     14398
+    ]
+   },
+   "pins": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "wipes": [
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "new": {
+   "n": 4,
+   "base": {
+    "seeds": 3,
+    "fam365": 89,
+    "fd365": 0,
+    "fdShield365": 54,
+    "famAll": 2613,
+    "fdAll": 63,
+    "empty": 0,
+    "pop400": 7312,
+    "popEnd": 14041,
+    "dissolved": 1,
+    "starvingMax": 24,
+    "debtMeanMax": 30.267,
+    "q2": {
+     "pins": 0,
+     "wipes": 0,
+     "phantom": 0
+    }
+   },
+   "band": {
+    "fam365": [
+     73,
+     130
+    ],
+    "fd365": [
+     0,
+     0
+    ],
+    "famAll": [
+     2613,
+     3323
+    ],
+    "fdAll": [
+     40,
+     139
+    ],
+    "empty": [
+     0,
+     0
+    ],
+    "dissolved": [
+     0,
+     1
+    ],
+    "pop400": [
+     7039,
+     7653
+    ],
+    "popEnd": [
+     13399,
+     14183
+    ]
+   },
+   "pins": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "wipes": [
+    0,
+    0,
+    0,
+    0
+   ]
+  }
+ },
+ "lab": {
+  "off": {
+   "seeds": 3,
+   "pop": [
+    4684,
+    5963,
+    5760
+   ],
+   "dead": 1,
+   "empty": 1,
+   "fam365": 280,
+   "fd": 0
+  },
+  "old": {
+   "seeds": 3,
+   "pop": [
+    4565,
+    5998,
+    5072
+   ],
+   "dead": 0,
+   "empty": 0,
+   "fam365": 110,
+   "fd": 112
+  },
+  "new": {
+   "seeds": 3,
+   "pop": [
+    5350,
+    5171,
+    4987
+   ],
+   "dead": 0,
+   "empty": 0,
+   "fam365": 206,
+   "fd": 20
+  }
+ },
+ "base": {
+  "off": {
+   "lines": [
+    "  ○ 시드 1020: 날 지문 400일 같음 · 판 JSON · 여덟 수 같음(인구 2412)",
+    "  ○ 시드 7: 날 지문 400일 같음 · 판 JSON · 여덟 수 같음(인구 2449)",
+    "  ○ 시드 42: 날 지문 400일 같음 · 판 JSON · 여덟 수 같음(인구 2387)",
+    "=== 같음 3/3 · 판 729초 ==="
+   ],
+   "per": {
+    "7": {
+     "pop": 2449,
+     "dissolved": 0,
+     "empty": 0,
+     "deadTot": 824
+    },
+    "42": {
+     "pop": 2387,
+     "dissolved": 1,
+     "empty": 0,
+     "deadTot": 426
+    },
+    "1020": {
+     "pop": 2412,
+     "dissolved": 1,
+     "empty": 0,
+     "deadTot": 718
+    }
+   },
+   "sum": {
+    "pop": 7248,
+    "dissolved": 2,
+    "empty": 0,
+    "deadTot": 1968
+   }
+  },
+  "old": {
+   "lines": [
+    "=== 다름 3/3 · 판 742초 ==="
+   ],
+   "per": {
+    "7": {
+     "pop": 2824,
+     "dissolved": 0,
+     "empty": 0,
+     "deadTot": 399
+    },
+    "42": {
+     "pop": 2359,
+     "dissolved": 1,
+     "empty": 1,
+     "deadTot": 226
+    },
+    "1020": {
+     "pop": 2870,
+     "dissolved": 0,
+     "empty": 0,
+     "deadTot": 338
+    }
+   },
+   "sum": {
+    "pop": 8053,
+    "dissolved": 1,
+    "empty": 1,
+    "deadTot": 963
+   }
+  },
+  "new": {
+   "lines": [
+    "=== 다름 3/3 · 판 756초 ==="
+   ],
+   "per": {
+    "7": {
+     "pop": 2688,
+     "dissolved": 0,
+     "empty": 0,
+     "deadTot": 381
+    },
+    "42": {
+     "pop": 2942,
+     "dissolved": 0,
+     "empty": 0,
+     "deadTot": 232
+    },
+    "1020": {
+     "pop": 2588,
+     "dissolved": 0,
+     "empty": 0,
+     "deadTot": 444
+    }
+   },
+   "sum": {
+    "pop": 8218,
+    "dissolved": 0,
+    "empty": 0,
+    "deadTot": 1057
+   }
+  }
+ }
+}
