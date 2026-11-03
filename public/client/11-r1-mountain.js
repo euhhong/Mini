@@ -1670,7 +1670,7 @@
   let _natAnchors = null, _natLoaded = 0, _natWanted = 0;
   (async () => {
     try {
-      const r = await fetch('/assets/nature/nature_anchors.json');
+      const r = await _gfetch('/assets/nature/nature_anchors.json');   // ★[T1123] 게임 그림 문(그림은 앵커 뒤에 건다)
       if (!r.ok) return;
       _natAnchors = await r.json();
       for (const cls in NAT_KINDS) {

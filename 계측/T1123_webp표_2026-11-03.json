@@ -1,0 +1,224 @@
+{
+ "enc": "PIL WEBP lossless=True quality=100 method=6",
+ "ruler": "asset-lock.js lockValue(pixel)",
+ "groups": {
+  "trees": {
+   "n": 51,
+   "png": 17961721,
+   "webp": 10606374,
+   "same": 51,
+   "lockHit": 51,
+   "lockN": 51
+  },
+  "nature": {
+   "n": 48,
+   "png": 2595345,
+   "webp": 1540992,
+   "same": 48,
+   "lockHit": 48,
+   "lockN": 48
+  },
+  "buildings": {
+   "n": 16,
+   "png": 1103188,
+   "webp": 503774,
+   "same": 16,
+   "lockHit": 16,
+   "lockN": 16
+  },
+  "bridge": {
+   "n": 21,
+   "png": 601227,
+   "webp": 153420,
+   "same": 21,
+   "lockHit": 21,
+   "lockN": 21
+  },
+  "crops": {
+   "n": 80,
+   "png": 440360,
+   "webp": 293460,
+   "same": 80,
+   "lockHit": 80,
+   "lockN": 80
+  },
+  "terrain": {
+   "n": 4,
+   "png": 740457,
+   "webp": 334812,
+   "same": 4,
+   "lockHit": 4,
+   "lockN": 4
+  },
+  "icons": {
+   "n": 338,
+   "png": 3487931,
+   "webp": 2098708,
+   "same": 338,
+   "lockHit": 338,
+   "lockN": 338
+  }
+ },
+ "top": [
+  {
+   "g": "trees",
+   "f": "tree03.png",
+   "png": 1041580,
+   "webp": 633298,
+   "same": true,
+   "lock": true
+  },
+  {
+   "g": "trees",
+   "f": "tree08_a.png",
+   "png": 886519,
+   "webp": 558782,
+   "same": true,
+   "lock": true
+  },
+  {
+   "g": "trees",
+   "f": "tree08_f.png",
+   "png": 884273,
+   "webp": 556466,
+   "same": true,
+   "lock": true
+  },
+  {
+   "g": "trees",
+   "f": "tree08.png",
+   "png": 873877,
+   "webp": 535388,
+   "same": true,
+   "lock": true
+  },
+  {
+   "g": "trees",
+   "f": "tree06_a.png",
+   "png": 715512,
+   "webp": 450160,
+   "same": true,
+   "lock": true
+  },
+  {
+   "g": "trees",
+   "f": "tree06_f.png",
+   "png": 710039,
+   "webp": 445964,
+   "same": true,
+   "lock": true
+  },
+  {
+   "g": "trees",
+   "f": "tree01.png",
+   "png": 709622,
+   "webp": 417344,
+   "same": true,
+   "lock": true
+  },
+  {
+   "g": "trees",
+   "f": "tree06.png",
+   "png": 700493,
+   "webp": 428168,
+   "same": true,
+   "lock": true
+  },
+  {
+   "g": "trees",
+   "f": "tree02.png",
+   "png": 553149,
+   "webp": 326338,
+   "same": true,
+   "lock": true
+  },
+  {
+   "g": "trees",
+   "f": "tree04.png",
+   "png": 551057,
+   "webp": 317722,
+   "same": true,
+   "lock": true
+  },
+  {
+   "g": "trees",
+   "f": "tree07_a.png",
+   "png": 511867,
+   "webp": 315900,
+   "same": true,
+   "lock": true
+  },
+  {
+   "g": "trees",
+   "f": "tree07_f.png",
+   "png": 509675,
+   "webp": 314108,
+   "same": true,
+   "lock": true
+  },
+  {
+   "g": "trees",
+   "f": "tree09_a.png",
+   "png": 504619,
+   "webp": 296954,
+   "same": true,
+   "lock": true
+  },
+  {
+   "g": "trees",
+   "f": "tree07.png",
+   "png": 503467,
+   "webp": 303744,
+   "same": true,
+   "lock": true
+  },
+  {
+   "g": "trees",
+   "f": "tree11.png",
+   "png": 469295,
+   "webp": 310870,
+   "same": true,
+   "lock": true
+  },
+  {
+   "g": "trees",
+   "f": "tree09_f.png",
+   "png": 460168,
+   "webp": 275434,
+   "same": true,
+   "lock": true
+  },
+  {
+   "g": "trees",
+   "f": "tree09.png",
+   "png": 456375,
+   "webp": 270298,
+   "same": true,
+   "lock": true
+  },
+  {
+   "g": "trees",
+   "f": "tree14_a.png",
+   "png": 428443,
+   "webp": 270564,
+   "same": true,
+   "lock": true
+  },
+  {
+   "g": "trees",
+   "f": "tree14_s.png",
+   "png": 422711,
+   "webp": 269060,
+   "same": true,
+   "lock": true
+  },
+  {
+   "g": "trees",
+   "f": "tree15_a.png",
+   "png": 415277,
+   "webp": 243166,
+   "same": true,
+   "lock": true
+  }
+ ]
+}

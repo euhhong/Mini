@@ -215,10 +215,11 @@ function onbRefresh() {
   return onbFetchInfo(zid).then((j) => {
     onbInfo = j;
     const box = document.getElementById('onbStart');
-    if (!j) { if (box) box.style.display = 'none'; return null; }
+    if (!j) { if (box) box.style.display = 'none'; _gimgOpen('시작 화면 정보 없음'); return null; }   // ★[T1123] 게임 그림 문 ⓒ
     if (box) box.style.display = '';
     if (onbSelVid == null && j.recommend != null) { onbSelVid = null; }
     onbDrawMap(); onbRenderCard(); onbRenderCards();
+    _gimgOpen('로비 다 뜸');   // ★[T1123] 게임 그림 문 ⓑ — 오른쪽 판이 그려진 뒤에 게임 그림을 받는다(00-const `_gimgOpen` · 두 번째부터 아무 일 없음)
     const hint = document.getElementById('onbHint');
     if (hint) hint.textContent = j.warming
       ? `${j.villages.length}곳 · 길을 그리는 중 (${j.ready}/${j.total})`
