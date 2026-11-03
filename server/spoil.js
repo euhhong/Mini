@@ -316,6 +316,7 @@ function outputQty(n, fresh) {
 //     노출(일수)을 그대로 옮기면 신선도가 안 이어진다 — 시든 생선(노출 1.5 · f 0.40)이 건어물 f 0.967 로 둔갑한다(보고/T767 §1).
 //   ★평균 0 — 넣은 레코드마다 한 줄(T732 규약: 같은 순간 · 같은 노출만 합친다). 상한 레코드는 상한 채로 나온다(게이트 `canPreserve` 는 그대로).
 //   ★가공하는 며칠(건조대 위)은 종전처럼 세지 않는다 — 산출 로트는 다 된 순간에 그 신선도로 선다(종전 = 그 순간 신선도 1).
+//     ★[T1118] 켬(기본)이면 센다 — 아래 `rackFresh` · `rackLand`(시설 위 날도 늙는다). 끄면(`T1118_RACK_AGE=0`) 이 줄 그대로.
 const T767_CARRY = process.env.T767_PRESERVE_CARRY !== '0';   // ★[T778] 켬 기본 · 되돌림 `=0`
 function carryOf(item, ages, today) {   // 넣은 레코드마다 [{n, f}] — f = 그 순간(오늘 · 켬이면 지금 순간)의 신선도
   const out = [];
@@ -329,6 +330,25 @@ function carryOf(item, ages, today) {   // 넣은 레코드마다 [{n, f}] — f
 function carryExposure(outItem, fresh) {   // 산출 품목 곡선에서 신선도 f 인 자리의 노출
   const f = Math.max(0, Math.min(1, Number(fresh) || 0));
   return +((1 - f) * shelfOf(outItem)).toFixed(6);
+}
+// ★★[T1118 2026-11-03 · ★PM 11-03 캐논(판정대기 문 11 = ㄱ · 신선도 캐논 10-12 · 10-14 "아이템마다 신선도를 따로") · 손잡이 `T1118_RACK_AGE` — 켬 기본 후보 · `=0` = 종전(위 T767 마지막 줄)]
+//   **시설 위 날도 늙는다.** 말리는(· 훈제 · 절임) 동안에도 로트 나이는 흐른다 — 보존 가공은 신선도가 떨어지는 속도를 늦출 뿐이다(재민 10-15) ·
+//   시설에서 내려도 그 나이를 이어받는다(수령 = 그 나이 그대로 · 개수 무변 — T767 그대로).
+//   ① 넣은 순간 → 가공이 시작되는 순간(앞 주문을 기다리는 동안 — 시설은 하나씩 만든다 · 대기열 `startAt`): 아직 원물이다 — **원물 곡선**으로 늙는다.
+//   ② 가공이 시작되는 순간부터: 산출 곡선 위 같은 신선도 자리(`carryExposure`)에서 노출이 쌓인다(문 11 ㄱ — 말리기 3일 = 건어물 노출 +3 = f −3/45).
+//   자리 = 시설 = 바깥(`ground` — 날씨 그대로 · 종전 수령 정산이 쓰던 배율과 같은 값) · 시각 = 소수 날(순간 로트) 또는 날(날 로트) — 부르는 쪽이 같은 자로 준다.
+//   ★새 수 0 — 곡선 · 보관일 · 자리 배율 · 소요일 다 종전 값이다. 넣은 순간의 신선도 f 는 T767 이 주문에 실은 그 값(`carryOf`)이다.
+const T1118_RACK = process.env.T1118_RACK_AGE !== '0';
+function rackFresh(inItem, fresh, putT, startT, elevKm) {   // 넣은 순간 신선도 f → 가공이 시작되는 순간 신선도(원물 곡선 · 시설 자리)
+  const f = Math.max(0, Math.min(1, Number(fresh) || 0));
+  if (!inItem || !(Number(startT) > Number(putT)) || !(f > 0)) return f;
+  const pf = placeFields('ground');
+  return freshnessOf(inItem, exposureAt({ e: (1 - f) * shelfOf(inItem), t: +putT, m: pf.m, w: pf.w }, +startT, elevKm));
+}
+function rackLand(inItem, outItem, fresh, putT, startT, elevKm) {   // 산출 레코드의 노출 칸 — 가공이 시작되는 순간(t)의 산출 곡선 노출(e) · 그 순간 신선도(f)
+  const f = rackFresh(inItem, fresh, putT, startT, elevKm);
+  const pf = placeFields('ground');
+  return { e: carryExposure(outItem, f), t: +startT, f, m: pf.m, w: pf.w };
 }
 // 가공 시간(ms) — 하루 길이를 주입받는다(새 시계 금지).
 function preserveMs(recipeKey, dayMs) {
@@ -611,5 +631,6 @@ module.exports = {
   nutritionMult, illnessFor, ofAges, bestOf, peekAges, peekOffer,
   yieldMult, canPreserve, outputQty, preserveMs,
   T767_CARRY, carryOf, carryExposure,   // ★[T767] 개수 그대로 · 신선도 이어받기(손잡이 · 넣은 레코드 → 산출 신선도 · 곡선 위 자리)
+  T1118_RACK, rackFresh, rackLand,      // ★[T1118] 시설 위 날도 늙는다(기다림 = 원물 곡선 · 가공 = 산출 곡선 · 자리 = 바깥)
   shelfTable, winterMath, orderCheck, resolveFrom,
 };
