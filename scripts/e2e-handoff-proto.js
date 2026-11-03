@@ -30,6 +30,7 @@
 //      돌려놓는다 — 주 존 한반도 · 들어가 있음(ready) · 까닭 한 줄 "<닛폰 표시 이름> 쪽으로 넘어가지 못했습니다. 저쪽 서버에 닿지 않습니다." · 몸이 걷는다 ·
 //      기다리는 동안 받는 존에 이름 · 열쇠로 다시 붙지 않는다 · 보낸 존 `⚠ ACK timeout` 0. 고치기 전 트리는 멈춤(주 존 닛폰 · 배너) — 빨강 증인 · 사진 한 장.
 'use strict';
+process.env.HANDOFF_ACK_MS = process.env.HANDOFF_ACK_MS || '3000'; process.env.HANDOFF_TOKEN_MS = process.env.HANDOFF_TOKEN_MS || '5000';   // ★[PM 11-03] 이 하네스는 종전 넘기 시한(3초 · 5초)으로 잰다 — 제품 기본은 12초 · 15초(server/zone.js HANDOFF_ACK_MS)
 const path = require('path');
 const fs = require('fs');
 const net = require('net');

@@ -3071,7 +3071,11 @@ const _t564Warned = new Set();   // 존별 "판 모름" 로그는 한 번만
 //   클라: `handoff` 에 `back`(= 받는 존 토큰 수명 ms)을 싣는다 — 그 안에서 이 존 소켓이 열려 있으면 클라는 받는 존에 이름 · 열쇠로 따로 붙지 않고 답을 기다린다
 //     (그 재시도가 받는 존에 행 몸을 세우면 몸이 둘이다 — 게스트는 존 사이 중복 차단이 없다 · `33-m-conn.js` `_t1092Wait`).
 const T1092_HANDOFF_BACK = process.env.T1092_HANDOFF_BACK !== '0';
-const HANDOFF_TOKEN_MS = 5000;   // 받는 존 토큰 수명(`/handoff_prepare` 의 그 5초 — 종전 글자에 이름만 붙였다) · ★[T1092] `handoff.back` 으로도 싣는다
+// ★★[PM 11-03 · ★재민 11-03 실기 "여전히 안 넘어가짐" · 핑 3,044ms] 넘기 시한 둘을 env 로 · 기본을 늘린다 — 서울이 메시지 하나에 3초를 쓰는 판에서
+//   보낸 존 ACK 3초 · 받는 존 토큰 5초 안에 브라우저가 옮겨 붙지 못해 토큰이 버려졌다(T1092 가 사람을 돌려놓는다 · 까닭 "연결하지 못했습니다").
+//   `HANDOFF_ACK_MS`(보낸 존이 도착 확인을 기다리는 시간 · 기본 12초) ≤ `HANDOFF_TOKEN_MS`(받는 존 토큰 수명 · 기본 15초) — 종전 값은 `=3000` · `=5000`.
+const HANDOFF_ACK_MS = Math.max(1000, parseInt(process.env.HANDOFF_ACK_MS || '', 10) || 12000);
+const HANDOFF_TOKEN_MS = Math.max(HANDOFF_ACK_MS + 1000, parseInt(process.env.HANDOFF_TOKEN_MS || '', 10) || 15000);   // 받는 존 토큰 수명(`/handoff_prepare` 의 그 5초 — 종전 글자에 이름만 붙였다) · ★[T1092] `handoff.back` 으로도 싣는다
 let nextPid = 1;
 let nextRid = 1;
 // nextBid 제거: 건물 id는 dbId 기반 결정값('b'+dbId)로 통일 (lazy-load materialize와 dedupe·재활성 안정).
@@ -16468,7 +16472,7 @@ async function fireHandoff(player, targetZoneId, newX, newY) {
   const timeoutHandle = setTimeout(() => {
     if (T1092_HANDOFF_BACK && outgoingHandoffs.has(token)) return _t1092Back(pid, token, targetZoneId, target, _ackGone);   // ★[T1092] 받는 존에 토큰을 놓으라 하고 돌려놓는다
     _ackGone();
-  }, 3000);
+  }, HANDOFF_ACK_MS);   // ★[PM 11-03] 종전 3000 — 위 HANDOFF_ACK_MS 머리글
   outgoingHandoffs.set(token, { pid, timeoutHandle });
   metrics.handoffs_out++;
 }
