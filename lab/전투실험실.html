@@ -494,6 +494,7 @@ function updateMorale(ctx,dt){
       +M_KCOMMIT*commit-M_KWOUND*wound*(1-commit)+M_KDESP*wound*commit
       +(u.form==='wall'?0.30:u.form==='circle'?0.15:u.form==='open'?-0.08:0) - (u.broken?0.18:0);
     if(_ratW>0){ const _r=ctx.sides[u.side].ration; if(_r!=null&&_r<1) tgt-=_ratW*(1-Math.max(0,_r)); }   // ★[T295 ②] 굶은 편은 먼저 흔들린다(손잡이 켤 때만)
+    { const _am=ctx.sides[u.side].armyMrl; if(_am!=null&&_am<1) tgt*=Math.max(0,_am); }   // ★[T1076] 원정 사기(0~1)가 목표를 누른다 — 호스트가 칸을 실을 때만(켬 · 랩 · 헤드리스는 칸 없음 = 무변)
     if(tgt<0)tgt=0;else if(tgt>1)tgt=1;
     u.mrl+=(tgt-u.mrl)*Math.min(1,M_RATE*dt);
     if(u.mrl<0)u.mrl=0;else if(u.mrl>1)u.mrl=1;
