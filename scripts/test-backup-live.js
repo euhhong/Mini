@@ -11,6 +11,7 @@
 //     ④ 깨진 사본 · 남의 사본은 멈추기 앞에 거절
 //     ⑤ --install · --uninstall · --status — 표 붙은 줄 하나만 · 남의 crontab 줄 그대로
 //     ⑥ 미끼 — sha 확인 줄을 뺀 사본은 깨진 사본을 놓는다(④ 가 문다)
+//     ⑧ [T1142] 단계 보관 — 날 14 · 주 12 · 달 영구 · BACKUP_KEEP 이면 종전
 //     ⑦ [T919] 갱신 앞 사본 — BACKUP_LABEL 이 meta · ✓ 줄에 · 글자 거름 · --dry 는 아무것도 안 쓴다(뗄 옛것은 찍는다) · --last 앞머리 · `bash -s`(서울 판을 흘림)
 'use strict';
 const fs = require('fs'), os = require('os'), path = require('path'), crypto = require('crypto');
@@ -187,6 +188,18 @@ ok(runRaw('--last hanbando').out.split('\t')[0] === path.join(DAILY, H7b[H7b.len
 try { const o = execFileSync('bash', ['-c', `cat ${SCRIPT} | bash -s -- --dry`], { encoding: 'utf8', env: Object.assign({}, process.env, { PATH: `${BIN}:${process.env.PATH}`, FAKE_STATE: STATE, BACKUP_DAILY_ROOT: DAILY }) });
   ok(/스냅샷 예행/.test(o) && /hanbando →/.test(o), '`cat backup-live.sh | bash -s`(update-live 가 서울 판을 도쿄에 흘리는 꼴)도 돈다 — BASH_SOURCE 빔(마른 연습이 잡음)'); }
 catch (e) { ok(false, '`bash -s` 로 흘린 판', String(e.stderr || e.message).split('\n')[0]); }
+console.log('\n⑧ [T1142] 단계 보관 — 날 14 · 주 12 · 달 영구(`keep_of` 를 떼어 400날 가짜 목록에)');
+{
+  const sh = `set -uo pipefail; eval "$(sed -n '/^pol() {/,/^}$/p' ${SCRIPT})"; DAILY=14; WEEKLY=12; KEEP=7
+for i in $(seq 0 399); do d=$(date -u -d "2026-11-03 - $i day" +%Y%m%d); echo "/r/$d-030000-hanbando"; [ $((i%10)) = 0 ] && echo "/r/$d-150000-hanbando"; true; done | sort -r | keep_of`;
+  const keep = execFileSync('bash', ['-c', sh], { encoding: 'utf8' }).trim().split('\n').map((x) => x.replace('/r/', '').slice(0, 15));
+  const days = new Set(keep.map((x) => x.slice(0, 8)));
+  ok(keep.includes('20261103-150000') && keep.includes('20261103-030000') && keep.includes('20261024-150000'), '★최근 14날은 그 날 것 전부(배포 날 두 벌 다)');
+  ok(!keep.includes('20261019-030000') && keep.includes('20261018-030000') && keep.includes('20261011-030000'), '★그 앞 12주는 ISO 주마다 가장 새것 하나');
+  ok(['20260701', '20260101', '20251101', '20250930'].every((d) => days.has(d)) && keep.length === 42, '★더 옛것은 달마다 가장 이른 것 영구 · 400날 440벌 → 42벌', String(keep.length));
+  const leg = execFileSync('bash', ['-c', sh.replace('KEEP=7', 'KEEP=7; BACKUP_KEEP=7')], { encoding: 'utf8' }).trim().split('\n');
+  ok(leg.length === 7, 'BACKUP_KEEP=7 이면 종전 꼴(새것 일곱)', String(leg.length));
+}
 fs.rmSync(TMP, { recursive: true, force: true });
 console.log(`\n=== PASS ${pass} / FAIL ${fail} ===`);
 process.exit(fail ? 1 : 0);

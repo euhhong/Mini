@@ -8,6 +8,7 @@
 #   bash scripts/backup-live.sh                    스냅샷 — 이 호스트에서 도는 durango 컨테이너(central · 존)마다 DB 를 SQLite 온라인 백업으로
 #                                                  `${BACKUP_DAILY_ROOT:-/srv/durango/_daily}/<UTC시각>-<대상>/` 에 → 사본 `PRAGMA quick_check` · 표마다 행 수 ·
 #                                                  sha256(SHA256SUMS) · meta.txt(비밀 아닌 칸만) → 대상마다 새것 BACKUP_KEEP 벌(기본 7 — 임시 · 회부)만 남기고 옛것은 지운다
+#   ★[T1142] 보관 = 날 14 · 주 12 · 달 영구(BACKUP_KEEP_DAILY · BACKUP_KEEP_WEEKLY) · BACKUP_KEEP=N 이면 종전(새것 N 벌)
 #   bash scripts/backup-live.sh --list             스냅샷 목록(대상 · 시각 · 크기 · 행 수 요약)
 #   bash scripts/backup-live.sh --install HH:MM    이 호스트 root crontab 에 하루 한 번(호스트 시계 — 보통 UTC) · 이미 있으면 바꾼다 · 표 `# durango-backup-live`
 #   bash scripts/backup-live.sh --uninstall        그 줄을 뺀다
@@ -28,6 +29,9 @@ umask 077
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"   # [T919] `bash -s`(update-live 가 서울 판을 도쿄에 흘린다)면 BASH_SOURCE 가 비어 있다
 ROOT="${BACKUP_DAILY_ROOT:-/srv/durango/_daily}"
 KEEP="${BACKUP_KEEP:-7}"
+#   ★[T1142 · 재민 11-03 "백업은 ㄱ"] 단계 보관(기본) — 최근 날 DAILY 날치는 그 날 것 전부 · 그보다 옛것은 ISO 주마다 가장 새것 WEEKLY 주 ·
+#   그보다 옛것은 달마다 가장 이른 것 **영구**. `BACKUP_KEEP` 를 주면 종전(새것 N 벌만) 꼴.
+DAILY="${BACKUP_KEEP_DAILY:-14}"; WEEKLY="${BACKUP_KEEP_WEEKLY:-12}"
 LABEL="$(printf '%s' "${BACKUP_LABEL:-}" | tr -cd 'A-Za-z0-9 ._:-' | cut -c1-120)"   # [T919] 갱신 앞 사본 표(비밀 0 — 글자를 거른다)
 TAG='# durango-backup-live'
 say() { echo "$*"; }
@@ -69,6 +73,24 @@ jsrun() {   # jsrun <이미지> <볼륨> <밖 폴더> <인자…> — 볼륨은 
   printf '%s\n' "$JS" | docker run --rm -i --network none -v "$vol:/data" -v "$out:/out" "$img" node --no-warnings --experimental-sqlite - "$@"
 }
 
+# 남길 것 — 표준입력: 한 대상의 스냅샷 폴더(새것 먼저) · 표준출력: 남길 폴더
+pol() { if [ -n "${BACKUP_KEEP:-}" ]; then echo "새것 $KEEP 벌"; else echo "날 $DAILY · 주 $WEEKLY · 달 영구"; fi; }
+keep_of() {
+  if [ -n "${BACKUP_KEEP:-}" ]; then head -n "$KEEP"; return; fi
+  local d b day wk mo; local -A dseen wseen mfirst; local nd=0 nw=0; local out=()
+  local list=(); while IFS= read -r d; do [ -n "$d" ] && list+=("$d"); done
+  for d in "${list[@]}"; do b="$(basename "$d")"; day="${b:0:8}"; mo="${b:0:6}"; mfirst[$mo]="$d"; done   # 옛것이 뒤 — 마지막이 그 달 가장 이른 것
+  for d in "${list[@]}"; do
+    b="$(basename "$d")"; day="${b:0:8}"; mo="${b:0:6}"
+    if [ -z "${dseen[$day]:-}" ]; then dseen[$day]=1; nd=$((nd + 1)); fi
+    if [ "$nd" -le "$DAILY" ]; then out+=("$d"); continue; fi
+    wk="$(date -u -d "${day:0:4}-${day:4:2}-${day:6:2}" +%G-%V 2>/dev/null || echo "$day")"
+    if [ -z "${wseen[$wk]:-}" ] && [ "$nw" -lt "$WEEKLY" ]; then wseen[$wk]=1; nw=$((nw + 1)); out+=("$d"); continue; fi
+    [ "${mfirst[$mo]}" = "$d" ] && out+=("$d")
+  done
+  printf '%s\n' "${out[@]}"
+}
+
 snapshot_one() {   # snapshot_one <컨테이너>
   local c=$1 t img vol db base ts dir out f
   t="$(tname "$c")"; img="$(docker inspect "$c" --format '{{.Image}}')"; vol="$(vol_of "$c")"; db="$(db_of "$c")"
@@ -92,9 +114,9 @@ snapshot_one() {   # snapshot_one <컨테이너>
   tb="$(echo "$out" | sed -n 's/.*"tables":\([0-9]*\).*/\1/p')"; ms="$(echo "$out" | sed -n 's/.*"ms":\([0-9]*\).*/\1/p')"
   [ "$q" = ok ] || { say "  ✗ $c — 사본 검사 $q(사본은 남긴다 · $dir)"; return 1; }
   say "  ✓ $t → $dir · $(H "$(stat -c %s "$dir/$base")") · 검사 ok · 표 $tb · 행 $n · ${ms}ms · sha $(cut -c1-12 "$dir/SHA256SUMS")${LABEL:+ · 라벨 $LABEL}"
-  # 보관 — 이 대상의 스냅샷(뒤에 붙은 -replaced 는 셈 밖)을 새것 KEEP 벌만
-  local all k=0 d; all="$(ls -1d "$ROOT"/*-"$t" 2>/dev/null | sort -r)"
-  for d in $all; do k=$((k + 1)); [ "$k" -le "$KEEP" ] && continue; rm -rf -- "$d" && say "    · 보관 $KEEP 벌 넘음 — 지움 $(basename "$d")"; done
+  # 보관 — 이 대상의 스냅샷(뒤에 붙은 -replaced 는 셈 밖) · 단계 보관(`keep_of` · ★T1142) 밖은 지운다
+  local all keep d; all="$(ls -1d "$ROOT"/*-"$t" 2>/dev/null | sort -r)"; keep="$(printf '%s\n' "$all" | keep_of)"
+  for d in $all; do grep -qxF -- "$d" <<< "$keep" && continue; rm -rf -- "$d" && say "    · $([ -n "${BACKUP_KEEP:-}" ] && echo "보관 $KEEP 벌 넘음" || echo "보관($(pol)) 밖") — 지움 $(basename "$d")"; done
 }
 
 MODE=snap; TARGET=""; RDIR=""
@@ -112,7 +134,7 @@ esac
 
 case "$MODE" in
 snap)
-  say "== 스냅샷 $(date -u +%FT%TZ) — $(hostname) · 자리 $ROOT · 보관 $KEEP 벌 =="
+  say "== 스냅샷 $(date -u +%FT%TZ) — $(hostname) · 자리 $ROOT · 보관 $(pol) =="
   mkdir -p "$ROOT" || die "자리를 못 만든다: $ROOT"
   T="$(targets)"; [ -n "$T" ] || die "도는 durango 컨테이너가 없다"
   rc=0; for c in $T; do snapshot_one "$c" || rc=1; done
@@ -120,13 +142,15 @@ snap)
   exit $rc ;;
 dry)
   #   [T919] 뜰 자리만 — 아무것도 안 쓴다(폴더 · 사본 · 보관 떼기 0)
-  say "== 스냅샷 예행 $(date -u +%FT%TZ) — $(hostname) · 자리 $ROOT · 보관 $KEEP 벌${LABEL:+ · 라벨 $LABEL} =="
+  say "== 스냅샷 예행 $(date -u +%FT%TZ) — $(hostname) · 자리 $ROOT · 보관 $(pol)${LABEL:+ · 라벨 $LABEL} =="
   T="$(targets)"; [ -n "$T" ] || die "도는 durango 컨테이너가 없다"
   ts="$(date -u +%Y%m%d-%H%M%S)"
   for c in $T; do t="$(tname "$c")"; vol="$(vol_of "$c")"; db="$(db_of "$c")"; base="${db#/data/}"
     sz=0; for x in "" -wal; do [ -f "$vol/$base$x" ] && sz=$((sz + $(stat -c %s "$vol/$base$x"))); done
-    old="$(ls -1d "$ROOT"/*-"$t" 2>/dev/null | sort -r | tail -n +"$KEEP" | xargs -r -n1 basename | paste -sd' ' -)"
-    say "  · $t → $ROOT/$ts-$t · 지금 DB $(H "$sz") · 보관 $KEEP 벌 넘어 뗄 옛것: ${old:-없음}"
+    if [ -n "${BACKUP_KEEP:-}" ]; then old="$(ls -1d "$ROOT"/*-"$t" 2>/dev/null | sort -r | tail -n +"$KEEP" | xargs -r -n1 basename | paste -sd' ' -)"
+    else all="$( { echo "$ROOT/$ts-$t"; ls -1d "$ROOT"/*-"$t" 2>/dev/null; } | sort -r)"; keep="$(printf '%s\n' "$all" | keep_of)"
+      old="$(for d in $all; do grep -qxF -- "$d" <<< "$keep" || basename "$d"; done | paste -sd' ' -)"; fi
+    say "  · $t → $ROOT/$ts-$t · 지금 DB $(H "$sz") · 보관 $(pol) 넘어 뗄 옛것: ${old:-없음}"
   done ;;
 last)
   for d in $(ls -1d "$ROOT"/*-"$TARGET" 2>/dev/null | sort -r); do m="$d/meta.txt"; [ -f "$m" ] || continue
