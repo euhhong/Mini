@@ -1,0 +1,163 @@
+{
+ "card": "T1110",
+ "made": "2026-11-03",
+ "world": "main 4fb8922f (= land1039 64a34e43 + PM 카드 둘) · 판정 0 · 문서만",
+ "closed": {
+  "2": "(다) 특례 없이 + 게이트 경보 줄 — 족보 718 · 721 ④ · T1082 scripts/gate-draft.js (land1039)",
+  "2-b": "둘 다(군량 빚 + 사기 평형) — 족보 721 ④ · T1076 T1076_ARMY_MORALE 끔 기본 · T1114",
+  "3": "3-a ㄱ · 3-b ㄴ(PM 캐논) · 3-c 족보 716 ③ — 족보 721 ④ · T1080 land1039 뺌 → T1108",
+  "4": "4-a ⓑ 은거지 더미 · 4-b ㄱ — 족보 721 ④ · T1078 · T1079 끔 기본(server/bandits.js:99 · :114) · T1119",
+  "5": "ㄱ T403_ARMS_LEDGER 켬 기본 · weapon → 창 → 화살 — ★PM 11-02 캐논(지시 T1094) · batch/arms-out-1103 737e2ae7 승인 대기 · main 끔(sim/war-core.js:426)",
+  "6": "몸이 질 수 있는 만큼만(carry.js CAP_KG 25 kg) · 못 지는 몫은 집 곳간 — ★PM 11-02 캐논(지시 T1094)",
+  "7-c": "예 — ★PM 11-02 캐논(지시 T1095) · T1095_MINE_DEMAND 켬 기본(server/villages.js:5067) · 족보 723",
+  "11": "예 — ★PM 11-03 캐논(지시 T1118 · 신선도 캐논 10-12 · 10-14) · T1118_RACK_AGE 세션3 진행 중"
+ },
+ "notClosed": {
+  "1-b": "다시 물을 차례 — 족보 721 ⑤ · T1074_FOOD_DEBT 끔 기본(sim/economy-sim.js:1162) · T1109 표 뒤",
+  "7-a·7-b": "방향 섬 — ★재민 11-02 1번 바람직 · 지시 T1107 그림 · 표 뒤 확인만"
+ },
+ "open": {
+  "8": {
+   "verdict": "PM 닫을 수 있음",
+   "rec": "ⓐ",
+   "canon": "족보 619 ★재민 10-12 조개 산지 B",
+   "facts": [
+    "server/villages.js:704 T711_SHELL_SOURCE === 1",
+    "server/villages.js:706 T635_SHELL_ORNAMENT === 1"
+   ]
+  },
+  "12": {
+   "verdict": "PM 닫을 수 있음",
+   "rec": "ㄱ",
+   "canon": "★재민 11-01 마을 화면(지시 T1070 · 족보 720 ①) · 족보 646",
+   "facts": [
+    "server/zone.js:12075 village_hall → _kinIsMemberOf",
+    "server/village-view.js:224 villageBoard (거리 문)",
+    "server/villages.js:14282 _villageNear · EV_BRIEF_PX 260 (villages.js:14070)",
+    "server/village-view.js:185 _store (가입 무관)",
+    "server/membership.js:26 꺼내기 = 촌장"
+   ]
+  },
+  "17": {
+   "verdict": "PM 닫을 수 있음",
+   "rec": "ㄱ",
+   "canon": "신선도 캐논 10-12 · 10-14(지시 T1118)",
+   "facts": [
+    "server/granary-lots.js:597 BAG WeakMap",
+    "server/villages.js:1071 _T747_KEYS",
+    "server/granary-lots.js:584 giveNoRec"
+   ]
+  },
+  "22": {
+   "verdict": "PM 닫을 수 있음",
+   "rec": "ㄱ",
+   "canon": "설계/설계_품목·동사·거래소_캐논.md 21행 §3 ③ ★재민 09-03",
+   "t1010": {
+    "sec": 773,
+    "rows": 1061,
+    "bad": 0,
+    "sameAs": "계측/T1010_넘는몫_2026-10-31.json overpay table · rows · bad · all · allCols · cap · words",
+    "fracP50": {
+     "A-give-0": 0.7046,
+     "A-give-1": 0.7046,
+     "B-give-0": 0.6508,
+     "B-give-1": 0.6508,
+     "C-give-0": 0.3552,
+     "C-give-1": 0.3929,
+     "D-give-0": 0.9834,
+     "D-want-0": 0.9834,
+     "E-give-0": 0.3333,
+     "E-want-0": 0.3333,
+     "A-want-0": 0.0542,
+     "A-want-1": 0.0542
+    },
+    "fracMax": {
+     "A-give-0": 0.963,
+     "A-give-1": 0.963,
+     "B-give-0": 0.9864,
+     "B-give-1": 0.9864,
+     "C-give-0": 0.9516,
+     "C-give-1": 0.9072,
+     "D-give-0": 0.9999,
+     "D-want-0": 0.9999,
+     "E-give-0": 0.3333,
+     "E-want-0": 0.3333,
+     "A-want-0": 0.8848,
+     "A-want-1": 0.8848
+    }
+   }
+  },
+  "14·15": {
+   "verdict": "재민(눈 · 한 번에)",
+   "rec": "없음",
+   "facts": [
+    "server/zone.js:7179 CHAR_SPRITE !== off (T1068) — 41c74d6a 는 === on",
+    "public/client/00-const.js:327 charSprite: true"
+   ],
+   "footSlide": {
+    "cmd": "python3 scripts/t723-foot-slide.py --glb=public/assets/char3d/char_body.glb",
+    "walkCmPerCycle": 14.7,
+    "runCmPerCycle": 29.8,
+    "walkT": [
+     0.8,
+     0.7267
+    ],
+    "runT": [
+     0.5714,
+     0.5119
+    ],
+    "strideMul": [
+     1.10094,
+     1.11623
+    ]
+   }
+  },
+  "9": {
+   "verdict": "재민",
+   "rec": "9-a ㄷ 만 캐논 §1 밖 · 9-b ㄱ 쪽 근거 · 9-c 없음",
+   "facts": [
+    "server/kcal.js:71 carp 640 (살 1,270 × 0.50)",
+    "server/kcal.js:53 fish 495 (살 900 × 0.55)",
+    "sim/economy-sim.js:1112 T312_FISH_ACT === 1"
+   ]
+  },
+  "10": {
+   "verdict": "재민(9 뒤)",
+   "rec": "근거 둘로 갈림",
+   "facts": [
+    "4 × 1,200 ÷ (1,610 × 0.6) = 4.9689 · granary-lots.js · kcal.js 커밋 0 (41c74d6a..)"
+   ]
+  },
+  "13": {
+   "verdict": "때가 아님(셀 0)",
+   "rec": "13-a 없음 · 13-b ㄴ 방향 PM",
+   "facts": [
+    "granSites 0",
+    "server/villages.js:12026 _granStock (물리 장부 · econ 무관)"
+   ]
+  },
+  "16": {
+   "verdict": "때가 아님(T789 끔)",
+   "rec": "켤 때 ㄱ PM 후보 · 재민 (마)",
+   "facts": [
+    "server/granary-lots.js:57 T789_DISCARD === 1",
+    "sim/economy-sim-v2.js:2327 × 15",
+    "server/spoil.js:61 PRODUCE 6"
+   ]
+  }
+ },
+ "outOfScope": [
+  "18",
+  "19",
+  "20",
+  "21"
+ ],
+ "commitsSinceT1057": {
+  "server/spoil.js": 1,
+  "server/kcal.js": 0,
+  "server/granary-lots.js": 0,
+  "server/trade.js": 1,
+  "server/carry.js": 0,
+  "public/assets/char3d/char_body.glb": 0
+ }
+}
