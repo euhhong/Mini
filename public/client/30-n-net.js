@@ -1789,5 +1789,7 @@
       showNotice(msg.text, undefined, msg.kind);   // ★[T90] 종류가 그림이 된다(T78 이 실어 둔 칸을 이제 읽는다)
       // ★[T1065] 서버가 "이건 될 수 없다"고 하면 채집 반복을 멈춘다(맨손 벌목 · 채석 거절 — 99-main 의 E 떼기와 같은 두 줄 · 새 상태 0)
       if (msg.stop === 'gather' && window.__eRepeat) { clearInterval(window.__eRepeat); window.__eRepeat = null; }
+      // ★[T1120] 무엇이 모자라 거절됐나(서버가 켬일 때만 싣는 칸) — 「지금 할 일」이 다음 막힘으로 잇는다(70-lobby · 새 상태 0 · 쌓기만)
+      if (msg.need && typeof onbNeedNote === 'function') onbNeedNote(msg.need);
     }
   }
