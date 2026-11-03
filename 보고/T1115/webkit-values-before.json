@@ -1,0 +1,279 @@
+{
+ "browser": "webkit",
+ "driver": "WebKitGTK MiniBrowser + WebKitWebDriver",
+ "version": "WebKitGTK 2.52.6",
+ "sizes": [
+  {
+   "W": 1440,
+   "H": 900,
+   "near": true,
+   "open": {
+    "total": 721,
+    "n": {
+     "plate": 8,
+     "frame": 2,
+     "rule": 7,
+     "button": 3,
+     "bar": 2,
+     "text": 31
+    },
+    "texts": 30,
+    "wait": 482,
+    "openCall": 374,
+    "skin": 51,
+    "render": 90,
+    "prof": {
+     "plate": 1,
+     "frame": 2,
+     "rule": 1,
+     "button": 7,
+     "bar": 1,
+     "text": 57
+    }
+   },
+   "reopen": {
+    "total": 212,
+    "n": {
+     "plate": 7,
+     "frame": 1,
+     "rule": 7,
+     "button": 3,
+     "bar": 2,
+     "text": 30
+    },
+    "texts": 108,
+    "wait": 53,
+    "openCall": 0,
+    "skin": 34,
+    "render": 51,
+    "prof": {
+     "plate": 0,
+     "frame": 1,
+     "rule": 2,
+     "button": 4,
+     "bar": 2,
+     "text": 27
+    }
+   },
+   "tabs": [
+    {
+     "total": 125,
+     "skin": 0,
+     "tab": "dash",
+     "text": 0
+    },
+    {
+     "total": 152,
+     "skin": 50,
+     "tab": "proj",
+     "text": 24
+    },
+    {
+     "total": 221,
+     "skin": 65,
+     "tab": "mem",
+     "text": 29
+    },
+    {
+     "total": 179,
+     "skin": 69,
+     "tab": "store",
+     "text": 26
+    }
+   ],
+   "tabs2": [
+    {
+     "total": 101,
+     "skin": 0,
+     "tab": "dash",
+     "text": 0
+    },
+    {
+     "total": 119,
+     "skin": 0,
+     "tab": "proj",
+     "text": 0
+    },
+    {
+     "total": 145,
+     "skin": 0,
+     "tab": "mem",
+     "text": 0
+    },
+    {
+     "total": 141,
+     "skin": 0,
+     "tab": "store",
+     "text": 0
+    }
+   ],
+   "shots": [
+    {
+     "tab": "dash",
+     "contrast": 8.71
+    },
+    {
+     "tab": "proj",
+     "contrast": 8.56
+    },
+    {
+     "tab": "mem",
+     "contrast": 8.27
+    },
+    {
+     "tab": "store",
+     "contrast": 8.79
+    }
+   ],
+   "rafOpen": {
+    "n": 35,
+    "p50": 86,
+    "p95": 109,
+    "max": 114
+   },
+   "rafClosed": {
+    "n": 45,
+    "p50": 67,
+    "p95": 84,
+    "max": 92
+   },
+   "pageErrors": []
+  },
+  {
+   "W": 1280,
+   "H": 720,
+   "near": true,
+   "open": {
+    "total": 305,
+    "n": {
+     "plate": 8,
+     "frame": 2,
+     "rule": 7,
+     "button": 3,
+     "bar": 2,
+     "text": 31
+    },
+    "texts": 30,
+    "wait": 88,
+    "openCall": 32,
+    "skin": 64,
+    "render": 106,
+    "prof": {
+     "plate": 2,
+     "frame": 2,
+     "rule": 4,
+     "button": 11,
+     "bar": 3,
+     "text": 71
+    }
+   },
+   "reopen": {
+    "total": 194,
+    "n": {
+     "plate": 7,
+     "frame": 1,
+     "rule": 7,
+     "button": 3,
+     "bar": 2,
+     "text": 30
+    },
+    "texts": 108,
+    "wait": 53,
+    "openCall": 0,
+    "skin": 41,
+    "render": 57,
+    "prof": {
+     "plate": 2,
+     "frame": 0,
+     "rule": 3,
+     "button": 6,
+     "bar": 2,
+     "text": 26
+    }
+   },
+   "tabs": [
+    {
+     "total": 114,
+     "skin": 0,
+     "tab": "dash",
+     "text": 0
+    },
+    {
+     "total": 150,
+     "skin": 59,
+     "tab": "proj",
+     "text": 28
+    },
+    {
+     "total": 196,
+     "skin": 94,
+     "tab": "mem",
+     "text": 47
+    },
+    {
+     "total": 152,
+     "skin": 62,
+     "tab": "store",
+     "text": 28
+    }
+   ],
+   "tabs2": [
+    {
+     "total": 97,
+     "skin": 0,
+     "tab": "dash",
+     "text": 0
+    },
+    {
+     "total": 88,
+     "skin": 0,
+     "tab": "proj",
+     "text": 0
+    },
+    {
+     "total": 106,
+     "skin": 0,
+     "tab": "mem",
+     "text": 0
+    },
+    {
+     "total": 109,
+     "skin": 0,
+     "tab": "store",
+     "text": 0
+    }
+   ],
+   "shots": [
+    {
+     "tab": "dash",
+     "contrast": 8.71
+    },
+    {
+     "tab": "proj",
+     "contrast": 8.56
+    },
+    {
+     "tab": "mem",
+     "contrast": 8.27
+    },
+    {
+     "tab": "store",
+     "contrast": 8.79
+    }
+   ],
+   "rafOpen": {
+    "n": 52,
+    "p50": 59,
+    "p95": 70,
+    "max": 74
+   },
+   "rafClosed": {
+    "n": 51,
+    "p50": 59,
+    "p95": 72,
+    "max": 81
+   },
+   "pageErrors": []
+  }
+ ]
+}
