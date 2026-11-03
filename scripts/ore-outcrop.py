@@ -15,6 +15,7 @@
 # 실행: python3 scripts/ore-outcrop.py
 import math, os
 from PIL import Image
+from webp_twins import twin as _webp_twin   # ★[T1131] (스크립트 자리 = scripts/ 가 sys.path 첫 칸)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 NATURE = os.path.join(os.path.dirname(HERE), "public", "assets", "nature")
@@ -87,6 +88,7 @@ for i in range(1, 7):
             nb = b * (1 - t) + col[2] * t * (0.55 + 0.75 * lum)
             tp[x, y] = (int(min(255, nr)), int(min(255, ng)), int(min(255, nb)), a)
     tinted.save(dst)
+    _webp_twin(dst)                   # ★[T1131] 배포 png 옆 같은 화소 무손실 webp 쌍둥이(scripts/webp_twins.py)
     opaque = sum(1 for y in range(h) for x in range(w) if sp[x, y][3] > 0)
     print(f"  ore{i:02d} ← rock{i:02d} {rock.size}  광물 얼룩 {stained}/{opaque}px "
           f"({stained/max(1,opaque)*100:.0f}%)  색 {'적갈' if col == RUST else '녹청'}")

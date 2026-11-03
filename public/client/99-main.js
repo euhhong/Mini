@@ -120,12 +120,12 @@
       _mtAnchors = await r.json();
       const names = Object.keys(_mtAnchors); _mtWanted = names.length;
       // ★확장자는 앵커가 들고 있다(포장본은 webp). 자기 서술 — 클라가 형식을 짐작하지 않는다.
-      for (const n of names) { const im = new Image(); im.onload = () => _mtLoaded++; im.src = '/assets/mountains/' + n + (_mtAnchors[n].ext || '.png'); MTX[n] = im; }
+      for (const n of names) { const im = new Image(); im.onload = () => _mtLoaded++; _gsrc(im, '/assets/mountains/' + n + (_mtAnchors[n].ext || '.png')); MTX[n] = im; }   // ★[T1131] 문을 지난다(앵커 뒤 · 표가 `?v=` 를 단다)
       // ★알파 지도 정본 — 굽는 쪽이 만든 하나를 클라도 하네스도 같이 쓴다.
       //   전엔 클라는 이미지를 축소해서, node 하네스는 PNG 를 읽어서 각자 만들었다.
       //   둘이 같이 틀리면 판정이 통과한다(자명 통과). 없으면 종전대로 이미지에서 유도한다.
       try {
-        const ra = await fetch('/assets/mountains/mountain_alpha.json');
+        const ra = await _gfetch('/assets/mountains/mountain_alpha.json');   // ★[T1131] 문을 지난다(문은 열렸다 · 표가 `?v=` 를 단다)
         if (ra.ok) {
           const j = await ra.json(); const N = j.n || 64;
           const tA = performance.now();   // ★[T962] 로비 일 표

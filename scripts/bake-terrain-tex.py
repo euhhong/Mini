@@ -3,6 +3,8 @@
 #   붙이면 풀이 옆으로 뭉개진다(재민 "풀 얼룩"). 갈래는 `angled` 하나다.
 #   결과: scripts/terrain_tex/{grass,dry,mud}_angled.png → public/assets/terrain/
 # 실행: blender -b -P scripts/bake-terrain-tex.py
+#   배치(손 · `scripts/terrain_tex/*.png` → `public/assets/terrain/`) 뒤 ★[T1131] `python3 scripts/webp_twins.py public/assets/terrain`
+#   (같은 화소 무손실 webp 쌍둥이 — 클라는 central 매니페스트대로 webp 를 받는다) → `node scripts/asset-lock.js --write`(쌍둥이가 낡았으면 멈춘다).
 import bpy, math, os, random, sys
 # ★[T272] 굽는 **상자** 한 줄 — 이 판은 `blender -b -P` 로 도는 독립 판이라 `render_common.build_scene()`
 #   을 안 지난다(T260 이 진입점 13 중 유일하게 못 찍는 자리로 회부했다). 같은 함수를 부른다 — 꼴을 베끼지 않는다.

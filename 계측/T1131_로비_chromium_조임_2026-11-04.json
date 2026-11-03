@@ -1,0 +1,761 @@
+{
+ "at": "2026-11-03T17:19:14.869Z",
+ "browser": "chromium",
+ "throttle": true,
+ "persistent": false,
+ "runs": 3,
+ "off": {
+  "root": "/root/wt-main",
+  "env": {}
+ },
+ "names": [
+  "main",
+  "켬"
+ ],
+ "rows": [
+  {
+   "i": 1,
+   "knob": "main",
+   "first": {
+    "304": 0,
+    "fcp": 320,
+    "dcl": 1183,
+    "load": 1185,
+    "zone": 1311,
+    "cards": 1476,
+    "req": 330,
+    "netReq": 329,
+    "bytes": 18327546,
+    "lobbyReq": 46,
+    "lobbyBytes": 744658,
+    "game": {
+     "n": 276,
+     "net": 276,
+     "n304": 0,
+     "bytes": 17578930,
+     "png": 182,
+     "webp": 88,
+     "pinned": 0
+    },
+    "gimg": {
+     "open": true,
+     "why": "로비 다 뜸",
+     "at": 1427,
+     "queued": 0,
+     "lazy": true
+    },
+    "by": {
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 12991
+     },
+     ".js": {
+      "n": 40,
+      "net": 40,
+      "tx": 680503
+     },
+     "(없음)": {
+      "n": 11,
+      "net": 10,
+      "tx": 5225
+     },
+     ".json": {
+      "n": 7,
+      "net": 7,
+      "tx": 341145
+     },
+     ".png": {
+      "n": 182,
+      "net": 182,
+      "tx": 12444196
+     },
+     ".webp": {
+      "n": 88,
+      "net": 88,
+      "tx": 4833744
+     }
+    }
+   },
+   "second": {
+    "304": 278,
+    "fcp": 272,
+    "dcl": 288,
+    "load": 289,
+    "zone": 418,
+    "cards": 587,
+    "req": 324,
+    "netReq": 283,
+    "bytes": 85679,
+    "lobbyReq": 46,
+    "lobbyBytes": 2167,
+    "game": {
+     "n": 276,
+     "net": 276,
+     "n304": 276,
+     "bytes": 82800,
+     "png": 182,
+     "webp": 88,
+     "pinned": 0
+    },
+    "gimg": {
+     "open": true,
+     "why": "로비 다 뜸",
+     "at": 537,
+     "queued": 0,
+     "lazy": true
+    },
+    "by": {
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 300
+     },
+     ".js": {
+      "n": 40,
+      "net": 0,
+      "tx": 0
+     },
+     "(없음)": {
+      "n": 5,
+      "net": 4,
+      "tx": 1979
+     },
+     ".json": {
+      "n": 7,
+      "net": 7,
+      "tx": 2100
+     },
+     ".png": {
+      "n": 182,
+      "net": 182,
+      "tx": 54600
+     },
+     ".webp": {
+      "n": 88,
+      "net": 88,
+      "tx": 26400
+     }
+    }
+   }
+  },
+  {
+   "i": 1,
+   "knob": "켬",
+   "first": {
+    "304": 0,
+    "fcp": 300,
+    "dcl": 1181,
+    "load": 1182,
+    "zone": 1317,
+    "cards": 1503,
+    "req": 330,
+    "netReq": 329,
+    "bytes": 12968888,
+    "lobbyReq": 47,
+    "lobbyBytes": 756401,
+    "game": {
+     "n": 276,
+     "net": 276,
+     "n304": 0,
+     "bytes": 12208805,
+     "png": 0,
+     "webp": 270,
+     "pinned": 276
+    },
+    "gimg": {
+     "open": true,
+     "why": "로비 다 뜸",
+     "at": 1441,
+     "queued": 0,
+     "lazy": true,
+     "map": "ok",
+     "mapN": 654,
+     "mapAt": 1439
+    },
+    "by": {
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 12991
+     },
+     ".js": {
+      "n": 40,
+      "net": 40,
+      "tx": 681618
+     },
+     "(없음)": {
+      "n": 10,
+      "net": 9,
+      "tx": 4989
+     },
+     ".json": {
+      "n": 8,
+      "net": 8,
+      "tx": 351922
+     },
+     ".webp": {
+      "n": 270,
+      "net": 270,
+      "tx": 11907624
+     }
+    }
+   },
+   "second": {
+    "304": 2,
+    "fcp": 260,
+    "dcl": 282,
+    "load": 283,
+    "zone": 411,
+    "cards": 568,
+    "req": 324,
+    "netReq": 6,
+    "bytes": 2563,
+    "lobbyReq": 55,
+    "lobbyBytes": 2207,
+    "game": {
+     "n": 276,
+     "net": 0,
+     "n304": 0,
+     "bytes": 0,
+     "png": 0,
+     "webp": 270,
+     "pinned": 276
+    },
+    "gimg": {
+     "open": true,
+     "why": "로비 다 뜸",
+     "at": 532,
+     "queued": 0,
+     "lazy": true,
+     "map": "ok",
+     "mapN": 654,
+     "mapAt": 430
+    },
+    "by": {
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 300
+     },
+     ".js": {
+      "n": 40,
+      "net": 0,
+      "tx": 0
+     },
+     "(없음)": {
+      "n": 4,
+      "net": 3,
+      "tx": 1663
+     },
+     ".json": {
+      "n": 8,
+      "net": 1,
+      "tx": 300
+     },
+     ".webp": {
+      "n": 270,
+      "net": 0,
+      "tx": 0
+     }
+    }
+   }
+  },
+  {
+   "i": 2,
+   "knob": "main",
+   "first": {
+    "304": 0,
+    "fcp": 300,
+    "dcl": 1197,
+    "load": 1197,
+    "zone": 1315,
+    "cards": 1492,
+    "req": 330,
+    "netReq": 329,
+    "bytes": 18327546,
+    "lobbyReq": 46,
+    "lobbyBytes": 744658,
+    "game": {
+     "n": 276,
+     "net": 276,
+     "n304": 0,
+     "bytes": 17578930,
+     "png": 182,
+     "webp": 88,
+     "pinned": 0
+    },
+    "gimg": {
+     "open": true,
+     "why": "로비 다 뜸",
+     "at": 1429,
+     "queued": 0,
+     "lazy": true
+    },
+    "by": {
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 12991
+     },
+     ".js": {
+      "n": 40,
+      "net": 40,
+      "tx": 680503
+     },
+     "(없음)": {
+      "n": 11,
+      "net": 10,
+      "tx": 5225
+     },
+     ".json": {
+      "n": 7,
+      "net": 7,
+      "tx": 341145
+     },
+     ".png": {
+      "n": 182,
+      "net": 182,
+      "tx": 12444196
+     },
+     ".webp": {
+      "n": 88,
+      "net": 88,
+      "tx": 4833744
+     }
+    }
+   },
+   "second": {
+    "304": 278,
+    "fcp": 288,
+    "dcl": 314,
+    "load": 314,
+    "zone": 428,
+    "cards": 598,
+    "req": 324,
+    "netReq": 283,
+    "bytes": 85679,
+    "lobbyReq": 46,
+    "lobbyBytes": 2167,
+    "game": {
+     "n": 276,
+     "net": 276,
+     "n304": 276,
+     "bytes": 82800,
+     "png": 182,
+     "webp": 88,
+     "pinned": 0
+    },
+    "gimg": {
+     "open": true,
+     "why": "로비 다 뜸",
+     "at": 562,
+     "queued": 0,
+     "lazy": true
+    },
+    "by": {
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 300
+     },
+     ".js": {
+      "n": 40,
+      "net": 0,
+      "tx": 0
+     },
+     "(없음)": {
+      "n": 5,
+      "net": 4,
+      "tx": 1979
+     },
+     ".json": {
+      "n": 7,
+      "net": 7,
+      "tx": 2100
+     },
+     ".png": {
+      "n": 182,
+      "net": 182,
+      "tx": 54600
+     },
+     ".webp": {
+      "n": 88,
+      "net": 88,
+      "tx": 26400
+     }
+    }
+   }
+  },
+  {
+   "i": 2,
+   "knob": "켬",
+   "first": {
+    "304": 0,
+    "fcp": 296,
+    "dcl": 1168,
+    "load": 1170,
+    "zone": 1293,
+    "cards": 1477,
+    "req": 330,
+    "netReq": 329,
+    "bytes": 12968893,
+    "lobbyReq": 47,
+    "lobbyBytes": 756402,
+    "game": {
+     "n": 276,
+     "net": 276,
+     "n304": 0,
+     "bytes": 12208805,
+     "png": 0,
+     "webp": 270,
+     "pinned": 276
+    },
+    "gimg": {
+     "open": true,
+     "why": "로비 다 뜸",
+     "at": 1426,
+     "queued": 0,
+     "lazy": true,
+     "map": "ok",
+     "mapN": 654,
+     "mapAt": 1416
+    },
+    "by": {
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 12991
+     },
+     ".js": {
+      "n": 40,
+      "net": 40,
+      "tx": 681618
+     },
+     "(없음)": {
+      "n": 10,
+      "net": 9,
+      "tx": 4994
+     },
+     ".json": {
+      "n": 8,
+      "net": 8,
+      "tx": 351922
+     },
+     ".webp": {
+      "n": 270,
+      "net": 270,
+      "tx": 11907624
+     }
+    }
+   },
+   "second": {
+    "304": 2,
+    "fcp": 272,
+    "dcl": 297,
+    "load": 301,
+    "zone": 429,
+    "cards": 574,
+    "req": 324,
+    "netReq": 6,
+    "bytes": 2565,
+    "lobbyReq": 50,
+    "lobbyBytes": 2208,
+    "game": {
+     "n": 276,
+     "net": 0,
+     "n304": 0,
+     "bytes": 0,
+     "png": 0,
+     "webp": 270,
+     "pinned": 276
+    },
+    "gimg": {
+     "open": true,
+     "why": "로비 다 뜸",
+     "at": 550,
+     "queued": 0,
+     "lazy": true,
+     "map": "ok",
+     "mapN": 654,
+     "mapAt": 446
+    },
+    "by": {
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 300
+     },
+     ".js": {
+      "n": 40,
+      "net": 0,
+      "tx": 0
+     },
+     "(없음)": {
+      "n": 4,
+      "net": 3,
+      "tx": 1665
+     },
+     ".json": {
+      "n": 8,
+      "net": 1,
+      "tx": 300
+     },
+     ".webp": {
+      "n": 270,
+      "net": 0,
+      "tx": 0
+     }
+    }
+   }
+  },
+  {
+   "i": 3,
+   "knob": "main",
+   "first": {
+    "304": 0,
+    "fcp": 324,
+    "dcl": 1363,
+    "load": 1364,
+    "zone": 1476,
+    "cards": 1642,
+    "req": 330,
+    "netReq": 329,
+    "bytes": 18327553,
+    "lobbyReq": 46,
+    "lobbyBytes": 744659,
+    "game": {
+     "n": 276,
+     "net": 276,
+     "n304": 0,
+     "bytes": 17578930,
+     "png": 182,
+     "webp": 88,
+     "pinned": 0
+    },
+    "gimg": {
+     "open": true,
+     "why": "로비 다 뜸",
+     "at": 1594,
+     "queued": 0,
+     "lazy": true
+    },
+    "by": {
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 12991
+     },
+     ".js": {
+      "n": 40,
+      "net": 40,
+      "tx": 680503
+     },
+     "(없음)": {
+      "n": 11,
+      "net": 10,
+      "tx": 5232
+     },
+     ".json": {
+      "n": 7,
+      "net": 7,
+      "tx": 341145
+     },
+     ".png": {
+      "n": 182,
+      "net": 182,
+      "tx": 12444196
+     },
+     ".webp": {
+      "n": 88,
+      "net": 88,
+      "tx": 4833744
+     }
+    }
+   },
+   "second": {
+    "304": 278,
+    "fcp": 272,
+    "dcl": 282,
+    "load": 283,
+    "zone": 416,
+    "cards": 576,
+    "req": 324,
+    "netReq": 283,
+    "bytes": 85682,
+    "lobbyReq": 46,
+    "lobbyBytes": 2168,
+    "game": {
+     "n": 276,
+     "net": 276,
+     "n304": 276,
+     "bytes": 82800,
+     "png": 182,
+     "webp": 88,
+     "pinned": 0
+    },
+    "gimg": {
+     "open": true,
+     "why": "로비 다 뜸",
+     "at": 533,
+     "queued": 0,
+     "lazy": true
+    },
+    "by": {
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 300
+     },
+     ".js": {
+      "n": 40,
+      "net": 0,
+      "tx": 0
+     },
+     "(없음)": {
+      "n": 5,
+      "net": 4,
+      "tx": 1982
+     },
+     ".json": {
+      "n": 7,
+      "net": 7,
+      "tx": 2100
+     },
+     ".png": {
+      "n": 182,
+      "net": 182,
+      "tx": 54600
+     },
+     ".webp": {
+      "n": 88,
+      "net": 88,
+      "tx": 26400
+     }
+    }
+   }
+  },
+  {
+   "i": 3,
+   "knob": "켬",
+   "first": {
+    "304": 0,
+    "fcp": 292,
+    "dcl": 1193,
+    "load": 1193,
+    "zone": 1311,
+    "cards": 1478,
+    "req": 330,
+    "netReq": 329,
+    "bytes": 12968894,
+    "lobbyReq": 47,
+    "lobbyBytes": 756402,
+    "game": {
+     "n": 276,
+     "net": 276,
+     "n304": 0,
+     "bytes": 12208805,
+     "png": 0,
+     "webp": 270,
+     "pinned": 276
+    },
+    "gimg": {
+     "open": true,
+     "why": "로비 다 뜸",
+     "at": 1449,
+     "queued": 0,
+     "lazy": true,
+     "map": "ok",
+     "mapN": 654,
+     "mapAt": 1416
+    },
+    "by": {
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 12991
+     },
+     ".js": {
+      "n": 40,
+      "net": 40,
+      "tx": 681618
+     },
+     "(없음)": {
+      "n": 10,
+      "net": 9,
+      "tx": 4995
+     },
+     ".json": {
+      "n": 8,
+      "net": 8,
+      "tx": 351922
+     },
+     ".webp": {
+      "n": 270,
+      "net": 270,
+      "tx": 11907624
+     }
+    }
+   },
+   "second": {
+    "304": 2,
+    "fcp": 268,
+    "dcl": 301,
+    "load": 301,
+    "zone": 438,
+    "cards": 588,
+    "req": 324,
+    "netReq": 6,
+    "bytes": 2564,
+    "lobbyReq": 53,
+    "lobbyBytes": 2208,
+    "game": {
+     "n": 276,
+     "net": 0,
+     "n304": 0,
+     "bytes": 0,
+     "png": 0,
+     "webp": 270,
+     "pinned": 276
+    },
+    "gimg": {
+     "open": true,
+     "why": "로비 다 뜸",
+     "at": 553,
+     "queued": 0,
+     "lazy": true,
+     "map": "ok",
+     "mapN": 654,
+     "mapAt": 450
+    },
+    "by": {
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 300
+     },
+     ".js": {
+      "n": 40,
+      "net": 0,
+      "tx": 0
+     },
+     "(없음)": {
+      "n": 4,
+      "net": 3,
+      "tx": 1664
+     },
+     ".json": {
+      "n": 8,
+      "net": 1,
+      "tx": 300
+     },
+     ".webp": {
+      "n": 270,
+      "net": 0,
+      "tx": 0
+     }
+    }
+   }
+  }
+ ]
+}

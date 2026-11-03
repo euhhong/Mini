@@ -27,6 +27,7 @@ const { DatabaseSync } = require('node:sqlite');
 const { ZONES, publicZoneMap, HANDOFF_COMMIT } = require('./zone-config');
 const httpClient = require('http');
 const StaticServe = require('./static-serve');   // ★[T1123] 정적 응답(캐시 · 304 · gzip) 한 자리
+const GimgMap = require('./gimg-map');   // ★[T1131] 게임 그림 매니페스트(webp 쌍둥이 · 주소 내용 해시) — 손잡이 `T1131_WEBP`
 const economy = require('../sim/economy-sim');
 const economyV2 = require('../sim/economy-sim-v2');  // Phase 4d-13: canadia world 전용 — 진짜 부분균형 시장 모델
 
@@ -803,6 +804,7 @@ const server = http.createServer(async (req, res) => {
         ...(process.env.T962_VIL_SLICE !== '0' ? { vilSlice: true } : {}),   // [T962 · ★T982 켬 기본 — PM 10-28] 클라가 로비의 마을 그림 굽기를 판당 8ms 로 나눠 돈다(20-r2 `_bakeVilArtSliced` · 화소 같음) · 되돌림 `T962_VIL_SLICE=0` 이면 칸이 없다(한 판에 다 — 종전 꼴 · 때는 /zones 뒤) · /zones 인 까닭: T937 과 같다(로비는 welcome 전)
         ...(process.env.T991_GT_SLICE !== '0' ? { gtSlice: true } : {}),
         ...(process.env.T1123_LOBBY_LAZY !== '0' ? { lobbyLazy: true } : {}),   // [T1123 · 켬 기본 후보] 클라가 게임 그림(나무 · 산 · 자연물 · 지면 · 아이콘 · terrain.json)을 로비가 다 뜬 뒤(또는 「나루터로 간다」 뒤) 낮은 차례로 받는다(00-const `_gsrc` · `_gfetch` · `_gimgOpen`) · 되돌림 `T1123_LOBBY_LAZY=0` 이면 칸이 없다(/zones 받는 즉시 다 받는다 — 종전 꼴 · 때만 /zones 뒤)
+        ...(GimgMap.on() ? GimgMap.field() : {}),   // [T1131 · 켬 기본 후보] 게임 그림 매니페스트 주소(`/gimg-map.json?v=<표 sha1 앞 10자>` · immutable) — 클라 문(00-const `_gimgCfg`)이 표를 받은 뒤에 열린다 · 표대로 png 대신 같은 화소 webp 쌍둥이 · 주소마다 `?v=<내용 sha1 앞 10자>`(둘째 방문 왕복 0) · 되돌림 `T1131_WEBP=0` 이면 칸이 없다(종전 png 주소 · 해시 없음 — T1123 그대로)
         ...(process.env.T1024_FIRST_WAIT !== '0' ? { firstWait: true } : {}),   // [T1024 · 켬 기본 — PM 10-31] 클라 첫 재시도도 백오프 간격(확정 오류 15초 · 아니면 1초부터 지수)을 기다린다(33-m-conn `ensurePrimaryConnection`) · 되돌림 `T1024_FIRST_WAIT=0` 이면 칸이 없다(종전 — 첫 재시도는 곧바로)   // [T991 · ★T1003 켬 기본 — PM 10-30] 로비 지면 데우기 둘(`gtPrewarm`)을 판당 8ms 로 쪼갠다(00-const `_gtPrewarmSliced` · 생성기 `_gtMaskGen` · `_grassSplitGen` · 값 같음) · 되돌림 `T991_GT_SLICE=0` 이면 칸이 없다(T991 앞 /zones · 둘을 한 판씩)
         handoffCommit: HANDOFF_COMMIT,   // ★[T604 추신3] 핸드오프 겹침 띠(px) — 클라 해안 평행이동의 경계 앞 바다 지킴이 읽는다(서버 chunk.js 와 같은 수 · 박힌 수 0)
       });
@@ -1536,6 +1538,9 @@ const server = http.createServer(async (req, res) => {
       return jsonResp(res, 200, { ok: true });
     }
 
+    // ★[T1131] 게임 그림 매니페스트 — 표는 기동 때 한 번 짓는다(`server/gimg-map.js` · 그림을 바꾸면 central 을 다시 띄운다 = 배포) · 끔이면 이 길이 없다(404)
+    if (req.method === 'GET' && req.url.split('?')[0] === GimgMap.ROUTE && GimgMap.on()) return GimgMap.serve(req, res);
+
     // Phase 5-G+: hardcoded terrain 전체 제공 — 클라가 미접속 zone의 강·호수도
     // bigMap/타일에 그릴 수 있게 (welcome은 접속 zone 것만 줘서 경계에서 강이 끊겨 보임)
     if (req.method === 'GET' && req.url.split('?')[0] === '/terrain.json') {
@@ -1571,6 +1576,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
+  if (GimgMap.on()) { try { const m = GimgMap.build(); console.log(`[central] [T1131] 그림 매니페스트 ${m.n}칸(webp 쌍둥이 ${m.twin} · png ${m.png} · 그 밖 ${m.other}) ${(m.body.length / 1024).toFixed(0)}KB · ${m.ms}ms · ${m.url}`); } catch (e) { console.warn('[central] [T1131] 그림 매니페스트 실패 — 칸은 첫 /zones 때 다시 짓는다:', e.message); } }
   console.log(`[central] 🏛️ central server up on :${PORT}  publicHost=${PUBLIC_HOST}  db=${DB_PATH}`);
 });
 

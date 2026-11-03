@@ -45,20 +45,41 @@ const CROP_SPR = {
 //   문이 열리는 때(먼저 오는 하나): ⓐ /zones 에 칸이 없다(끔) · ⓑ 로비가 다 떴다(오른쪽 판 마을 카드가 그려짐 · 70-lobby `onbRefresh`) ·
 //     ⓒ 시작 화면 정보를 못 받음(같은 자리 — 오른쪽 판이 비어도 문은 연다) · ⓓ 「나루터로 간다」 눌림(30-n-net).
 //   켬이면 줄에 섰던 그림은 낮은 차례(`fetchPriority = 'low'`)로 건다. 그림 · 차례 · 새 수 0. 보는 법: 콘솔 `__gimg()`.
-const _gimg = { open: false, q: [], w: [], why: null, at: null, lazy: null };
-function _gsrc(im, url) { if (_gimg.open) im.src = url; else _gimg.q.push([im, url]); }
+// ★★[T1131 2026-11-04] **그림 주소는 매니페스트가 정한다** — 손잡이 `T1131_WEBP`(central `/zones` 칸 `gimgMap` · `!== '0'` 켬 기본 후보 · 되돌림 `=0` = 칸 없음 = 아래 전부 종전).
+//   칸이 있으면 문은 그 표(`/gimg-map.json?v=…` · immutable)를 받은 **뒤에** 열린다(표가 오기 전에 문 열 때가 오면 그 까닭을 들고 기다린다 · 표를 못 받으면 표 없이 연다 = 종전 png 주소).
+//   부르는 쪽은 종전 주소(`/assets/trees/tree01.png` …)를 그대로 짓고, 문(`_gurl`)이 표에서 내는 주소로 바꾼다 —
+//   png 옆 같은 화소 webp 쌍둥이(`scripts/webp_twins.py` · 잠금 자 같음) + `?v=<그 파일 내용 sha1 앞 10자>`(둘째 방문 왕복 0 · server/gimg-map.js).
+//   ⇒ 확장자 · 해시를 클라가 짐작하지 않는다(산 앵커 `ext` 와 같은 뜻 · 정본 한 자리). 표에 없는 주소는 그대로 간다.
+const _gimg = { open: false, q: [], w: [], why: null, at: null, lazy: null, map: null, mapSt: null, mapAt: null, pend: null };
+function _gurl(u) { const m = _gimg.map; return (m && typeof m[u] === 'string') ? m[u] : u; }   // [T1131] 표에 있으면 내는 주소(webp · ?v=) · 없거나 표가 없으면 그대로
+function _gsrc(im, url) { if (_gimg.open) im.src = _gurl(url); else _gimg.q.push([im, url]); }
 function _gwait() { return _gimg.open ? Promise.resolve() : new Promise((r) => _gimg.w.push(r)); }
-function _gfetch(url, opt) { return _gwait().then(() => fetch(url, opt)); }
+function _gfetch(url, opt) { return _gwait().then(() => fetch(_gurl(url), opt)); }
 function _gimgOpen(why) {
   if (_gimg.open) return;
+  if (_gimg.mapSt === 'wait') { if (_gimg.pend == null) _gimg.pend = why; return; }   // [T1131] 표를 기다린다 — 오면(또는 못 받으면) 이 까닭으로 연다
   _gimg.open = true; _gimg.why = why; _gimg.at = performance.now(); window.__gimg = _gimgReport;
   const low = _gimg.lazy === true, q = _gimg.q, w = _gimg.w;
   _gimg.q = []; _gimg.w = [];
-  for (const [im, u] of q) { if (low) { try { im.fetchPriority = 'low'; } catch (e) {} } im.src = u; }
+  for (const [im, u] of q) { if (low) { try { im.fetchPriority = 'low'; } catch (e) {} } im.src = _gurl(u); }
   for (const r of w) r();
 }
-function _gimgCfg(lazy) { window.__gimg = _gimgReport; if (_gimg.lazy !== null) return; _gimg.lazy = !!lazy; if (!_gimg.lazy) _gimgOpen('끔(/zones 칸 없음)'); }
-function _gimgReport() { return { open: _gimg.open, why: _gimg.why, at: _gimg.at == null ? null : Math.round(_gimg.at), queued: _gimg.q.length, lazy: _gimg.lazy }; }   // 훅(읽기 전용) — `_gimgCfg` 가 건다(최상위 실행문 0 · test-client-globals)
+function _gimgMapGot(m) {   // [T1131] 표가 왔다(못 받으면 null) — 기다리던 문을 연다
+  _gimg.map = (m && typeof m === 'object' && !Array.isArray(m)) ? m : null;
+  _gimg.mapSt = _gimg.map ? 'ok' : 'fail'; _gimg.mapAt = performance.now();
+  const p = _gimg.pend; _gimg.pend = null;
+  if (p != null) _gimgOpen(p);
+}
+function _gimgCfg(lazy, mapUrl) {
+  window.__gimg = _gimgReport; if (_gimg.lazy !== null) return; _gimg.lazy = !!lazy;
+  if (typeof mapUrl === 'string' && mapUrl && typeof fetch === 'function') {   // [T1131] 칸이 있으면 표부터(문이 열리기 전에 받는다 · 그림 0)
+    _gimg.mapSt = 'wait';
+    fetch(mapUrl).then((r) => (r.ok ? r.json() : null)).catch(() => null).then(_gimgMapGot);
+  }
+  if (!_gimg.lazy) _gimgOpen('끔(/zones 칸 없음)');
+}
+function _gimgReport() { return { open: _gimg.open, why: _gimg.why, at: _gimg.at == null ? null : Math.round(_gimg.at), queued: _gimg.q.length, lazy: _gimg.lazy,
+  map: _gimg.mapSt, mapN: _gimg.map ? Object.keys(_gimg.map).length : 0, mapAt: _gimg.mapAt == null ? null : Math.round(_gimg.mapAt) }; }   // 훅(읽기 전용) — `_gimgCfg` 가 건다(최상위 실행문 0 · test-client-globals)
 
 let _cropSprLoaded = 0;
 (function preloadCropSprites() {
@@ -84,13 +105,13 @@ let _cropSprLoaded = 0;
         if (typeof Image === 'function') {
           const si = new Image();
           si.onload = () => { _cropSprLoaded++; };
-          si.src = '/assets/crops/' + m[1] + '_' + m[2] + '.png';
+          _gsrc(si, '/assets/crops/' + m[1] + '_' + m[2] + '.png');   // ★[T1131] 문을 지난다(문은 이미 열렸다 — 앵커 뒤 · 표대로 주소)
           CROP_SPR[m[1]][+m[2]] = si;
         }
       } else if (CROP_SPR[m[1]][+m[2]] === undefined && !CROP_SPR._slug[m[1]] && typeof Image === 'function') {
         const si = new Image();
         si.onload = () => { _cropSprLoaded++; };
-        si.src = '/assets/crops/' + m[1] + '_' + m[2] + '.png';
+        _gsrc(si, '/assets/crops/' + m[1] + '_' + m[2] + '.png');   // ★[T1131] 문을 지난다
         CROP_SPR[m[1]][+m[2]] = si;
       }
       const im = CROP_SPR[m[1]] && CROP_SPR[m[1]][+m[2]];

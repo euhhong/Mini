@@ -12,6 +12,7 @@ import json, os, sys
 from PIL import Image
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import render_common as _RC      # ★[T132] 못박기 헬퍼 한 벌(사본 0). bpy 를 부르지만 씬은 안 짓는다.
+from webp_twins import twin as _webp_twin   # ★[T1131] 배포 png 옆 같은 화소 무손실 webp 쌍둥이(클라는 central 매니페스트대로 webp 를 받는다)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -104,6 +105,7 @@ for key, a in sorted(raw.items()):
     _RC.assert_pinned_box(_ap_out, key, im2.width, im2.height, round(ox, 2), round(oy, 2),
                           label="nat-post")
     im2.save(dst)
+    _webp_twin(dst)                 # ★[T1131] 쌍둥이도 같은 자리에서 쓴다(png 만 새로 쓰면 낡은 webp 가 남는다 — asset-lock --write 가 멈춘다)
     out[key] = {"w": im2.width, "h": im2.height, "ox": round(ox, 2), "oy": round(oy, 2),
                 "ppu": a["ppu"], "kind": a.get("kind", "prop")}
     # 게임 픽셀 환산(1m=32px) — 규격 검사용 부가 정보

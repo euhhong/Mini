@@ -450,6 +450,8 @@ if _SPECIES:
     os.makedirs(DEPLOY, exist_ok=True)
     for k in made:                                  # ★종 키만 배치한다(군 판 무변)
         shutil.copy2(os.path.join(OUT, k + '.png'), os.path.join(DEPLOY, k + '.png'))
+    import webp_twins                               # ★[T1131] 배치한 png 옆 같은 화소 무손실 webp 쌍둥이(Blender 파이썬엔 PIL 이 없을 수 있다 — 시스템 python3 로 넘긴다)
+    webp_twins.run([os.path.join(DEPLOY, k + '.png') for k in made])
     dj = os.path.join(DEPLOY, "crops_anchors.json")
     cur = json.load(open(dj, encoding='utf-8')) if os.path.exists(dj) else {}
     for k in made: cur[k] = anchors[k]              # ★앵커도 더하기만(군 키 무변)
@@ -493,10 +495,14 @@ if __name__ == '__main__':
     # ★[T101] 배치도 코드다 — 여태 `cp` 한 줄이 머리말 주석에만 있었다(구전 · T79c 축소 단계와 같은 함정).
     import shutil
     os.makedirs(DEPLOY, exist_ok=True)
+    _put = []
     for k in sorted(anchors):
         src = os.path.join(OUT, k + ".png")
         if os.path.exists(src):
             shutil.copy2(src, os.path.join(DEPLOY, k + ".png"))
+            _put.append(os.path.join(DEPLOY, k + ".png"))
+    import webp_twins                               # ★[T1131] 배치한 png 옆 같은 화소 무손실 webp 쌍둥이(시스템 python3 로 넘긴다)
+    webp_twins.run(_put)
     shutil.copy2(apath, os.path.join(DEPLOY, "crops_anchors.json"))
     print(f"[fields] 배치 -> {DEPLOY} ({len(anchors)}장 + 앵커)")
     if not ONLY or 'item_farmland' in ONLY:

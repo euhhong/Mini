@@ -212,7 +212,7 @@
     // ★하네스 훅(읽기 전용) — "그 종이 실제로 어느 파일을 썼나"를 화면에 묻는다(소스 대조 아님).
     window.__treeSpriteFor = (sp, sx, sy, fruitNow) => {
       const im = _speciesImg(sp, _treeHash(sx, sy), !!fruitNow);
-      return im ? String(im.src).replace(/^.*\//, '').replace(/\.png$/, '') : null;
+      return im ? String(im.src).replace(/[?#].*$/, '').replace(/^.*\//, '').replace(/\.(png|webp)$/, '') : null;   // ★[T1131] 주소는 매니페스트가 정한다(webp 쌍둥이 · `?v=`) — 어간이 곧 그림 이름
     };
     window.__treeSpeciesTable = () => (TREE_SPECIES.ok ? Object.keys(TREE_SPECIES.byId) : null);
     try {

@@ -458,6 +458,20 @@ console.log('\n[⑧ 굽는 기계 정본 — icons.lock.json 이 지금 자산�
       const drift = files.filter(k => tbl[k] && tbl[k] !== idatSha(path.join(dir, k + '.png')));
       ok(drift.length === 0,
          `${grp}: 화소 해시가 잠금표와 같다 (어긋남 ${drift.length}${drift.length ? ' — ' + drift.slice(0, 4).join(', ') : ''})`);
+      // ★★[T1131] **쌍둥이** — 게임 그림 일곱 무리는 클라가 이제 **webp 를 받는다**(central 매니페스트 · 손잡이 `T1131_WEBP`).
+      //   그러니 배포되는 그림은 png 가 아니라 그 옆 webp 다 — 짝이 다 있고(`scripts/webp_twins.py`), **같은 칸** 값이어야 한다(같은 화소 · 잠금 자 한 자리).
+      //   png 만 새로 굽고 쌍둥이를 안 다시 쓰면 화면엔 **낡은 그림**이 간다 — 그 자리를 여기서 문다(`asset-lock.js --write` 도 멈춘다).
+      if (ASSETLOCK.TWIN_GROUPS.includes(grp)) {
+        const webps = fs.readdirSync(dir).filter(f => f.endsWith('.webp')).map(f => f.slice(0, -5)).sort();
+        const noTwin = files.filter(k => !webps.includes(k)), lone = webps.filter(k => !files.includes(k));
+        ok(noTwin.length === 0 && lone.length === 0,
+           `${grp}: webp 쌍둥이 ${webps.length} ↔ png ${files.length} 짝 전수` +
+           (noTwin.length ? ` — 쌍둥이 없음: ${noTwin.slice(0, 4).join(', ')}` : '') +
+           (lone.length ? ` — png 없는 webp: ${lone.slice(0, 4).join(', ')}` : ''));
+        const tdrift = webps.filter(k => tbl[k] && tbl[k] !== idatSha(path.join(dir, k + '.webp')));
+        ok(tdrift.length === 0,
+           `${grp}: webp 쌍둥이 화소 해시가 잠금표(= png)와 같다 (어긋남 ${tdrift.length}${tdrift.length ? ' — ' + tdrift.slice(0, 4).join(', ') : ''})`);
+      }
     }
     {   // ★[T101] T97 이 두던 `_기계_예외`(저장소 밖 기계가 구운 바위 18장)는 **없어졌다** —
       //   바위가 `nature_render.py` 로 들어왔다. 예외가 다시 생기면 그건 굽는 코드 없는 그림을

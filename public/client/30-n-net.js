@@ -77,7 +77,7 @@
     const res = await fetch('/zones');
     const data = await res.json();
     _lob.mk.zones = performance.now();   // ★[T962] 때 표시
-    _gimgCfg(data.lobbyLazy === true);   // ★[T1123] 손잡이 `T1123_LOBBY_LAZY`(central /zones 칸 · 켬 기본) — 칸이 없으면 게임 그림 문을 곧바로 연다(00-const `_gimgCfg`)
+    _gimgCfg(data.lobbyLazy === true, data.gimgMap);   // ★[T1123] 손잡이 `T1123_LOBBY_LAZY`(central /zones 칸 · 켬 기본) — 칸이 없으면 게임 그림 문을 곧바로 연다(00-const `_gimgCfg`) · ★[T1131] `gimgMap`(손잡이 `T1131_WEBP`) — 그림 매니페스트 주소 · 칸이 있으면 문이 표를 받은 뒤 열린다
     zonesMeta = data.zones;
     marketplaceUrl = data.marketplaceUrl || '';
     handoffCommit = (typeof data.handoffCommit === 'number' && data.handoffCommit > 0) ? data.handoffCommit : 0;

@@ -96,6 +96,12 @@ for (const f of files) {
   console.log(`  ${f.padEnd(20)} bbox ${bb.w}×${bb.h} → ${dw}×${dh} (96 캔버스)`);
 }
 console.log(`총 ${done.length}종 → ${OUT}`);
+// ★[T1131] 쓴 png 옆에 같은 화소 무손실 webp 쌍둥이 — 클라는 central 매니페스트대로 webp 를 받는다(`scripts/webp_twins.py` · 설정 한 자리).
+//   실패는 삼키지 않는다: 쌍둥이를 못 쓰면 낡은 webp 가 배포에 남는다(그때 `asset-lock.js --write` 도 멈춘다).
+if (done.length) {
+  const r = require('child_process').spawnSync(process.env.WEBP_PY || 'python3', [path.join(__dirname, 'webp_twins.py'), ...done.map((d) => path.join(OUT, d.key + '.png'))], { stdio: 'inherit' });
+  if (r.status !== 0) { console.error('[icons-postprocess] ★webp 쌍둥이를 못 썼다(python3 + PIL · WEBP_PY 로 바꿀 수 있다)'); process.exit(1); }
+}
 
 // 컨택트 시트 (UI 배경색 #2a2e2a 위 정렬 격자)
 if (SHEET && done.length) {

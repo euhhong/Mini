@@ -1,0 +1,316 @@
+{
+ "at": "2026-11-03T17:32:44.722Z",
+ "tool": "scripts/t920-load-proof.js --n 2 --throttle [--wait 0 | 30000] [--root main 작업트리]",
+ "browser": "chromium",
+ "throttle": "10 Mbit/s · 왕복 100ms(CDP)",
+ "rows": [
+  {
+   "tag": "main-즉시",
+   "i": 1,
+   "total": 5623,
+   "frame1": 726,
+   "welcomeWait": 4510,
+   "settled": false,
+   "long": {
+    "n": 249,
+    "ms": 26372,
+    "max": 599
+   },
+   "img": {
+    "click": 2134,
+    "n": 630,
+    "pendingAtClick": 602,
+    "kbAfter": 25416,
+    "lastAfterClick": 35675,
+    "treesAfterClick": 11908,
+    "png": 535,
+    "webp": 88,
+    "gimg": {
+     "open": true,
+     "why": "로비 다 뜸",
+     "at": 1511,
+     "queued": 0,
+     "lazy": true
+    }
+   },
+   "rtImg": {
+    "n": 836,
+    "kb": 32563,
+    "afterClick": 813,
+    "lastEnd": 37809
+   },
+   "verdict": "1위 welcome 기다림(서버) 4510ms(눌림 → 첫 입력 5623ms 중)"
+  },
+  {
+   "tag": "main-즉시",
+   "i": 2,
+   "total": 5403,
+   "frame1": 461,
+   "welcomeWait": 4565,
+   "settled": false,
+   "long": {
+    "n": 295,
+    "ms": 25369,
+    "max": 427
+   },
+   "img": {
+    "click": 1968,
+    "n": 630,
+    "pendingAtClick": 611,
+    "kbAfter": 25669,
+    "lastAfterClick": 35555,
+    "treesAfterClick": 11779,
+    "png": 535,
+    "webp": 88,
+    "gimg": {
+     "open": true,
+     "why": "로비 다 뜸",
+     "at": 1490,
+     "queued": 0,
+     "lazy": true
+    }
+   },
+   "rtImg": {
+    "n": 836,
+    "kb": 32563,
+    "afterClick": 821,
+    "lastEnd": 37523
+   },
+   "verdict": "1위 welcome 기다림(서버) 4565ms(눌림 → 첫 입력 5403ms 중)"
+  },
+  {
+   "tag": "켬-즉시",
+   "i": 1,
+   "total": 4007,
+   "frame1": 549,
+   "welcomeWait": 3124,
+   "settled": false,
+   "long": {
+    "n": 261,
+    "ms": 26213,
+    "max": 596
+   },
+   "img": {
+    "click": 2041,
+    "n": 630,
+    "pendingAtClick": 608,
+    "kbAfter": 16929,
+    "lastAfterClick": 29637,
+    "treesAfterClick": 7385,
+    "png": 0,
+    "webp": 623,
+    "gimg": {
+     "open": true,
+     "why": "로비 다 뜸",
+     "at": 1529,
+     "queued": 0,
+     "lazy": true,
+     "map": "ok",
+     "mapN": 654,
+     "mapAt": 1527
+    }
+   },
+   "rtImg": {
+    "n": 836,
+    "kb": 24015,
+    "afterClick": 819,
+    "lastEnd": 31678
+   },
+   "verdict": "1위 welcome 기다림(서버) 3124ms(눌림 → 첫 입력 4007ms 중)"
+  },
+  {
+   "tag": "켬-즉시",
+   "i": 2,
+   "total": 4139,
+   "frame1": 699,
+   "welcomeWait": 2971,
+   "settled": false,
+   "long": {
+    "n": 295,
+    "ms": 25696,
+    "max": 652
+   },
+   "img": {
+    "click": 1932,
+    "n": 630,
+    "pendingAtClick": 608,
+    "kbAfter": 16929,
+    "lastAfterClick": 29520,
+    "treesAfterClick": 7591,
+    "png": 0,
+    "webp": 623,
+    "gimg": {
+     "open": true,
+     "why": "로비 다 뜸",
+     "at": 1449,
+     "queued": 0,
+     "lazy": true,
+     "map": "ok",
+     "mapN": 654,
+     "mapAt": 1447
+    }
+   },
+   "rtImg": {
+    "n": 836,
+    "kb": 24015,
+    "afterClick": 819,
+    "lastEnd": 31451
+   },
+   "verdict": "1위 welcome 기다림(서버) 2971ms(눌림 → 첫 입력 4139ms 중)"
+  },
+  {
+   "tag": "main-30초",
+   "i": 1,
+   "total": 2296,
+   "frame1": 662,
+   "welcomeWait": 1384,
+   "settled": false,
+   "long": {
+    "n": 300,
+    "ms": 25631,
+    "max": 673
+   },
+   "img": {
+    "click": 31807,
+    "n": 630,
+    "pendingAtClick": 354,
+    "kbAfter": 8609,
+    "lastAfterClick": 20697,
+    "treesAfterClick": -19771,
+    "png": 535,
+    "webp": 88,
+    "gimg": {
+     "open": true,
+     "why": "로비 다 뜸",
+     "at": 1510,
+     "queued": 0,
+     "lazy": true
+    }
+   },
+   "rtImg": {
+    "n": 836,
+    "kb": 32563,
+    "afterClick": 566,
+    "lastEnd": 52504
+   },
+   "verdict": "1위 welcome 기다림(서버) 1384ms(눌림 → 첫 입력 2296ms 중)"
+  },
+  {
+   "tag": "main-30초",
+   "i": 2,
+   "total": 2026,
+   "frame1": 618,
+   "welcomeWait": 1125,
+   "settled": false,
+   "long": {
+    "n": 323,
+    "ms": 25095,
+    "max": 587
+   },
+   "img": {
+    "click": 31810,
+    "n": 630,
+    "pendingAtClick": 354,
+    "kbAfter": 8609,
+    "lastAfterClick": 20412,
+    "treesAfterClick": -19902,
+    "png": 535,
+    "webp": 88,
+    "gimg": {
+     "open": true,
+     "why": "로비 다 뜸",
+     "at": 1439,
+     "queued": 0,
+     "lazy": true
+    }
+   },
+   "rtImg": {
+    "n": 836,
+    "kb": 32563,
+    "afterClick": 566,
+    "lastEnd": 52222
+   },
+   "verdict": "1위 welcome 기다림(서버) 1125ms(눌림 → 첫 입력 2026ms 중)"
+  },
+  {
+   "tag": "켬-30초",
+   "i": 1,
+   "total": 2090,
+   "frame1": 540,
+   "welcomeWait": 1283,
+   "settled": false,
+   "long": {
+    "n": 285,
+    "ms": 25708,
+    "max": 522
+   },
+   "img": {
+    "click": 31871,
+    "n": 630,
+    "pendingAtClick": 354,
+    "kbAfter": 5306,
+    "lastAfterClick": 18581,
+    "treesAfterClick": -23655,
+    "png": 0,
+    "webp": 623,
+    "gimg": {
+     "open": true,
+     "why": "로비 다 뜸",
+     "at": 1470,
+     "queued": 0,
+     "lazy": true,
+     "map": "ok",
+     "mapN": 654,
+     "mapAt": 1459
+    }
+   },
+   "rtImg": {
+    "n": 836,
+    "kb": 24015,
+    "afterClick": 566,
+    "lastEnd": 50452
+   },
+   "verdict": "1위 welcome 기다림(서버) 1283ms(눌림 → 첫 입력 2090ms 중)"
+  },
+  {
+   "tag": "켬-30초",
+   "i": 2,
+   "total": 2036,
+   "frame1": 651,
+   "welcomeWait": 1058,
+   "settled": false,
+   "long": {
+    "n": 304,
+    "ms": 25521,
+    "max": 656
+   },
+   "img": {
+    "click": 31763,
+    "n": 630,
+    "pendingAtClick": 354,
+    "kbAfter": 5306,
+    "lastAfterClick": 18155,
+    "treesAfterClick": -23630,
+    "png": 0,
+    "webp": 623,
+    "gimg": {
+     "open": true,
+     "why": "로비 다 뜸",
+     "at": 1416,
+     "queued": 0,
+     "lazy": true,
+     "map": "ok",
+     "mapN": 654,
+     "mapAt": 1416
+    }
+   },
+   "rtImg": {
+    "n": 836,
+    "kb": 24015,
+    "afterClick": 566,
+    "lastEnd": 49918
+   },
+   "verdict": "1위 welcome 기다림(서버) 1058ms(눌림 → 첫 입력 2036ms 중)"
+  }
+ ]
+}

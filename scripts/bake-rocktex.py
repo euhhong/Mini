@@ -264,5 +264,8 @@ if __name__ == '__main__':
     TGT = float(os.environ.get('TGT', 92))
     tile = np.clip(tile.astype(np.float32) + (TGT - tile.mean()), 0, 255).astype(np.uint8)
     Image.fromarray(tile, 'RGB').save(OUT)
+    if os.path.normpath(os.path.dirname(OUT)) == os.path.normpath(os.path.join(ROOT, 'public/assets/terrain')):
+        import sys; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from webp_twins import twin; twin(OUT)   # ★[T1131] 배포 자리면 같은 화소 무손실 webp 쌍둥이도(클라는 central 매니페스트대로 webp 를 받는다)
     print(f'\n산출: {OUT} {Image.open(OUT).size} {os.path.getsize(OUT)/1024:.0f}KB')
     print('평균색 rgb', [int(v) for v in tile.reshape(-1, 3).mean(axis=0)])

@@ -130,9 +130,9 @@
   // ★★[T481] **특산 갈래 대표 그림** — 제 그림이 없는 econ 특산 품목은 **제 갈래의 대표 그림**을 빌린다(라벨은 제 이름 그대로).
   //   정본은 `icons.lock.json` 의 `_갈래`(갈래마다 대표 키 + 빌려 쓰는 품목) 하나 — 여기 표를 옮겨 적지 않는다.
   //   제 그림이 있는 키는 **안 덮는다** · 대표가 구운 목록에 없거나 표가 안 오면 종전대로 점선 칸이다(요청은 구운 PNG 에만 · 404 0).
-  if (typeof fetch === 'function' && typeof Image === 'function') _gfetch('/assets/icons.lock.json').then((r) => (r.ok ? r.json() : null)).then((L) => { for (const g of Object.values((L && L['_갈래']) || {})) { if (!g || !g.icon || !ICON_RENDERED.has(g.icon) || !Array.isArray(g.items)) continue; for (const k of g.items) { if (ICON_RENDERED.has(k)) continue; const im = new Image(); im.onload = () => { ITEM_ICON_IMG[k] = im; }; im.src = '/assets/icons/' + g.icon + '.png'; } }
+  if (typeof fetch === 'function' && typeof Image === 'function') _gfetch('/assets/icons.lock.json').then((r) => (r.ok ? r.json() : null)).then((L) => { for (const g of Object.values((L && L['_갈래']) || {})) { if (!g || !g.icon || !ICON_RENDERED.has(g.icon) || !Array.isArray(g.items)) continue; for (const k of g.items) { if (ICON_RENDERED.has(k)) continue; const im = new Image(); im.onload = () => { ITEM_ICON_IMG[k] = im; }; _gsrc(im, '/assets/icons/' + g.icon + '.png'); } }   // ★[T1131] 문을 지난다(잠금표 뒤 — 문은 열렸다)
     // ★[T1088] **같은 물건**(`_같은물건` — econ 곳간 칸 ← 플레이어 품목 하나) — 그 품목의 그림을 쓴다(두 번째 PNG 0 · 제 그림이 있으면 안 덮는다).
-    for (const [k, src] of Object.entries((L && L['_같은물건']) || {})) { if (k === '_' || typeof src !== 'string' || ICON_RENDERED.has(k) || !ICON_RENDERED.has(src)) continue; const im = new Image(); im.onload = () => { ITEM_ICON_IMG[k] = im; }; im.src = '/assets/icons/' + src + '.png'; } }).catch(() => {});
+    for (const [k, src] of Object.entries((L && L['_같은물건']) || {})) { if (k === '_' || typeof src !== 'string' || ICON_RENDERED.has(k) || !ICON_RENDERED.has(src)) continue; const im = new Image(); im.onload = () => { ITEM_ICON_IMG[k] = im; }; _gsrc(im, '/assets/icons/' + src + '.png'); } }).catch(() => {});   // ★[T1131] 문을 지난다
   // ★★[T66] **물건 그림은 함수 하나다.** 인벤 · 조합법 · 바닥 · 거래소 · 창고가 전부 이걸 부른다.
   //   있으면 `/assets/icons/<key>.png` 렌더, 없으면 **점선 빈 칸**. 이모지는 없다(재민 확정 4·5).
   function itemPic(k, px) {

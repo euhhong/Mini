@@ -1,0 +1,141 @@
+{
+ "at": "2026-11-03T16:52:23.951Z",
+ "ruler": "asset-lock.js lockValue(pixel)",
+ "enc": "scripts/webp_twins.py (PIL WEBP lossless=True quality=100 method=6)",
+ "groups": {
+  "trees": {
+   "n": 51,
+   "png": 17961721,
+   "webp": 10606374,
+   "twin": 51,
+   "same": 51,
+   "lockN": 51,
+   "lockHit": 51
+  },
+  "nature": {
+   "n": 48,
+   "png": 2595345,
+   "webp": 1540992,
+   "twin": 48,
+   "same": 48,
+   "lockN": 48,
+   "lockHit": 48
+  },
+  "buildings": {
+   "n": 16,
+   "png": 1103188,
+   "webp": 503774,
+   "twin": 16,
+   "same": 16,
+   "lockN": 16,
+   "lockHit": 16
+  },
+  "bridge": {
+   "n": 21,
+   "png": 601227,
+   "webp": 153420,
+   "twin": 21,
+   "same": 21,
+   "lockN": 21,
+   "lockHit": 21
+  },
+  "crops": {
+   "n": 80,
+   "png": 440360,
+   "webp": 293460,
+   "twin": 80,
+   "same": 80,
+   "lockN": 80,
+   "lockHit": 80
+  },
+  "terrain": {
+   "n": 4,
+   "png": 740457,
+   "webp": 334812,
+   "twin": 4,
+   "same": 4,
+   "lockN": 4,
+   "lockHit": 4
+  },
+  "icons": {
+   "n": 338,
+   "png": 3487931,
+   "webp": 2098708,
+   "twin": 338,
+   "same": 338,
+   "lockN": 338,
+   "lockHit": 338
+  }
+ },
+ "bad": [],
+ "top": [
+  {
+   "g": "trees",
+   "k": "tree03",
+   "png": 1041580,
+   "webp": 633298
+  },
+  {
+   "g": "trees",
+   "k": "tree08_a",
+   "png": 886519,
+   "webp": 558782
+  },
+  {
+   "g": "trees",
+   "k": "tree08_f",
+   "png": 884273,
+   "webp": 556466
+  },
+  {
+   "g": "trees",
+   "k": "tree08",
+   "png": 873877,
+   "webp": 535388
+  },
+  {
+   "g": "trees",
+   "k": "tree06_a",
+   "png": 715512,
+   "webp": 450160
+  },
+  {
+   "g": "trees",
+   "k": "tree06_f",
+   "png": 710039,
+   "webp": 445964
+  },
+  {
+   "g": "trees",
+   "k": "tree01",
+   "png": 709622,
+   "webp": 417344
+  },
+  {
+   "g": "trees",
+   "k": "tree06",
+   "png": 700493,
+   "webp": 428168
+  },
+  {
+   "g": "trees",
+   "k": "tree02",
+   "png": 553149,
+   "webp": 326338
+  },
+  {
+   "g": "trees",
+   "k": "tree04",
+   "png": 551057,
+   "webp": 317722
+  }
+ ],
+ "total": {
+  "n": 558,
+  "same": 558,
+  "lockN": 558,
+  "lockHit": 558,
+  "png": 26930229,
+  "webp": 15531540
+ }
+}
