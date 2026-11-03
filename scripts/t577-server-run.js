@@ -16,6 +16,7 @@
 //     ★[T914] 집 행위가 선 판에선 `T315_MAPBEDS=1` + `T627_TRIP_DAY=1` 이 기본이다(아래 T914 줄) — 이 줄은 집 행위 끔 판(`T400_BUILD_ACT=0`)의 기본이다.
 //   · `VILLAGE_NPC_CAP=1` — 가시 몸만 줄인다(econ 인구는 무제한 · 시뮬 진실). 몸 5천을 30Hz 로 굴리면 빠른 시계를 못 버틴다.
 //     ★[T864] `VILLAGE_NPC_CAP=Infinity` 를 주면 아이 env 에서 그 칸을 뺀다 = 제품 운영 기본(무제한 · villages.js `NPC_CAP_PER_VILLAGE` 의 Infinity · T805 자 꼴).
+//     ★[T1087] 집 행위가 선 판의 기본은 1 이 아니라 집 크루 몫(`LIFE_CREW`)이다 — 크루가 명부(몸)에서 뽑히니 몸 1 이면 크루 1 로 묶였다(아래 KID_CAP 줄).
 //   · 시드 = econ 시드(`createWorldV2({seed})` 한 칸 — t17 이 시드를 바꾸는 그 자리). 지도·소굴·전쟁 시드는 그대로.
 //   ⚠★★[T577 추신 2026-10-03] **이 조건의 왜곡 하나 — 집이 공짜다.** 생활층 집 행위(`T400_BUILD_ACT` 기본 켬)가 서는 마을은
 //     econ 이 집 목재 제약을 크루에게 넘긴다(`economy-sim.js buildActOn` · `_t400Live`). 빠른 시계에선 크루가 걷지 못하고
@@ -112,6 +113,11 @@ fs.mkdirSync(DIR, { recursive: true });
 const HOUSE_ACT = process.env.T400_BUILD_ACT !== '0';
 const KID_MAPBEDS = process.env.T315_MAPBEDS != null ? process.env.T315_MAPBEDS : (HOUSE_ACT ? '1' : '0');
 const KID_TRIPDAY = process.env.T627_TRIP_DAY != null ? process.env.T627_TRIP_DAY : (HOUSE_ACT ? '1' : null);
+// ★★[T1087 2026-11-02 · T1055 1위] 판 자 가시 몸 상한 — 집 행위가 선 판이면 **집 크루 몫**(서버 정본 `LIFE_CREW` · `villages.js` 를 `__labProbe._t400Probe.LIFE_CREW` 로 읽는다 — 랩 자 t17 · t176 이 크루에 주는 그 수 · 사본 0)
+//   크루는 명부 앞 `min(LIFE_CREW, 몸 수)` 명이다(`_t400Crew`). 몸 상한이 1 이면 크루가 1 로 묶여 한 채 3날(랩 · 운영 2날) — 판 자만의 왜곡(보고 T1055 · T1087).
+//   운영 기본은 몸 상한 무제한이라 크루가 LIFE_CREW 다. 판 자는 빠른 시계 때문에 몸을 줄인다(위 머리 주석) — 줄이되 크루 몫 아래로는 안 줄인다.
+//   집 행위가 꺼진 판(서버 기준선 자 `T400_BUILD_ACT=0`)은 크루가 없어 종전 '1' 그대로다. 부르는 쪽이 준 값이 먼저(되돌림 = `VILLAGE_NPC_CAP=1`).
+const KID_CAP = process.env.VILLAGE_NPC_CAP || (HOUSE_ACT ? String(require(path.join(ROOT, 'server', 'villages')).__labProbe._t400Probe.LIFE_CREW) : '1');
 // ★[T941] 가상 시계 판이면 WAL 일꾼 끔이 기본(머리 주석 T941 줄 · 값 무변) — 부르는 쪽이 준 값이 먼저
 const VCLOCK = process.env.T745_VCLOCK === '1';
 const KID_WAL = process.env.T696_WAL != null ? process.env.T696_WAL : (VCLOCK ? '0' : null);
@@ -139,7 +145,7 @@ function runOne(seed, k) {
       T941_BATTLE_DAY: KID_BATTLE,   // ★[T959] 판 자 기본 '1'(교전 국면 몸만 운영 하루 몫) · 되돌림 '0' = T959 전 판 자
       T1013_BAND_DAY: KID_BAND,   // ★[T1013] 판 자 기본 '1'(사냥터 짓기 그날 안에) · 되돌림 '0' = T1013 전 판 자
       T990_ECON_DAY: KID_ECON,   // ★[T990] 판 자 기본 '1'(길의 날 · NPC 광맥 시각 = econ 날) · 되돌림 '0' = T990 전 판 자
-      VILLAGE_NPC_CAP: process.env.VILLAGE_NPC_CAP || '1',
+      VILLAGE_NPC_CAP: KID_CAP,   // ★[T1087] 집 행위 켬 판 기본 = 집 크루 몫(`LIFE_CREW`) · 끔 판 기본 '1'(종전) · 부르는 쪽이 먼저
       T577_SEED: String(seed), T577_DAYS: String(DAYS), T577_OUT: out,
       //   ★[T655] 첫 부팅 조각(T640 · 제품 기본 켬)은 이 자에서 끈다 — 하루 250ms 면 표본이 도는 ~4분 동안 수백 날이 지나 도적 데일리를 건너뛴다(T640 회부 ①).
       T640_BOOT_SLICE: '0',
@@ -161,7 +167,7 @@ function runOne(seed, k) {
 
 (async () => {
   console.log(`\n=== 서버 판 자(T577) — ${DAYS}일 · 시드 ${SEEDS.join('·')} · 판 ${TAG} · 동시 ${PAR} · ${DIR} ===`);
-  console.log(`  조건: VILLAGE_DAY_MS=${process.env.VILLAGE_DAY_MS || '250'} · T315_MAPBEDS=${KID_MAPBEDS} · T627_TRIP_DAY=${KID_TRIPDAY != null ? KID_TRIPDAY : '(없음)'} · 집 행위 ${HOUSE_ACT ? '켬' : '끔'} · 가상 시계 ${VCLOCK ? '켬' : '끔'} · T696_WAL=${KID_WAL != null ? KID_WAL : '(없음)'} · T941_BATTLE_DAY=${KID_BATTLE} · T990_ECON_DAY=${KID_ECON} · T1013_BAND_DAY=${KID_BAND} · VILLAGE_NPC_CAP=${process.env.VILLAGE_NPC_CAP || '1'} · 도적 ${process.env.ENABLE_BANDITS === '0' ? '끔' : '켬'}`);
+  console.log(`  조건: VILLAGE_DAY_MS=${process.env.VILLAGE_DAY_MS || '250'} · T315_MAPBEDS=${KID_MAPBEDS} · T627_TRIP_DAY=${KID_TRIPDAY != null ? KID_TRIPDAY : '(없음)'} · 집 행위 ${HOUSE_ACT ? '켬' : '끔'} · 가상 시계 ${VCLOCK ? '켬' : '끔'} · T696_WAL=${KID_WAL != null ? KID_WAL : '(없음)'} · T941_BATTLE_DAY=${KID_BATTLE} · T990_ECON_DAY=${KID_ECON} · T1013_BAND_DAY=${KID_BAND} · VILLAGE_NPC_CAP=${KID_CAP === 'Infinity' ? '∞(운영 기본)' : KID_CAP} · 도적 ${process.env.ENABLE_BANDITS === '0' ? '끔' : '켬'}`);
   const res = [];
   const q = SEEDS.map((s, k) => [s, k]);
   await Promise.all(Array.from({ length: Math.min(PAR, q.length) }, async () => {

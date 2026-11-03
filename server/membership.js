@@ -480,9 +480,61 @@ function publicState(player, vil) {
   return out;
 }
 
+// ── ★★[T1086 2026-11-02] 첫 의뢰 = 마을 사람 권함(★재민 11-01 "마을 가입 · 개인 사유지 강하게 유도" · 카드 "첫 의뢰 뒤 바로") ──────
+//   손잡이 `T1086_FIRST_JOIN` — 켬 기본 후보(`'0'` 만 끔 · 끔이면 아래 셋을 아무도 안 부른다 = 종전 K-2 · 종전 바이트).
+//   ⓐ `offerFirst` — 온보딩이 **시작 마을 의뢰 하나를 다 채운 순간**(또는 다시 접속했을 때 빈터 권리가 서 있으면) 권함 자리만 건다.
+//      말은 촌장 대사 한 통이 한다(온보딩 'hook' · 'offer' — 종전 권함 알림은 안 낸다 · 같은 말을 두 번 안 한다).
+//   ⓑ `firstJoinChat` — 그 권함에 `/소속` 이면 앉힌다. 문턱은 `N_MEMBER` 대신 **시작 마을 빈터 권리**(= 그 마을 의뢰를 하나 다 채웠다)다.
+//      계량기는 그대로 하나(`contribOf` 무변 · 기여를 지어내지 않는다) · 앉히는 줄은 `_seat` 하나(사본 0).
+//      ⚠종전 문턱을 넘은 사람(기여 ≥ `N_MEMBER`)은 종전 문(`accept` · 종전 말)이 받는다 — 이 문은 문턱 아래만.
+//   ⓒ `joinOf` — 「지금 할 일」 칸이 읽는 가입 형편 `{ member, offer }`(온보딩 메시지의 `join` 칸 · 존이 부르는 법만 넘긴다).
+const T1086 = process.env.T1086_FIRST_JOIN !== '0';
+function offerFirst(player, vid) {
+  if (!T1086 || !ready() || !player || vid == null) return false;
+  if (memberOf(player)) return false;                                     // 한 사람은 한 마을(K-1)
+  if (player._memberOfferVid === (vid | 0)) return false;                 // 이미 권했다(앵무새 금지 — 종전 `onDeliver` 와 같은 자리)
+  //   초대제 마을은 기여로 권하지 않는다(T785 — 존의 납품 문이 `Membership.onDeliver` 를 안 부르는 그 판정)
+  if (VillageKin.ON && typeof VillageKin.joinModeOfVid === 'function' && VillageKin.joinModeOfVid(vid | 0) === 'invite') return false;
+  player._memberOfferVid = vid | 0;
+  player._memberOfferAt = Date.now();
+  player._t1086Offer = vid | 0;                                            // 이 권함이 첫 의뢰 권함이라는 표지(몸의 메모리 칸 · 저장 0 — 종전 권함과 같다)
+  return true;
+}
+function joinOf(player) {
+  if (!player) return null;
+  const m = memberOf(player);
+  return { member: m ? { vid: m.vid | 0, name: m.name || '' } : null,
+    offer: (!m && player._memberOfferVid != null) ? (player._memberOfferVid | 0) : null };
+}
+function firstJoinChat(player, text) {
+  if (!T1086 || !ready() || !player) return false;
+  if (String(text || '').trim().split(/\s+/)[0] !== '/소속') return false;
+  if (memberOf(player)) return false;                                     // 이미 마을 사람 — 종전 문이 형편을 되읊는다
+  const v = player._memberOfferVid;
+  if (v == null || player._t1086Offer !== (v | 0)) return false;          // 첫 의뢰 권함이 아니면 종전 문(K-2)
+  if (contribOf(player.playerId) >= CFG.N_MEMBER) return false;           // 종전 문턱을 넘었으면 종전 문이 받는다(같은 결과 · 종전 말)
+  const s = Onb.stateOf(player.playerId);
+  if (!s.lot_ok || s.start_vid == null || (s.start_vid | 0) !== (v | 0)) return false;   // 시작 마을 · 빈터 권리(= 그 마을 의뢰를 하나 다 채웠다)
+  if (VillageKin.ON && typeof VillageKin.joinModeOfVid === 'function' && VillageKin.joinModeOfVid(v | 0) === 'invite') return false;   // 그새 초대제 — 종전 문이 답한다
+  _seat(player, v | 0);
+  player._memberOfferVid = null;
+  player._t1086Offer = null;
+  //   촌장의 말 — 온보딩 통로(말풍선 + 알림 첫 줄 · 클라 `onbOnMessage`). 빈터 줄은 아직 터를 안 잡았을 때만(이미 잡았으면 헛말이다).
+  let claimed = false;
+  try { claimed = !!(H && typeof H.lotClaimed === 'function' && H.lotClaimed(player)); } catch (e) { claimed = false; }
+  const lines = ['오늘부터 자네는 우리 마을 사람일세.'];
+  if (!claimed) lines.push(Onb.T1086_LOT_LINE);
+  try {
+    if (H && H.send && player.ws) H.send(player.ws, { type: 'onboarding_quest', vid: v | 0, kind: 'joined', name: player.member.name || '', day: _day(), quest: null,
+      lines, state: Onb.publicState(player.playerId), join: joinOf(player) });
+  } catch (e) {}
+  return true;
+}
+
 module.exports = {
   CFG, init, ready, contribOf, memberOf, isMemberHere,   // ★[T779] 한도 둘(`limitOf` · `remainOf`)은 걷었다
   onDeliver, accept, seatFounder, seatGuildMember, seatByInvite, leave, expel, withdraw, orderBrief, handleChat, publicState,   // ★[T197] 창설 = 소속 · ★[T202] 길드원도 · ★[T785] 부름으로 드는 문
   resolveRes, resKo,   // ★[T159] 품목 해석 · ★[T779] 길드 곳간 잠금 둘(`granaryOpen` · `granaryBust`)은 걷었다
   T769, withdrawChief, chiefCheck, chiefCached, resolveItem,   // ★[T769] 기부 · 촌장 꺼내기
+  T1086, offerFirst, firstJoinChat, joinOf,   // ★[T1086] 첫 의뢰 = 마을 사람 권함 — 권함 자리 · 받아들이는 문 · 칸이 읽는 형편
 };

@@ -94,6 +94,22 @@
     'bone', 'fur', 'leather', 'horn', 'feather', 'egg',
     'hammer', 'saw', 'weapon', 'tool', 'armor',
     'obsidian', 'sulfur',
+    // ★[T1088] 그림 없던 품목 이어서 백스물셋 — 차례: 제작창 음식 칸(모두가 첫 1시간에 본다) → 곳간 · 거래 · 게시판 빈도(`T17_ITEMFREQ`) →
+    //   빌린 갈래 그림이 다른 물건으로 보이던 것(곡물 밭 · 서 있는 나무 · 약초 풀 · 광석 그림 아래의 열매 · 뿌리 · 진 · 가루 …) → 남은 점선(보석 · 공예품 · 가축 산물 · 바다).
+    //   굽는 곳 `props_render.py` `ITEMS_T1088` · `test-icons ⑬` 이 이 목록과 대조한다. 같은 물건 둘(`fruit` · `meat`)은 PNG 가 아니라 `icons.lock.json` `_같은물건`(아래 한 줄).
+    'food_cooked', 'clam_stew', 'seaweed_soup', 'food', 'bronze', 'ramie', 'hemp', 'clothes', 'resin', 'cooked_food',
+    'clay', 'tigerhide', 'amber_resin', 'bamboo', 'beeswax', 'birch_sap', 'chamomile', 'cork', 'fruit_berries', 'ginseng',
+    'wild_ginseng', 'latex', 'rubber', 'nuts', 'paper_mulberry', 'truffle', 'amber_raw', 'coal', 'kaolin', 'mercury',
+    'nitrate', 'sand', 'soda_ash', 'black_pepper', 'cumin', 'cardamom', 'clove', 'nutmeg', 'star_anise', 'cinnamon',
+    'vanilla', 'saffron', 'paprika', 'turmeric', 'frankincense', 'myrrh', 'musk', 'apple', 'banana', 'cassava',
+    'chickpea', 'chili', 'cocoa', 'coconut', 'coffee', 'corn', 'cotton', 'dates', 'fig', 'flax',
+    'lentil', 'mango', 'mulberry', 'olive', 'onion', 'peanut', 'pineapple', 'potato', 'pumpkin', 'sugarbeet',
+    'sugarcane', 'sweet_potato', 'tobacco', 'tomato', 'diamond', 'ruby', 'sapphire', 'emerald', 'amethyst', 'topaz',
+    'turquoise', 'jade_polished', 'amber_polished', 'gold_coin', 'silver_coin', 'relic', 'iron_relic', 'scroll', 'beer', 'wine',
+    'soy_sauce', 'kimchi', 'bread', 'bow', 'brush', 'ink', 'paper', 'clay_brick', 'stone_brick', 'dye_indigo',
+    'dye_purple', 'glass', 'perfume', 'pottery', 'silk_cloth', 'beef_tallow', 'cheese', 'duck_meat', 'goat_milk', 'milk',
+    'ivory', 'linen', 'meat_beef', 'meat_mutton', 'meat_pork', 'silk_raw', 'silkworm', 'wool', 'lobster', 'murex_shell',
+    'grain_sheaf', 'bronze_tool', 'iron_tool',
   ]);
   // ★★[T66 2차 · 재민 확정 2026-09-03] 옛 **거부 목록** `ICON_NO_RENDER` 은 **없앴다** — 뒤집혔다.
   //   종전: "여기 있으면 렌더가 없다"(빠뜨리면 404). 지금: `ICON_RENDERED` 에 **있으면 그림, 없으면 점선 칸**.
@@ -109,7 +125,9 @@
   // ★★[T481] **특산 갈래 대표 그림** — 제 그림이 없는 econ 특산 품목은 **제 갈래의 대표 그림**을 빌린다(라벨은 제 이름 그대로).
   //   정본은 `icons.lock.json` 의 `_갈래`(갈래마다 대표 키 + 빌려 쓰는 품목) 하나 — 여기 표를 옮겨 적지 않는다.
   //   제 그림이 있는 키는 **안 덮는다** · 대표가 구운 목록에 없거나 표가 안 오면 종전대로 점선 칸이다(요청은 구운 PNG 에만 · 404 0).
-  if (typeof fetch === 'function' && typeof Image === 'function') fetch('/assets/icons.lock.json').then((r) => (r.ok ? r.json() : null)).then((L) => { for (const g of Object.values((L && L['_갈래']) || {})) { if (!g || !g.icon || !ICON_RENDERED.has(g.icon) || !Array.isArray(g.items)) continue; for (const k of g.items) { if (ICON_RENDERED.has(k)) continue; const im = new Image(); im.onload = () => { ITEM_ICON_IMG[k] = im; }; im.src = '/assets/icons/' + g.icon + '.png'; } } }).catch(() => {});
+  if (typeof fetch === 'function' && typeof Image === 'function') fetch('/assets/icons.lock.json').then((r) => (r.ok ? r.json() : null)).then((L) => { for (const g of Object.values((L && L['_갈래']) || {})) { if (!g || !g.icon || !ICON_RENDERED.has(g.icon) || !Array.isArray(g.items)) continue; for (const k of g.items) { if (ICON_RENDERED.has(k)) continue; const im = new Image(); im.onload = () => { ITEM_ICON_IMG[k] = im; }; im.src = '/assets/icons/' + g.icon + '.png'; } }
+    // ★[T1088] **같은 물건**(`_같은물건` — econ 곳간 칸 ← 플레이어 품목 하나) — 그 품목의 그림을 쓴다(두 번째 PNG 0 · 제 그림이 있으면 안 덮는다).
+    for (const [k, src] of Object.entries((L && L['_같은물건']) || {})) { if (k === '_' || typeof src !== 'string' || ICON_RENDERED.has(k) || !ICON_RENDERED.has(src)) continue; const im = new Image(); im.onload = () => { ITEM_ICON_IMG[k] = im; }; im.src = '/assets/icons/' + src + '.png'; } }).catch(() => {});
   // ★★[T66] **물건 그림은 함수 하나다.** 인벤 · 조합법 · 바닥 · 거래소 · 창고가 전부 이걸 부른다.
   //   있으면 `/assets/icons/<key>.png` 렌더, 없으면 **점선 빈 칸**. 이모지는 없다(재민 확정 4·5).
   function itemPic(k, px) {

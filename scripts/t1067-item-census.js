@@ -180,6 +180,8 @@ const equipPicKey = litAt(ICON_JS, /(?=function equipPicKey\()/, { EQUIP_ICONS }
 const LOCK = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'assets', 'icons.lock.json'), 'utf8'));
 const LOCK_ICONS = new Set(Object.keys(LOCK.icons || {}));
 const GROUPS = LOCK['_갈래'] || {};
+// ★[T1088] 같은 물건 표(`_같은물건` — econ 곳간 칸 ← 플레이어 품목 하나 · 그 품목의 그림을 쓴다) — 제 그림과 같이 센다(`own` 열 · 머리줄에 따로 적는다).
+const SAME = Object.fromEntries(Object.entries(LOCK['_같은물건'] || {}).filter(([k, v]) => k !== '_' && typeof v === 'string'));
 
 // ══ ② 이름표 — zone.js 가 짓는 차례 그대로 ═════════════════════════════════════════════════════════
 const LAB = {}, LAB_FROM = {};
@@ -544,8 +546,9 @@ const ROWS = KEYS.map((k) => {
   const png = lc(k), rendered = ICON_RENDERED.has(k), lock = LOCK_ICONS.has(k);
   const g = GROUP_OF[k] || null, gd = g ? GROUPS[g] : null;
   const canBorrow = !!(gd && gd.icon && ICON_RENDERED.has(gd.icon));   // 클라 술어 그대로(대표가 구운 목록에 있어야 빌린다)
-  const status = png ? 'own' : (gd && gd.icon ? `borrow:${g}` : 'none');
-  const client = rendered ? '그림' : (canBorrow ? '빌림' : '점선');
+  const sameSrc = !png && SAME[k] && ICON_RENDERED.has(SAME[k]) ? SAME[k] : null;   // ★[T1088] 클라 술어 그대로(대표가 구운 목록에 있어야 쓴다)
+  const status = png ? 'own' : sameSrc ? `same:${sameSrc}` : (gd && gd.icon ? `borrow:${g}` : 'none');
+  const client = rendered ? '그림' : sameSrc ? '같은 물건' : (canBorrow ? '빌림' : '점선');
   const tier = tierOf(k);
   const paths = PATHS.filter((p) => p.item === k).map((p) => ({ verb: p.verb, at: p.at, kind: p.kind, on: p.on, knob: p.knob, tier: TIERS[p.tier], reach: p.on && p.tier < 3 ? REACH[p.reachIdx] : null,
     req: p.req, inputs: p.inputs, tools: p.tools, facility: p.facility, days: p.days || 0, seasons: p.seasons, region: p.region }));
@@ -604,10 +607,11 @@ const ROW = new Map(ROWS.map((r) => [r.key, r]));
 
 // ══ ⑨ 셈 · 출력 ═════════════════════════════════════════════════════════════════════════════════
 const cnt = (arr, f) => arr.filter(f).length;
-const own = cnt(ROWS, (r) => r.pic === 'own'), borrow = cnt(ROWS, (r) => r.pic.startsWith('borrow')), none = cnt(ROWS, (r) => r.pic === 'none');
+function isOwn(r) { return r.pic === 'own' || r.pic.startsWith('same:'); }   // ★[T1088] 같은 물건은 제 물건의 그림이 뜬다
+const own = cnt(ROWS, isOwn), same = cnt(ROWS, (r) => r.pic.startsWith('same:')), borrow = cnt(ROWS, (r) => r.pic.startsWith('borrow')), none = cnt(ROWS, (r) => r.pic === 'none');
 const out = [];
 const P = (s) => out.push(s);
-P(`# T1067 품목 그림 전수 — 존 \`${ZONE}\` · 품목 ${ROWS.length} · own ${own} · borrow ${borrow} · none ${none}`);
+P(`# T1067 품목 그림 전수 — 존 \`${ZONE}\` · 품목 ${ROWS.length} · own ${own}${same ? ` (같은 물건 ${same} 포함)` : ''} · borrow ${borrow} · none ${none}`);
 P('');
 P(`**자** \`scripts/t1067-item-census.js\` · 아이콘 폴더 \`${path.relative(ROOT, ICON_DIR).startsWith('..') ? ICON_DIR : (path.relative(ROOT, ICON_DIR) || '.')}\` · 하루 = ${DAY_MS / 60000}실분(${AT.dayMs} · 읽는 자리 ${AT.seasonDayMs}) ⇒ 실시간 1시간 = **${GATE_DAYS}게임일** · 한 해 ${YEAR_DAYS}일`);
 P('');
@@ -640,13 +644,13 @@ P('| 출처 | 품목 | own | borrow | none |');
 P('|---|---|---|---|---|');
 {
   const tags = [...new Set(ROWS.flatMap((r) => r.sources))].sort();
-  for (const t of tags) { const rs = ROWS.filter((r) => r.sources.indexOf(t) >= 0); P(`| ${t} | ${rs.length} | ${cnt(rs, (r) => r.pic === 'own')} | ${cnt(rs, (r) => r.pic.startsWith('borrow'))} | ${cnt(rs, (r) => r.pic === 'none')} |`); }
+  for (const t of tags) { const rs = ROWS.filter((r) => r.sources.indexOf(t) >= 0); P(`| ${t} | ${rs.length} | ${cnt(rs, isOwn)} | ${cnt(rs, (r) => r.pic.startsWith('borrow'))} | ${cnt(rs, (r) => r.pic === 'none')} |`); }
 }
 P('');
 P('## 단 × 그림');
 P('| 단 | own | borrow | none | 합 |');
 P('|---|---|---|---|---|');
-for (let t = 0; t < 4; t++) { const rs = ROWS.filter((r) => r.tierIdx === t); P(`| ${TIERS[t]} | ${cnt(rs, (r) => r.pic === 'own')} | ${cnt(rs, (r) => r.pic.startsWith('borrow'))} | ${cnt(rs, (r) => r.pic === 'none')} | ${rs.length} |`); }
+for (let t = 0; t < 4; t++) { const rs = ROWS.filter((r) => r.tierIdx === t); P(`| ${TIERS[t]} | ${cnt(rs, isOwn)} | ${cnt(rs, (r) => r.pic.startsWith('borrow'))} | ${cnt(rs, (r) => r.pic === 'none')} | ${rs.length} |`); }
 P(`| 합 | ${own} | ${borrow} | ${none} | ${ROWS.length} |`);
 P('');
 P('## 단 × 보는 사람 (none · borrow 만)');
@@ -726,7 +730,7 @@ if (JSON_OUT) {
     card: 'T1067', zone: ZONE, iconDir: path.relative(ROOT, ICON_DIR), dayMs: DAY_MS, gateDays: GATE_DAYS, tiers: TIERS, reach: REACH,
     knobs: { T593_SEA: M.Fishing.T593_SEA, T602_SEA_TABLE: M.Sea.T602_SEA_TABLE, T602_NEW_FISH: M.Sea.T602_NEW_FISH, T609_FRESH_TABLE: M.Fresh.T609_FRESH_TABLE,
       T694_GAME_MEAT: M.GameMeat.on(), T877_ON: M.Specialty.T877_ON, T450_WILD_GROVES: WILD_ON, ENABLE_WILDLIFE: HOSTILES_ON, fishToolGate: FISH_TOOL_GATE },
-    totals: { keys: ROWS.length, own, borrow, none },
+    totals: { keys: ROWS.length, own, same, borrow, none },
     start: { player: L_START.value, at: AT.start, npc: L_NPC_INV.value, npcAt: AT.npcStart },
     surfaces: SURF.map((s) => ({ name: s.name, reach: REACH[s.reach], at: s.at, keys: [...s.keys].sort() })), textOnly: TEXT_ONLY,
     dishes: DISHES, rows: ROWS, priority: PRIO.map((r) => r.key), fish: FISH_ROWS, anchors: AT, missingAnchors: MISSING,

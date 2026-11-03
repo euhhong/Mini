@@ -66,6 +66,22 @@ let _ready = false;
 //   채택값은 켜짐. A/B 재현 규약(`lab-wiring-check [A2]` 정신)과 같은 결이고,
 //   원인 가르기(“이 층이 범인인가”)를 한 줄로 할 수 있게 한다.
 const ENABLED = process.env.ONB_ENABLE !== '0';
+// ★★[T1086 2026-11-02 · ★재민 11-01 "마을 가입과 개인 사유지 건설은 강하게 유도" · 카드 "첫 의뢰 뒤 바로"]
+//   손잡이 `T1086_FIRST_JOIN` — 켬 기본 후보(`'0'` 만 끔 · 끔이면 종전 K-2 그대로: 빈터 = 누적 기여 `LOT_AFTER` · 소속 = `MEMBER_N` · 이 층의 말 · 메시지 칸 무변).
+//   켬이면 **시작 마을의 의뢰 하나를 다 채운 순간**(첫 의뢰 · 장부의 `done`) 대본의 다음 두 단계가 바로 선다 —
+//     ⓐ 빈터 권리(`lot_ok`) ⓑ 마을 사람 권함(`membership.offerFirst` — 권함 자리만 · 받아들이면 `membership.firstJoinChat` 이 앉힌다).
+//   ★새 수 0 — 문은 "그 마을 의뢰 하나를 다 채웠다"(`done`)와 "시작 마을"(대본 상태 `start_vid`)뿐이다. 계량기는 그대로 하나(`contrib`).
+//   ★다른 마을에 드는 문은 종전 K-2(`MEMBER_N`) 그대로다 — 이 층은 대본(시작 마을)만 앞당긴다.
+const T1086 = process.env.T1086_FIRST_JOIN !== '0';
+//   촌장의 말(하게체 · `지시/지시_T1069.md`) — 권함 한 줄 · 빈터 한 줄. 받아들인 뒤의 말(`membership.firstJoinChat`)도 빈터 줄은 이것을 부른다(사본 0).
+const T1086_JOIN_LINE = '이만하면 자네를 우리 마을 사람으로 받겠네. 들겠거든 채팅에 "/소속"이라 적게.';
+const T1086_LOT_LINE = '어귀 빈터에 자네 터를 잡게. 거기다 집을 올리게.';
+//   「지금 할 일」 칸이 읽는 가입 형편 `{ member, offer }` — 정본은 `membership.joinOf`(존이 부르는 법만 넘긴다). 끔이면 칸 자체를 안 싣는다(옛 바이트).
+function _t1086Join(player) {
+  if (!T1086 || !H || typeof H.joinOf !== 'function' || !player) return undefined;
+  try { return H.joinOf(player) || null; } catch (e) { return null; }
+}
+function _t1086With(msg, player) { const j = _t1086Join(player); if (j !== undefined) msg.join = j; return msg; }
 function init(host) {
   if (!ENABLED) { console.log('[onboarding] ONB_ENABLE=0 — 온보딩 층 꺼짐(no-op)'); return false; }
   H = host || {};
@@ -821,6 +837,15 @@ function onDeliver(player, r, vid) {
     s.contrib = (s.contrib | 0) + 1;
     if (!s.first_done) { s.first_done = 1; if (r.req && r.req.item) s.first_item = String(r.req.item); }
   }
+  // ★[T1086] 첫 의뢰 — 시작 마을 의뢰 하나를 다 채운 순간: 빈터 권리 + 마을 사람 권함(위 손잡이 주석 · 끔이면 셋 다 거짓)
+  //   권함 자리는 `membership` 정본이 건다(`H.offerJoin` — 이미 마을 사람 · 이미 권함 · 초대제 마을이면 거짓). 말은 아래 촌장 한 통이 한다.
+  const _fj = T1086 && done && s.start_vid != null && (vid | 0) === (s.start_vid | 0);
+  const _fjLot = _fj && !s.lot_ok;
+  if (_fjLot) s.lot_ok = 1;
+  const _fjOffer = _fj && typeof H.offerJoin === 'function' && H.offerJoin(player, vid | 0) === true;
+  const _fjLines = [];
+  if (_fjOffer) _fjLines.push(T1086_JOIN_LINE);
+  if (_fjLot) _fjLines.push(T1086_LOT_LINE);
   // 곳간 방향 이펙트 — "내가 낸 물건이 실제로 쌓인다"(§9.4 반응 ②). 새 패널이 아니라 한 번의 연출.
   if (a) out.push({ type: 'onboarding_fx', kind: 'granary', x: a.centerX, y: a.centerY, vid: vid | 0 });
   // ★촌장의 말은 **온보딩 전용 메시지**로 보낸다 — 근접 브리핑(`village_brief`)과 같은 통로를 쓰면
@@ -835,16 +860,28 @@ function onDeliver(player, r, vid) {
     let _sh = null; try { _sh = H.shelterOf ? H.shelterOf(vid) : null; } catch (e) { _sh = null; }
     if (_sh && a) _l.push(`잠자리는 마을 쉼터를 쓰게 — ${_DIRWORD(_sh.x - a.x, _sh.y - a.y)}에 지붕 하나 있네.`);
     else if (_sh) _l.push('잠자리는 마을 쉼터를 쓰게 — 지붕 하나 내어 두었네.');
-    _l.push('며칠 일손을 보태면 마을 끝 빈터 하나 내어줌세.');
-    out.push({ type: 'onboarding_quest', vid: vid | 0, kind: 'hook', name: (a && a.name) || '', day, quest: null,
-      lines: _l, state: publicState(pid) });
+    //   ★[T1086] 첫 의뢰가 시작 마을이면 "며칠 일손을 보태면 …"(K-2 3회) 대신 지금 서는 두 단계(권함 · 빈터)를 그 자리에서 말한다.
+    if (_fjLines.length) _l.push(..._fjLines.splice(0));
+    else _l.push('며칠 일손을 보태면 마을 끝 빈터 하나 내어줌세.');
+    out.push(_t1086With({ type: 'onboarding_quest', vid: vid | 0, kind: 'hook', name: (a && a.name) || '', day, quest: null,
+      lines: _l, state: publicState(pid) }, player));
   }
+  //   ★[T1086] 훅이 이미 지나간 뒤(첫 납품이 다른 마을이었다 · 접속을 끊어 권함이 사라졌다)면 이 두 줄만 한 통으로.
+  if (_fjLines.length) {
+    out.push(_t1086With({ type: 'onboarding_quest', vid: vid | 0, kind: 'offer', name: (a && a.name) || '', day, quest: null,
+      lines: _fjLines.splice(0), state: publicState(pid) }, player));
+  }
+  let _stSent = false;
   if (!s.lot_ok && (s.contrib | 0) >= CFG.LOT_AFTER) {
     s.lot_ok = 1;
     out.push({ type: 'onboarding_quest', vid: vid | 0, kind: 'lot', name: (a && a.name) || '', day, quest: null,
       lines: ['이만하면 우리 마을 사람일세.', '어귀 빈터를 쓰게 — 거기다 자네 집을 올리게.'], state: publicState(pid) });
-    out.push({ type: 'onboarding_state', state: publicState(pid) });
+    out.push(_t1086With({ type: 'onboarding_state', state: publicState(pid) }, player));   // ★[T1086] 켬이면 가입 형편 칸도(끔 = 옛 바이트)
+    _stSent = true;
   }
+  //   ★[T1086] 켬 — 의뢰를 다 채울 때마다(그리고 권함 · 빈터가 선 때) 대본 상태 한 통 — 칸이 다음 단계를, HUD 가 계량기를 바로 본다.
+  //     빈터가 첫 의뢰에 서면 종전 빈터 한 통(의뢰 3건째)이 안 가서 클라 계량기가 1에 멎어 보였다(e2e-onboarding "누적 기여 1/3" 실측). 끔이면 종전 그대로.
+  if (T1086 && !_stSent && (done || _fjLot || _fjOffer)) out.push(_t1086With({ type: 'onboarding_state', state: publicState(pid) }, player));
   _save(pid, s);
   if (H.send && player.ws) for (const m of out) { try { H.send(player.ws, m); } catch (e) {} }
 }
@@ -897,9 +934,16 @@ function sendGreet(player, vid, by) {
   if (!ready() || !player || !H.send || !player.ws || vid == null) return false;
   const g = greetLines(vid, player.playerId, { x: player.x, y: player.y });   // ★[T540 추신2] 선 자리(쉼터 안이면 근황 한 줄)
   const a = arrivalOf(vid);
-  H.send(player.ws, { type: 'onboarding_quest', vid, kind: 'greet', name: (a && a.name) || '',
+  H.send(player.ws, _t1086With({ type: 'onboarding_quest', vid, kind: 'greet', name: (a && a.name) || '',
     day: (typeof H.gameDay === 'function') ? (H.gameDay() | 0) : 0,
-    lines: g.lines, quest: g.quest, state: publicState(player.playerId), ...(by != null ? { by } : {}) });
+    lines: g.lines, quest: g.quest, state: publicState(player.playerId), ...(by != null ? { by } : {}) }, player));   // ★[T1086] 켬이면 가입 형편 칸(끔 = 옛 바이트)
+  return true;
+}
+// ★[T1086] 가입 형편이 바뀐 뒤(마을 문 · 소속 명령 · 종전 문턱 권함) 칸이 바로 보게 대본 상태를 한 통 더 — 끔이면 무동작(옛 바이트).
+//   ⚠`arrive` 는 안 싣는다 — 클라는 그 칸이 오면 마을 쪽으로 몸을 돌린다(첫 도착 한 번의 연출).
+function pushState(player) {
+  if (!T1086 || !ready() || !player || !H.send || !player.ws) return false;
+  try { H.send(player.ws, _t1086With({ type: 'onboarding_state', state: publicState(player.playerId) }, player)); } catch (e) { return false; }
   return true;
 }
 // zone.js `handleMessage` 가 한 줄로 넘긴다.
@@ -907,7 +951,10 @@ function handleMsg(player, msg) {
   if (!ready() || !player || !msg || !H.send || !player.ws) return;
   const t = msg.type;
   if (t === 'onboarding_state') {
-    H.send(player.ws, { type: 'onboarding_state', state: publicState(player.playerId), arrive: arrivalOf(stateOf(player.playerId).start_vid) });
+    //   ★[T1086] 켬 — 접속해 다시 물으면(클라는 접속마다 한 번 묻는다) 빈터 권리가 선 시작 마을의 권함을 다시 건다(권함은 몸의 메모리 칸이라 접속을 끊으면 사라진다).
+    //     걸지 말지는 `membership.offerFirst` 정본이 판다(이미 마을 사람 · 초대제 마을이면 안 건다) · 끔이면 이 줄이 무동작.
+    if (T1086 && typeof H.offerJoin === 'function') { const st0 = stateOf(player.playerId); if (st0.lot_ok && st0.start_vid != null) H.offerJoin(player, st0.start_vid | 0); }
+    H.send(player.ws, _t1086With({ type: 'onboarding_state', state: publicState(player.playerId), arrive: arrivalOf(stateOf(player.playerId).start_vid) }, player));
   } else if (t === 'onboarding_greet') {
     const vid = msg.vid != null ? (msg.vid | 0) : stateOf(player.playerId).start_vid;
     if (vid == null) return;
@@ -950,6 +997,7 @@ module.exports = {
   pickFirstQuest, greetLines, sendGreet, onDeliver, handleMsg, daySummary, __isPlayerVillage: _isPlayerVillage,
   noteVillage,   // ★[T19] 마을이 하나 늘었을 때 그 곳만 굽는다
   dirWord: _DIRWORD,   // ★[T56] 방위말 정본 — 쓰러짐의 외침이 촌장과 **같은 어휘**를 쓴다
+  T1086, T1086_JOIN_LINE, T1086_LOT_LINE, pushState,   // ★[T1086] 첫 의뢰 = 빈터 + 마을 사람 권함 — 손잡이 · 촌장 말 두 줄(정본 · `membership.firstJoinChat` 이 부른다) · 칸 갱신
 
   vacantZoneOf, vacantLotAllows, publicState, stateOf,
   // ★하네스용 — **정본을 그대로 내준다**(하네스가 산출을 다시 짜면 사본이다)
