@@ -632,7 +632,7 @@ function table() {
       const selfTop = Object.entries(T.self).sort((x, y) => y[1] - x[1]).slice(0, 15).map(([ln, n]) => [+ln, n, u(n)]);
       const top = (o, n) => Object.entries(o).sort((x, y) => y[1] - x[1]).slice(0, n).map(([k, v]) => [k, v, u(v)]);
       r.lines = { chunks: T.chunks, samples: T.tot, decSamples: T.dec, stepSamples: T.ns, decUs, stepUs: +stepUs.toFixed(3), selfUs: u(T.nsSelf), groups: G, calls: calls.slice(0, 20), selfTop,
-        deepFn: top(T.dF, 20), deepTop: top(T.dL, 25), call2: top(T.c2, 15), incl: top(T.inc, 40), reqBy: top(T.rq, 15) };
+        deepFn: top(T.dF, 20), deepTop: top(T.dL, 25), call2: top(T.c2, 15), incl: top(T.inc, 400), reqBy: top(T.rq, 15), selfAll: Object.entries(T.self).map(([ln, n]) => [+ln, n, u(n)]) };
     }
     out.runs.push(r);
   }

@@ -1,0 +1,75 @@
+{
+ "at": "2026-11-03T18:51:04.004Z",
+ "N": 615,
+ "TICKS": 3000,
+ "FLUSH_MB": 8,
+ "node": "v22.23.4",
+ "rows": [
+  {
+   "label": "ⓐ 몸 객체(T806 켬 리터럴)",
+   "coldNsPerBody": 87.6,
+   "warmNsPerBody": 46.7,
+   "reps": [
+    {
+     "label": "ⓐ 몸 객체(T806 켬 리터럴)",
+     "coldNsPerBody": 87.6,
+     "warmNsPerBody": 36.3
+    },
+    {
+     "label": "ⓐ 몸 객체(T806 켬 리터럴)",
+     "coldNsPerBody": 94.1,
+     "warmNsPerBody": 47.6
+    },
+    {
+     "label": "ⓐ 몸 객체(T806 켬 리터럴)",
+     "coldNsPerBody": 83.6,
+     "warmNsPerBody": 46.7
+    }
+   ]
+  },
+  {
+   "label": "ⓑ 차례 리터럴(T1140_HOT_ORDER)",
+   "coldNsPerBody": 87.3,
+   "warmNsPerBody": 54.9,
+   "reps": [
+    {
+     "label": "ⓑ 차례 리터럴(T1140_HOT_ORDER)",
+     "coldNsPerBody": 103.6,
+     "warmNsPerBody": 56
+    },
+    {
+     "label": "ⓑ 차례 리터럴(T1140_HOT_ORDER)",
+     "coldNsPerBody": 85.9,
+     "warmNsPerBody": 52.1
+    },
+    {
+     "label": "ⓑ 차례 리터럴(T1140_HOT_ORDER)",
+     "coldNsPerBody": 87.3,
+     "warmNsPerBody": 54.9
+    }
+   ]
+  },
+  {
+   "label": "ⓒ 열(타입 배열 · 슬롯)",
+   "coldNsPerBody": 38.7,
+   "warmNsPerBody": 33.1,
+   "reps": [
+    {
+     "label": "ⓒ 열(타입 배열 · 슬롯)",
+     "coldNsPerBody": 38.7,
+     "warmNsPerBody": 30.6
+    },
+    {
+     "label": "ⓒ 열(타입 배열 · 슬롯)",
+     "coldNsPerBody": 37.9,
+     "warmNsPerBody": 33.1
+    },
+    {
+     "label": "ⓒ 열(타입 배열 · 슬롯)",
+     "coldNsPerBody": 40.5,
+     "warmNsPerBody": 33.7
+    }
+   ]
+  }
+ ]
+}

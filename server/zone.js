@@ -3663,7 +3663,8 @@ function _t671Shape(p) {
 }
 // ★★[T1140 ③-가 2026-11-04 · 손잡이 `T1140_HOT_ORDER`(기본 끔 · `'1'` 만 켬 · 끔 = 아래 함수가 안 불린다 = 종전 글자)] **걸음 머리 칸을 x · y 곁에** — T791 회부 2 의 남은 몫.
 //   T806 ③ 이 걸음 몸통 칸을 객체 안(리터럴)에 넣었다. 그 칸들은 리터럴 **뒤쪽**(30 번째 칸 뒤)에 있다 — 틱 머리 공간 색인이 몸마다 이미 짚는 x · y 칸(앞 줄)과 다른 캐시 줄이다.
-//   T1140 ① 표본: 걸음 문 첫 줄(결정 문 `canadiaVillage` · `nextDecisionAt` 읽기 · zone.js `npcStep` 머리)이 `npcStep` 의 18 % — 셈이 아니라 그 틱에 처음 짚는 칸 몫이다.
+//   T1140 ① 표본: 걸음 몸통의 첫 짚기 줄 셋(막힘 서 있음 판정 · 결정 문 `canadiaVillage` · `nextDecisionAt` · 도착 뒤 첫 줄)이 낮 `npcStep` 의 ≈ 28 % — 셈이 아니라 그 틱에 처음 짚는 칸 몫이다.
+//   ★T1140 ③ 판(다 켬 둘 ↔ 끔 둘 · 대조 보정): **값 0** — 객체 안 차례로는 첫 짚기가 안 빠졌다(보고/T1140 §3 · 켬 제안 안 함).
 //   켬이면 T806 켬 리터럴과 **같은 칸 · 같은 값 · 같은 평가 차례(값 식 중 부르는 것은 `Date.now()` 하나)** 를 차례만 바꿔 짓는다: 걸음 머리 · 막힘 · 길 · 따라가기가 짚는 칸을 맨 앞에.
 //   다른 것은 키 차례뿐이다 — 몸 키를 차례로 도는 · `in` · 펼침 · `JSON.stringify(몸)` 자리 0(T671 §2 · T806 §3 그 전수 · T1140 다시 grep 0). 새 수 0 · 새 몸 칸 0.
 const T1140_HOT_ORDER = process.env.T1140_HOT_ORDER === '1';
@@ -4662,6 +4663,7 @@ function _t670Stuck(npc, now) { const S = npc._stuckPos; if (S) { S.x = npc.x; S
 //   종전 `_stuckPos` 는 몸 밖 객체 하나({x, y, at}) — 서 있는 몸이 틱마다 그 객체를 짚고(쓰기 셋) 걷는 몸이 읽는다. T700 은 그릇을 `Float64Array(3)` 로 바꿨다(역시 몸 밖 객체 · 값 0).
 //   켬이면 같은 세 수를 몸 칸 셋(`_t1140Sx` · `_t1140Sy` · `_t1140Sa` — 차례 리터럴(`T1140_HOT_ORDER`)에서는 막힘 판정이 짚는 칸 곁)에 둔다.
 //   같은 답인 까닭: `_stuckPos` 를 읽고 쓰는 자리는 서버 전체에서 `_t670Stuck` · `detectStuck` 둘(+ 모양 선언)뿐이다 — 그 둘을 같은 차례 · 같은 수로 옮겼다.
+//   ★T1140 ③ 판: **값 0**(막힘 줄 그대로 · 보고/T1140 §3 · 켬 제안 안 함).
 //     "없음"(`!npc._stuckPos`) = `_t1140Sa === undefined`(`now` 는 늘 수). 값은 그릇 변환 없이 그대로(−0 · NaN · `undefined` 위치까지 같다 — T700 의 Float64Array 와 달리 `undefined` 도 그대로).
 function _t1140St(npc, now) { npc._t1140Sx = npc.x; npc._t1140Sy = npc.y; npc._t1140Sa = now; }
 function _t1140Detect(npc, now) {

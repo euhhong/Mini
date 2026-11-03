@@ -14845,6 +14845,7 @@ function __e2eDayFreeze(on) {
 //   T1140 ① 표본: 걸음(`npcStep`) 안 표본의 ≈1 % 가 노드 모듈 적재기(`require` · `Module._load`)였다 — 결정마다 생활 층 함수가 이미 실린 모듈을 다시 `require` 한다
 //   (`_fishingMod` — 어부 물가 · 바다 손 · 어장 · `_tripDayMs` — 하루 몫 · `zone-config`). `require` 는 실린 모듈이면 **같은 객체**를 돌려준다(캐시) ⇒
 //   켬이면 처음 받은 객체를 모듈 칸에 둔다(`_zc720` · `_lifeVL` · `_seaTbl` 과 같은 꼴 · 실패면 종전처럼 `null`). 같은 객체 · 같은 답 · 세계 무접촉.
+//   ★T1140 ③ 판: `require()` 줄 낮 0.028 → 0 · 밤 0.010 → 0 µs/사람(표본 사슬) — 켬 기본 후보(PM).
 const T1140_LIFE_REQ = process.env.T1140_LIFE_REQ === '1';
 let _t1140Fish;   // undefined = 아직 · null = 실패(종전도 늘 실패 — 같은 파일 · 같은 판)
 function _fishingMod() {

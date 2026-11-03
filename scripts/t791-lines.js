@@ -29,12 +29,12 @@ if (process.env.T791_LINES && require('worker_threads').isMainThread) {
     for (const id0 of P.samples) {
       tot++;
       let id = id0, below = null, below2 = null, hitStep = false, hitDec = false, cat = null;
-      const fr = [];   // ★[T1140] npcStep 아래 틀(잎 → 위) — 함수마다 포함 표본(한 표본에 한 번)
+      const fr = [], rq = [];   // ★[T1140] npcStep 아래 틀(잎 → 위) — 함수마다 포함 표본(한 표본에 한 번) · rq = require 를 부른 자리
       while (id != null) {
         const nd = byId.get(id); if (!nd) break; const cf = nd.callFrame;
         if (!hitStep && !isStep(cf)) { fr.push((cf.functionName || '(anon)') + '@' + (cf.url || '').replace(/^.*\//, ''));
-          if (!/^node:|^$/.test(cf.url || '') && fr.length > 1 && /^(require|_load|wrapModuleLoad)@/.test(fr[fr.length - 2]) && !/^(require|_load|wrapModuleLoad|\(anon\))@/.test(fr[fr.length - 1])) { const k = fr[fr.length - 1] + ':' + (cf.lineNumber + 1); reqBy[k] = (reqBy[k] || 0) + 1; } }   // ★[T1140] 걸음 안 `require()` 를 부른 함수
-        if (!hitStep && isStep(cf)) { hitStep = true; for (const k of new Set(fr)) incl[k] = (incl[k] || 0) + 1; cat = below ? (below.functionName || '(anon)') + ':' + (below.lineNumber + 1) : null;
+          if (!/^node:|^$/.test(cf.url || '') && fr.length > 1 && /^(require|_load|wrapModuleLoad)@/.test(fr[fr.length - 2]) && !/^(require|_load|wrapModuleLoad|\(anon\))@/.test(fr[fr.length - 1])) rq.push(fr[fr.length - 1] + ':' + (cf.lineNumber + 1)); }   // ★[T1140] `require()` 를 부른 함수(npcStep 아래 표본만 — 아래 hitStep 에서 센다)
+        if (!hitStep && isStep(cf)) { hitStep = true; for (const k of new Set(fr)) incl[k] = (incl[k] || 0) + 1; for (const k of new Set(rq)) reqBy[k] = (reqBy[k] || 0) + 1; cat = below ? (below.functionName || '(anon)') + ':' + (below.lineNumber + 1) : null;
           if (below && below2) { const k2 = cat + '>' + (below2.functionName || '(anon)') + ':' + (below2.lineNumber + 1); call2[k2] = (call2[k2] || 0) + 1; } }
         below2 = below;
         if (cf.functionName === '_decOne') hitDec = true;
