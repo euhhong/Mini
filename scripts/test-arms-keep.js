@@ -28,7 +28,7 @@ const codeOf = (s) => s.split('\n').map((l) => l.replace(/\/\/.*$/, '')).join('\
 const C = codeOf(SRC);
 function seeded(seed) { let s = (seed >>> 0) || 1; return () => { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
 const _origRandom = Math.random;
-const setK = (on) => { if (on) process.env.T403_ARMS_LEDGER = '1'; else delete process.env.T403_ARMS_LEDGER; };
+const setK = (on) => { process.env.T403_ARMS_LEDGER = on ? '1' : '0'; };   // ★[T1094] T403 켬 기본 — 끈 판은 명시 `=0`
 const prevK = process.env.T403_ARMS_LEDGER;
 const near = (a, b) => Math.abs(a - b) <= 1e-9;
 
