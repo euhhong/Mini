@@ -1,0 +1,436 @@
+{
+ "card": "T1109",
+ "base": "main 4fb8922f + batch/walk-one-1103 a58682d7",
+ "q1b": {
+  "food": {
+   "server": {
+    "on": {
+     "seeds": 3,
+     "per": [
+      {
+       "fam365": 37,
+       "fd365": 0,
+       "fdShield365": 27,
+       "lastDay": 400,
+       "pop": 2354,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      },
+      {
+       "fam365": 29,
+       "fd365": 0,
+       "fdShield365": 0,
+       "lastDay": 400,
+       "pop": 2699,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      },
+      {
+       "fam365": 27,
+       "fd365": 0,
+       "fdShield365": 0,
+       "lastDay": 400,
+       "pop": 2488,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      }
+     ],
+     "fam365": 93,
+     "fd365": 0,
+     "fdShield365": 27,
+     "pop": 7541,
+     "empty": 0,
+     "dissolved": 0,
+     "villages": 153,
+     "lastDay": 400
+    },
+    "off": {
+     "seeds": 3,
+     "per": [
+      {
+       "fam365": 115,
+       "fd365": 0,
+       "fdShield365": 0,
+       "lastDay": 400,
+       "pop": 2367,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      },
+      {
+       "fam365": 94,
+       "fd365": 0,
+       "fdShield365": 0,
+       "lastDay": 400,
+       "pop": 2824,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      },
+      {
+       "fam365": 64,
+       "fd365": 0,
+       "fdShield365": 0,
+       "lastDay": 400,
+       "pop": 2631,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      }
+     ],
+     "fam365": 273,
+     "fd365": 0,
+     "fdShield365": 0,
+     "pop": 7822,
+     "empty": 0,
+     "dissolved": 0,
+     "villages": 153,
+     "lastDay": 400
+    },
+    "shield": {
+     "villages": 153,
+     "shielded": 20,
+     "onSh": 93,
+     "offSh": 273,
+     "onRest": 0,
+     "offRest": 0,
+     "ratio": 2.94
+    }
+   },
+   "lab": {
+    "on": {
+     "seeds": 3,
+     "per": [
+      {
+       "fam365": 74,
+       "fd365": 0,
+       "fdShield365": 68,
+       "lastDay": 400,
+       "pop": 2817,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      },
+      {
+       "fam365": 0,
+       "fd365": 0,
+       "fdShield365": 0,
+       "lastDay": 400,
+       "pop": 2786,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      },
+      {
+       "fam365": 36,
+       "fd365": 0,
+       "fdShield365": 0,
+       "lastDay": 400,
+       "pop": 3050,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      }
+     ],
+     "fam365": 110,
+     "fd365": 0,
+     "fdShield365": 68,
+     "pop": 8653,
+     "empty": 0,
+     "dissolved": 0,
+     "villages": 153,
+     "lastDay": 400
+    },
+    "off": {
+     "seeds": 3,
+     "per": [
+      {
+       "fam365": 281,
+       "fd365": 27,
+       "fdShield365": 0,
+       "lastDay": 400,
+       "pop": 2779,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      },
+      {
+       "fam365": 52,
+       "fd365": 0,
+       "fdShield365": 0,
+       "lastDay": 400,
+       "pop": 2801,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      },
+      {
+       "fam365": 120,
+       "fd365": 0,
+       "fdShield365": 0,
+       "lastDay": 400,
+       "pop": 3029,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      }
+     ],
+     "fam365": 453,
+     "fd365": 27,
+     "fdShield365": 0,
+     "pop": 8609,
+     "empty": 0,
+     "dissolved": 0,
+     "villages": 153,
+     "lastDay": 400
+    },
+    "shield": {
+     "villages": 153,
+     "shielded": 23,
+     "onSh": 110,
+     "offSh": 423,
+     "onRest": 0,
+     "offRest": 30,
+     "ratio": 3.85
+    }
+   }
+  },
+  "fd0": {
+   "server": {
+    "on": {
+     "seeds": 3,
+     "per": [
+      {
+       "fam365": 70,
+       "fd365": 0,
+       "fdShield365": 0,
+       "lastDay": 400,
+       "pop": 2345,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      },
+      {
+       "fam365": 86,
+       "fd365": 0,
+       "fdShield365": 0,
+       "lastDay": 400,
+       "pop": 2809,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      },
+      {
+       "fam365": 76,
+       "fd365": 0,
+       "fdShield365": 0,
+       "lastDay": 400,
+       "pop": 2438,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      }
+     ],
+     "fam365": 232,
+     "fd365": 0,
+     "fdShield365": 0,
+     "pop": 7592,
+     "empty": 0,
+     "dissolved": 0,
+     "villages": 153,
+     "lastDay": 400
+    },
+    "off": {
+     "seeds": 3,
+     "per": [
+      {
+       "fam365": 179,
+       "fd365": 0,
+       "fdShield365": 0,
+       "lastDay": 400,
+       "pop": 2463,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      },
+      {
+       "fam365": 162,
+       "fd365": 0,
+       "fdShield365": 0,
+       "lastDay": 400,
+       "pop": 2510,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      },
+      {
+       "fam365": 175,
+       "fd365": 0,
+       "fdShield365": 0,
+       "lastDay": 400,
+       "pop": 2388,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      }
+     ],
+     "fam365": 516,
+     "fd365": 0,
+     "fdShield365": 0,
+     "pop": 7361,
+     "empty": 0,
+     "dissolved": 0,
+     "villages": 153,
+     "lastDay": 400
+    },
+    "shield": {
+     "villages": 153,
+     "shielded": 38,
+     "onSh": 232,
+     "offSh": 488,
+     "onRest": 0,
+     "offRest": 28,
+     "ratio": 2.1
+    }
+   },
+   "lab": {
+    "on": {
+     "seeds": 3,
+     "per": [
+      {
+       "fam365": 136,
+       "fd365": 0,
+       "fdShield365": 0,
+       "lastDay": 400,
+       "pop": 2602,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      },
+      {
+       "fam365": 78,
+       "fd365": 0,
+       "fdShield365": 0,
+       "lastDay": 400,
+       "pop": 3075,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      },
+      {
+       "fam365": 66,
+       "fd365": 0,
+       "fdShield365": 0,
+       "lastDay": 400,
+       "pop": 2825,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      }
+     ],
+     "fam365": 280,
+     "fd365": 0,
+     "fdShield365": 0,
+     "pop": 8502,
+     "empty": 0,
+     "dissolved": 0,
+     "villages": 153,
+     "lastDay": 400
+    },
+    "off": {
+     "seeds": 3,
+     "per": [
+      {
+       "fam365": 307,
+       "fd365": 0,
+       "fdShield365": 0,
+       "lastDay": 400,
+       "pop": 2932,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      },
+      {
+       "fam365": 279,
+       "fd365": 0,
+       "fdShield365": 0,
+       "lastDay": 400,
+       "pop": 2895,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      },
+      {
+       "fam365": 194,
+       "fd365": 0,
+       "fdShield365": 0,
+       "lastDay": 400,
+       "pop": 2669,
+       "empty": 0,
+       "dissolved": 0,
+       "villages": 51
+      }
+     ],
+     "fam365": 780,
+     "fd365": 0,
+     "fdShield365": 0,
+     "pop": 8496,
+     "empty": 0,
+     "dissolved": 0,
+     "villages": 153,
+     "lastDay": 400
+    },
+    "shield": {
+     "villages": 153,
+     "shielded": 37,
+     "onSh": 280,
+     "offSh": 644,
+     "onRest": 0,
+     "offRest": 136,
+     "ratio": 2.3
+    }
+   }
+  }
+ },
+ "eq3": {
+  "off": {
+   "seeds": 3,
+   "pop400": 7541,
+   "popEnd": 14398,
+   "dissolved": 0,
+   "empty": 0,
+   "born": 16815,
+   "hasBorn": true,
+   "emig": 0,
+   "emigLost": 0,
+   "deaths": 3137,
+   "fdDead": 118,
+   "unhappyDays": 66264,
+   "villDays": 122400,
+   "Hmin": 0,
+   "HminMean": 0.10894117647058824,
+   "nv": 153
+  },
+  "on": {
+   "seeds": 3,
+   "pop400": 7537,
+   "popEnd": 14237,
+   "dissolved": 1,
+   "empty": 1,
+   "born": 16251,
+   "hasBorn": true,
+   "emig": 1221,
+   "emigLost": 0,
+   "deaths": 2690,
+   "fdDead": 179,
+   "unhappyDays": 71606,
+   "villDays": 122015,
+   "Hmin": 0,
+   "HminMean": 0.22416993464052284,
+   "nv": 153
+  }
+ }
+}
