@@ -1145,7 +1145,7 @@ const T815_DRAFT_FAMINE = (typeof process !== 'undefined' && process.env && proc
 //   켜면 그 갈래에서 출생 쪽 거울(자리가 없으면 `Math.min(_dPAccum, 0.9)`)처럼 `Math.max(_dPAccum, −0.9)` — 못 치른 몫을 다음 날로 넘기지 않는다
 //   (새 수 0 — 0.9 는 출생 줄의 그 수 · 셈만 느는 죽음은 `T815_DRAFT_FAMINE` 몫 — 이 손잡이가 켜지면 빚이 −1 아래에 쌓여 있지 않아 그날 압력이 −1 을 넘긴 날만 센다).
 const T924_DEBT_CAP = !(typeof process !== 'undefined' && process.env && process.env.T924_DEBT_CAP === '0');   // ★[T960 · T935 · PM 10-26 · T924 회부 1] 켬 기본 · 되돌림 `=0`
-// ★★[T1074 2026-11-02 · ★재민 11-02] **굶주림 = 사람마다 식량 빚 · 적응 · 14일** — 손잡이 `T1074_FOOD_DEBT`(**기본 끔** · `=1` 만 켬 · 끔 = 종전 바이트).
+// ★★[T1074 2026-11-02 · ★재민 11-02] **굶주림 = 사람마다 식량 빚 · 적응 · 14일** — 손잡이 `T1074_FOOD_DEBT`(★[T1127] **켬 기본** · `=0` 만 끔 = 종전 바이트 · T1074 착지 땐 끔 기본이었다).
 //   재민 11-02: "14일로 하고, 그 이후에도 적자가 지속되면 매일 한 명씩 죽도록 · 식량 1이 생겼다고 타이머가 리셋되면 어색하니
 //   굶은 만큼 '식량 빚'을 · 채운 만큼 메워지게" · 고증(미네소타 기아 실험 · Dulloo 재분석) → 갚기는 열량 1:1 · 덤은 적응에서.
 //   칸(econ NPC 항목 · plain number · 저장 줄이 그대로 싣는다) — 켠 판에서만 선다(끔 = 칸 없음):
@@ -1159,7 +1159,8 @@ const T924_DEBT_CAP = !(typeof process !== 'undefined' && process.env && process
 //     · FD_ADAPT_UP_DAYS 140 — 재활 R20(20주)에 기초대사가 대조값으로 돌아왔다(R12 에 35~70% · 곧은 꼴이면 R12 = 60% 로 그 안) · 빚이 0 인 날마다 0.40/140 씩 올린다
 //     · FD_DEATH_DAYS 14 — 카드(★재민) · 빚 > 14 **이고** 그날도 적자인 사람 가운데 가장 늙은 1명/일
 //   갚기 하루 상한은 출처 수를 못 찾아 두지 않았다(그날 남은 식량이 갚을 수 있는 만큼 · 회부) — 빚은 곳간이 빈 날에만 생기므로 갚는 몫은 그 뒤 들어온 식량이다.
-const T1074_FOOD_DEBT = (typeof process !== 'undefined' && process.env && process.env.T1074_FOOD_DEBT === '1');
+// ★★[T1127 2026-11-04 · ★재민 11-03 문 1-b ⓐ "식량 빚 켜고 + 보호막 걷기"] **켬 기본** — `=0` 만 끔(= 종전 바이트 · T1074 착지 판) · 미설정 · 빈 값 · 그 밖 = 켬 · 브라우저 shim 빈 env = 켬.
+const T1074_FOOD_DEBT = !(typeof process !== 'undefined' && process.env && process.env.T1074_FOOD_DEBT === '0');
 // ★★[T1117 2026-11-03 · T1106 고증 `설계/고증_굶주림.md`] 고증 상수 — 손잡이 `T1117_FD_EVID`(켬 기본 · `=0` = T1074 상수 그대로 = T1074 착지 바이트 · T1074 끔이면 아무도 안 읽는다).
 //     · FD_ADAPT_MAX 0.155 — Keys 1950 pp. 328–329(Troscianko 2016 인용): 24주 BMR −40%(사람당) 가운데 **활성 조직 단위당 −15.5%** — 몸 크기로 설명 안 되는 적응 몫.
 //       게임 몸은 굶어도 작아지지 않는다(몸무게 칸 없음 · 일관된 몸) ⇒ 작아진 몸의 몫(−40% 의 나머지)은 짝이 없다 · 적응 몫만 싣는다(가정 — 보고 T1117 §1).
@@ -2067,11 +2068,13 @@ function _t597ShieldExtra(v) {   // 이 마을 보호막이 SHIELD_DAYS 뒤로 �
 const SHIELD_SOFT_ON = !(typeof process !== 'undefined' && process.env && process.env.SHIELD_SOFT === '0');
 const SHIELD_SOFT_K = (typeof process !== 'undefined' && process.env && process.env.SHIELD_SOFT_K != null)
   ? Number(process.env.SHIELD_SOFT_K) : 0.25;
-// ★★[T858 2026-10-22 · 재민 10-22 "보호막은 없애는 게 바람직하긴 한데"] **보호막을 걷은 세계를 재는 손잡이** `T858_NO_SHIELD`('1' 만 켬 · 없음 · '0' · 빈 값 = 끔 = main 바이트).
+// ★★[T858 2026-10-22 · 재민 10-22 "보호막은 없애는 게 바람직하긴 한데"] **보호막을 걷은 세계를 재는 손잡이** `T858_NO_SHIELD`(★[T1127] 켬 기본 · `'0'` 만 끔 = 보호막 선 종전 바이트 · T858 땐 '1' 만 켬이었다).
 //   켜면 기근 보호막(클램프 · 감쇠 · `T597_SHIELD_RAMP` 펴기 — 갈래 전부)이 안 선다 — 첫날부터 음수 압력이 그대로 아래 죽음 사다리로 간다.
 //   끄는 자리는 `_shieldT` 판정 한 곳이다(켬 = `SHIELD_DAYS` — 보호가 끝난 마을과 같다) · 보호 조건 줄은 한 글자도 안 바뀐다(`test-frontier-iron ③` 계약).
 //   새 수 0 — 쓰는 수는 보호막 그 자체(`SHIELD_DAYS`). 재는 카드라 켜는 건 재민(판정 0 · T858).
-const T858_NO_SHIELD = (typeof process !== 'undefined' && process.env && process.env.T858_NO_SHIELD === '1');
+// ★★[T1127 2026-11-04 · ★재민 11-03 문 1-b ⓐ] **켬 기본(보호막 걷음)** — `=0` 만 끔(= 보호막 선 종전 바이트) · 미설정 · 빈 값 · 그 밖 = 켬 · 브라우저 shim 빈 env = 켬.
+//   재민 11-03: "어차피 평형을 찾아 유지하면 되는 것 · 보호막 때문에 드러나야 할 문제가 365일 뒤에야 드러나는 게 싫었다."
+const T858_NO_SHIELD = !(typeof process !== 'undefined' && process.env && process.env.T858_NO_SHIELD === '0');
 // ★땅맞춤 초기 부존 배수 — 기본 1(채택값). LANDFIT=0 이면 2026-08-02 채택 **이전 동작**을 정확히 재현한다.
 //   (계수를 임의로 흔들라는 손잡이가 아니라 A/B 재현용이다 — PEACE_W 선례. createVillage 참조.)
 const LANDFIT_K = (typeof process !== 'undefined' && process.env && process.env.LANDFIT != null)

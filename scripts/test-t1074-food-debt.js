@@ -3,7 +3,7 @@
 // === scripts/test-t1074-food-debt.js — 굶주림 = 사람마다 식량 빚 · 적응 · 14일 [T1074 · ★재민 11-02] ===
 //   잰다: ① 부분 식사는 부분만 빚 ② 남은 식량만 빚을 갚는다(열량 1:1) ③ 적응은 빚 있는 동안 내려가고(최대 — ★T1117 고증 −15.5% · `T1117_FD_EVID=0` −40%) 빚 0 이면 돌아온다 · ★T1117 사람마다 하루 갚기 상한(1,600 kcal ÷ 2,450)
 //         ④ 죽음 = 빚 > 14 이고 그날도 적자인 사람 가운데 가장 늙은 1명 · 제 몫을 다 먹은 날엔 안 죽는다 · 징발 중은 안 죽는다
-//         ⑤ 원정 중 제 짐을 먹는 병사는 마을 식사 명부에서 빠진다 ⑥ 끔 = 칸이 안 선다(손잡이 기본 끔)
+//         ⑤ 원정 중 제 짐을 먹는 병사는 마을 식사 명부에서 빠진다 ⑥ 끔(`=0`) = 칸이 안 선다(★T1127 손잡이 켬 기본)
 //         ⑦ econ 하루를 실제로 돌린 판 — 곳간 0 마을은 빚이 쌓이고 14일 넘긴 날부터 하루 1명 · 옛 굶주림 두 줄은 0
 'use strict';
 const path = require('path');
@@ -55,11 +55,11 @@ if (process.env.T1074_CHILD) {
 
 const run = (env) => JSON.parse(execFileSync(process.execPath, [__filename], { env: Object.assign({}, process.env, { T1074_CHILD: '1' }, env), encoding: 'utf8', maxBuffer: 1 << 24 }).trim().split('\n').pop());
 console.log('\n=== T1074 식량 빚 하네스 ===\n');
-const on = run({ T1074_FOOD_DEBT: '1' }), off = run({ T1074_FOOD_DEBT: '' });
+const on = run({ T1074_FOOD_DEBT: '1' }), off = run({ T1074_FOOD_DEBT: '0' }), dflt = run({ T1074_FOOD_DEBT: '' });   // ★[T1127] 끔 = '0' 하나 · 빈 값 · 그 밖 = 켬(기본)
 const old = run({ T1074_FOOD_DEBT: '1', T1117_FD_EVID: '0' });   // ★[T1117] T1074 상수 갈래(`=0`) — 늘 같이 본다
 // ★[T1117] 고증 상수(켬 기본) — 적응 최대 0.155(Keys 활성 조직당 −15.5%) · 하루 갚기 상한 1,600 ÷ 2,450 하루치 · 168 · 140 · 14 그대로
 const EV = { max: 0.155, repay: 1600 / 2450 }, R = (c) => (c.repay === 'inf' ? Infinity : c.repay);
-ok(on.knob === true && off.knob === false, '⑥ 손잡이 — `T1074_FOOD_DEBT=1` 만 켬 · 기본 끔');
+ok(on.knob === true && off.knob === false && dflt.knob === true, '⑥ 손잡이 — ★[T1127] 켬 기본(빈 값 · `=1` 켬) · `=0` 만 끔');
 ok(on.consts.evid === (process.env.T1117_FD_EVID !== '0') && on.consts.down === 168 && on.consts.up === 140 && on.consts.die === 14
   && (on.consts.evid ? (on.consts.max === EV.max && Math.abs(R(on.consts) - EV.repay) < 1e-12) : (on.consts.max === 0.4 && R(on.consts) === Infinity)),
   '수 — 적응 최대(고증 0.155 · `T1117_FD_EVID=0` 0.40) · 갚기 상한(고증 1,600/2,450 · `=0` 없음) · 168일(24주) · 140일(R20) · 14일', JSON.stringify(on.consts));

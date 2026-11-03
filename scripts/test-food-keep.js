@@ -14,6 +14,10 @@
 //   ③ 세계 전체 — 켬이면 어느 마을도 먹을 것을 싣다가 하루치 밑으로 안 내려간다 · 손잡이 값(★[T935] 없음 = 켬 · '0' 만 끔)
 // 실행: node scripts/test-food-keep.js
 'use strict';
+// ★[T1127 2026-11-04] 이 하네스가 재는 것은 굶주림 길(식량 빚 · 보호막) 밖이다 — 판 세계를 T1127 앞(`T1074_FOOD_DEBT=0 T858_NO_SHIELD=0` = 종전 바이트)으로 묶는다.
+//   T1127 이 두 손잡이를 켬 기본으로 바꾼 뒤 이 하네스의 작은 판 세계(인구 · 곳간 · 교역)가 갈려 단언이 빨개졌다(main 에선 초록 · 보고 T1127 §4). 켬 기본 세계에서 같은 단언을 다시 세우는 일은 회부. 부르는 쪽이 값을 주면 그 값이 먼저다.
+if (process.env.T1074_FOOD_DEBT == null) process.env.T1074_FOOD_DEBT = '0';
+if (process.env.T858_NO_SHIELD == null) process.env.T858_NO_SHIELD = '0';
 const path = require('path');
 const { execFileSync } = require('child_process');
 const ROOT = path.resolve(__dirname, '..');

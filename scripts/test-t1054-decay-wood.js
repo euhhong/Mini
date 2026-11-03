@@ -16,6 +16,10 @@
 //
 // 실행: node scripts/test-t1054-decay-wood.js   (존 안 띄움 · 몇 초)
 'use strict';
+// ★[T1127 2026-11-04] 이 하네스가 재는 것은 굶주림 길(식량 빚 · 보호막) 밖이다 — 판 세계를 T1127 앞(`T1074_FOOD_DEBT=0 T858_NO_SHIELD=0` = 종전 바이트)으로 묶는다.
+//   T1127 이 두 손잡이를 켬 기본으로 바꾼 뒤 이 하네스의 작은 판 세계(인구 · 곳간 · 교역)가 갈려 단언이 빨개졌다(main 에선 초록 · 보고 T1127 §4). 켬 기본 세계에서 같은 단언을 다시 세우는 일은 회부. 부르는 쪽이 값을 주면 그 값이 먼저다.
+if (process.env.T1074_FOOD_DEBT == null) process.env.T1074_FOOD_DEBT = '0';
+if (process.env.T858_NO_SHIELD == null) process.env.T858_NO_SHIELD = '0';
 const path = require('path');
 const fs = require('fs');
 const { execFileSync } = require('child_process');
