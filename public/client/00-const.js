@@ -467,7 +467,7 @@ function cropSprite(stage, crop) {
       hard = el3 > CONN_ENTER_WARN_MS;
       state = hard ? 'error' : 'entering';
       title = hard ? '서버가 들어오는 일을 끝내지 못하고 있습니다. 오류일 수 있습니다.'
-                   : '서버가 받았다 — 입장 처리 중';
+                   : '서버가 받았습니다. 입장을 처리하는 중입니다.';
       why = `${(el3 / 1000).toFixed(0)}초 경과${connStage ? ` · 단계 ${connStage}` : ''}${connRef ? ` · ref ${connRef}` : ''}`;
     } else if (connPhase === 'connecting') {
       const el3 = now - (connOutageAt || connStartedAt || now);

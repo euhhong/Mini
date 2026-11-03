@@ -172,7 +172,7 @@ function onbRenderCard() {
     + (v.intro ? `<br/><span class="quote">“${onbEsc(v.intro)}”</span>` : '')
     + `<br/><span class="quote">“${v.news}”</span>`
     + (v.board ? `<br/><span class="dim">게시판에 걸린 일 ${v.board}건</span>` : '')
-    + (v.welcome && !v.welcome.ok ? `<br/><span class="warn">이방인을 받기엔 아직 이르다 — ${v.welcome.why.join(' · ')}</span>` : '');
+    + (v.welcome && !v.welcome.ok ? `<br/><span class="warn">이방인을 받기에는 아직 이릅니다. ${v.welcome.why.join(' · ')}</span>` : '');
 }
 // ★[T66 §5] 마을 카드 셋 — "어디서 시작하나". 추천 순으로 셋만(고르면 지도·상세와 같이 움직인다).
 function onbRenderCards() {

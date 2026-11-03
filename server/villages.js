@@ -2420,7 +2420,7 @@ function foundPlayerVillage(opts) {
   const ta = state.ta, db = state.db, econ = state.econ, world = state.world;
   // ── 상한 ────────────────────────────────────────────────────────────────
   const pvNow = state.villages.filter((v) => v.econ && v.econ.founder).length;
-  if (pvNow >= PV_MAX) return { ok: false, err: `이 세상이 감당하는 새 마을 수를 넘었다 (${pvNow}/${PV_MAX})` };
+  if (pvNow >= PV_MAX) return { ok: false, err: `이 세상이 감당할 수 있는 새 마을 수를 넘었습니다(${pvNow}/${PV_MAX}).` };
   // ── 남의 땅 위에는 못 짓는다 — 기존 마을 영토(+여유) 침범 금지 ─────────────
   for (const vil of state.villages) {
     const rCells = Math.max(PV_TERR_R, Math.round((vil._maxRPx || 0) / SZ)) + PV_GAP_CELLS;

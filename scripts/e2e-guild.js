@@ -265,7 +265,7 @@ const last = (C) => JSON.stringify(C.notices.slice(-1));
     say(L, '/초대 picker'); await sleep(1500);
     const G2 = await connect('picker', 'pw7'); await sleep(1500);
     G2.notices.length = 0; say(G2, '/수락 없는길드'); await sleep(1500);
-    ok(G2.notices.some((t) => /부르지 않았다/.test(t)), '④d3 ★★안 부른 이름을 대면 **안 든다**(그리고 부른 곳을 알려 준다)', last(G2));
+    ok(G2.notices.some((t) => /부르지 않았(다|습니다)/.test(t)), '④d3 ★★안 부른 이름을 대면 **안 든다**(그리고 부른 곳을 알려 준다)', last(G2));
     const still = await jget(`${CEN}/player/${encodeURIComponent(G2.playerId)}`);
     ok(!!still && !still.player.tribe_id, '④d4 그때 소속은 **안 바뀐다**');
     close(G2);
@@ -338,7 +338,7 @@ const last = (C) => JSON.stringify(C.notices.slice(-1));
   await sleep(1500);
   L.notices.length = 0; say(L, '/초대 member'); await sleep(7000);
   ok(!L.closed, '⑤ ★central 이 죽어도 **놀던 사람은 안 끊긴다**');
-  ok(L.notices.some((t) => /못 불렀다/.test(t)), '⑤b ★조용히 실패하지 않는다 — 말로 알려 준다', last(L));
+  ok(L.notices.some((t) => /못 불렀다|부르지 못했습니다/.test(t)), '⑤b ★조용히 실패하지 않는다 — 말로 알려 준다', last(L));
   const siDown = await jget(`http://localhost:${ZPORT}/startinfo`);
   ok(!!(siDown && siDown.ok), '⑤c 시작 화면은 그대로 뜬다');
   //   ★[T139] **문이 닫혀 있을 때 알림함이 어떻게 실패하나** — 던지면 로그인 경로가 죽는다.

@@ -163,7 +163,7 @@ async function runCase(tag, envOf, chromium, C, opt) {   // ★[T1092] opt = { r
       why: ((document.querySelector('#netLost .nl-why') || {}).textContent || ''), on: !!(document.getElementById('netLost') && document.getElementById('netLost').classList.contains('on')) }));
     r.cs = tail.cs; r.why = tail.why; r.bannerOn = tail.on;
     r.maxBack = Math.round(maxBack);   // 동쪽으로 걷는 동안 서버 x 가 한 표본에 뒤로 간 가장 큰 폭 — 되끌림(튕김)
-    r.reached = !!tSeam; r.maxOver = Math.round(maxSx - C.seam); r.z = tail.z; r.handoffMsgs = tail.h; r.notices = tail.n.filter((t) => /못 넘어간다|모른다/.test(t));
+    r.reached = !!tSeam; r.maxOver = Math.round(maxSx - C.seam); r.z = tail.z; r.handoffMsgs = tail.h; r.notices = tail.n.filter((t) => /못 넘어간다|넘어가지 못했습니다|모른다|모릅니다/.test(t));
     r.recover = clog.filter((l) => /\[recover\]/.test(l)).length;
     r.cut = clog.filter((l) => /\[recover\].*(강제 close|좀비|primary 재연결)/.test(l)).length;   // ★[T1125] 감시견이 끊은 줄(틱 · pong · 재연결) — 딱지 줄(예측 정지)은 안 센다
     if (opt && opt.back) {   // ★[T1092] 되돌림 판 — 사람이 옛 존(한반도)에 들어가 있나(시도 하나가 날던 중이면 끝날 때까지) · 사진 · 몸이 걷나

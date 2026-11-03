@@ -207,7 +207,7 @@ function itemKo(k) {
   // 요리 인스턴스 목록(신선도·버프). 갓 지은 것 우선 — 식으면 신선도·효과↓.
   function dishesListHtml() {
     if (!dishes || !dishes.length) return '';
-    let h = '<div class="hint" style="margin-top:10px;font-weight:bold">— 내 요리 (신선할 때 먹자) —</div>';
+    let h = '<div class="hint" style="margin-top:10px;font-weight:bold">— 내 요리(신선할 때 드십시오) —</div>';
     for (const d of dishes) {
       const fresh = d.freshness;
       const fcol = fresh > 60 ? 'var(--stam)' : (fresh > 30 ? 'var(--accent)' : 'var(--hp)');
@@ -521,7 +521,7 @@ function itemKo(k) {
     const hint = document.getElementById('downRescueHint');
     //   ★[T563] 글을 매번 새로 쓴다 — 만료 문구가 `innerHTML` 로 초읽기 칸(`downTimer`)을 지워, 두 번째 쓰러짐부터는 초읽기가 없었다.
     //     구조는 길드원만이 아니다(T43 — "다른 플레이어" 누구나).
-    if (hint) { hint.classList.remove('expired'); hint.style.display = ''; hint.innerHTML = '구조를 기다리는 중 — 누구든 R 키로 업어 일으킬 수 있다 (남은 시간: <b id="downTimer"></b>초)'; }
+    if (hint) { hint.classList.remove('expired'); hint.style.display = ''; hint.innerHTML = '구조를 기다리는 중입니다. 누구든 R 키로 업어 일으킬 수 있습니다. (남은 시간: <b id="downTimer"></b>초)'; }
     if (myDownChosen) _renderDownWait();
   }
   // 1초마다 타이머 업데이트 + 윈도우 만료 시 hint 회색
@@ -1121,14 +1121,14 @@ function itemKo(k) {
       //   판정은 서버가 정본 가격 함수에 직접 물어본 결과다(클라가 다시 풀지 않는다).
       h += `<div class="tr-row${cls}${off}${r.glut ? ' glut' : ''}" data-res="${r.res}">`
         + `<span>${trGive === r.res ? '' : (trTake === r.res ? '' : '')}</span>`
-        + `<span>${kg(r)}${r.glut ? ' <i class="tr-glut" title="이 마을엔 이미 남아돈다 — 더 갖다 줘도 값이 더 내려가지 않는다">넘침</i>' : ''}</span>`
+        + `<span>${kg(r)}${r.glut ? ' <i class="tr-glut" title="이 마을에는 이미 남아돕니다. 더 갖다 주어도 값이 더 내려가지 않습니다.">넘침</i>' : ''}</span>`
         + `<span class="tr-num">${r.num == null ? '—' : r.num}</span>`
         + `<span class="tr-num">${r.sell}</span>`
         + `<span class="tr-num">${r.mine}</span></div>`;
     }
     h += '<div class="tr-deal">';
-    if (!trGive) h += '<div class="tr-line">낼 물건을 고르라 ()</div>';
-    else if (!trTake) h += `<div class="tr-line"><b>${kg(t.rows.find((r) => r.res === trGive) || {})}</b> — 이제 <b>받을</b> 물건을 고르라 ()</div>`;
+    if (!trGive) h += '<div class="tr-line">낼 물건을 고르십시오.</div>';
+    else if (!trTake) h += `<div class="tr-line"><b>${kg(t.rows.find((r) => r.res === trGive) || {})}</b> — 이제 <b>받을</b> 물건을 고르십시오.</div>`;
     else if (trQuote && trQuote.err) h += `<div class="tr-line">${trQuote.err}</div>`;
     else if (trQuote && trQuote.ok) {
       const gk = kg(t.rows.find((r) => r.res === trGive) || {}), tk = kg(t.rows.find((r) => r.res === trTake) || {});
@@ -1246,10 +1246,10 @@ function itemKo(k) {
   //   "하나 모자람"이 오늘의 할 일이고, 그게 시장에 갈 이유다.
   function renderFacilityPanel(el) {
     const F = myFacility;
-    if (!F || !F.near) { el.innerHTML = '<div class="hint">시설 앞에 서면 그 시설의 제작창이 열린다 — 모닥불(요리·훈제) · 작업대(도구·절임) · 노(제련) · 건조대(말리기)</div>'; return; }
+    if (!F || !F.near) { el.innerHTML = '<div class="hint">시설 앞에 서면 그 시설의 제작창이 열립니다. 모닥불(요리·훈제) · 작업대(도구·절임) · 노(제련) · 건조대(말리기)</div>'; return; }
     if (!F.near.mine) { el.innerHTML = `<div class="hint">${F.near.ko}은(는) 내 것이 아닙니다. 남의 시설은 아직 쓸 수 없습니다.</div>`; return; }
     const secs = Math.round((F.near.craftMs || 0) / 1000);
-    let h = `<div class="hint" style="margin-bottom:8px"><b>${F.near.ko}</b> — 여기서 만들 수 있는 것만 보인다 · 한 개 ${secs}초</div>`;
+    let h = `<div class="hint" style="margin-bottom:8px"><b>${F.near.ko}</b> — 여기서 만들 수 있는 것만 보입니다 · 한 개 ${secs}초</div>`;
     // ── 대기열 ──
     const q = (F.queue || []).find((x) => x.bid === F.near.bid);
     if (q && q.jobs.length) {

@@ -271,7 +271,7 @@ async function chiefCheck(player, vil) {
   const now = _chiefNow(player, vil);
   if (now) return now;
   const lid = await _leaderOf(vil._tribeId | 0);
-  if (lid == null) return { ok: false, err: '촌장을 확인하지 못했다 — 곳간을 열지 않는다(잠시 뒤 다시)' };
+  if (lid == null) return { ok: false, err: '촌장을 확인하지 못해 곳간을 열지 않았습니다. 잠시 뒤 다시 해 보십시오.' };
   return lid === String(player.playerId) ? { ok: true } : { ok: false, err: _NOT_CHIEF };
 }
 // 켬의 꺼내기 문 — 근접 게이트로 마을을 찾고 → 촌장 판정 → `withdraw` 정본(같은 실물 길).

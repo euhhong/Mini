@@ -190,7 +190,7 @@ async function person(tag) {   // 게스트 하나 — 짐 · 도구 · kg 를 �
       await until(() => obs.readyState === 1, 5000); try { obs.send(JSON.stringify({ type: 'promote_to_primary', token: H.token })); } catch (e) {}
       await sleep(1200);
       const bn2 = await bodiesOf('nippon', q.name);
-      ok(lateId !== q.id && Object.keys(bn2).length === 0 && on.some((t) => /모른다/.test(t)),
+      ok(lateId !== q.id && Object.keys(bn2).length === 0 && on.some((t) => /모른다|모릅니다/.test(t)),
         'ⓐ ★늦은 토큰 — 받는 존 토큰 접속은 그 사람이 아니고(종전 1회용 손님 꼴) · 승격은 "모른다"(T564) · 닛폰에 그 사람 몸 0', `토큰 접속 ${lateId === q.id ? '그 사람!' : '남(' + String(lateId).slice(0, 10) + ')'} · 승격 ${JSON.stringify(on)} · 닛폰 ${Object.keys(bn2).length}`);
       try { late && late.ws && late.ws.close(); } catch (e) {} try { obs.close(); } catch (e) {}
     }

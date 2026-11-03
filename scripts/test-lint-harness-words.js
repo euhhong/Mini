@@ -13,6 +13,7 @@
 //   ③ 커밋 2 · `--old <커밋 1>` — `/너무 멀/` 이 **줄어듦**(노랑 · 2→1)에 선다(다른 문장에 남아 "있다"가 되는 꼴) · 나감은 빨강만 가른다
 //   ④ 커밋 3 — PASS(나감 0 · 고치면 풀린다)
 //   ⑤ 판정 자리 밖(`console.log` · `ok()` 메시지)의 옛 글자는 안 본다 — 커밋 2 의 빨강은 하나뿐
+//   ⑥ 커밋 2 의 부분 클론(`--filter=blob:none`) — 망 0(전송 금지) · 지금 없는 두 줄은 건너뜀으로 센다(끝 줄 · ⚠ 줄 · 20초 안)
 'use strict';
 const fs = require('fs'), os = require('os'), path = require('path');
 const { spawnSync, execFileSync } = require('child_process');
@@ -55,6 +56,18 @@ git: {
   ok(b.code === 1 && b.red.length === 1 && /test-x\.js:7 .*먹였다.*그때 있음 먹였다/.test(b.red[0]) && /^LINT-HARNESS-WORDS FAIL · 빨강 1 · test-x\.js:7 먹였다/.test(b.last),
     '★② 커밋 2(말투) — FAIL · 빨강 = /먹였다/ 하나 · 주석에 남은 옛 글자가 숨기지 않는다', b.red.join(' ; ') || b.last);
   ok(b.red.length === 1 && !b.red.some((l) => /장식|메시지|열린뜰|하네스만의/.test(l)), '⑤ 판정 자리 밖 · 런타임 이름 · 제 출력은 빨강이 아니다(빨강 하나뿐)');
+  //   ⑥ 부분 클론(옛 블롭 없음 · 약속 원격) — 망 0: 옛 판을 원격에서 받지 않고 그 줄을 **건너뜀**으로 센다(T1112 · PM land1039 추신)
+  {
+    G('config', 'uploadpack.allowFilter', 'true');
+    const P = R + '-pc';
+    execFileSync('git', ['clone', '-q', '--filter=blob:none', 'file://' + R, P], { stdio: 'ignore' });
+    const t0 = Date.now();
+    const r = spawnSync(process.execPath, [LINT, '--root', P], { encoding: 'utf8' });
+    const out = (r.stdout || '') + (r.stderr || ''), last = out.trim().split('\n').pop(), sec = (Date.now() - t0) / 1000;
+    ok(r.status === 0 && /건너뜀 2\(태어난 판이 지역에 없음/.test(last) && /⚠ 부분 클론/.test(out) && sec < 20,
+      '⑥ 부분 클론 — 망 0 · 빨강 · 참고 줄 둘을 건너뜀으로 센다(조용히 초록 아님 · 끝 줄 · ⚠ 줄) · 빨리 끝난다', `${last} · ${sec.toFixed(1)}초`);
+    fs.rmSync(P, { recursive: true, force: true });
+  }
   const y = lint('--old', c1);
   ok(y.code === 1 && y.yel.length === 1 && /test-x\.js:8 .*너무 멀.*줄어듦 너무 멀 2→1/.test(y.yel[0]), '★③ `--old <커밋 1>` — /너무 멀/ 이 줄어듦(노랑 2→1)에 선다 · 나감은 빨강만 가른다', y.yel.join(' ; ') || y.last);
   W('scripts/test-x.js', HARNESS('먹였(다|습니다)'));

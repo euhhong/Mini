@@ -169,7 +169,7 @@ console.log('\n③ 자격 셋 — 한 인자만 바꿔 답이 뒤집히는가');
   // ⓐ' 쉼터 — 곳간이 얇다
   _vils.get(1).econ.storage.food = 1;
   const a2 = Newcomers.listable(1);
-  ok(!a2.ok && a2.why.join().includes('곳간이 얇다'), '③ⓐ′ 먹일 것이 없으면 막힌다', JSON.stringify(a2.why));
+  ok(!a2.ok && a2.why.join().includes('곳간이 얇습니다'), '③ⓐ′ 먹일 것이 없으면 막힌다', JSON.stringify(a2.why));
   base();
   // ⓐ″ ★못 읽으면 **통과시키지 않는다** — NaN 이 조용히 지나가면 이 절 전체가 거짓이 된다
   delete _vils.get(1).econ.storage.fish;
@@ -190,7 +190,7 @@ console.log('\n③ 자격 셋 — 한 인자만 바꿔 답이 뒤집히는가');
   // ★★그리고 **대체 술어를 버리지 않았다**: 지붕이 있어도 먹일 것이 없으면 막힌다.
   _vils.get(1).econ.storage.food = 1;
   const a6 = Newcomers.listable(1);
-  ok(!a6.ok && a6.shelter === true && a6.why.join().includes('곳간이 얇다'),
+  ok(!a6.ok && a6.shelter === true && a6.why.join().includes('곳간이 얇습니다'),
     '③ⓐ‴-c ★★쉼터가 있어도 **곳간이 얇으면 막힌다** — 지붕만으론 이방인을 못 먹인다(§9.4 "밥 + 쉼터")');
   base();
   // ⓑ 길드 벌점
@@ -230,7 +230,7 @@ console.log('\n④ 지도 — 켬 + 자격 = 오른다 · 끄면 사라진다');
     econ: { founder: null, npcs: [{}, {}], storage: { food: 900, fish: 0, meat: 0, cooked_food: 0 }, land: {} } };
   _vils.set(2, npc); _arrOk.add(2);
   const e2 = Newcomers.listable(2);
-  ok(!e2.ok && e2.why.join().includes('사람이 세운 마을이 아니다'), '④ NPC 마을은 이 스위치의 대상이 아니다');
+  ok(!e2.ok && e2.why.join().includes('사람이 세운 마을이 아닙니다'), '④ NPC 마을은 이 스위치의 대상이 아니다');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

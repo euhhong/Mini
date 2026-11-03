@@ -794,7 +794,7 @@ async function waitHttp(url, tries = 900) {
       const notes = lastN(C, 2), p1 = packFood(C);
       return { p0, p1, notes, gave: Number.isFinite(p0) && Number.isFinite(p1) && p1 > p0,
         //   ★[T779] 촌장 판정 거절 셋(촌장 아님 · 사람 촌장 없음 · central 못 물음) — 판정 자리 `membership._chiefNow` · `chiefCheck` 의 그 말
-        chiefNo: /곳간은 촌장만 열 수 있습니다|사람이 열지 않습니다|촌장을 확인하지 못했다/.test(notes),
+        chiefNo: /곳간은 촌장만 열 수 있습니다|사람이 열지 않습니다|촌장을 확인하지 못(했다|해)/.test(notes),
         //   ★[T202] **기근은 잠금이 아니다**(T159 의 다른 문 · 마을의 형편). 셋을 갈라 놓지 않으면
         //     대조 팔이 "곳간이 잠겼다"와 "마을이 굶는다"를 구별 못 하고 거짓 빨강이 난다(실측).
         famine: /마을이 굶고 있/.test(notes) };
