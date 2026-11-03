@@ -5,6 +5,7 @@
 //            (아이 존만 · 판 JSON 곁 `<판>-<시드>.t1076.json`)
 //   장부 하루(`events.createLedger` 의 `scanDay`)마다 war-core 진행 전쟁(`world._warWars`)을 읽는다 — 원정마다 마지막으로 본 값:
 //     선포 날 · 병력 · 국면 · 작전 · 짐 남은 날(`_packRem`) · 군량 장부(`_rationBook` — 먹음 · 못 먹음 · 굶은 몸-날) · 사기(`_mrl` · 평형 `_mrlEq` · 계단 죽음 `_mrlDead`) · 최저 사기 · 빚(몸 평균).
+//   원정마다 날 곡선 `curve` = [날 · 사기 · 평형 · 짐 · 굶은 몸-날 누계 · 국면](T1114).
 //   끝난 전쟁은 war-core 가 목록에서 뺀다 — 마지막 본 값이 그 전쟁의 끝 값이다(전쟁 글은 t1031 관찰기 몫).
 const path = require('path');
 const fs = require('fs');
@@ -23,6 +24,7 @@ function snap(world, day) {
     o.days++; o.last = day; o.phase = w.phase; o.op = w.op; o.pack = r3(w._packRem);
     const bk = w._rationBook; if (bk) { o.eaten = r3(bk.eaten); o.unfed = r3(bk.unfed || 0); o.hungry = bk.hungryDays || 0; o.starveDead = bk.starveDead || 0; }
     if (w._mrl != null) { o.mrl = r3(w._mrl); o.eq = r3(w._mrlEq); o.mrlDead = w._mrlDead || 0; o.minMrl = o.minMrl == null ? o.mrl : Math.min(o.minMrl, o.mrl); }
+    (o.curve || (o.curve = [])).push([day, o.mrl != null ? o.mrl : null, o.eq != null ? o.eq : null, o.pack, o.hungry || 0, o.phase]);   // 날 곡선 — [날 · 사기 · 평형 · 짐 남은 날 · 굶은 몸-날 누계 · 국면]
     if (w._debt && w._debt.size) { let s = 0; for (const v of w._debt.values()) s += v; o.debt = r3(s / w._debt.size); }
   }
   rec.lastDay = day;
