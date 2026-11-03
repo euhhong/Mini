@@ -1,5 +1,5 @@
 {
-  "_doc": "T1072 villageView 고정 자료(T1084 — 집터 줄 bedsGain · 공사 줄 kind:'clear' 더함 · T1105 — head.region · dash.foodDays · fuelCov · fuelShort 더함 · T1103 — 집터 자재 줄 give · 소식 · 끝낸 일 줄 = 하십시오체 `Events.newsLine` · T1115 — land1039 합침에서 빠진 give 되돌림) — 모양은 설계/설계_마을화면_villageView.md 표 그대로 · 값은 예시(클라 배치용 · 서버 값 아님). 서버 메시지 { type:'village_view', vid, seq, full:true, view } 의 view 칸이다.",
+  "_doc": "T1072 villageView 고정 자료(T1084 — 집터 줄 bedsGain · 공사 줄 kind:'clear' 더함 · T1105 — head.region · dash.foodDays · fuelCov · fuelShort 더함 · T1103 — 집터 자재 줄 give · 소식 · 끝낸 일 줄 = 하십시오체 `Events.newsLine` · T1115 — land1039 합침에서 빠진 give 되돌림) — 모양은 설계/설계_마을화면_villageView.md 표 그대로 · 값은 예시(클라 배치용 · 서버 값 아님). 서버 메시지 { type:'village_view', vid, seq, full:true, view } 의 view 칸이다. · T1116 — store.rows[].use · priceUp · priceDown · store.short · store.glut · store.priceMoves 더함) — 모양은 설계/설계_마을화면_villageView.md 표 그대로 · 값은 예시(클라 배치용 · 서버 값 아님). 서버 메시지 { type:'village_view', vid, seq, full:true, view } 의 view 칸이다.)",
   "type": "village_view",
   "vid": 3,
   "seq": 1,
@@ -56,14 +56,35 @@
     },
     "store": {
       "rows": [
-        { "res": "wood", "ko": "나무", "qty": 85, "daysOf": 21.3, "short": false, "glut": false },
-        { "res": "stone", "ko": "돌", "qty": 42, "daysOf": 3.1, "short": true, "glut": false },
+        { "res": "wood", "ko": "나무", "qty": 85, "daysOf": 21.3, "use": 3.99, "short": false, "glut": false, "priceUp": false, "priceDown": false },
+        { "res": "stone", "ko": "돌", "qty": 42, "daysOf": 3.1, "use": 13.55, "short": true, "glut": false, "priceUp": true, "priceDown": false },
         { "res": "salt", "ko": "소금", "qty": 64, "daysOf": null, "short": false, "glut": false },
-        { "res": "millet", "ko": "기장", "qty": 140, "daysOf": 52.0, "short": false, "glut": true }
+        { "res": "millet", "ko": "기장", "qty": 140, "daysOf": 52.0, "use": 2.69, "short": false, "glut": true, "priceUp": false, "priceDown": true }
       ],
       "shortDays": 5,
       "glutDays": 45,
-      "withheld": 3
+      "withheld": 3,
+      "short": {
+        "rows": [
+          { "res": "stone", "ko": "돌", "qty": 42, "daysOf": 3.1, "use": 13.55 },
+          { "res": "hide", "ko": "가죽", "qty": 0, "daysOf": 0, "use": 0.8 }
+        ],
+        "withheld": 1
+      },
+      "glut": {
+        "rows": [
+          { "res": "millet", "ko": "기장", "qty": 140, "daysOf": 52.0, "use": 2.69 }
+        ],
+        "withheld": 0
+      },
+      "priceMoves": {
+        "rows": [
+          { "res": "stone", "ko": "돌", "type": "PRICE_SPIKE", "day": 608, "ago": 4, "line": "돌 값이 올랐습니다." },
+          { "res": "millet", "ko": "기장", "type": "PRICE_DROP", "day": 600, "ago": 12, "line": "기장 값이 내렸습니다." }
+        ],
+        "withheld": 0,
+        "days": 30
+      }
     },
     "prices": {
       "numeraire": "wood",
