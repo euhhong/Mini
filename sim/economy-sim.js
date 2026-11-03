@@ -4523,10 +4523,9 @@ if (_hwW > 0 && v.lastStats && typeof v.lastStats.happiness === 'number') {
       for (let i = 0; i < v.npcs.length; i++) { const p = v.npcs[i]; if (p._warDraft) continue; if (yi < 0 || p.age < v.npcs[yi].age) yi = i; }
       if (yi < 0) break;
       const p = v.npcs[yi];
-      let took = false; try { took = !!_go(v, p); } catch (e) { took = false; }
+      let took = false; try { took = !!_go(v, p, day); } catch (e) { took = false; }
       if (!took) { v._emigAccum = Math.min(v._emigAccum, 0.9); break; }
-      v.npcs.splice(yi, 1);
-      v.counts[p.currentJob] = Math.max(0, (v.counts[p.currentJob] || 0) - 1);
+      { const at = v.npcs.indexOf(p); if (at >= 0) { v.npcs.splice(at, 1); v.counts[p.currentJob] = Math.max(0, (v.counts[p.currentJob] || 0) - 1); } }   // ★[T1109] 걷기 문(`walkToVillage`)이 이미 명부에서 뺐으면 두 번 빼지 않는다
       v._emigTot = (v._emigTot || 0) + 1;
       v._emigAccum -= 1;
     }

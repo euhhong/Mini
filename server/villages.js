@@ -1537,7 +1537,7 @@ function _t765Depart(vil, best, n) {
   let len = 0;
   if (pts && pts.length >= 2) { for (let i = 1; i < pts.length; i++) len += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y); }
   else len = Math.hypot((best.ccx - vil.ccx) * SZ, (best.ccy - vil.ccy) * SZ);   // 길을 못 찾았다 — 직선(`_bxWalk` 직선 폴백 그 꼴)
-  const ppd = (((state.deps && state.deps.moveSpeed) || 0) / 1000) * (state.dayMs || 0);   // T681 ③ 하루 걸음(`_bxWalk` 의 rec.ppd 그 식)
+  const ppd = (((state.deps && state.deps.moveSpeed) || 0) / 1000) * ((T1080_ROAD_LIFE ? _tripDayMs() : state.dayMs) || 0);   // T681 ③ 하루 걸음(`_bxWalk` 의 rec.ppd 그 식) · ★[T1080] 켬 = 장부 하루는 `_tripDayMs`(T627 — 제품·끔 판 = `state.dayMs` 그대로 · 리허설 판 `T627_TRIP_DAY=1` = 정본 운영 하루: 몸은 판 시계로 걷고 장부 길날은 정본 · T627 그 문)
   let queued = 0; if (vil._bxQ) for (const h of vil._bxQ) queued += h.n | 0;
   let free = 0; for (const pid of vil.npcPids) { const p = players.get(pid); if (p && !p._muster && !p._bxExit) free++; }
   const take = Math.max(0, Math.min(n | 0, free - queued));
@@ -1714,7 +1714,7 @@ function _t1079Walk(p, cell, gid) {   // 흩어진 단의 몸 — 합류할 단�
   _bxWalk({ dbId: null, ccx: cell.cx, ccy: cell.cy }, p, { k: 'desert', to: { x: cell.cx * SZ + SZ / 2, y: cell.cy * SZ + SZ / 2 }, gid });
   return true;
 }
-function _t1079Ppd() { return (((state.deps && state.deps.moveSpeed) || 0) / 1000) * (state.dayMs || 0); }   // T681 ③ 하루 걸음(`_bxWalk` 의 rec.ppd 그 식)
+function _t1079Ppd() { return (((state.deps && state.deps.moveSpeed) || 0) / 1000) * ((T1080_ROAD_LIFE ? _tripDayMs() : state.dayMs) || 0); }   // ★[T1108] 켬 = 해체 걷기와 같은 장부 하루(`_t765Depart` 그 줄 · T627 `_tripDayMs` — 제품 · 끔 판 = `state.dayMs` 그대로)   // T681 ③ 하루 걸음(`_bxWalk` 의 rec.ppd 그 식)
 function _t1079Home(p, toVil) {   // 흩어진 단의 몸 — 받는 마을까지 걷되 닿아도 안 거둔다(붙는 날 = 도적 하루 길 위 장부 · `_t765Join`)
   if (!_t1078Out(p, toVil)) return null;
   const r = _t765Mark(p.pid);   // T765 표식 문 그대로(닿아도 안 거둔다 · 붙기 `_t765Join` 이 받는다)
@@ -1732,6 +1732,141 @@ function _t1079Gone(pid) {   // 사람 기록 없는 몸이 닿았다 — 종전
   const p = state.deps.players.get(pid), r = state.bodyExits && state.bodyExits.get(pid);
   if (r) { _bxGone(r, p); _bx.arrive++; return true; }
   return false;
+}
+// ═══ ★★[T1080 2026-11-02 · 세션4 · ★PM 11-02 문 3(재민 위임) — 3-a ㄱ 길 위도 먹고 늙는다(제 짐) · 3-b ㄴ 실제 걸어갈 길 거리] 손잡이 `T1080_ROAD_LIFE` ═══
+//   `T577_CAND_WALK=1`(해체 뒤 남은 사람이 걸어서 다른 마을로 · 끔 기본) 안에서만 돈다 — 그 손잡이가 끄면 이 함수들은 한 번도 안 불린다(기준선 무접촉).
+//   켬 기본(`=0` = T765 그대로 — 곧은 거리 최근접 · 길 위는 안 먹고 안 늙는다).
+//   ⓐ 받는 마을(`_t1080Pick`) — 교역 거리행렬(`world._distMatrix` · BFS 길 거리 · econ 좌표)로 가장 가까운 산 마을(사람 있음 · 해체 표 없음).
+//      도달 불능 쌍(Infinity)은 뺀다. 행렬이 없거나 크기가 안 맞으면 곧은 거리(종전 그 식)로 떨어진다.
+//      길 한가운데서 다시 고를 때(받는 마을이 걷는 사이 해체 · 빔)는 그 길의 두 끝(떠난 마을 · 가던 마을)을 거쳐 가는 길 거리 중 짧은 쪽이다
+//      (그래프 위 한 변 위의 점에서 다른 노드까지 = min(걸은 길 + 행렬[떠난 곳][c] · 남은 길 + 행렬[가던 곳][c]) — 새 수 0).
+//   ⓑ 제 짐(`_t1080Pack`) — 떠나는 그 순간, 그 마을 곳간의 먹을 것(식량등가 > 0 인 칸 — war-core `bagFE` = econ `totalFoodEquivalent` 정본)을
+//      떠나는 사람 수로 고르게 나눠 진다. 한 사람 짐 무게는 `carry.js CAP_KG`(25kg · 무게 `weights.js`)까지 — 넘으면 그 사람 몫을 같은 비로 줄인다.
+//      진 만큼 곳간에서 빠진다(빈 마을 곳간에 남는 것은 못 진 몫).
+//   ⓒ 길 위 하루(`_t1080RoadDay`) — 떠난 다음 날부터 하루 경계마다:
+//      늙는다(econ 나이 줄 `n.age += 1/365` 그 식) · 제 짐에서 먹는다(하루치 `DAILY_FOOD_CONSUMPTION` 1 = war-core `bodyEat` — econ `consumeFood` 정본 ·
+//      상하는 것부터 `_warEatBySpoil` — 원정 짐과 같은 문) · 몸의 굶주림 사다리(T906 `_t906Day` — Body 감쇠 · 극단 HP · 채움 = 먹은 몫 × `Kcal.dayHunger`)를 그 사람 장부 칸에 둔다.
+//      HP(100)가 0 이면 그 자리에서 굶어 죽는다 — 몸이 있으면 그 몸이 눕는다(걸음 기록을 누운 몸으로 · 짐은 그 몸 짐 칸에) · 없으면 장부만.
+//      그 사람(econ 항목)은 어느 마을에도 안 붙는다(사망 · 길 위 죽음).
+//   ⓓ 닿으면 남은 짐은 받는 마을 곳간에 든다(제 것을 가지고 온다 — 소멸 0).
+//   ⓔ 같은 걷기 길을 T1075(불행 이탈) · T1079(도적 잔여)가 쓴다 — 도적 층 `walkToVillage`(아래 문들을 부른다 · 사본 0).
+//   새 수 0 · 주사위 0 · 영속 = 도적 저장 줄(`walk` 줄에 칸 셋 — 짐 · 허기 · HP).
+const T1080_ROAD_LIFE = process.env.T1080_ROAD_LIFE !== '0';
+const _t1080Stat = { pick: 0, pickMatrix: 0, pickLine: 0, unreach: 0, packed: 0, packFE: 0, packKg: 0, packCut: 0, roadDays: 0, hungryDays: 0, minH: 100,
+  dead: 0, deadBody: 0, reroute: 0, rerouteNone: 0, arriveFE: 0, deadRows: [], rerouteRows: [] };
+function _t1080Px(econD) { return (econD / 2.5) * SZ; }   // econ 좌표(셀 × 2.5) → px(셀 × SZ)
+// ⓐ 받는 마을 — ends = [{ vil, off(px) }] 길 위의 점에서 끝마다 이미 걸어야 할 거리 · skip = 뺄 마을 집합
+function _t1080Pick(ends, skip) {
+  const W = state.world, M = W && W._distMatrix, ev = W && W.villages;
+  let best = null, bd = Infinity, via = 'line', unreach = 0;
+  const useM = !!(M && ev && M.length === ev.length);
+  for (const v of state.villages) {
+    if (!v.econ || !(v.econ.npcs.length > 0) || v.econ._banditized || (skip && skip.has(v))) continue;
+    let d = Infinity, ok = false;
+    for (const e of ends) {
+      if (!e.vil) continue;
+      if (e.vil === v) { d = Math.min(d, e.off); ok = true; continue; }
+      if (useM) {
+        const i = ev.indexOf(e.vil.econ), j = ev.indexOf(v.econ);
+        if (i >= 0 && j >= 0 && M[i]) { const m = M[i][j]; if (isFinite(m)) { d = Math.min(d, e.off + _t1080Px(m)); ok = true; } continue; }
+      }
+      d = Math.min(d, e.off + Math.hypot((v.ccx - e.vil.ccx) * SZ, (v.ccy - e.vil.ccy) * SZ)); ok = true;
+    }
+    if (!ok) { unreach++; continue; }
+    if (d < bd) { bd = d; best = v; }
+  }
+  _t1080Stat.unreach += unreach;
+  if (best) { _t1080Stat.pick++; if (useM) { _t1080Stat.pickMatrix++; via = 'matrix'; } else _t1080Stat.pickLine++; }
+  return best ? { vil: best, px: bd, via } : null;
+}
+// ⓑ 제 짐 — n 사람 몫(배열 · 사람마다 같은 짐)
+function _t1080Pack(vil, n) {
+  const WC = state.war, e = vil && vil.econ;
+  if (!WC || !WC.bagFE || !e || !e.storage || !(n > 0)) return null;
+  const ctx = { _priceCache: e._priceCache, _world: e._world };
+  const Wt = _weights(), cc = _carryCfg(), cap = (cc && cc.CFG && cc.CFG.CAP_KG) || 0;
+  const one = {}; let kg = 0, fe = 0;
+  for (const k of Object.keys(e.storage)) {
+    const q = e.storage[k] || 0; if (!(q > 0)) continue;
+    if (!(WC.bagFE({ [k]: 1 }, ctx) > 0)) continue;
+    one[k] = q / n; kg += one[k] * ((Wt && Wt.kgOfOrDefault) ? Wt.kgOfOrDefault(k) : 0);
+  }
+  if (cap > 0 && kg > cap) { const f = cap / kg; for (const k in one) one[k] *= f; kg = cap; _t1080Stat.packCut += n; }
+  for (const k in one) e.storage[k] = Math.max(0, (e.storage[k] || 0) - one[k] * n);
+  fe = WC.bagFE(one, ctx);
+  _t1080Stat.packed += n; _t1080Stat.packFE += fe * n; _t1080Stat.packKg += kg * n;
+  const out = []; for (let i = 0; i < n; i++) out.push(Object.assign({}, one));
+  return { bags: out, fe, kg };
+}
+// ⓒ 길 위 하루 — w = 도적 길 위 장부 한 줄 { npc, pack, h, hp, pid, ... } · 반환 true = 오늘 굶어 죽었다
+function _t1080RoadDay(w, day, ctxVil) {
+  const WC = state.war; if (!WC || !WC.bodyEat) return false;
+  const K = _kcal(); if (!K) return false;
+  if (w.npc) w.npc.age = (w.npc.age || 0) + 1 / 365;   // econ 나이 줄 그 식(`economy-sim` 8) age)
+  const bag = w.pack || (w.pack = {});
+  const e = ctxVil && ctxVil.econ, ctx = { _priceCache: e && e._priceCache, _world: e && e._world };
+  const need = (state.econ && state.econ.DAILY_FOOD_CONSUMPTION) || 1;   // 하루 1인 식량 정본(없으면 1 — 그 값)
+  const got = _warEatBySpoil(WC, bag, need, ctx, null);
+  for (const k in bag) if (!(bag[k] > 1e-12)) delete bag[k];
+  const ent = w._st || (w._st = { h: w.h != null ? w.h : 100, sc: null });
+  const L = _t906Day(ent);
+  const phi = need > 0 ? Math.max(0, Math.min(1, got / need)) : 1;
+  ent.h = Math.min(100, ent.h + phi * K.dayHunger());
+  w.h = ent.h; w.hp = (w.hp != null ? w.hp : 100) - L;
+  _t1080Stat.roadDays++; if (phi < 1) _t1080Stat.hungryDays++; _t1080Stat.minH = Math.min(_t1080Stat.minH, ent.h);
+  const p = w.pid != null ? state.deps.players.get(w.pid) : null;
+  if (p && L > 0) _setHp(p, Math.max(0, (p.hp == null ? (p.maxHp || 100) : p.hp) - L), 'starve');
+  if (!(w.hp <= 0)) return false;
+  _t1080Stat.dead++;
+  if (p) {   // 그 몸이 그 자리에 눕는다 — `_bxDie` 그 줄들(낙하 문 · 누운 몸 기록 · 회수 시계) · 짐은 먼저 그 몸 짐 칸에(낙하 문이 그 짐을 떨군다)
+    const now = Date.now(), { npcs, broadcast } = state.deps;
+    if (!p.inventory) p.inventory = {};
+    for (const k in bag) p.inventory[k] = (p.inventory[k] || 0) + bag[k];
+    npcs.delete(p.pid); _bxQuiet(p); p.simCaravan = true;
+    try { if (state.deps.deathDrop) state.deps.deathDrop(p); } catch (e) {}
+    _setHp(p, 0, 'died'); p.isDown = true; p.downedAt = 0; p._bxExit = 'died'; p.vx = 0; p.vy = 0;
+    try { broadcast({ type: 'player_down_state', pid: p.pid, isDown: true, why: 'down' }); } catch (e) {}
+    const ms = Math.max(0, +(state.deps.corpseMs || 0));
+    _bxMap().set(p.pid, { pid: p.pid, vid: w.from, k: 'starve', cat: 'died', t0: now, until: now + ms,
+      untilDay: T681_ON ? state.world.day + ms / Math.max(1, state.dayMs) : undefined });
+    _bx.died.starve++; _t1080Stat.deadBody++;
+  }
+  if (_t1080Stat.deadRows.length < 200) _t1080Stat.deadRows.push({ day, d0: w.d0, from: w.from, to: w.to, body: !!p, age: w.npc ? +(+w.npc.age).toFixed(2) : null });
+  return true;
+}
+// ⓐ' 다시 고르기 — 받는 마을이 걷는 사이 해체되거나 비었다 · 반환 { to, len, ppd } 또는 null(갈 곳 없음 — 그 자리에서 기다린다)
+function _t1080Reroute(w, day) {
+  const from = state.byDbId.get(w.from), to = state.byDbId.get(w.to);
+  const s = Math.max(0, Math.min(w.len || 0, (day - w.d0) * (w.ppd || 0)));
+  const ends = []; if (from) ends.push({ vil: from, off: s }); if (to) ends.push({ vil: to, off: Math.max(0, (w.len || 0) - s) });
+  const skip = new Set([from, to].filter(Boolean));
+  const P = _t1080Pick(ends, skip);
+  if (!P) { _t1080Stat.rerouteNone++; return null; }
+  // 지금 자리 — 몸이 있으면 몸 자리 · 없으면 떠난 길(`getRoute`) 위 s 만큼 간 점
+  const p = w.pid != null ? state.deps.players.get(w.pid) : null;
+  let x = null, y = null;
+  if (p) { x = p.x; y = p.y; }
+  else if (from && to) {
+    let pts = null; try { pts = getRoute(from, to); } catch (e) { pts = null; }
+    if (pts && pts.length >= 2) { let left = s; for (let i = 1; i < pts.length; i++) { const sg = Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y); if (left <= sg || i === pts.length - 1) { const t = sg > 0 ? Math.min(1, left / sg) : 0; x = pts[i - 1].x + (pts[i].x - pts[i - 1].x) * t; y = pts[i - 1].y + (pts[i].y - pts[i - 1].y) * t; break; } left -= sg; } }
+  }
+  let extra = 0;   // ★[T1108] 떠난 마을이 없는 줄(T1079 해산 몸 — 은거지에서 떠났다) · 몸도 없으면 가던 마을을 거쳐 간다(남은 길 + 그 마을에서 새 길)
+  if (x == null) { const o = from || to; x = o.ccx * SZ + SZ / 2; y = o.ccy * SZ + SZ / 2; if (!from && !p) extra = Math.max(0, (w.len || 0) - s); }
+  const v = P.vil, tx = v.ccx * SZ + SZ / 2, ty = v.ccy * SZ + SZ / 2;
+  let pts = null; try { pts = computeRoutePts(x, y, tx, ty); } catch (e) { pts = null; }
+  if (!pts || pts.length < 2) pts = [{ x, y }, { x: tx, y: ty }];
+  let len = extra; for (let i = 1; i < pts.length; i++) len += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+  const r = p && state.bodyExits ? state.bodyExits.get(w.pid) : null;
+  if (r) { setBodyPts(r, [{ x: p.x, y: p.y }, ...pts.slice(1)]); r.vid = v.dbId; if (T681_ON) { r.d0 = day; r.L = 0; } }   // 몸은 지금 자리에서 새 길로(걸음 장부도 그날부터)
+  _t1080Stat.reroute++;
+  if (_t1080Stat.rerouteRows.length < 200) _t1080Stat.rerouteRows.push({ day, d0: w.d0, from: w.from, oldTo: w.to, to: v.dbId, walked: Math.round(s), px: Math.round(len), via: P.via });
+  return { to: v.dbId, len, ppd: w.ppd };
+}
+function _t1080Arrive(w, to) {   // ⓓ 남은 짐 → 받는 마을 곳간
+  const bag = w.pack; if (!bag || !to || !to.econ || !to.econ.storage) return 0;
+  let n = 0; for (const k in bag) { const a = bag[k] || 0; if (a > 0) { to.econ.storage[k] = (to.econ.storage[k] || 0) + a; n += a; } }
+  const WC = state.war; if (WC && WC.bagFE) _t1080Stat.arriveFE += WC.bagFE(bag, { _priceCache: to.econ._priceCache, _world: to.econ._world });
+  w.pack = null; return n;
 }
 // 몸 하나를 줄인다 — 까닭 `why`(`_bxTake` 한 몫 · 없으면 `unknown`)에 따라 그 자리에서 죽거나 걸어서 나간다.
 //   ★[P3 삼중 코히런스] 출정(징발·_muster) 중 병사는 대상에서 제외 — 전쟁 실체가 그 pid 를 쥔다(종전 그대로).
@@ -8770,6 +8905,7 @@ function __p3Bind(mock) {
     _oreMineDaily, T1095_MINE_DEMAND, _t1095Stat,   // ★[T1095] 채굴 일괄 수요 문 — 하네스(`test-t1095-mine-demand`)가 운영과 같은 문을 부른다(내보내기만)
     _t1039Depart, _t1039Join, _t1039Leave,   // ★[T1039] 도적 전환 몸 문 셋(하네스 `test-bandit-body` 가 운영과 같은 문을 부른다)
     _t1078Walkers, _t1078Die, _t1078Out, _t1078Life,   // ★[T1078] 단원 = 몸 문 넷(하네스 `test-bandit-all` 이 운영과 같은 문을 부른다)
+    T1080_ROAD_LIFE, _t1080Pick, _t1080Pack, _t1080RoadDay, _t1080Reroute, _t1080Arrive, _t1080Stat, _t1079Len,   // ★[T1080] 하네스(`test-t1080-road-life`)가 운영과 같은 문을 부른다(내보내기만)
     _t681Day, _t681Flush, T681_ON, T703_MARCH,   // ★[T703] T681 켬(기본) 판의 하루 경계 두 자리 — 하네스가 운영 하루 마감과 같은 차례(econ 앞 `_t681Flush` · 캐러밴 앞 `_t681Day`)로 부른다(값 무변 · 내보내기만)
     _warEngage, _warAfterDaily, _warEndFight, _warBuildRectIndex, _warBlockedCell, _warWorld, warPerf, _warOrderFallback, _warToStandoff,
     T1019_UNTRAP, T1019_ASSAULT_HP, _t1019HpRef, _t1019NoHurt,   // ★[T1019] 하네스(`test-t1019-untrap`)가 운영과 같은 문을 부른다(내보내기만)
@@ -8843,6 +8979,7 @@ function banditHost() {
     t1039Depart: _t1039Depart, t1039Join: _t1039Join, t1039Leave: _t1039Leave,   // ★[T1039] 도적 전환 몸 문 셋(도적 `formGang` · `_t1039Arrive` · `syncBodies` — `T1039_BANDIT_BODY` 켬 갈래에서만 불린다)
     t1079Pitch: _t1079Pitch, t1079Find: _t1079Find, t1079Flush: _t1079Flush, t1079Walk: _t1079Walk, t1079Home: _t1079Home, t1079Len: _t1079Len, t1079Gone: _t1079Gone,   // ★[T1079] 은거지 시설 · 짐 더미 문(도적 층 — `T1079_BANDIT_CAMP` 켬에서만 불린다)
     t1078Walkers: _t1078Walkers, t1078Die: _t1078Die, t1078Out: _t1078Out,   // ★[T1078] 단원 = 몸 문 셋(도적 `_t1078Gather` · `_t1078Trim` · `t1078Died` · `_t1078Out` — `T1078_BANDIT_ALL` 켬에서만 불린다)
+    t1080On: () => T1080_ROAD_LIFE, t1080Pick: _t1080Pick, t1080Pack: _t1080Pack, t1080RoadDay: _t1080RoadDay, t1080Reroute: _t1080Reroute, t1080Arrive: _t1080Arrive, t1080Stat: () => _t1080Stat,   // ★[T1080] 길 위 먹고 늙기 · 길 거리 받는 마을(도적 `walkToVillage` 가 부른다)    // ★[T765] 후보 걷기 몸 문 둘(도적 `_t577Walk` — `T577_CAND_WALK=1` 에서만 불린다)
     seed: state.villageSeed || 1020,
     cellsW: ZONE ? Math.ceil(ZONE.zoneWidth / SZ) : 0,
     cellsH: ZONE ? Math.ceil(ZONE.zoneHeight / SZ) : 0,
