@@ -3193,6 +3193,22 @@ const ACORN_BYPRODUCT = (() => { const v = parseFloat(process.env.T124_ACORN); r
 // ★[T372] 덤불 `berry` 의 양 — **옮긴 것이지 새 수가 아니다**(바로 아래 덤불 갈래가 쓰던 그 수).
 //   군락 종 넷의 전리품 양이 이 한 칸을 읽는다 ⇒ 두 자리가 갈릴 수 없다(하네스가 같음을 문다).
 const BUSH_BERRY_N = 2;
+// ★★[T1135 ② 2026-11-04] **한 그루 땔감 w 를 실제 숲 무게에 맞춘다** — 손잡이 `T1135_FUEL_EQ`(끔 기본 · `'1'` 켬 · 끔 = 이 배수 0 · 종전 바이트).
+//   이 세계 빽빽한 숲 1 m² 의 선 나무 = 숲 그리드 칸당 평균 그루(`chunk.forestTreesPerCellMean` 0.16) × 그루당 평균 6.42단(T1135 N* 표 —
+//   51마을 30~140 띠 144,712그루를 이 함수로 센 평균) × 1단 kg(`weights.kgOf('wood')`) = 30.8 t/ha ↔ 신갈나무 30년생 지상부 67.9 t/ha
+//   (서울대 태화산 학술림 — T717 §1 https://koreascience.or.kr/article/JAKO200211921049935.page?lang=en) ⇒ 배수 F = 67.9 ÷ 30.8 ≈ 2.20.
+//   나무 · 어린나무 둘 다(같은 식 · `_t1135Sap` 한 함수 — 전리품 정본 두 갈래의 `return` 이 부른다) · 단은 낱개라 반올림(곳간 · 손 · 짐 단위 그대로).
+//   몸(플레이어 · 관측 나무꾼)과 헤드리스(생활층 `t325LootOf`)가 같은 `lootOfResource` 를 읽는다(몸 일관).
+const T1135_W_BAR = 6.42;
+let _t1135WMul = null;
+function _t1135W() {
+  if (_t1135WMul === null) {
+    _t1135WMul = 0;
+    if (process.env.T1135_FUEL_EQ === '1') { const C = require('./chunk'); _t1135WMul = 67.9 * 1000 / 10000 / (C.forestTreesPerCellMean(32) * T1135_W_BAR * Weights.kgOf('wood')); }
+  }
+  return _t1135WMul;
+}
+function _t1135Sap(l) { const F = _t1135W(); if (F > 0 && l.wood > 0) l.wood = Math.round(l.wood * F); return l; }   // 나무 · 어린나무 단 × F(끔 = 그대로)
 function lootOfResource(r, ctx) {
   const t = r && r.type;
   if (t === 'tree') {
@@ -3205,11 +3221,11 @@ function lootOfResource(r, ctx) {
     //   뽑기가 아니다 ⇒ 자리로 결정한다(T102 의 `_gidHash` 정본을 그대로 쓴다 · 사본 0).
     //   같은 나무는 몇 번을 물어도 같은 답이고, 재부팅해도 같다.
     if ((_gidHash(`acorn:${Math.round(r.x)}:${Math.round(r.y)}`) % 10000) / 10000 < ACORN_BYPRODUCT) l.acorn = 1;
-    return l;
+    return _t1135Sap(l);   // ★[T1135 ②] 단 × 숲 무게 배수(끔 = 그대로 — 위 머리말)
   }
   // ★[T122] 묘목 — **같은 식에 같은 크기를 넣은 것**이다(새 표 0). 묘목은 반경이 0.45배라
   //   `wood` 가 3~4 로 저절로 떨어진다. "목재 소량"을 손으로 적지 않았다.
-  if (t === 'sapling')    return { wood: 1 + Math.floor((r.r || 4) / 3), twig: 1 };
+  if (t === 'sapling')    return _t1135Sap({ wood: 1 + Math.floor((r.r || 4) / 3), twig: 1 });   // ★[T1135 ②] 같은 배수
   if (t === 'rock')       return { stone: 1, pebble: 2 };
   if (t === 'berry_bush') {
     // ★[재민 확정 2026-08-28] **덤불 E = 잔가지.** 열매·풀과 **함께** 삭정이가 나온다 —

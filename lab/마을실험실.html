@@ -10470,6 +10470,22 @@ const T958_HOUSE_REAL = !(typeof process !== 'undefined' && process.env && proce
 //   켜면 그 줄이 출생 문(`tickVillage` 출생 줄 `_hcap` — econ 주거 ∧ 지은 침상 `_mapBeds`)과 **같은 상한**을 읽는다(같은 식 · 새 수 0).
 //   랩 · 집 행위 아닌 마을은 지은 침상 칸이 없어 상한 = econ 주거 = 종전 그대로다(바이트 같음).
 const T1046_WOOD_SHARE = (typeof process !== 'undefined' && process.env && process.env.T1046_WOOD_SHARE === '1');
+// ★★★[T1135 2026-11-04 · ★재민 11-03 판정] 손잡이 `T1135_FUEL_EQ`(끔 기본 · `'1'` 만 켬 · 끔 = 종전 바이트) — **땔감 평형**.
+//   판정: 행위 층 벌목의 하루 몫은 `_woodOutLast = 나무꾼 × base × land.wood × 도구` 였다. `land.wood` 는 시딩 때 지도 숲 배수 칸을
+//   한 번 센 수라 선 나무와 무관하다 — 그래서 T1107 의 k · 둘레 나무가 땔감을 못 바꿨다. 켜면:
+//   ① 몫(T374 수요 문 `actDemandLeft` 의 분자 `D`) = 그 마을 그날 **땔감 수요** `fuelNeed`(아래 틱이 남기는 `_t1135Need` — 같은 문 · 분자만 바뀐다).
+//      위끝 = 걸어서 닿는 **실제 나무**(생활층 벌목 고리 · 없으면 못 벤다) — 행위 층 마을에서 나무 칸이 0 이면 수식 목재도 안 낸다(`woodFormulaOff`).
+//   ② 한 그루 땔감 w — 존 전리품 정본(`zone.js lootOfResource`)이 숲 무게 배수를 곱한다(그 파일 T1135 줄).
+//   ③ 삭정이 · 고사목 줍기 — 생활층 헤드리스 나무꾼 하루(`server/villages.js` T1135 절 · 산 나무 안 벰).
+//   ④ 1인 땔감 d = 고증 수(아래 `FIREWOOD_PC_SRC`) — `fuelNeed` · 짚 상한 · 하급 연료 몫 · 연료 K 의 1인 수요가 같은 한 함수 `_firewoodPC()` 를 읽는다.
+//   ⑤ 재생 배수 k — `server/chunk.js REGROW.REGROW_K`(T1107 과 같은 자리 하나 · 손잡이 `T1135_REGROW_K` · 켬이면 k 미설정 = 1 — 종 시계 그대로 · 로지스틱 끔).
+const T1135_FUEL_EQ = (typeof process !== 'undefined' && process.env && process.env.T1135_FUEL_EQ === '1');
+//   ④ 고증 d — 1955년 남한 가정용 연료(나무와 가지 등) 약 1천만 ㎥(국가기록원 산림녹화 기록 "산림 황폐화 직접 원인"
+//      https://theme.archives.go.kr/next/forest/background/immediateCausesOfDeforestation.do) ÷ 1955년 추계인구 21,526,374
+//      (국가기록원 인구정책 통계 https://theme.archives.go.kr/next/populationPolicy/statisticsPopup_01.do) × 신갈나무 기본밀도 0.663 g/cm³
+//      (Pyo et al. 2020 JESAM "Estimation of basic wood density … Quercus species in South Korea" https://ovcre.uplb.edu.ph/journals-uplb/index.php/JESAM/article/view/331)
+//      ÷ 365 ÷ 1단 3 kg(`weights.js kgOf('wood')` — 하네스가 대조한다) = 0.2813단 ≈ 0.84 kg/인/일(지금 0.085단의 3.3배 · 출처 셋 · 새 수 0)
+const FIREWOOD_PC_SRC = 10000000 / 21526374 * 663 / 365 / 3;
 // ★★[T1054 2026-11-01 · T1047 ② · PM "짓는 것은 목재가 든다 · 같은 규칙"] **집 행위 마을의 노후 메움도 곳간 목재를 쓴다** — 손잡이 `T1054_DECAY_WOOD`(★끔 기본 · 켜는 값 `'1'` · 끔 = 종전 바이트 — 켬 기본 후보였으나 판 자 띠에서 첫해 기근이 커져 회부).
 //   T958 마을(집 행위 · 지은 침상을 아는 판 — 서버 · 랩 T1050)은 econ 주거가 지은 침상까지만 오르고 목재 상한이 `Infinity` 다(차감은 크루가 진다).
 //   그래서 노후(`HOUSE_DECAY`)로 줄어든 주거가 침상 밑에서 **목재 없이** 다시 찼다(보고 T1047 ② — 서버 첫해 노후 메움 3,095 · 목재 0).
@@ -10960,7 +10976,9 @@ function actDemandCap(v, units, D, todayKey) {
 }
 // ★[T374] 품목마다 `D` 를 어디서 읽나 — 정본 칸 이름만 다르다(식은 하나).
 function fishDemandLeft(v, held) { return actDemandLeft(v, (v && v._fishOutLast) || 0, '_t312InflowToday', held); }
-function woodDemandLeft(v, held) { return actDemandLeft(v, (v && v._woodOutLast) || 0, '_t325InflowToday', held); }
+//   ★[T1135 ①] 나무꾼 분자 — 켬 = 그날 땔감 수요(`_t1135Need`) · 끔 = 수식 몫(`_woodOutLast` · 종전 글자). 문(`actDemandLeft`)은 하나다.
+function woodShareD(v) { return (v && (T1135_FUEL_EQ ? v._t1135Need : v._woodOutLast)) || 0; }
+function woodDemandLeft(v, held) { return actDemandLeft(v, woodShareD(v), '_t325InflowToday', held); }
 //   채집만 한 항이 더 붙는다 — 걷는 몫만 대신하므로 그 몫을 곱한다(T347 `_t347MixShare` · 계측 칸이 아니라 계약).
 function forageDemandLeft(v, held) {
   const share = (v && typeof v._t347MixShare === 'number' && v._t347MixShare > 0) ? v._t347MixShare : 0;
@@ -10976,13 +10994,15 @@ function fishToGranary(v, units) {
 //     목재는 **낱개 = 단위**다(`weights.js wood 3.00kg` 이 "장작·목재 단(段)" 하나의 무게다 · 환산식 0).
 function woodToGranary(v, units) {
   if (!T325_WOOD_ACT || !v || !v.storage) return 0;
-  return actToGranary(v, 'wood', actDemandCap(v, units, (v._woodOutLast || 0), '_t325InflowToday'), '_t325InflowToday', '_t325CutN');
+  return actToGranary(v, 'wood', actDemandCap(v, units, woodShareD(v), '_t325InflowToday'), '_t325InflowToday', '_t325CutN');
 }
 // ★[T325] 이 마을이 **행위 벌목**으로 도는가 — 손잡이 ∧ 나무 셀이 있다(생활층이 `resourceAt` 로 세어 심는다).
 //   ⚠둘 다여야 한다. 나무 없는 마을(T309 ⓒ: 반경 16셀에서 3/51)은 켜도 종전 수식 그대로다 — 몸이 갈 자리가 없다.
 //   ★[T334] 셀 수는 이제 **분모가 아니다** — *"갈 자리가 있나"* 만 답한다.
 //   ★[T341] 예산이 아예 없어졌으므로 이 게이트가 **유일한 문**이다(숲이 있나 · 손잡이가 켜졌나).
 function woodActOn(v) { return !!(T325_WOOD_ACT && v && (v._t325Cells | 0) > 0); }
+// ★[T1135 ①] 수식 목재를 걷어내는 문 — 행위 층 마을(종전) ∨ 켬이면 **나무 칸 0 마을**(생활층이 세어 0 을 적은 뒤 · 지도 칠 무관 — 없으면 못 벤다).
+function woodFormulaOff(v) { return woodActOn(v) || !!(T1135_FUEL_EQ && T325_WOOD_ACT && v && v._t325Cells === 0); }
 // ★★[T347 · 설계_생산_실체 §1·§2] **채집꾼의 곳간 입구.** 캐논: *"따는 순간 손에, 귀환하면 곳간에."*
 //   ⚠어부·나무꾼과 **같은 몸통 · 같은 세금 · 같은 장부 다리**다(위 `actToGranary`) — 새 회계 0.
 //   ⚠다른 것 하나: 품목이 **인자**다(채집은 한 번에 여러 품목이 손에 든다) — 부르는 쪽이 품목별로 부른다.
@@ -11345,6 +11365,7 @@ function isBoomtown(land) { return foodCapOf(land) < BOOM_FOOD_MAX && veinScore(
 //   큰 마을일수록 매일 대량 소비 → 고갈된 숲(벌목꾼 슬롯·산출↓)은 못 댐 → fuelCov↓ → 건강↓ → 인구·생산성↓(비례=자기교정).
 //   숲 안 베는 작은 마을은 수요 작아 무영향. 역사적으로 마을 크기를 실제 제한한 건 건축목재가 아니라 땔감(연료 고갈).
 const FIREWOOD_PC = 0.085;     // 1인당 일일 땔감(요리·난방). 인구비례 흐름 수요 → 숲 규모가 부양 인구 상한(리비히: 식량 vs 연료)
+const _firewoodPC = () => (T1135_FUEL_EQ ? FIREWOOD_PC_SRC : FIREWOOD_PC);   // ★[T1135 ④] 켬 = 고증 d · 끔 = 같은 상수(비트 동일)
 const STRAW_FUEL_PER_FOOD = 0.018;   // ★볏짚·왕겨 연료(고증): 평야 농촌은 아궁이에 짚을 땠다. 도출: 1인 연간 곡물 ~260kg→짚 ~300kg→목재 열량환산 ~210kg
                                      //   vs 연간 연료수요 ~1.2t → 짚이 수요의 ~17% → food 1단위 생산당 0.085×0.2≈0.018 wood-eq. 저장 없이 당일 소진(flow).
                                      //   효과: 농업촌 연료난 완화(수출작 짚도 남음)·광산촌은 여전히 목재 수입 의존 → 마을 유형별 연료 전략 분화(자연).
@@ -13013,7 +13034,7 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
       //   아래 부산물 루프(수지·껍질·도토리)는 `baseAmt` 를 그대로 타고 나간다(T135 `repl` 이 이미 거른다).
       if (!(T100_FIELD_YIELD && npc.currentJob === 'farmer')
        && !(npc.currentJob === 'fisher' && fishActOn(v))
-       && !(npc.currentJob === 'lumberjack' && woodActOn(v))) {
+       && !(npc.currentJob === 'lumberjack' && woodFormulaOff(v))) {
         if (T635_SEA_SPECIES && npc.currentJob === 'fisher' && v.land && v.land.seaMix) _t635SeaProduce(addProduce, v.land.seaMix, baseAmt);   // ★[T635 ②] 바다 마을 = 종으로(합 kg 무변)
         else addProduce(jdef.output, baseAmt);
       }
@@ -13498,18 +13519,19 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
   //     한쪽만 보고 "이게 주거 유지 전부"라고 읽으면 안 된다(그 오독이 이번 배치의 회부 사유였다).
   const _maintS = Math.min(v.storage.stone || 0, N * STONE_MAINT_PC);
   if (_maintS > 0) { v.storage.stone -= _maintS; _cons(v, 'stone', _maintS); }   // ★flow-EMA
-  const fuelNeed = N * FIREWOOD_PC * (1 + FUEL_COLD_W * (v._coldStress || 0)) + smelters * SMELT_FUEL_PER;   // ★한랭 난방 가중(2026-07-12) — 겨울 연료 수요 실물화
+  const fuelNeed = N * _firewoodPC() * (1 + FUEL_COLD_W * (v._coldStress || 0)) + smelters * SMELT_FUEL_PER;   // ★한랭 난방 가중(2026-07-12) — 겨울 연료 수요 실물화
   // ★볏짚 먼저(공짜 부산물, 당일 소진 — 취사·난방용. 제련은 고온이라 목재만) → 부족분만 목재.
   // ★[T240] 종전(끔)은 `Math.min(상한, 원량)` 그대로 — 넘친 짚은 그날로 사라진다(비트 동일).
   //   켜면 넘친 몫이 `_strawPend` 로 이월되고 다음 날부터 **상한만큼** 탄다(상한은 안 건드린다).
-  const _strawCap = N * FIREWOOD_PC;
+  if (T1135_FUEL_EQ) v._t1135Need = fuelNeed;   // ★[T1135 ①] 나무꾼 몫 = 그날 땔감 수요(내일 생활층 벌목이 T374 문의 분자로 읽는다)
+  const _strawCap = N * _firewoodPC();
   const _strawRaw = (v._grainToday || 0) * STRAW_FUEL_PER_FOOD;
   const strawFuel = T240_STRAW_CARRY ? strawCarryBurn(v, _strawRaw, _strawCap)
                                      : Math.min(_strawCap, _strawRaw);
   v._grainToday = 0;
   // ★유령 박멸(§9): 하급 연료 — 잔가지(twig)·껍질(bark)을 장작보다 먼저 땜(LOW_FUEL_EQ eq). 취사·난방분만(제련 제외 = straw와 동일).
   //   채집 잔가지·벌목 껍질의 자연 소비처(연료 등가 편입) — 목재 소비 실절감.
-  const _cookHeatNeed = Math.max(0, N * FIREWOOD_PC - strawFuel);   // 하급 연료가 감당 가능한 몫(제련 제외)
+  const _cookHeatNeed = Math.max(0, N * _firewoodPC() - strawFuel);   // 하급 연료가 감당 가능한 몫(제련 제외)
   let _lowFuel = 0;
   for (const _lf of ['twig', 'bark']) {
     const _rem = _cookHeatNeed - _lowFuel;
@@ -13591,7 +13613,7 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
   const woodCapFlow = _woodProdCap
                     + (dailyProductionPotential.food || 0) * STRAW_FUEL_PER_FOOD    // + 볏짚(곡물 잠재생산 부산물 — 농업촌 연료 자급분)
                     + (v._woodImportEMA || 0) + (v.storage.wood || 0) / 90;         // + 수입EMA + 재고 한 계절 완충
-  const fuelNeedPC = N > 0 ? Math.max(FIREWOOD_PC, fuelNeed / N) : FIREWOOD_PC;
+  const fuelNeedPC = N > 0 ? Math.max(_firewoodPC(), fuelNeed / N) : _firewoodPC();
   // ★신뢰 관성(EMA ~50일): 숲 고갈로 용량이 줄 때 K가 절벽 낙하(θ=4 로지스틱 −20%/일 학살)하지 않게 —
   //   주민의 부양력 인식은 서서히 갱신(고증: 숲이 줄어드는 걸 몇 계절에 걸쳐 체감). 하락도 상승도 완만.
   const _fuelKraw = woodCapFlow / fuelNeedPC;
@@ -15449,6 +15471,7 @@ module.exports = {
 
   _LEGACY_CONTRIBUTES: LEGACY_CONTRIBUTES,
   T958_HOUSE_REAL,   // ★[T958] 집 행위 마을 econ 주거 = 지은 침상까지(★[T974] 켬 기본 · `=0` 되돌림 · ★[T966] 끔 기본이던 글자) — 방아쇠(서버 `villages.js`)가 읽는다
+  T1135_FUEL_EQ, FIREWOOD_PC_SRC, woodShareD, woodFormulaOff,   // ★[T1135] 땔감 평형(끔 기본 · `'1'` 켬) · 고증 d · 나무꾼 분자 · 수식 목재 걷어냄
   T1046_WOOD_SHARE,   // ★[T1046] 나무꾼 안전망 = 출생 문과 같은 주거 상한(끔 기본 · `'1'` 켬)
   T932_SMELT_CONT, t932Stat,   // ★[T932] 제련 날 마을 하루 결함 손잡이(켬 기본) + 계측 칸(관찰기 `t932-smelt-probe` 가 읽는다 — 행동 무관)
   T924_DEBT_CAP, _computeVillageStats,   // ★[T924] 빚 손잡이 + 마을 stat 함수(관찰기 `t924-observe` 가 건강 · 행복 항을 가른다 — 읽기만 · 사본 0 · 동작 무변)

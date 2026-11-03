@@ -27,7 +27,7 @@ const Ev = require(path.join(ROOT, 'server', 'events'));
 let SV = null; if (SERVER) { try { SV = require(path.join(ROOT, 'server', 'villages')); } catch (e) { SV = null; } }
 const r3 = (x) => (x == null || !isFinite(+x) ? null : Math.round((+x) * 1000) / 1000);
 const F = ['pop', 'born', 'out', 'fam', 'hous', 'beds', 'want', 'plan', 'tfe', 'fema', 'K', 'ks', 'kp', 'kf', 'logi', 'hung', 'happy', 'hlth', 'pres', 'gate', 'dP', 'acc', 'hap', 'fcov', 'wood', 'stone',
-  'crew', 'took', 'adv', 'stall', 'trips', 'walkS', 'site', 'cells', 'bodies', 'farm', 'dayS', 'wimp', 'csent', 'wexp'];
+  'crew', 'took', 'adv', 'stall', 'trips', 'walkS', 'site', 'cells', 'bodies', 'farm', 'dayS', 'wimp', 'csent', 'wexp', 'cold', 'dead', 'lj'];   // ★[T1135] 추위(`_coldStress`) · 삭정이 누계(`_t1135Got` — 켬만) · 나무꾼 수(econ `counts.lumberjack`)
 const SAMPLE = new Set([0, 29, 59, 89]);
 const rec = { where: SERVER ? 'server' : path.basename(A1), days: DAYS, fields: F, vil: {}, jobs: {}, err: null, lastDay: -1 };
 const seen = new WeakSet();
@@ -64,7 +64,7 @@ function row(v, vil, d) {
   const o = { pop: N, born, out, fam: DD.deathsToday(v), hous: v.housing, beds: v._mapBeds, want: v._t958Want, plan: v._t958Plan, tfe, fema: v.surplusEMA && v.surplusEMA.food,
     K: D.K, ks: K.slot, kp: K.prod, kf: K.fuel, logi: D.logi, hung: D.hunger, happy: D.happy, hlth: D.health, pres: D.prestige, gate: D.gated ? 1 : 0, dP: D.dP, acc: v._dPAccum,
     hap: v.lastStats && v.lastStats.happiness, fcov: v._fuelCov, wood: S.wood, stone: S.stone, crew, took, adv, stall, trips, walkS, site, cells, bodies, farm, dayS,
-    wimp: T.woodImported || 0, csent: T.caravansSent || 0, wexp: (T.exportBy && T.exportBy.wood) || 0 };
+    wimp: T.woodImported || 0, csent: T.caravansSent || 0, wexp: (T.exportBy && T.exportBy.wood) || 0, cold: v._coldStress || 0, dead: v._t1135Got || 0, lj: (v.counts && v.counts.lumberjack) || 0 };
   return F.map((k) => r3(o[k]));
 }
 const mk = Ev.createLedger;

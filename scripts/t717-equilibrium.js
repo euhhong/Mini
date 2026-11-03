@@ -31,6 +31,7 @@
 //     박원규·김수철 1999 보존과학회지 8(1) https://www.earticle.net/Article/A142312). 맹아 주기 · 고사목 수는 현대 한·일 참나무 숲의 값이다(청동기 값을 적은 출처는 못 찾았다).
 //
 // 쓰는 법: node scripts/t717-equilibrium.js --audit /tmp/t702/audit.json --trees /tmp/t702/trees.json [--runs <판 JSON 폴더(.t717.json)>] [--json out.json]
+//   ★[T1135] `--nstar <판 디렉터리>` = 마을별 N* 표(땔감 평형 · k 열 · 세계 합 · 숯) — 아래 T1135 절
 'use strict';
 const path = require('path');
 const fs = require('fs');
@@ -58,7 +59,8 @@ const YEAR = (EV.yearDaysOf && EV.yearDaysOf()) || 365;
 const DAY_S = ZONES && R('server/zone-config').WORLD.dayLengthMs * R('server/zone-config').WORLD.dayPhaseRatio / 1000;
 // 존 전리품 식 — 소스 줄을 대조한다(식이 바뀌면 이 자가 먼저 멈춘다)
 if (!/if \(t === 'tree'\) \{\s*const l = \{ wood: 3 \+ Math\.floor\(\(r\.r \|\| 8\) \/ 3\), twig: 1 \};/.test(SRC_ZONE)) throw new Error('zone.js 나무 전리품 식이 바뀌었다 — woodOf 를 다시 맞출 것');
-if (!/if \(t === 'sapling'\)\s*return \{ wood: 1 \+ Math\.floor\(\(r\.r \|\| 4\) \/ 3\), twig: 1 \};/.test(SRC_ZONE)) throw new Error('zone.js 묘목 전리품 식이 바뀌었다');
+if (!/if \(t === 'sapling'\)\s*return _t1135Sap\(\{ wood: 1 \+ Math\.floor\(\(r\.r \|\| 4\) \/ 3\), twig: 1 \}\);/.test(SRC_ZONE))   // ★[T1135] 단 × 숲 무게 배수 함수(끔 = 그대로 · 이 자는 끈 세계 식을 센다 · N* 표가 F 를 따로 곱한다)
+  throw new Error('zone.js 묘목 전리품 식이 바뀌었다');
 const woodOf = (r) => 3 + Math.floor((r || 8) / 3);
 const sapWoodOf = (r) => 1 + Math.floor(((r || 8) * 0.45) / 3);   // 묘목 = 같은 식에 반경 0.45배(`chunk.js` 재생 단계 `entity.r *= 0.45`)
 const REG = C.REGROW;
@@ -161,4 +163,82 @@ const M = (k) => med(rows.map((r) => r[k]));
 console.log(`\n중앙 — 평형 하루 몫 ${f(M('yMat'), 3)}단 · 50~140 ${f(M('yMatFar'), 3)} · +맹아 ${f(M('yCopLo'), 3)}~${f(M('yCopHi'), 3)} · 고사목·삭정이 ${f(med(rows.map((r) => r.yFine + r.yCwdLo)), 3)}~${f(med(rows.map((r) => r.yFine + r.yCwdHi)), 3)} · 합 ${f(M('yAllLo'), 2)}~${f(M('yAllHi'), 2)} · 수식 한 명 ${f(M('D1'), 3)} · 400일 땔감 수요식 ${f(M('needFire400'), 2)} · 한 몸 걸음 몫(75셀) ${f(M('carry'), 0)}단/일`);
 console.log(`140~200 띠(참고) 평형 하루 몫 중앙 ${f(M('yMat200'), 3)} · 30~140 평형 몫 0.1 미만 마을 ${rows.filter((r) => r.yMat < 0.1).length}/${nV}`);
 console.log(`n(수식 몫으로 영원히) = 0 인 마을 ${rows.filter((r) => r.nMax === 0).length}/${nV} · 한 명이 베면 다 베는 날 중앙 ${f(med(rows.filter((r) => Number.isFinite(r.daysToBare)).map((r) => r.daysToBare)), 0)}일`);
-if (JOUT) fs.writeFileSync(JOUT, JSON.stringify({ src: SRC, consts: { FIREWOOD_PC, LJ_BASE, MOVE_SPEED, KG, CAP, YEAR, DAY_S }, species: allSp, miss, rows }, null, 1));
+
+// ══ ★★[T1135 ① 2026-11-04 · 읽기만] **마을별 N\* 표** — 땔감 평형(몫 = 수요 · 위끝 = 걸어서 닿는 실제 나무) ══════════
+//   S_k = F · k · (평형 하루 몫 — 위 `yMat`, 30~140 띠 · 자리마다 Σ w ÷ T ÷ 365 · 카드의 ρ·π(R₂²−R₁²)·w ÷ (T·365) 를 그루마다 센 것) + 삭정이
+//   N\*_k = S_k ÷ d · 지금 인구 ↔ N\* · k = 1 · 2 · 4 · 8 · 16(카드가 준 수) · 필요 k = (d·N − 삭정이) ÷ (F · yMat)
+//   ② F(숲 무게 배수) = 신갈나무 30년생 지상부 67.9 t/ha(서울대 태화산 학술림 — T717 §1 https://koreascience.or.kr/article/JAKO200211921049935.page?lang=en)
+//        ÷ 이 세계 빽빽한 숲 1 m² 의 선 나무 무게(`chunk.forestTreesPerCellMean`(숲 그리드 칸당 평균 그루) × 30~140 띠 그루당 평균 단 × 1단 kg)
+//   ③ 삭정이 = 위 `yFine + yCwd`(빽빽한 숲 칸 × 계방산 가지 낙엽 574 + 점봉산 1,200 ~ 광릉 4,810 kg/ha/년 — T717 출처 그대로) · k 를 안 곱한다(실측 흐름)
+//   ④ d = 지금 `FIREWOOD_PC`(0.085단) ↔ 고증 d — 1955년 남한 가정용 연료 약 1천만 ㎥(국가기록원 산림녹화 "산림 황폐화 직접 원인")
+//        ÷ 1955년 추계인구 21,526,374(국가기록원 인구정책 통계) × 신갈나무 기본밀도 0.663 g/cm³(Pyo et al. 2020 JESAM) ÷ 365 ÷ 1단 kg
+//   ⓢ 숯 — 숯가마 산출(`smelt-uses` 통나무 3 → 숯 4) · 무게(`weights.kgOf`) · 열량(FAO WISDOM East Africa 부록 1: 나무 13.8 · 숯 30.8 MJ/kg)
+//   쓰는 법: … --nstar <판 디렉터리(base-<시드>.t1055.json)> [--nday 799]
+const NSD = arg('--nstar', ''), NDAY = +arg('--nday', 799);
+let NS = null;
+if (NSD) {
+  const KS = [1, 2, 4, 8, 16];
+  const SRCD = { m3: 10000000, pop1955: 21526374, rho: 663 };               // 출처 셋(위 머리말)
+  const D_SRC = SRCD.m3 / SRCD.pop1955 * SRCD.rho / 365 / KG;               // 단/인/일
+  const DS = { now: FIREWOOD_PC, src: D_SRC };
+  const wAll = rows.reduce((a, r) => a + r.w140, 0), nAll = rows.reduce((a, r) => a + r.n140, 0);
+  const wBarAll = nAll ? wAll / nAll : NaN;
+  const forestKgM2 = C.forestTreesPerCellMean(SZ) * wBarAll * KG;
+  const F = 67.9 * 1000 / HA / forestKgM2;                                  // 67.9 t/ha → kg/m²
+  // 인구 — 판(관찰기 t1055)의 그날 마을 인구(시드 중앙)
+  const POP = {};
+  for (const sd of [1020, 7, 42]) {
+    const fp = path.join(NSD, `base-${sd}.t1055.json`); if (!fs.existsSync(fp)) continue;
+    const a = JSON.parse(fs.readFileSync(fp, 'utf8')); const iP = a.fields.indexOf('pop') + 1;
+    for (const [nm, rs] of Object.entries(a.vil)) { let x = null; for (const r of rs) if (r[0] <= NDAY) x = r[iP]; (POP[nm] || (POP[nm] = [])).push(x || 0); }
+  }
+  const out = rows.map((r) => {
+    const N = med(POP[r.name] || []), dead = r.yFine + r.yCwdLo, deadHi = r.yFine + r.yCwdHi, live = F * r.yMat;
+    const o = { name: r.name, kind: r.name.replace(/\d+$/, ''), N, yMat: r.yMat, live, dead, deadHi, S: {}, Nst: {}, need: {}, kNeed: {} };
+    for (const k of KS) { o.S[k] = live * k + dead; o.Nst[k] = { now: o.S[k] / DS.now, src: o.S[k] / DS.src }; }
+    for (const [dk, d] of Object.entries(DS)) { o.need[dk] = d * N; o.kNeed[dk] = live > 0 ? Math.max(0, (d * N - dead) / live) : (d * N <= dead ? 0 : Infinity); }
+    return o;
+  });
+  NS = { KS, DS, SRCD, F, forestKgM2, wBarAll, treesPerCell: C.forestTreesPerCellMean(SZ), nday: NDAY, rows: out };
+  const P = console.log, g = (x, d = 2) => (Number.isFinite(x) ? x.toFixed(d) : (x === Infinity ? '∞' : '—'));
+  P(`\n=== T1135 ① N* 표 — 51마을 · 인구 = 판 ${NSD.split('/').pop()} ${NDAY}날(3시드 중앙) ===`);
+  P(`② F = 67.9 t/ha ÷ 이 세계 빽빽한 숲 ${g(forestKgM2 * 10, 1)} t/ha(칸당 ${C.forestTreesPerCellMean(SZ)}그루 × 그루당 ${g(wBarAll, 2)}단 × ${KG} kg) = **${g(F, 3)}**`);
+  P(`④ d — 지금 ${FIREWOOD_PC}단(${g(FIREWOOD_PC * KG, 3)} kg/인/일) ↔ 고증 ${g(D_SRC, 4)}단(${g(D_SRC * KG, 3)} kg/인/일 = 1천만 ㎥ ÷ ${SRCD.pop1955.toLocaleString()} × ${SRCD.rho} kg/㎥ ÷ 365 · ${g(D_SRC / FIREWOOD_PC, 2)}배)`);
+  P('\n| 마을 | 인구 N | 산 나무 몫 F·yMat(k=1) | 삭정이(점봉산 ~ 광릉) | ' + KS.map((k) => `S(k=${k})`).join(' | ') + ' | ' + KS.map((k) => `N*(k=${k}) d지금 · d고증`).join(' | ') + ' | 필요 k d지금 · d고증 |');
+  P('|---|---:|---:|---|' + KS.map(() => '---:').join('|') + '|' + KS.map(() => '---').join('|') + '|---|');
+  for (const o of out) P(`| ${o.name} | ${g(o.N, 0)} | ${g(o.live, 3)} | ${g(o.dead, 3)} ~ ${g(o.deadHi, 3)} | ` + KS.map((k) => g(o.S[k], 2)).join(' | ') + ' | ' + KS.map((k) => `${g(o.Nst[k].now, 0)} · ${g(o.Nst[k].src, 0)}`).join(' | ') + ` | ${g(o.kNeed.now, 1)} · ${g(o.kNeed.src, 1)} |`);
+  // 세계 합
+  const sum = (f) => out.reduce((a, o) => a + f(o), 0);
+  const Ntot = sum((o) => o.N);
+  P(`\n세계 합 — 인구 ${g(Ntot, 0)} · 수요 Σd·N = d지금 ${g(Ntot * DS.now, 1)} · d고증 ${g(Ntot * DS.src, 1)}단/일 · 삭정이 Σ ${g(sum((o) => o.dead), 1)} ~ ${g(sum((o) => o.deadHi), 1)}`);
+  P('| k | Σ S | Σ S ÷ Σ d·N(d지금) | Σ S ÷ Σ d·N(d고증) | 자급 마을 d지금 | 자급 마을 d고증 | Σ N* d지금 · d고증 |');
+  P('|---:|---:|---:|---:|---:|---:|---|');
+  for (const k of KS) {
+    const SS = sum((o) => o.S[k]);
+    P(`| ${k} | ${g(SS, 1)} | ${g(SS / (Ntot * DS.now), 2)} | ${g(SS / (Ntot * DS.src), 2)} | ${out.filter((o) => o.S[k] >= o.need.now).length}/${out.length} | ${out.filter((o) => o.S[k] >= o.need.src).length}/${out.length} | ${g(SS / DS.now, 0)} · ${g(SS / DS.src, 0)} |`);
+  }
+  //   숲 마을 잉여가 모자란 마을 몫을 덮나 — k 마다 Σ max(0, S − d·N) ↔ Σ max(0, d·N − S)
+  P('\n| k | d | 잉여 합(남는 마을) | 모자람 합(모자란 마을) | 덮나(잉여 ÷ 모자람) |');
+  P('|---:|---|---:|---:|---:|');
+  for (const k of KS) for (const dk of ['now', 'src']) {
+    const sur = sum((o) => Math.max(0, o.S[k] - o.need[dk])), def = sum((o) => Math.max(0, o.need[dk] - o.S[k]));
+    P(`| ${k} | ${dk === 'now' ? 'd지금' : 'd고증'} | ${g(sur, 1)} | ${g(def, 1)} | ${g(def > 0 ? sur / def : Infinity, 2)} |`);
+  }
+  const top = out.slice().sort((a, b) => (b.S[1] - b.need.src) - (a.S[1] - a.need.src)).slice(0, 8);
+  P(`\n숲 마을 잉여 상위(k=1 · d고증 · S − d·N): ` + top.map((o) => `${o.name} ${g(o.S[1] - o.need.src, 2)}`).join(' · '));
+  for (const dk of ['now', 'src']) {
+    const lst = out.filter((o) => o.S[16] < o.need[dk]).sort((a, b) => a.name.localeCompare(b.name));
+    P(`k = 16 에도 자급 못 하는 마을(${dk === 'now' ? 'd지금' : 'd고증'}) ${lst.length}: ` + lst.map((o) => `${o.name}(S ${g(o.S[16], 2)} ↔ ${g(o.need[dk], 2)})`).join(' · '));
+  }
+  const byKind = {};
+  for (const o of out) { const b = byKind[o.kind] || (byKind[o.kind] = []); b.push(o.kNeed.src); }
+  P('필요 k 중앙(d고증 · 갈래별): ' + Object.entries(byKind).map(([k, a]) => `${k} ${g(med(a.filter(Number.isFinite)), 1)}(∞ ${a.filter((x) => !Number.isFinite(x)).length})`).join(' · '));
+  //   ⓢ 숯
+  const SU = R('server/smelt-uses');
+  const kW = SU.CHARCOAL_KILN_WOOD, kC = SU.CHARCOAL_KILN_YIELD, kgC = W.kgOf('charcoal');
+  const MJW = 13.8, MJC = 30.8;   // FAO WISDOM East Africa 부록 1(나무 30% 함수율 · 숯 5%)
+  NS.charcoal = { kW, kC, kgC, MJW, MJC, massYield: kC * kgC / (kW * KG), energyYield: (kC * kgC * MJC) / (kW * KG * MJW), batchesPerDay: SU.kilnBatchesPerDay(R('server/zone-config').WORLD.dayLengthMs) };
+  P(`\nⓢ 숯 — 숯가마 한 배치 통나무 ${kW}단(${kW * KG} kg · ${g(kW * KG * MJW, 1)} MJ) → 숯 ${kC}(${g(kC * kgC, 1)} kg · ${g(kC * kgC * MJC, 1)} MJ) · 무게 수율 ${g(100 * NS.charcoal.massYield, 0)}% · 열 수율 ${g(100 * NS.charcoal.energyYield, 0)}% · 하루 배치 상한 ${NS.charcoal.batchesPerDay}(서버 하루)`);
+  P(`  숯 1 = 땔감 ${g(kgC * MJC / (KG * MJW), 3)}단 열량 · 1 kg 당 열 숯 ${MJC} ↔ 나무 ${MJW} MJ(${g(MJC / MJW, 2)}배) — econ 은 숯을 노 연료로만 쓴다(취사·난방 0)`);
+}
+if (JOUT) fs.writeFileSync(JOUT, JSON.stringify({ src: SRC, consts: { FIREWOOD_PC, LJ_BASE, MOVE_SPEED, KG, CAP, YEAR, DAY_S }, species: allSp, miss, rows, nstar: NS }, null, 1));
