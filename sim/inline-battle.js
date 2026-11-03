@@ -44,6 +44,15 @@ if (pairRe.test(H)) {
   H = H.slice(0, i) + block + '\n' + H.slice(i);
   console.log('[inline-battle] 첫 <script> 앞에 BATTLE-CORE 블록 삽입');
 }
+// ★[T1100] 원정 사기 식 블록(sim/equilibrium.js + sim/army-morale.js) — 대상에 마커 쌍이 있을 때만(전투실험실). 차례 = 평형 → 원정 사기(코어 뒤).
+const amRe = /<!-- ARMY-MORALE[\s\S]*?<!-- \/ARMY-MORALE -->/;
+if (amRe.test(H)) {
+  const rd = (f) => fs.readFileSync(path.join(__dirname, f), 'utf8').replace(/<\/script>/g, '<\\/script>');
+  const am = '<!-- ARMY-MORALE · durango-mini/sim/equilibrium.js + sim/army-morale.js 인라인 · 재생성: node durango-mini/sim/inline-battle.js -->\n' +
+    '<script>\n' + rd('equilibrium.js') + '\n</scr' + 'ipt>\n<script>\n' + rd('army-morale.js') + '\n</scr' + 'ipt>\n<!-- /ARMY-MORALE -->';
+  H = H.replace(amRe, () => am);
+  console.log('[inline-battle] ARMY-MORALE 블록 교체');
+}
 fs.writeFileSync(target, H);
 console.log(`[inline-battle] 완료: ${target} (${(H.length / 1024).toFixed(0)} KB)`);
 }

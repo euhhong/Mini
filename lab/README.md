@@ -1,7 +1,7 @@
 # lab — 실험실 정본 (레포 안) [재민 확정 2026-09-05 밤]
 
 **정본은 `전쟁실험실.html` 이다.** `마을실험실.html` 은 옛 판(마을 층만) — 참고용으로 같이 둔다.
-`전투실험실.html` 은 진영을 짜고 **전투만** 시키는 랩이다(★T1090 2026-11-02 — 07-10 원본을 레포로). 전투 계산은 `sim/battle-core.js` 인라인 하나(`node sim/inline-battle.js` · `lab-wiring-check` 가 어긋남을 잡는다) — 랩은 화면 · 입력 · 지형(나무 · 집)과 지형 어댑터만 갖는다. 07-10 원본은 `원본/전투실험실_0710.html`(대조 기준 · 고치지 않음 · `scripts/t1090-battle-lab-diff.js` · `sim/_battle-core-verify.js` 가 읽는다).
+`전투실험실.html` 은 진영을 짜고 **전투만** 시키는 랩이다(★T1090 2026-11-02 — 07-10 원본을 레포로). 전투 계산은 `sim/battle-core.js` 인라인 하나(`node sim/inline-battle.js` · `lab-wiring-check` 가 어긋남을 잡는다) — 랩은 화면 · 입력 · 지형(나무 · 집)과 지형 어댑터만 갖는다. 07-10 원본은 `원본/전투실험실_0710.html`(대조 기준 · 고치지 않음 · `scripts/t1090-battle-lab-diff.js` · `sim/_battle-core-verify.js` 가 읽는다). ★T1100: 원정 사기 · 군량 빚(T1076) 켬 칸 — 식은 `sim/army-morale.js`(+ `sim/equilibrium.js`) 인라인(`ARMY-MORALE` 블록 · 같은 `inline-battle.js` 가 굽는다) · 원정 사기(날) · 교전 사기(초) 곡선 · 군량 빚 막대 · 하네스 `scripts/test-lab-army-morale.js`.
 캐논: *"랩(마을실험실·전쟁실험실)에서 만든 것이 우리가 지향할 목표다"*(재민 09-03). 서버 이식이 랩보다 얕으면 결함 — 복원 카드.
 
 * 2026-09-05 밤 PM 이 맥 `~/Mini/` 사본을 그대로 옮겨 넣었다(T89 회부 5 — "랩 HTML 이 저장소 밖이라 세션이 카드로 못 만진다" 닫힘).

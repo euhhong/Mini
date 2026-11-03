@@ -1,0 +1,62 @@
+test-bandit-walk rc=0 2s :: 결과: PASS (31 통과 · 0 실패)
+test-bandit-camp rc=1 2s :: 결과: FAIL (33 통과 · 1 실패)
+test-bandit-all rc=0 2s :: 결과: PASS (31 통과 · 0 실패)
+test-bandit-body rc=0 3s :: 결과: PASS (65 통과 · 0 실패)
+test-body rc=0 7s :: === 324건 중 PASS 324 · FAIL 0 ===
+test-body-chunks rc=0 0s :: === 결과: 27 PASS / 0 FAIL ===
+test-body-fields rc=1 0s :: === 5 통과 / 3 실패 ===
+test-body-seed-other rc=0 1s :: === 결과: 11 PASS / 0 FAIL ===
+test-body-seed-restart rc=0 0s :: === 16 통과 / 0 실패 ===
+test-body-exit rc=0 0s :: === 28건 중 PASS 28 · FAIL 0 ===
+test-t986-bandit-day rc=0 132s :: === PASS 5 / FAIL 0 ===
+test-t766-dissolve rc=0 1s :: === 17건 중 PASS 17 · FAIL 0 ===
+test-loot-body rc=0 0s :: === 결과: 13 PASS / 0 FAIL ===
+test-arms-body rc=0 1s :: === 결과: 28 PASS / 0 FAIL ===
+test-handoff-body rc=0 326s :: === 94 통과 / 0 실패 ===
+test-membership rc=0 4s :: === PASS 85 / FAIL 0 ===
+test-village-found rc=0 1s :: === 마을 건립 하네스: 51 통과 / 0 실패 ✅ ===
+test-cand-walk rc=0 0s :: === 40건 중 PASS 40 · FAIL 0 ===
+test-harness-lint rc=0 8s :: === 68건 중 PASS 68 · FAIL 0 ===
+test-moment-lot rc=0 46s :: === 107건 중 PASS 107 · FAIL 0 ===
+test-events rc=0 171s :: === 305건 중 PASS 305 · FAIL 0 ===
+test-local-midnight-window rc=0 113s :: === 12건 중 PASS 12 · FAIL 0 ===
+test-move-soa rc=0 81s :: === 결과: 286 PASS / 0 FAIL ===
+test-t742-zone rc=0 0s :: === 11건 중 PASS 11 · FAIL 0 ===
+test-war-world rc=0 191s :: 결과: 201 통과 / 0 실패
+--- 블록 옮긴 뒤 다시(최종 코드)
+test-bandit-walk :: 결과: PASS (31 통과 · 0 실패)
+test-bandit-camp :: 결과: PASS (34 통과 · 0 실패)
+test-bandit-all :: 결과: PASS (31 통과 · 0 실패)
+test-bandit-body :: 결과: PASS (65 통과 · 0 실패)
+--- test-body-fields 5/3 은 베이스(0a235ff 그대로 · git archive HEAD 사본)에서도 5/3 — bandits.js npc.age(T1049 · land1038)
+  ✓ 정적 · 손잡이 하나(`'1'` 만 켬) · T1078 · T1079 켬 위에서만 선다
+  ✓ 정적 · T1104 문 덩이(bandits)에 새 수 0(0 · 1 · 반 칸 `SZ / 2` 말고 수 글자 없음)
+  ✓ 정적 · T1104 몸 쪽 문 덩이(villages)에 새 수 0
+  ✓ 정적 · econ — 두 판(`_raidOut` · `_raidIn`)은 종전 덩이를 이름만 올렸다(식 · 부름 둘) · 만남 문이 없으면 도착 자리에서 종전 그대로 · 있으면 길 �
+  ✓ [전제] 일곱 판이 다 돌았다
+  ✓ ① 켬 · 캐러밴이 떠난 날 — 단이 그 길의 길목(은거지에 가장 가까운 정점)으로 나간다(장부 · 노리는 캐러밴 · 구간)  {"st":"out","tc":77,"leg":"outboun
+  ✓ ① 몸이 실제로 걷는다 — 은거지에서 길목까지(가장 멀리 간 몸 ≈ 길목 거리) · 순간이동 0(틱 걸음 ≤ 존 걸음)  가장 멂 1545px · 길목 1545px · 순�
+  ✓ ① 캐러밴 장부가 길목을 지나는 그날(장부 지나는 날) 그 자리에서 econ 이 치른다 — 산 단 몸이 다 길목에(은거지 0)  {"day":407,"ds":407,"live":4,"atChoke"
+  ✓ ① 사상 — 도적 사상만큼 몸이 **길목에서** 쓰러진다(T1078 맞춤 · 은거지가 아니다)  {"n0":5,"n1":4,"down":1,"atChoke":1}
+  ✓ ① 노획 = 산 몸 짐 → 은거지에 걸어 닿는 날 더미(닿은 날 더미 = 전날 + 몸 짐 − 유지비 · 몸 짐 0)  {"meetPile":133,"meetInv":10,"homeDay":408,"homePile":141,"ho
+  ✓ ① 만난 날 더미 = 전날 − 유지비(노획이 더미로 순간이동하지 않는다)  [135,133,4]
+  ✓ ① 돌아온 몸은 은거지에서 일과로(AI 다시 켬 · 은거지 곁)  {"day":408,"pile":141,"inv":0,"atCamp":4,"bodies":4,"ai":4}
+  ✓ ① 소멸 0 · 새 몸 = 소굴에서 난 사람 수뿐  소멸 0 · 새 몸 5 · 단 5
+  ✓ ① 저장 줄 — 켬만 단의 걸음 장부 칸(`t1104`)이 선다 · 끔 = 종전 칸  [["id","camp","n","zero","born","home","why","lootN","lastLoot","den","_sup","_supKill","t1104","t1079"
+  ✓ ⓐ 끔 — 같은 판에서 단 몸은 은거지를 안 떠나고(가장 멂 ≤ 4칸) 약탈은 도착 날 길목 표로(몸이 길에 없다) ⇒ ①이 실제로 다르다  {"far":119,"raid"
+  ✓ ⓐ 끔 — 노획은 그날 더미에(몸이 안 나른다)  [122.5,130.5]
+  ✓ ① 하루 구간 캐러밴 — 단이 길목에 먼저 닿을 수 없다 · 안 나간다 · 약탈 0(몸이 만나지 않았다)  {"stat":{"far":2,"out":0},"raids":[]}
+  ✓ ⓐ 끔 — 같은 캐러밴을 도착 날 길목 표로 턴다(몸이 못 닿는 거리) ⇒ 이 칸이 실제로 다르다  [{"day":404,"id":77,"at":"arrive","leg":"outbound","n0":5,"n1":4,"do
+  ✓ ② 켬 · 결단 날 — 목촌 전사 몸 8 이 은거지로 걷는다(닿는 날 = 걸음 장부 · 종전 240셀/일 셈 아님)  {"pids":8,"eta":404,"len":4605,"ppd":1920}
+  ✓ ② 닿은 날 은거지에서 싸운다 — 산 원정 몸이 은거지 곁  {"day":404,"eta":404,"atCamp":7,"line":"D404 토벌⚔: 목촌 원정대(8명) vs 도적단#1 → 5명 사살 · 원
+  ✓ ② 원정 전사 — 그 몸이 은거지에서 쓰러진다 · 명부에서 빠진다(econ 사람 수 = 명부 몸 수)  {"fell":1,"atCamp":1,"inRoster":0,"pop":[30,29],"pids":[30,29]}
+  ✓ ② 이겨서 단이 무너졌다 — 산 원정 몸이 더미를 몸 짐에 싣고(T466 문) · 집에 닿아 곳간에 내린다(T423 문 · 실은 그 양)  {"bag":140,"stored":[{"vil":"목�
+  ✓ ② 돌아온 원정 몸은 집 곁에서 마을 일과로  {"day":407,"ai":7,"home":7}
+  ✓ ② 소멸 0 · 순간이동 0  소멸 0 · 순간이동 0
+  ✓ ② 단이 길목에 나가 있을 때 닿은 원정 — 은거지에서 기다렸다가 단이 돌아온 뒤 싸운다(빈 은거지와 싸우지 않는다)  {"wait":{"day":406,"wait":406,"gst"
+  ✓ ⓐ 끔 — 같은 판에서 토벌은 날짜 셈 날(D402 = 결단 + ⌈141 ÷ 240⌉) 몸 없이 · 더미를 실어 가지 않는다 ⇒ ②가 실제로 다르다  {"day":402,"stored":0,"wal
+  ✓ ⓐ 손잡이 그 밖 값(`'0'`) = 손잡이 없음 — 판 결과 JSON 바이트 같음  2389B
+  ✓ ⓐ T1079 없이 T1104 만 — 무동작(T1078 · T1079 켬 위에서만 선다)
+  ✓ ⓑ 미끼 `nomeet`(econ 만남 문을 뗀다) — ① “그날 그 자리에서 치른다”가 빨개진다  [{"day":412,"id":77,"at":"arrive","leg":"outbound","n0":5,"n1":4,"done":true}]
+  ✓ ⓑ 미끼 `nowalk`(몸 걸음 문을 뗀다) — ① “산 단 몸이 다 길목에”가 빨개진다  {"live":4,"atChoke":0}
+  ✓ ⓑ 미끼 `nodraft`(원정 뽑기 문을 뗀다) — ② “원정 몸이 걷는다”가 빨개진다  몸 0
