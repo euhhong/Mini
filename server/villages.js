@@ -7356,26 +7356,31 @@ function _t906Wipe(w, body, day) {
   }
   if (state.war && state.war.warLog) state.war.warLog(day, (w.atk && w.atk.name) + ' 원정 몸이 다 굶어 죽었다 — ' + (home ? '귀환 길' : byFight ? '교전이 끝낸다(싸우는 병사 0)' : '철수(몸이 없다 · 교전이 있었으면 그 교전을 정산)'));
 }
+let _armyMoraleMod = null; function _armyMorale() { return _armyMoraleMod || (_armyMoraleMod = require('../sim/army-morale.js')); }   // ★[T1122] 원정 하루 먹기 · 충족도 · 빚 평균 한 곳
 function _warRationEat(w, day) {
   const WC = state.war; if (!w || !w._packOnBodies || !WC || !WC.bodyEat) return null;
   const body = state.warBodies && state.warBodies.get(w.id);
   const ctx = _warPackCtx(w), keys = w._packKeys || [], need = (w._packShare || 0) * (state.warCore ? state.warCore.WAR_RATION : 1);
   const bearers = _warBearers(w, body);
   if (_forageMarchOn()) _warForageMarch(w, body, day, bearers);   // ★[T441] 먹기 전에 — 그날 지난 길에서 딴 것도 짐이다
-  let eaten = 0, left = 0, unfed = 0, hungry = 0; const eatU = {};
+  const eatU = {};
   const _on1076 = !!(WC.T1076_ON && WC.T1076_ON() && w._mrl != null), _dbt = _on1076 ? (w._debt || (w._debt = new Map())) : null;   // ★[T1076] 원정 사기 · 빚(끔 = 거짓 · 칸 0)
   let _t906Dead = null; const _m906 = _t906Mode();   // ★[T906] 판(끔 = '') · ㄱ — 오늘 굶어 죽은 몸(루프 밖에서 치른다)
   const _G = _t748G();
-  for (const p of bearers) {
-    const bag = _warBagView(p, keys);
-    const _b0 = _G ? Object.assign({}, bag) : null;
-    const _e = _warEatBySpoil(WC, bag, need, ctx, eatU);   // ★[T458] 상하는 것부터(부패 정본 순서) · 품목마다 같은 문
-    eaten += _e; if (_e < need) { unfed += need - _e; hungry++; }
-    if (_on1076 && need > 0) { const _sh = Math.max(0, need - _e) / need; if (_sh > 0) _dbt.set(p.pid, (_dbt.get(p.pid) || 0) + _sh); }   // ★[T1076] 몸마다 군량 빚(하루치 단위 · 쌓기만 — 갚기 · 죽음은 T1074 몫)   // ★[T886] 짐이 모자란 몸 — 마을 밥상으로 안 돌아간다(셈만 · 굶음의 결과는 회부 T886)
-    _warBagWrite(p, keys, bag); left += WC.bagFE(bag, ctx);
-    if (_m906 && _t906Step(w, body, p, need > 0 ? _e / need : 1, _m906)) (_t906Dead || (_t906Dead = [])).push(p);   // ★[T906] 몸의 굶주림 사다리(끔이면 안 돈다)
-    if (_b0) for (const k of keys) { const d = (_b0[k] || 0) - (bag[k] || 0); if (d > 1e-12) _G.bagOut(p, k, d); }   // ★[T748] 먹은 몫 — 그 품목의 오래된 것부터(끄면 null)
-  }
+  // ★[T1122] 몸 고리 = sim/army-morale.js `eatDay` 한 곳(전투실험실 날 축이 같은 고리를 부른다 · 차례 · 셈 그대로)
+  const _day = _armyMorale().eatDay(bearers, need, {
+    view: (p) => _warBagView(p, keys),
+    pre: (p, bag) => (_G ? Object.assign({}, bag) : null),
+    eat: (bag, nd) => _warEatBySpoil(WC, bag, nd, ctx, eatU),   // ★[T458] 상하는 것부터(부패 정본 순서) · 품목마다 같은 문
+    write: (p, bag) => _warBagWrite(p, keys, bag),
+    fe: (bag) => WC.bagFE(bag, ctx),
+    id: (p) => p.pid,
+    post: (p, bag, _e, _b0) => {
+      if (_m906 && _t906Step(w, body, p, need > 0 ? _e / need : 1, _m906)) (_t906Dead || (_t906Dead = [])).push(p);   // ★[T906] 몸의 굶주림 사다리(끔이면 안 돈다)
+      if (_b0) for (const k of keys) { const d = (_b0[k] || 0) - (bag[k] || 0); if (d > 1e-12) _G.bagOut(p, k, d); }   // ★[T748] 먹은 몫 — 그 품목의 오래된 것부터(끄면 null)
+    },
+  }, _dbt);   // ★[T1076] 몸마다 군량 빚(하루치 단위 · 쌓기만 — 갚기 · 죽음은 T1074 몫 · 끔이면 null = 안 쌓는다)   // ★[T886] 짐이 모자란 몸 — 마을 밥상으로 안 돌아간다(셈만)
+  const eaten = _day.eaten, unfed = _day.unfed, hungry = _day.hungry; let left = _day.left;
   let _t906Alive = bearers.length;
   if (_t906Dead) { for (const p of _t906Dead) left -= _t906Die(w, body, p, day); _t906Alive -= _t906Dead.length; if (left < 0) left = 0; if (body && !_t906Live(body)) _t906Wipe(w, body, day); }   // ★[T906] ㄱ — 그 자리에서 죽는다(짐은 떨어진다) · 산 몸이 0 이면 원정이 끝난다
   const perDay = (w.force || 0) * (state.warCore ? state.warCore.WAR_RATION : 1);
@@ -7383,13 +7388,12 @@ function _warRationEat(w, day) {
     if (w._fgKeys) bk.fgEat = +((bk.fgEat || 0) + _warFgUnits(w, eatU)).toFixed(6); if (bk.days.length < 64) bk.days.push({ day, bearers: bearers.length, eaten: +eaten.toFixed(4), left: +left.toFixed(4) }); }
   // 사기 항 — 오늘 몫이 짐에 있나(짐꾼 병력 기준 · 0~1). 교전 몸이 있으면 그 판의 편 값에 바로 적는다.
   const needNow = (_m906 ? _t906Alive : bearers.length) * need;
-  let ration = needNow > 0 ? Math.max(0, Math.min(1, left / needNow)) : 0;
+  let ration = _armyMorale().rationOf(left, needNow);   // ★[T1122] 같은 식 한 곳
   if (_m906 === 'mrl') { const tb = w._starve; let s = 0, n = 0; for (const p of bearers) { const e = tb && tb.get(p.pid); if (e) { s += _t906Sat(e); n++; } } ration = n ? s / n : ration; }   // ★[T906] ㄴ — 허기 무너짐 평균이 군량 충족도
   w._ration = ration;
   if (body && body.fight && body.fight.ctx && body.fight.ctx.sides && body.fight.ctx.sides.A) body.fight.ctx.sides.A.ration = ration;
   if (_on1076) {   // ★[T1076] 사기 평형 하루 — 평형 = min(짐 비율, 1 − 빚 깊이 ÷ 14) · 교전이 서 있으면 그 편 칸에 바로
-    let _ds = 0, _dn = 0; for (const p of bearers) { _ds += _dbt.get(p.pid) || 0; _dn++; }
-    WC.armyMoraleDay(w, ration, _dn ? _ds / _dn : 0);
+    WC.armyMoraleDay(w, ration, _armyMorale().debtMean(_dbt, bearers, (p) => p.pid));   // ★[T1122] 몸 평균 빚 = 같은 식 한 곳
     if (body && body.fight && body.fight.ctx && body.fight.ctx.sides && body.fight.ctx.sides.A) body.fight.ctx.sides.A.armyMrl = w._mrl;
   }
   return perDay > 0 ? left / perDay : 0;

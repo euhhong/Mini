@@ -43,10 +43,9 @@
       <div class="row"><label>청동전사</label><input type="range" id="a_champ" min="0" max="2" value="0"><b id="a_champ_v">0</b> <span style="color:#7a8494;font-size:11px">희귀</span></div>
       <div class="row"><label>대형</label><select id="a_form"><option value="line" selected>선형</option><option value="wall">방패벽</option><option value="open">산개</option><option value="circle">원형(방진)</option><option value="column">종대</option></select></div>
       <div class="row"><label>무기 품질</label><input type="range" id="a_q" min="0" max="1" step="0.05" value="0.5"><b id="a_q_v">0.5</b> <span style="color:#7a8494;font-size:11px">0.5 = 배수 1</span></div>
-      <div class="row t1076" style="display:none"><label>짐 비율</label><input type="range" id="a_r" min="0" max="1" step="0.05" value="1"><b id="a_r_v">1</b> <span style="color:#7a8494;font-size:11px">남은 짐 ÷ 하루 몫</span></div>
-      <div class="row t1076" style="display:none"><label>군량 빚</label><input type="range" id="a_debt" min="0" max="14" step="1" value="0"><b id="a_debt_v">0</b>날 <span class="dbar" id="a_debt_bar"><i></i></span></div>
+      <div class="row t1076" style="display:none"><label>군량 짐</label><input type="range" id="a_pack" min="0" max="28" step="0.5" value="28"><b id="a_pack_v">28</b>날치 <span style="color:#7a8494;font-size:11px">몸 하나가 지고 떠난 몫</span></div>
       <div class="row t1076" style="display:none"><label>행군 날</label><input type="range" id="a_days" min="0" max="28" step="1" value="0"><b id="a_days_v">0</b>날</div>
-      <div class="row t1076" style="display:none;color:#9fb0c0;font-size:12px" id="a_mrl_txt"></div>
+      <div class="row t1076" style="display:none;color:#9fb0c0;font-size:12px"><label>군량 빚</label><span class="dbar" id="a_debt_bar"><i></i></span> <span id="a_mrl_txt"></span></div>
     </div>
     <div class="side sb"><b style="color:#ff8a7a">B군 (적)</b>
       <div class="row"><label>창방패</label><input type="range" id="b_spear" min="0" max="100" value="4"><b id="b_spear_v">4</b></div>
@@ -59,10 +58,9 @@
       <div class="row"><label>청동전사</label><input type="range" id="b_champ" min="0" max="2" value="0"><b id="b_champ_v">0</b> <span style="color:#7a8494;font-size:11px">희귀</span></div>
       <div class="row"><label>대형</label><select id="b_form"><option value="line" selected>선형</option><option value="wall">방패벽</option><option value="open">산개</option><option value="circle">원형(방진)</option><option value="column">종대</option></select></div>
       <div class="row"><label>무기 품질</label><input type="range" id="b_q" min="0" max="1" step="0.05" value="0.5"><b id="b_q_v">0.5</b> <span style="color:#7a8494;font-size:11px">0.5 = 배수 1</span></div>
-      <div class="row t1076" style="display:none"><label>짐 비율</label><input type="range" id="b_r" min="0" max="1" step="0.05" value="1"><b id="b_r_v">1</b> <span style="color:#7a8494;font-size:11px">남은 짐 ÷ 하루 몫</span></div>
-      <div class="row t1076" style="display:none"><label>군량 빚</label><input type="range" id="b_debt" min="0" max="14" step="1" value="0"><b id="b_debt_v">0</b>날 <span class="dbar" id="b_debt_bar"><i></i></span></div>
+      <div class="row t1076" style="display:none"><label>군량 짐</label><input type="range" id="b_pack" min="0" max="28" step="0.5" value="28"><b id="b_pack_v">28</b>날치 <span style="color:#7a8494;font-size:11px">몸 하나가 지고 떠난 몫</span></div>
       <div class="row t1076" style="display:none"><label>행군 날</label><input type="range" id="b_days" min="0" max="28" step="1" value="0"><b id="b_days_v">0</b>날</div>
-      <div class="row t1076" style="display:none;color:#9fb0c0;font-size:12px" id="b_mrl_txt"></div>
+      <div class="row t1076" style="display:none;color:#9fb0c0;font-size:12px"><label>군량 빚</label><span class="dbar" id="b_debt_bar"><i></i></span> <span id="b_mrl_txt"></span></div>
     </div>
 
     <div class="row" style="margin-top:8px">
@@ -78,8 +76,9 @@
     <div class="row" style="margin-top:6px"><label style="min-width:auto"><input type="checkbox" id="t1076"> 원정 사기 · 군량 빚(T1076)</label> <span style="color:#7a8494;font-size:11px">끔 = 종전 판 그대로</span></div>
     <div class="stat" id="stat">배치하고 전투 시작.</div>
     <div class="t1076" id="mcharts" style="display:none;margin-top:8px">
-      <div style="font-size:12px;color:#aeb8c4">원정 사기 — 날(점선 = 평형 · 끝 계단 = 이 판 전사자)</div>
-      <canvas id="mc_day" width="600" height="150" style="width:300px;height:75px;background:#161f2a;border:1px solid #2a3a4a;border-radius:4px"></canvas>
+      <div style="font-size:12px;color:#aeb8c4">원정 — 행군 날(굵은 선 = 사기 · 점선 = 그날 평형 · 회색 = 몸 하나 짐 ÷ 처음 · 주황 = 빚 ÷ 14 · 끝 계단 = 이 판 전사자)</div>
+      <div style="font-size:11px;color:#7ab0ff">A</div><canvas id="mc_day_a" width="600" height="150" style="width:300px;height:75px;background:#161f2a;border:1px solid #2a3a4a;border-radius:4px"></canvas>
+      <div style="font-size:11px;color:#ff8a7a">B</div><canvas id="mc_day_b" width="600" height="150" style="width:300px;height:75px;background:#161f2a;border:1px solid #2a3a4a;border-radius:4px"></canvas>
     </div>
     <div style="margin-top:6px">
       <div style="font-size:12px;color:#aeb8c4">교전 사기 — 초(살아 있는 병사 평균 · 궤주 빼고)</div>
@@ -687,7 +686,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=BattleCore;
 
 </script>
 <script>
-// === sim/army-morale.js — 원정 사기 평형 · 군량 빚 · 죽음 계단 식 한 곳(T1076 · T1100) ===
+// === sim/army-morale.js — 원정 사기 평형 · 군량 빚 · 죽음 계단 · 하루 먹기 한 곳(T1076 · T1100 · T1122) ===
 //   ★[T1100 2026-11-03] T1076 이 `sim/war-core.js` 닫힘 안에 둔 식(armyMoraleDay · armyMoraleLoss 의 셈)을 떼어 여기 하나로 —
 //     war-core(서버 원정)와 전투실험실(lab/전투실험실.html 인라인)이 같은 식을 부른다(사본 0 · 셈 · 순서 · 값 그대로 = 바이트 같음).
 //   식(★재민 11-02 문 2-b · T1076):
@@ -711,7 +710,29 @@ if(typeof module!=='undefined'&&module.exports)module.exports=BattleCore;
   function day(mrl, r, debt) { return Equilibrium.step(mrl, target(r, debt), DEBT_DAYS, 1); }
   // 죽음 계단 — 새 사기
   function loss(mrl, dead, force) { return Equilibrium.drop(mrl, BattleCore.M_KABS * dead / force); }
-  const ArmyMorale = { DEBT_DAYS, target, day, loss };
+  // ★[T1122 2026-11-03] 원정 하루 먹기 — 서버 `_warRationEat` 의 몸 고리를 한 곳에(서버 · 전투실험실 날 축이 같은 고리를 부른다 · 사본 0).
+  //   몸마다: 짐 보기 → (앞 갈고리) → 먹기 → 셈(먹음 · 모자람 · 굶은 몸) → 빚(모자란 몫 ÷ 하루 몫 · debt 가 있을 때 · 쌓기만) →
+  //           짐 쓰기 → 남은 식량등가 더하기 → (뒤 갈고리). 차례 · 셈은 T1076 서버 고리 그대로(바이트 같음).
+  //   io = { view(p) → 짐, eat(짐, need) → 먹은 식량등가, write(p, 짐), fe(짐) → 식량등가, id(p) → 빚 열쇠, pre?(p, 짐) → 표, post?(p, 짐, 먹음, 표) }
+  //   품목 · 부패 순서 · 몸 장부는 io 몫이다(서버 = 몸 짐 거울 · 부패 정본 순서 · T748 · T906 / 랩 = 식량 한 칸).
+  function eatDay(bearers, need, io, debt) {
+    let eaten = 0, left = 0, unfed = 0, hungry = 0;
+    for (const p of bearers) {
+      const bag = io.view(p);
+      const tok = io.pre ? io.pre(p, bag) : null;
+      const e = io.eat(bag, need);
+      eaten += e; if (e < need) { unfed += need - e; hungry++; }
+      if (debt && need > 0) { const sh = Math.max(0, need - e) / need; if (sh > 0) { const k = io.id(p); debt.set(k, (debt.get(k) || 0) + sh); } }
+      io.write(p, bag); left += io.fe(bag);
+      if (io.post) io.post(p, bag, e, tok);
+    }
+    return { eaten, left, unfed, hungry };
+  }
+  // 군량 충족도(0~1) — 먹고 남은 짐 ÷ 오늘 몫(살아 있는 짐꾼 × 몫)
+  function rationOf(left, needNow) { return needNow > 0 ? Math.max(0, Math.min(1, left / needNow)) : 0; }
+  // 몸 평균 빚(하루치 단위)
+  function debtMean(debt, bearers, id) { let s = 0, n = 0; for (const p of bearers) { s += debt.get(id(p)) || 0; n++; } return n ? s / n : 0; }
+  const ArmyMorale = { DEBT_DAYS, target, day, loss, eatDay, rationOf, debtMean };
   if (node) module.exports = ArmyMorale;
   if (root) root.ArmyMorale = ArmyMorale;
 })(typeof window !== 'undefined' ? window : null);
@@ -812,7 +833,7 @@ function deploy(){
 }
 // ═══════════ ★[T1100] 원정 사기 · 군량 빚(T1076 식 = sim/army-morale.js 인라인 · 사본 0) ═══════════
 //   손잡이 끔(기본) = 편 칸 armyMrl 을 안 싣는다 = 07-10 · T1090 판과 같은 바이트(코어는 칸이 없으면 무변).
-//   켬: 진영마다 짐 비율 r · 군량 빚(날) · 행군 날을 받아, 행군 날마다 ArmyMorale.day 를 불러 그날 사기를 낸다(서버 원정이 하루 먹고 부르는 그 식).
+//   켬: 진영마다 군량 짐(날치) · 행군 날을 받아, 행군 날마다 서버 원정 하루(ArmyMorale.eatDay → rationOf · debtMean → day)를 굴려 그날 짐 · 빚 · 사기를 낸다(★T1122 — T1100 은 짐 비율 · 빚을 손으로 줬다).
 //     그 사기를 코어 편 칸 armyMrl 에 싣는다(서버 `_warEnsureFight` 와 같은 칸) — 교전 사기 목표가 그만큼 눌린다.
 //     판이 끝나면 그 편 전사자로 ArmyMorale.loss 를 불러 계단을 그린다(서버 `warResolveBattle` 의 공격 사상 계단과 같은 식 · 분모 = 떠난 병력).
 const AM=window.ArmyMorale;
@@ -823,11 +844,29 @@ function armyMoraleDeploy(){
   T1076.A=T1076.B=null; _mcSec={A:[],B:[]}; _mcNext=0;
   if(!T1076.on||!AM)return;
   for(const S of ['A','B']){ const x=S.toLowerCase();
-    const r=+document.getElementById(x+'_r').value, debt=+document.getElementById(x+'_debt').value, days=+document.getElementById(x+'_days').value;
-    let m=1; const curve=[m]; for(let d=0;d<days;d++){ m=AM.day(m,r,debt); curve.push(m); }
-    T1076[S]={r,debt,days,eq:AM.target(r,debt),curve,mrl:m,after:null};
-    BC.sides[S].armyMrl=m;   // 서버와 같은 칸 — 1 이면 코어가 안 누른다
+    const pack=+document.getElementById(x+'_pack').value, days=+document.getElementById(x+'_days').value;
+    T1076[S]=marchDays(BC.sides[S].start, pack, days);
+    BC.sides[S].armyMrl=T1076[S].mrl;   // 서버와 같은 칸 — 1 이면 코어가 안 누른다
   }
+}
+// ★[T1122] 행군 날 축 — 서버 원정 하루(`_warRationEat`)의 몸 고리 `ArmyMorale.eatDay` 를 그대로 부른다(사본 0).
+//   몸 = 그 편 병사 수만큼(새 몸 0 · 판의 몸과 같은 수) · 몸마다 짐 = 군량 짐(날치 — 하루 몫을 1 로 센 단위) · 하루 몫 = 1.
+//   하루: 몸마다 짐에서 하루 몫을 먹고(모자라면 있는 만큼) · 모자란 몫이 그 몸 빚에 쌓이고 ·
+//         충족도 = 남은 짐 ÷ 오늘 몫(`rationOf`) · 몸 평균 빚(`debtMean`) → 사기 하루(`day` = 평형 min(충족도, 1 − 빚 ÷ 14) 쪽 반감기 14날).
+//   짐 품목은 식량 하나다(서버는 몸 짐 품목을 상하는 것부터 먹는다 — 그 순서는 econ 번들 몫 · 보고 T1122 회부).
+function marchDays(n, pack, days){
+  const bodies=[]; for(let i=0;i<n;i++)bodies.push({id:i, bag:{food:pack}});
+  const io={ view:(p)=>p.bag, eat:(bag,need)=>{ const got=Math.min(bag.food,need); bag.food-=got; return got; }, write:()=>{}, fe:(bag)=>bag.food, id:(p)=>p.id };
+  const debt=new Map(); let m=1;
+  const rows=[{d:0, pack:pack, debt:0, ration:pack>0?1:0, eq:1, mrl:1}];
+  for(let d=1; d<=days; d++){
+    const r=AM.eatDay(bodies, 1, io, debt);
+    const ration=AM.rationOf(r.left, bodies.length*1), dm=AM.debtMean(debt, bodies, io.id);
+    m=AM.day(m, ration, dm);
+    rows.push({d, pack:bodies.length?r.left/bodies.length:0, debt:dm, ration, eq:AM.target(ration,dm), mrl:m, hungry:r.hungry});
+  }
+  const last=rows[rows.length-1];
+  return {pack0:pack, days, rows, mrl:m, eq:last.eq, debt:last.debt, packLeft:last.pack, after:null};
 }
 function armyMoraleAfter(){   // 판 끝 — 전사자 계단(그 편 사상 ÷ 떠난 병력 × M_KABS)
   if(!T1076.on||!BC.result)return;
@@ -843,16 +882,16 @@ function drawCharts(){
   const box=(id)=>{ const c=document.getElementById(id); if(!c)return null; const g=c.getContext('2d'); g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,c.width,c.height);
     g.strokeStyle='rgba(255,255,255,0.12)'; g.lineWidth=1; g.beginPath(); for(const v of [0,0.5,1]){const y=8+(c.height-16)*(1-v); g.moveTo(0,y); g.lineTo(c.width,y);} g.stroke();
     g.fillStyle='rgba(232,236,242,0.6)'; g.font='16px sans-serif'; g.fillText('1',4,22); g.fillText('0',4,c.height-10); return {c,g,Y:(v)=>8+(c.height-16)*(1-v)}; };
-  // 원정 사기(날)
-  const D=box('mc_day');
-  if(D&&T1076.on){ const maxD=Math.max(1,...['A','B'].map(S=>T1076[S]?T1076[S].days:0))+1, X=(d)=>30+(D.c.width-50)*d/maxD;
-    // 궤주 문턱(M_BREAK) — 원정이 이 밑이면 서버 결단이 철수
-    D.g.setLineDash([2,4]); D.g.strokeStyle='rgba(255,90,90,0.5)'; D.g.beginPath(); D.g.moveTo(30,D.Y(BC.M_BREAK)); D.g.lineTo(D.c.width,D.Y(BC.M_BREAK)); D.g.stroke(); D.g.setLineDash([]);
-    for(const S of ['A','B']){ const t=T1076[S]; if(!t)continue;
-      D.g.setLineDash([6,5]); D.g.strokeStyle=col[S]; D.g.globalAlpha=0.55; D.g.beginPath(); D.g.moveTo(X(0),D.Y(t.eq)); D.g.lineTo(X(maxD),D.Y(t.eq)); D.g.stroke(); D.g.setLineDash([]); D.g.globalAlpha=1;
-      D.g.lineWidth=3; D.g.beginPath(); t.curve.forEach((v,d)=>{ d?D.g.lineTo(X(d),D.Y(v)):D.g.moveTo(X(d),D.Y(v)); });
-      if(t.after!=null){ D.g.lineTo(X(t.days+1),D.Y(t.mrl)); D.g.lineTo(X(t.days+1),D.Y(t.after)); }
-      D.g.stroke(); D.g.lineWidth=1; }
+  // 원정(행군 날) — 편마다 한 칸
+  for(const S of ['A','B']){ const D=box('mc_day_'+S.toLowerCase()), t=T1076[S]; if(!D||!T1076.on||!t)continue;
+    const maxD=Math.max(1,t.days+1), X=(d)=>30+(D.c.width-50)*d/maxD;
+    D.g.setLineDash([2,4]); D.g.strokeStyle='rgba(255,90,90,0.5)'; D.g.beginPath(); D.g.moveTo(30,D.Y(BC.M_BREAK)); D.g.lineTo(D.c.width,D.Y(BC.M_BREAK)); D.g.stroke(); D.g.setLineDash([]);   // 궤주 문턱 M_BREAK — 원정이 이 밑이면 서버 결단이 철수
+    const line=(f,c,w,dash)=>{ D.g.setLineDash(dash||[]); D.g.strokeStyle=c; D.g.lineWidth=w; D.g.beginPath(); t.rows.forEach((r,i)=>{ const y=D.Y(Math.max(0,Math.min(1,f(r)))); i?D.g.lineTo(X(r.d),y):D.g.moveTo(X(r.d),y); }); return D.g; };
+    line((r)=>t.pack0>0?r.pack/t.pack0:0,'rgba(200,205,215,0.55)',2).stroke();
+    line((r)=>r.debt/AM.DEBT_DAYS,'#d88a3a',2).stroke();
+    line((r)=>r.eq,col[S],2,[6,5]).stroke();
+    const g=line((r)=>r.mrl,col[S],4); if(t.after!=null){ g.lineTo(X(t.days+1),D.Y(t.mrl)); g.lineTo(X(t.days+1),D.Y(t.after)); } g.stroke();
+    D.g.setLineDash([]); D.g.lineWidth=1;
   }
   // 교전 사기(초)
   const E=box('mc_sec');
@@ -862,8 +901,8 @@ function drawCharts(){
   }
   // 군량 빚 막대 · 사기 글
   for(const S of ['A','B']){ const x=S.toLowerCase(), t=T1076[S]; const bar=document.getElementById(x+'_debt_bar'), txt=document.getElementById(x+'_mrl_txt');
-    if(bar)bar.firstChild.style.width=(100*Math.min(1,(+document.getElementById(x+'_debt').value)/(AM?AM.DEBT_DAYS:14)))+'%';
-    if(txt)txt.textContent=t?('평형 '+t.eq.toFixed(2)+' · 사기 '+t.mrl.toFixed(2)+(t.after!=null?' → '+t.after.toFixed(2)+'(전사 '+t.dead+')':'')):''; }
+    if(bar)bar.firstChild.style.width=(t?100*Math.min(1,t.debt/AM.DEBT_DAYS):0)+'%';
+    if(txt)txt.textContent=t?(t.debt.toFixed(1)+'날 · 짐 '+t.packLeft.toFixed(1)+'날치 남음 · 평형 '+t.eq.toFixed(2)+' · 사기 '+t.mrl.toFixed(2)+(t.after!=null?' → '+t.after.toFixed(2)+'(전사 '+t.dead+')':'')):''; }
 }
 // ★[T1090] 증원 — 진행 중인 판에 병사를 더 넣는다(코어 addUnits · 07-10 뒤 생긴 것). 자리는 그 진영 후열 줄(코어 표준 배치 후열 x 22 · 간격 5)
 function reinforce(side){
@@ -950,7 +989,7 @@ function updStat(){const st=document.getElementById('stat'); const units=BC.unit
   if(result)h+=`<br><b style="font-size:15px;color:${result.win==='A'?'#7ab0ff':result.win==='B'?'#ff8a7a':'#ccc'}">${result.win==='무'?'무승부':result.win+'군 승리'}</b> (전투 시작 = 다시)`;
   st.innerHTML=h; drawCharts();}
 
-['a','b'].forEach(s=>KEYS.concat(['q','r','debt','days']).forEach(k=>{const id=s+'_'+k, el=document.getElementById(id); if(!el)return;
+['a','b'].forEach(s=>KEYS.concat(['q','pack','days']).forEach(k=>{const id=s+'_'+k, el=document.getElementById(id); if(!el)return;
   el.addEventListener('input',()=>{document.getElementById(id+'_v').textContent=el.value; if(!running)deploy();});}));
 {const el=document.getElementById('t1076'); if(el)el.addEventListener('change',()=>{ for(const d of document.querySelectorAll('.t1076'))d.style.display=el.checked?'':'none'; if(!running)deploy(); });}
 {const el=document.getElementById('r_n'); if(el)el.addEventListener('input',()=>{document.getElementById('r_n_v').textContent=el.value;});}
