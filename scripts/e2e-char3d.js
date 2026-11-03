@@ -809,12 +809,13 @@ const imgDim = (p) => {   // PNG IHDR · JPEG SOF — 무늬 크기(1024² 이�
   {
     await P.evaluate(() => { try { drawSpeechBubble = function () {}; } catch (e) { } });
     const seenN = new Map();           // pid → {job, n, mesh, want, chk}
-    let bestShot = null, bestK = 0;
+    let bestShot = null, bestK = 0, maxRs = 0;   // ★[T1111] maxRs = 한 표본에 그려진 주민 최다(상황 줄)
     await tpTo(P, offP, vx, vy);
     const t0 = Date.now();
     while (Date.now() - t0 < 60000) {
       await sleep(700);
       const rs = (await recent(P)).filter((e) => e.job);
+      if (rs.length > maxRs) maxRs = rs.length;
       const wants = await P.evaluate((L) => L.map((e) => { const md = window.__char3d.modeOf(e.layers, e.clip); return md && md.kind ? '3D' : ('시트:' + (md && md.why)); }), rs);
       rs.forEach((e, i) => { let v = seenN.get(e.pid); if (!v) { v = { job: e.job, n: 0, agree: 0, mesh: 0, want3d: 0, tools: 0, hand: 0, chk: null, whys: new Set() }; seenN.set(e.pid, v); }
         v.n++; if (e.mesh) v.mesh++; if (wants[i] === '3D') v.want3d++; else v.whys.add(wants[i]); if ((wants[i] === '3D') === e.mesh) v.agree++;
@@ -831,13 +832,22 @@ const imgDim = (p) => {   // PNG IHDR · JPEG SOF — 무늬 크기(1024² 이�
         bestShot = { frames: [fM, fS], npcScr, drawn: rs.length, mesh: rs.filter((e) => e.mesh).length };
       }
       const multiN = [...seenN.values()].filter((v) => v.n >= 3).length;
-      if (multiN >= 5 && [...seenN.values()].some((v) => v.tools > 0) && (bestK >= 10 || Date.now() - t0 > 30000)) break;
-      if (rs.length < 3 && ((Date.now() - t0) / 700 | 0) % 6 === 5) {
+      //   ★[T1111 2026-11-03] 일찍 끝내는 문에 ⑤ 의 전제(한 표본에 주민 셋 넘게 — `bestShot`)를 더한다. 종전엔 ①-b 몫(다섯 명 · 도구)만 차면
+      //     30초에 고리를 나와, 주민이 흩어진 판은 ⑤ 를 한 장도 못 찍고 "그려진 주민 0명"으로 빨갰다(야간 11-02 첫 밤 · T1111 단독 5판 중 1판).
+      //     못 찍었으면 고리의 제 상한(60초)까지 계속 찾는다(가장 붐비는 자리로 옮기는 아래 줄도 그대로 돈다) — 문턱(셋)은 그대로다.
+      if (bestShot && multiN >= 5 && [...seenN.values()].some((v) => v.tools > 0) && (bestK >= 10 || Date.now() - t0 > 30000)) break;
+      //   ★[T1111] 한 장에 주민 셋이 아직 없으면(⑤ 전제 미충족 · `bestShot` 없음) 붐비는 자리 찾기를 **표본마다** 한다(종전 여섯 표본에 한 번 —
+      //     주민이 흩어진 판은 60초 안에 열 번 남짓만 옮겨 다녀 셋이 모인 순간을 놓쳤다). 셋을 한 번 찍은 뒤엔 종전 박자(①-b 표본이 흔들리지 않게).
+      if (rs.length < 3 && (!bestShot || ((Date.now() - t0) / 700 | 0) % 6 === 5)) {
         const tgt = await P.evaluate((o) => { const n = window.__getNpcs ? window.__getNpcs() : []; let best = null;
           for (const q of n) { const k = n.filter((r) => Math.hypot(r.wx - q.wx, r.wy - q.wy) < 256).length; if (!best || k > best.k) best = { k, x: Math.round(q.wx - o[0]), y: Math.round(q.wy - o[1]) }; } return best; }, offP);
         if (tgt) await tpTo(P, offP, tgt.x + 48, tgt.y + 48);
       }
     }
+    //   ★[T1111] 상황 한 줄(판정 아님) — ⑤ 가 비면 무엇이 비었는지: 이 클라가 아는 주민 몸 수 · 256px 안 가장 붐빈 자리 · 고리 시간
+    { const _sit = await P.evaluate(() => { const n = window.__getNpcs ? window.__getNpcs() : []; let k = 0;
+        for (const q of n) k = Math.max(k, n.filter((r) => Math.hypot(r.wx - q.wx, r.wy - q.wy) < 256).length); return { npcs: n.length, best: k }; });
+      console.log(`    [상황] ⑤ 고리 ${Math.round((Date.now() - t0) / 1000)}초 · 한 표본 최다 ${maxRs}명 · 이 클라가 아는 주민 몸 ${_sit.npcs} · 256px 안 가장 붐빈 자리 ${_sit.best}명`); }
     const all = [...seenN.values()];
     const multi = all.filter((v) => v.n >= 3);
     const agreeAll = multi.filter((v) => v.agree >= v.n - 1);          // 처음 보인 한 판은 시트(타일이 한 판 늦다)
