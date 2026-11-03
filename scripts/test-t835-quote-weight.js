@@ -22,7 +22,7 @@
 //   내려오지 못했다(정본 순서로 고르면 뒤 아이템이 첫 개체보다 무겁다 · `server/trade.js` `T965_WANT_START` · 보고 T965). 고친 뒤 두 세계 16/16.
 const path = require('path');
 const fs = require('fs');
-const { execFileSync } = require('child_process');
+const { execFileSync, spawn } = require('child_process');
 const ROOT = path.join(__dirname, '..');
 
 if (process.env.T835_SUB === '1') {   // ── 아이 판: 세계 하나 · 판마다 곳간 · 인벤을 되돌린다 ──
@@ -103,9 +103,20 @@ console.log('\n② 글자 — 고르기 · 단위 셈 하나');
   ok(/\{ inventory: opts\.inventory, unitsOf: \(typeof unitsOf === 'function'\) \? unitsOf : undefined, giveCount: _n \}/.test(Vs) && /\{ want: msg\.want, inventory: player\.inventory \}/.test(Zs),
     '② 호스트 — 존이 낼 사람 인벤을 넘기고 마을 문이 그대로 전달한다(손잡이는 안 읽는다)'); }
 
-const sub = (env) => JSON.parse(execFileSync(process.execPath, [__filename], { env: Object.assign({}, process.env, env, { T835_SUB: '1' }), stdio: 'pipe', maxBuffer: 64 << 20 }).toString().trim().split('\n').pop());
+// ★[T1121 2026-11-03] 아이 판 둘(끔 · 켬)을 **나란히** — 둘은 서로 안 닿는다(판마다 세계 하나 · 같은 씨 · 같은 짐 · 프로세스 따로).
+//   종전엔 하나씩 차례로 돌려(execFileSync) 2코어 상자에서 한 코어가 놀았다(386초 · T1121 표 8위). `test-t988-trade-words` · `test-t807-quote-exec` 가 이미 쓰는 꼴 그대로다.
+//   받는 차례 · 단언 · 찍는 글자는 종전 그대로 — 증명 = 줄이기 전후 출력 바이트 같음(보고 T1121 §3). 아이가 죽으면 이름을 붙여 빨강(종전: 잡히지 않은 예외로 죽음 · 둘 다 rc 1).
+const sub = (env) => new Promise((res, rej) => {
+  const p = spawn(process.execPath, [__filename], { env: Object.assign({}, process.env, env, { T835_SUB: '1' }), stdio: ['ignore', 'pipe', 'pipe'] });
+  let o = '', e = '';
+  p.stdout.setEncoding('utf8'); p.stderr.setEncoding('utf8');   // 조각 경계에 걸린 한글 바이트를 잇는다
+  p.stdout.on('data', (b) => { o += b; }); p.stderr.on('data', (b) => { e += b; });
+  p.on('close', (c) => { if (c !== 0) return rej(new Error(`아이 판 ${JSON.stringify(env)} 종료 ${c} · ${e.trim().split('\n').pop() || ''}`));
+    try { res(JSON.parse(o.trim().split('\n').pop())); } catch (err) { rej(new Error(`아이 판 ${JSON.stringify(env)} 출력을 못 읽었다 · ${err.message}`)); } });
+});
 console.log('\n③ 같은 곳간 · 같은 순간 — 무게 다른 짐');
-{ const off = sub({ T835_QUOTE_WEIGHT: '0' }), on = sub({ T835_QUOTE_WEIGHT: '1' });
+(async () => {
+{ const [off, on] = await Promise.all([sub({ T835_QUOTE_WEIGHT: '0' }), sub({ T835_QUOTE_WEIGHT: '1' })]);
   //   행 = [마을 · 열량짝 · 짝 · 낼 양 · 견적 받을 · 견적 상한 · 견적 giveUsed · 실행 됨 · 실행 낸 · 실행 받은 · 곳간 나감 · 인벤 그대로]
   const lie = (r) => (r[4] == null ? false : (r[7] ? (r[4] !== r[9] || (r[6] != null && r[6] !== r[8])) : r[4] > 0));
   ok(off.on === false && on.on === true && off.gives.length === 2, '③ 전제 — 손잡이가 실제로 읽힌다 · 무게 다른 아이템 여럿인 낼 것 둘', `${off.gives.join(' · ')}`);
@@ -128,3 +139,4 @@ console.log('\n③ 같은 곳간 · 같은 순간 — 무게 다른 짐');
 
 console.log(`\n=== ${pass + fail}건 중 PASS ${pass} · FAIL ${fail} ===\n`);
 process.exit(fail ? 1 : 0);
+})().catch((e) => { console.log('  ✗ ' + (e && e.message)); process.exit(1); });

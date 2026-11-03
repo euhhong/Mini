@@ -508,9 +508,17 @@ async function waitHttp(url, tries = 600) {
     //   ★★[T66 2차] "렌더 없는 품목"을 **이름으로 박아 두지 않는다.** 처음엔 `oyster` 를 썼는데
     //     T76 이 그날 굴을 구워서, 옳은 화면인데도 이 줄이 빨개질 참이었다(아이콘은 배치마다 는다).
     //   ⇒ 화면의 정본(`ICON_RENDERED`)에서 **아직 안 구운 키를 그때그때 고른다.** 안 썩는다.
-    const probe = await page.evaluate(() => {
+    //   ★[T1121 곁 · T1088 뒤 빨강] "안 구운 키"만으로는 모자랐다 — 제 그림이 없어도 **빌린 그림**이 있으면 짐 칸은 그림이다
+    //     (`icons.lock.json` `_갈래` 대표 · T1088 `_같은물건` · 클라 `43-i-icon.js` 가 같은 표를 읽는다). T1088 이 점선 품목을 65 → 5 로 줄이자
+    //     첫 안 구운 키가 빌리는 품목(`meteorite` → 광물 대표)이 되어 이 줄이 "점선 아님"으로 빨갰다(T1121 측정 판 · land1040).
+    //   ⇒ 클라와 **같은 표를 그 자리에서 읽어** 빌림 · 같은 물건 키를 뺀다(표 사본 0 · 이름 박기 0). 점선 품목이 0 이 되면 아래 (상황) 줄이 그렇게 말한다.
+    const probe = await page.evaluate(async () => {
       const src = (typeof ITEM_LABEL_SRV === 'object' && ITEM_LABEL_SRV) ? Object.keys(ITEM_LABEL_SRV) : [];
-      return src.find((k) => !ICON_RENDERED.has(k) && !/^item_/.test(k) && /^[a-z_]+$/.test(k)) || null;
+      const L = await fetch('/assets/icons.lock.json', { signal: AbortSignal.timeout(15000) }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      const lent = new Set();
+      for (const g of Object.values((L && L['_갈래']) || {})) if (g && g.icon && ICON_RENDERED.has(g.icon) && Array.isArray(g.items)) for (const k of g.items) lent.add(k);
+      for (const [k, s] of Object.entries((L && L['_같은물건']) || {})) if (k !== '_' && typeof s === 'string' && ICON_RENDERED.has(s)) lent.add(k);
+      return src.find((k) => !ICON_RENDERED.has(k) && !lent.has(k) && !/^item_/.test(k) && /^[a-z_]+$/.test(k)) || null;
     });
     ok(!!probe, '★⑪ⓑ (상황) 아직 안 구운 품목을 하나 골랐다 — 없으면 아래 점선 칸 판정이 뜻이 없다', String(probe));
     await page.evaluate((pk) => window.__sendPrimary({ type: '__e2e_give', items: { wood: 3, [pk]: 2 } }), probe);

@@ -43,6 +43,14 @@ function mins(stamp) {
   const d = +stamp.slice(8, 10), h = +stamp.slice(11, 13), mi = +stamp.slice(14, 16);
   return ((d * 24) + h) * 60 + mi;   // 달을 넘는 밤은 없다(야간 창은 4시간)
 }
+// ★[T1121] 도장 → 초 단위 정수(같은 꼴 · `Date` 0) — §6 걸린 시간 표가 쓴다(분 단위로는 짧은 판 수백 개가 0 이 된다).
+function secs(stamp) {
+  if (!stamp) return null;
+  const d = +stamp.slice(8, 10), h = +stamp.slice(11, 13), mi = +stamp.slice(14, 16), s = +stamp.slice(17, 19);
+  return (((d * 24) + h) * 60 + mi) * 60 + s;
+}
+// 천 단위 쉼표 — `toLocaleString` 을 안 쓴다(상자 로캘 · ICU 판이 끼면 같은 로그가 다른 바이트가 된다)
+const grp = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 function hhmm(stamp) { return stamp ? stamp.slice(11, 16) : '?'; }
 function dur(a, b) {
   const x = mins(a), y = mins(b);
@@ -264,6 +272,18 @@ if (fs.existsSync(RETRY)) {
 
 const outside = reds.filter((b) => !known.has(base(b.name)));
 
+// ── [T1121 2026-11-03] **걸린 시간 표** — 하네스마다 `#####` 줄 도장 → 판정 줄 도장(초) · 판정 0 · 표시만 ──────────
+//   왜: 야간 11-02 묶음 A 가 4시간 33분(예정 3시간)인데 이 보고는 실패 칸에만 '소요'(분)가 있어 **어느 판이 시간을 썼는지** 아무도 몰랐다.
+//   러너는 하네스 출력을 판이 끝난 뒤에 한꺼번에 찍는다(`run-regress.sh` run_one) — 그래서 두 도장 사이 = 그 하네스가 돈 시간이다(배수는 `#####` 앞).
+//   끊긴 판(판정 줄 없음)은 셈 밖이다(안 잰 것을 재었다고 안 쓴다). 순위가 같으면 이름순(결정적).
+//   ⚠표의 줄은 **순위로 연다**(`| 1 | \`이름\` |`) — `prevNight` · `nightStatus` 가 `| \`이름\` |` 으로 여는 줄을 실패 줄로 읽기 때문이다(다음 밤 연속 셈 오염 0).
+const TIME_TOP = 10;
+const timed = blocks.map((b) => ({ b, s: (secs(b.t0) != null && secs(b.t1) != null) ? secs(b.t1) - secs(b.t0) : null })).filter((x) => x.s != null);
+const sumS = timed.reduce((a, x) => a + x.s, 0);
+const wallS = (secs(T0) != null && secs(T1) != null) ? secs(T1) - secs(T0) : null;
+const topT = timed.slice().sort((a, b) => (b.s - a.s) || (base(a.b.name) < base(b.b.name) ? -1 : base(a.b.name) > base(b.b.name) ? 1 : 0)).slice(0, TIME_TOP);
+const pct = (x, tot) => (tot > 0 ? (Math.round((1000 * x) / tot) / 10).toFixed(1) : '0.0');
+
 // 연속 몇 밤째인가 — 직전 밤 보고를 본다(있으면). `--prev-dir` 는 시험용 · 기본은 이 보고가 사는 곳.
 const PREVDIR = argOf('--prev-dir', OUT ? path.dirname(path.resolve(ROOT, OUT)) : path.join(ROOT, '보고'));
 const prev = prevNight(T0 ? T0.slice(0, 10) : '', PREVDIR);
@@ -288,6 +308,7 @@ L.push(`· 상자 의존 ${DEP ? (/^\[상황\]/.test(DEP) ? `**${DEP}**` : `\`${
 const ENC = (lines.map((l) => split1(l).s).find((s) => /\[상황\] 층 데이터 PNG 인코더 차이\(화소 같음\)/.test(s)) || '').replace(/^\s*\[상황\] 층 데이터 PNG 인코더 차이\(화소 같음\) — /, '');
 if (ENC) L.push(`· 층 데이터 인코더 차이(화소 같음 · 통과 · T1051) — ${cell(ENC)}`);
 L.push(`· 상시 점검(§1b · T1038) — 뺄 차례 **${CHK.marks.drop}** · 상시 올릴지 **${CHK.marks.raise}** · 상시 줄 ${known.size}`);
+L.push(`· 걸린 시간(§6 · T1121) — ${topT.length ? `1위 \`${base(topT[0].b.name)}\` **${grp(topT[0].s)}초**` : '잰 판 없음'} · 하네스 합 ${grp(sumS)}초 · 판 전체 ${wallS == null ? '?' : grp(wallS) + '초'}`);
 L.push(`· 이 문서는 \`scripts/nightly-report.js\` 가 로그만 읽어 냈다 — **모델 판단 0** · 같은 로그면 바이트가 같다`);
 L.push(`· 로그 \`${LOG}\` · 단독 재실행 \`${RETRY}\` · 상시 목록 \`${path.relative(ROOT, argOf('--known', KNOWN_DEFAULT))}\``);
 L.push(`· 직전 밤 ${prev.why ? `**못 읽었다** (${prev.why})` : `\`${path.relative(ROOT, prev.file)}\` — 빨강 ${prev.rows.size}종`} · "연속 n밤"은 **세기만** 한 수다(판정 0)`);
@@ -373,6 +394,19 @@ L.push('');
 L.push('```');
 L.push(greens.map((b) => base(b.name)).join('  '));
 L.push('```');
+L.push('');
+
+L.push(`## 6. 걸린 시간 상위 ${TIME_TOP} (T1121 — 로그 도장으로 잰 초 · \`#####\` 줄 → 판정 줄 · 판정 0)`);
+L.push('');
+if (!topT.length) L.push('잰 판 **0**(판정 줄까지 닫힌 판이 없다).');
+else {
+  L.push('| 순위 | 하네스 | 걸린 초 | 하네스 합의 몫 | 판정 |');
+  L.push('|---|---|---|---|---|');
+  topT.forEach((x, i) => L.push(`| ${i + 1} | \`${base(x.b.name)}\` | ${grp(x.s)} | ${pct(x.s, sumS)}% | ${x.b.ok ? '초록' : '빨강'} |`));
+  const topSum = topT.reduce((a, x) => a + x.s, 0);
+  L.push('');
+  L.push(`· 잰 판 **${timed.length}** · 하네스 합 **${grp(sumS)}초** · 위 ${topT.length} 합 ${grp(topSum)}초(${pct(topSum, sumS)}%) · 판 전체 ${wallS == null ? '?' : `**${grp(wallS)}초** · 그 사이(배수 · 정리 기다림 · 머리) ${grp(wallS - sumS)}초`}${cut.length ? ` · 끊김 ${cut.length}은 셈 밖` : ''}`);
+}
 
 const text = L.join('\n') + '\n';
 if (OUT) { fs.mkdirSync(path.dirname(path.resolve(ROOT, OUT)), { recursive: true }); fs.writeFileSync(path.resolve(ROOT, OUT), text); console.log(OUT); }
