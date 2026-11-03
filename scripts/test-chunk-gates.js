@@ -9,6 +9,7 @@
 //   ④ 무효화 — 벽을 놓으면 그 청크(와 이웃)만 낡고, 낡은 표는 다시 지어질 때까지 쓰이며, 다시 지은 뒤 답이 새 벽을 따른다 · 지형 판 전부
 //   ⑤ 자명 통과 금지 — 간선 비트를 망가뜨리면 ② 가 문다 · 건너기 통행 확인을 빼면 ② 가 문다 · 구간 끊기 규칙을 빼면 ① 이 문다
 //   ⑥ [T679] 표 상한(LRU) — 상한을 넘지 않는다 · 버린 청크는 다시 물으면 `unknown` → 다시 지은 뒤 답이 같다 · 창 청크 수
+//   ⑨ [T1138] 부팅 미리 굽기 창(`enqueueWindow` — route 창 · 가운데부터 고리 차례 · 다 지은 뒤 unknown 0) · 묻기 못 찾은 청크 줄 앞으로(`opt.front`)
 'use strict';
 const path = require('path');
 const ROOT = path.join(__dirname, '..');
@@ -255,6 +256,42 @@ console.log('\n⑧ [T734 ②] 칸 A* 가 두 술어를 표 비트로 읽는다(`
   }
   ok(same === tot && foundN > 1000 && fastHit === tot, '⑧ ★표 비트 A* = 술어 A*(같은 길 — 세계 둘 · 3,000쌍) · 쌍마다 술어 부름이 줄었다', `${same}/${tot} · 찾은 ${foundN} · 줄어든 쌍 ${fastHit}`);
   console.log(`    [표] A* 합 술어 ${msOff.toFixed(0)} ms · 표 비트 ${msOn.toFixed(0)} ms(합성 술어는 싸다 — 존 술어는 벽 질의 격자를 묻는다)`);
+}
+
+// ── ⑨ [T1138] 부팅 미리 굽기(`enqueueWindow`) · 묻기 못 찾은 청크 줄 앞으로(`opt.front`) ─────────────
+{
+  const Wd = makeWorld(1138);
+  // 창 청크 = route 창 · 가운데 청크부터 고리 차례 · 다 지은 뒤 그 창 안 묻기는 unknown 0 · 답 = 한 번에 다 지은 표의 답
+  const Gp = G.create({ front: true, chunkCells: C, cellsW: CW, cellsH: CH, pass: Wd.P, step: Wd.S, cap: () => Infinity });
+  const cx = 100, cy = 90, n0 = Gp.enqueueWindow(cx, cy, R), st0 = Gp.stats();
+  const X0 = Math.max(0, Math.floor((cx - R) / C)), X1 = Math.min(Math.ceil(CW / C) - 1, Math.floor((cx + R) / C)), Y0 = Math.max(0, Math.floor((cy - R) / C)), Y1 = Math.min(Math.ceil(CH / C) - 1, Math.floor((cy + R) / C));
+  const want = (X1 - X0 + 1) * (Y1 - Y0 + 1);
+  ok(n0 === want && st0.queue === want && Gp.enqueueWindow(cx, cy, R) === 0, '⑨ 창 청크를 줄에 넣는다(route 창 그 상자) · 두 번 부르면 0(줄에 선 것은 건너뜀)', `${n0} = ${want}`);
+  const order = []; { const Gx = G.create({ chunkCells: C, cellsW: CW, cellsH: CH, pass: Wd.P, step: Wd.S, cap: () => Infinity }); Gx.enqueueWindow(cx, cy, R);
+    let k = 0; while (Gx.busy() && k++ < 1e6) { const before = new Set(Gx._recs.keys()); Gx.tick(1); for (const ci of Gx._recs.keys()) if (!before.has(ci)) order.push(ci); } }
+  const NXg = Math.ceil(CW / C), ring = (ci) => Math.max(Math.abs(ci % NXg - Math.floor(cx / C)), Math.abs(((ci / NXg) | 0) - Math.floor(cy / C)));
+  let mono = order.length === want; for (let i = 1; i < order.length; i++) if (ring(order[i]) < ring(order[i - 1])) mono = false;
+  ok(mono && ring(order[0]) === 0, '⑨ 짓는 차례 = 가운데 청크부터 고리 차례', `${order.length}개 · 첫 고리 ${ring(order[0])}`);
+  let k = 0; while (Gp.busy() && k++ < 1e6) Gp.tick(1500);
+  const Ga = mkG(Wd); Ga.enqueueAll(); Ga.tick(Infinity);
+  let unk = 0, same = 0, tot = 0;
+  rs = 1138; for (let i = 0; i < 400; i++) { const gx = Math.min(CW - 1, Math.max(0, cx + ((rnd() - 0.5) * 2 * R) | 0)), gy = Math.min(CH - 1, Math.max(0, cy + ((rnd() - 0.5) * 2 * R) | 0));
+    const a = Gp.route(cx, cy, gx, gy, R), b = Ga.route(cx, cy, gx, gy, R); tot++; if (a.res === 'unknown') unk++; if (JSON.stringify(a) === JSON.stringify(b)) same++; }
+  ok(unk === 0 && same === tot, '⑨ ★미리 구운 창 안 묻기 — unknown 0 · 답 = 다 지은 표의 답(같은 그릇 · 같은 짓기)', `unknown ${unk} · 같음 ${same}/${tot}`);
+  // front — 미리 굽기 줄(창 A) 뒤에 선 창 B 의 청크가, B 묻기 한 번에 줄 앞으로 온다 · front 끔이면 종전(줄 끝)
+  let bs = null; for (let y = 150; y < 170 && !bs; y++) for (let x = 180; x < 200 && !bs; x++) if (Wd.P(x, y) && Wd.P(x + 8, y + 6)) bs = [x, y, x + 8, y + 6];   // 통행 칸 짝(막힌 칸은 창을 안 묻는다)
+  const run = (front) => { const Gq = G.create({ front, chunkCells: C, cellsW: CW, cellsH: CH, pass: Wd.P, step: Wd.S, cap: () => Infinity });
+    Gq.enqueueWindow(40, 40, R); const q = Gq.route(bs[0], bs[1], bs[2], bs[3], R); const built = [];
+    for (let j = 0; j < 4000 && Gq.busy(); j++) { const before = new Set(Gq._recs.keys()); Gq.tick(1500); for (const ci of Gq._recs.keys()) if (!before.has(ci)) built.push(ci); }
+    return { q, built, Gq }; };
+  const F = run(true), B = run(false);
+  const winB = new Set(); for (let Y = Math.max(0, Math.floor((bs[1] - R) / C)); Y <= Math.min(Math.ceil(CH / C) - 1, Math.floor((bs[1] + R) / C)); Y++) for (let X = Math.max(0, Math.floor((bs[0] - R) / C)); X <= Math.min(NXg - 1, Math.floor((bs[0] + R) / C)); X++) winB.add(Y * NXg + X);
+  const firstA = (L) => L.findIndex((ci) => !winB.has(ci));
+  const bAll = (L) => L.filter((ci) => winB.has(ci)).length;
+  ok(F.q.res === 'unknown' && firstA(F.built) >= winB.size - 1 && bAll(F.built) === winB.size, '⑨ ★front 켬 — 묻기가 못 찾은 청크가 미리 굽기 줄 앞으로(짓는 중 하나만 먼저 끝난다)', `B 창 ${winB.size} · 첫 A 청크 자리 ${firstA(F.built)}`);
+  ok(B.q.res === 'unknown' && firstA(B.built) <= 1, '⑨ front 끔(종전) — 그 청크는 줄 끝에 선다', `첫 A 청크 자리 ${firstA(B.built)}`);
+  ok(F.built.length === B.built.length && new Set(F.built).size === F.built.length, '⑨ 두 판 다 같은 청크를 한 번씩 짓는다(옮기기는 차례만 바꾼다)', `${F.built.length} · ${B.built.length}`);
+  { const a = F.Gq.route(bs[0], bs[1], bs[2], bs[3], R), b = B.Gq.route(bs[0], bs[1], bs[2], bs[3], R); ok(a.res !== 'unknown' && JSON.stringify(a) === JSON.stringify(b), '⑨ 다 지은 뒤 답은 두 판이 같다', a.res); }
 }
 
 console.log(`\n=== 결과: ${pass} PASS / ${fail} FAIL ===\n`);
