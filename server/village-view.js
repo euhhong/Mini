@@ -17,6 +17,9 @@
 // ★[T1105] PM 임시 `vvAdapt` 가 비워 둔 칸 중 셀 수 있는 셋을 더했다 — 지역 이름 `head.region`(그 존의 `displayName`) ·
 //   먹을 것 며칠치 `dash.foodDays`(곳간 스냅숏 정본 값) · 땔감 충당 몫 `dash.fuelCov` · `dash.fuelShort`(econ 이 그날 남긴 `_fuelCov`).
 //   새 칸만 · 옛 이름 무변 · 새 수 0. 겨울 준비 %(겨울 목표) · 인구 증감 · 다음 일 한 줄은 여전히 키가 없다(`보고/T1105_2026-11-03.md`).
+// ★[T1116] 창고 탭(재민 11-01 "창고 · 각 물품별 시세")에 셀 수 있는 것을 더했다 — 곳간 줄 하루 수요 `use` · 값 래치 `priceUp`/`priceDown` ·
+//   모자란 것 / 남는 것 줄 `store.short` · `store.glut`(사건 장부 래치 · 곳간이 바닥난 물건 포함) · 값 오르내림 줄 `store.priceMoves`(이 마을 장부 링 ·
+//   지난 `PRICE_WIN` 날). 새 칸만 · 옛 이름 무변 · 새 수 0. 지난 날마다의 시세(30날 흐름)는 저장 칸이 없어 키가 없다(`보고/T1116_2026-11-03.md` · 회부).
 //
 // 보내는 때: 열 때 칸 전부(`full:true`) · 열려 있는 동안 **JSON 이 바뀐 칸만**(`full:false`) — 존의 5초 박자(아래 `TICK_MS`) +
 //   마을 장부 메시지(납품 · 교환 · 기부 · 꺼내기 …) 직후 한 번. 닫거나 끊기면 표지를 지운다.
@@ -182,17 +185,55 @@ function _dash(src, vil, projects, inv) {
   if (Number.isFinite(fc)) { out.fuelCov = _r(fc, 2); out.fuelShort = out.fuelCov < 1; }
   return out;
 }
+// 창고 — 곳간 줄(T1072) + [T1116] 하루 수요 `use` · 값 래치 `priceUp`/`priceDown` · 모자란 것/남는 것 줄 · 값 오르내림 줄.
+//   ★[T1116] 새 수 0 · 새 문턱 0 · 새 저장 0 — 전부 사건 장부(`events.js createLedger`)와 econ 이 이미 쥔 값을 읽는다.
+//   · `use` = econ 하루 소비 EMA(`_consEMA` — `daysOf` 의 분모 그대로 · 소수 둘째 자리). 0 이면 키가 없다(`daysOf` 가 null 인 줄).
+//   · `priceUp`/`priceDown` = 장부의 값 래치(`detOf().up/down` — `PRICE_SPIKE`/`PRICE_DROP` 이 선 뒤 풀리기 전까지 참 · `events.js` ③④).
+//     장부가 그 물건 값을 자기평균 창(`cfg.PRICE_WIN` 30날)만큼 지켜보기 전엔(`pN < PRICE_WIN` · 재기동 직후 포함) 판정이 없어 **키가 없다**.
+//   · `short`/`glut` 줄 = 같은 장부의 모자람 · 넘침 래치(`STOCK_SHORTAGE`/`STOCK_GLUT` — 문턱 `SHORT_DAYS`/`GLUT_DAYS` × 소비 EMA · 히스테리시스 `HYST`).
+//     래치는 소비 EMA 가 0 보다 큰 품목에서만 선다 ⇒ 후보 = 곳간 줄 ∪ `_consEMA` 키. 곳간이 바닥난 물건(스냅숏에 없는 줄)도 `qty:0` 으로 든다.
+//     차례 = 곳간 스냅숏 차례(묶음 표 `PV_INV_GROUPS`) 뒤 `_consEMA` 키 차례 — 새 정렬 규칙 0.
+//   · `priceMoves` = 이 마을 장부 링(`ledger.ringOf` — 이 마을에서 난 사건 · DB `village_events` 에서 되살린 것 포함)의
+//     `PRICE_SPIKE`/`PRICE_DROP` 중 지난 `PRICE_WIN` 날 것(새것부터) · 줄 = 하십시오체 `Events.newsLine`. 값 수(`mag` · `meta.p/avg`)는
+//     싣지 않는다 — 장부의 그림자가격 원값이라 시세 칸(거래소 정본 · 기준 품목 환산)과 다른 자(사본 0 · 회부 T1116 1).
+//   ⚠지난 날마다의 시세 줄(30날 흐름)은 저장 칸이 없어 키가 없다 — 회부 T1116 1.
+const PRICE_MOVE = new Set(['PRICE_SPIKE', 'PRICE_DROP']);
 function _store(src, vil, inv) {
-  const L = src.ledger, ema = vil.econ._consEMA || {};
-  const rows = []; let withheld = 0;
-  for (const g of (inv && inv.groups) || []) for (const it of g.items || []) {
-    if (isLumped(it.r)) { withheld++; continue; }
-    const det = (L && L.detOf) ? L.detOf(vil.dbId | 0, it.r) : null;
-    const e = +ema[it.r] || 0;
-    rows.push({ res: it.r, ko: ko(it.r), qty: it.q, daysOf: e > 0 ? _r(it.q / e, 1) : null, short: !!(det && det.short), glut: !!(det && det.glut) });
-  }
+  const L = src.ledger, ema = vil.econ._consEMA || {}, vid = vil.dbId | 0;
   const cfg = (L && L.cfg) || Events.CFG;
-  return { rows, shortDays: cfg.SHORT_DAYS, glutDays: cfg.GLUT_DAYS, withheld };
+  const detOf = (r) => ((L && L.detOf) ? L.detOf(vid, r) : null);
+  const line = (r, q) => {
+    const e = +ema[r] || 0, o = { res: r, ko: ko(r), qty: q, daysOf: e > 0 ? _r(q / e, 1) : null };
+    if (e > 0) o.use = _r(e, 2);
+    return o;
+  };
+  const rows = [], short = { rows: [], withheld: 0 }, glut = { rows: [], withheld: 0 }, seen = new Set(); let withheld = 0;
+  const latch = (r, q, d) => {
+    if (!d || !(d.short || d.glut)) return;
+    if (isLumped(r)) { if (d.short) short.withheld++; if (d.glut) glut.withheld++; return; }
+    if (d.short) short.rows.push(line(r, q));
+    if (d.glut) glut.rows.push(line(r, q));
+  };
+  for (const g of (inv && inv.groups) || []) for (const it of g.items || []) {
+    seen.add(it.r);
+    const det = detOf(it.r);
+    latch(it.r, it.q, det);
+    if (isLumped(it.r)) { withheld++; continue; }
+    const o = Object.assign(line(it.r, it.q), { short: !!(det && det.short), glut: !!(det && det.glut) });
+    if (det && (det.pN | 0) >= cfg.PRICE_WIN) { o.priceUp = !!det.up; o.priceDown = !!det.down; }
+    rows.push(o);
+  }
+  for (const r of Object.keys(ema)) { if (seen.has(r) || r.charCodeAt(0) === 95) continue; latch(r, 0, detOf(r)); }   // 곳간 스냅숏에 없는(바닥난) 물건
+  const priceMoves = { rows: [], withheld: 0, days: cfg.PRICE_WIN };
+  const ring = (L && L.ringOf) ? L.ringOf(vid) : [];
+  for (let i = ring.length - 1; i >= 0; i--) {
+    const ev = ring[i], ago = src.day - (ev.day | 0);
+    if (ago >= cfg.PRICE_WIN) break;   // 링은 날 오름차순 — 창 밖이면 더 볼 것이 없다
+    if (ago < 0 || !PRICE_MOVE.has(ev.type)) continue;
+    if (isLumped(ev.item)) { priceMoves.withheld++; continue; }
+    priceMoves.rows.push({ res: ev.item, ko: ko(ev.item), type: ev.type, day: ev.day | 0, ago, line: Events.newsLine(ev) });
+  }
+  return { rows, shortDays: cfg.SHORT_DAYS, glutDays: cfg.GLUT_DAYS, withheld, short, glut, priceMoves };
 }
 // ★시세표 입력의 지문 — 거래소 정본(`trade.board`)이 읽는 것: 그날 · 곳간(`v.storage`) · 내 짐(`mine`) · 기준 품목 · 걸린 의뢰의 보상(팔지 않는 품목).
 //   열린 동안 다시 읽을 때 지문이 같으면 지난 시세 칸을 그대로 둔다 — 값은 언제나 정본이 낸 그것이다(하루 캐시가 아니다: 곳간이 한 톨만 움직여도 다시 부른다).

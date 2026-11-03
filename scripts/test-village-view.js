@@ -18,6 +18,9 @@
 //     공사 줄 `kind:'clear'` = 개간 술어 정본(`villageViewSrc().needClear`) ∧ 농부 몸 · 밭 칸 수 · 개간 몸 수 · 술어가 거짓이면 줄 없음 · 고정 자료 같은 모양
 //  ②-T1105 임시 vvAdapt 가 비워 둔 칸 중 셀 수 있는 셋 — 지역 이름 `head.region` = 그 존 `displayName` · 먹을 것 며칠치 `dash.foodDays` = 곳간 스냅숏 정본 ·
 //     땔감 충당 몫 `dash.fuelCov`/`fuelShort` = econ `_fuelCov` · 값이 없으면 키 없음 · 회부 칸(인구 증감 · 겨울 % · 다음 일)은 키 없음 · 고정 자료 같은 모양
+//  ②-T1116 창고 탭 — 하루 수요 `use` = econ `_consEMA` · 모자란 것/남는 것 줄 `store.short`/`glut` = 사건 장부 래치 전부(곳간이 바닥난 물건 포함) ·
+//     값 래치 `priceUp`/`priceDown` = `detOf().up/down`(창을 못 채우면 키 없음) · 값 오르내림 줄 `store.priceMoves` = 장부 링의 지난 `PRICE_WIN` 날 값 사건 ·
+//     값 수 싣지 않음 · 30날 시세 흐름은 키 없음(회부) · 고정 자료 같은 모양
 //
 // 실행: node scripts/test-village-view.js   (존 한 벌을 이 프로세스 안에서 띄운다 · 마을 2곳)
 'use strict';
@@ -264,6 +267,81 @@ const ITEM_KEYS = (view) => {   // 품목이 서는 자리 전부(④)
     const FD = FIX.view.dash, FH = FIX.view.head;
     ok(typeof FH.region === 'string' && Number.isFinite(FD.foodDays) && Number.isFinite(FD.fuelCov) && typeof FD.fuelShort === 'boolean' && FD.fuelShort === (FD.fuelCov < 1)
       && Object.keys(FD).every((k) => DASH_KEYS.includes(k)), '고정 자료에도 같은 새 칸(`head.region` · `dash.foodDays` · `fuelCov` · `fuelShort`) — 세션12 가 같은 모양을 본다');
+  }
+  // ── ②-T1116 창고 탭 — 하루 수요 · 모자란 것/남는 것 줄 · 값 래치 · 값 오르내림 줄(새 칸만 · 새 수 0) ──
+  say('\n②-T1116 창고 탭 — 모자란 것 · 남는 것 · 값 오르내림(새 칸만)');
+  {
+    const L = V.villageViewSrc(VID).ledger, cfg = L.cfg, ema = vil.econ._consEMA || {}, sto = vil.econ.storage || {};
+    const inv = V.playerVillageInventory(vil), all = [].concat(...inv.groups.map((g) => g.items));
+    const r2 = (x, n) => +(+x).toFixed(n);
+    const S = view.store;
+    const STORE_KEYS = ['glut', 'glutDays', 'priceMoves', 'rows', 'short', 'shortDays', 'withheld'];
+    ok(JSON.stringify(Object.keys(S).sort()) === JSON.stringify(STORE_KEYS), '창고 칸 = 옛 넷(`rows` · `shortDays` · `glutDays` · `withheld`) + 새 셋(`short` · `glut` · `priceMoves`) — 옛 이름 무변', Object.keys(S).join(','));
+    ok(S.rows.every((r) => ['res', 'ko', 'qty', 'daysOf', 'short', 'glut'].every((k) => k in r)), '곳간 줄의 옛 칸 여섯 그대로(`res` · `ko` · `qty` · `daysOf` · `short` · `glut`)');
+    ok(S.rows.every((r) => { const e = +ema[r.res] || 0; return e > 0 ? (r.use === r2(e, 2) && r.daysOf === r2(r.qty / e, 1)) : (!('use' in r) && r.daysOf === null); }),
+      '하루 수요 `use` = econ 소비 EMA(`_consEMA` · `daysOf` 의 분모 그대로) · 소비 0 이면 키 없음', S.rows.filter((r) => 'use' in r).slice(0, 3).map((r) => `${r.ko} ${r.use}/날`).join(' · '));
+    // 모자람 · 넘침 줄 = 장부 래치 — 장부의 후보 집합(곳간 키 ∪ 소비 EMA 키 · `events.js itemsOf`)을 따로 훑어 대조한다
+    const cand = [...new Set([...Object.keys(sto), ...Object.keys(ema)])].filter((r) => r.charCodeAt(0) !== 95);
+    const want = (k) => cand.filter((r) => { const d = L.detOf(VID, r); return d && d[k]; });
+    const chk = (k) => {
+      const w = want(k), got = S[k];
+      const wc = w.filter((r) => !VV.isLumped(r));
+      return got.rows.length === wc.length && got.rows.length + got.withheld === w.length
+        && got.rows.every((x) => { const it = all.find((y) => y.r === x.res), e = +ema[x.res] || 0; return wc.includes(x.res) && x.qty === (it ? it.q : 0) && x.daysOf === (e > 0 ? r2(x.qty / e, 1) : null) && (e > 0 ? x.use === r2(e, 2) : !('use' in x)); });
+    };
+    ok(chk('short') && chk('glut'), '모자란 것 · 남는 것 줄 = 사건 장부 래치(`detOf().short/glut`) 전부 · 양 = 곳간 스냅숏(없으면 0) · 며칠치 · 하루 수요 · 뭉뚱그린 것은 빼고 센다',
+      `모자람 ${S.short.rows.length}(+뺀 ${S.short.withheld}) · 넘침 ${S.glut.rows.length}(+뺀 ${S.glut.withheld})`);
+    ok(S.rows.every((r) => r.short === S.short.rows.some((x) => x.res === r.res) && r.glut === S.glut.rows.some((x) => x.res === r.res)), '곳간 줄의 `short`/`glut` 과 줄 목록이 같은 래치를 읽는다');
+    // [자명 통과 금지] 곳간이 바닥난 물건(스냅숏에 없는 줄)의 모자람이 실제로 줄에 든다 — 소비가 있는 물건 하나의 곳간 칸을 잠시 비우고
+    //   그 물건의 장부 래치를 잠시 세운다(장부는 하루 경계에만 래치를 고친다 · 날은 얼렸다 · 끝에 둘 다 그대로 되돌린다)
+    const zr = Object.keys(ema).find((r) => r.charCodeAt(0) !== 95 && !VV.isLumped(r) && (+ema[r] || 0) > 0 && L.detOf(VID, r));
+    ok(!!zr, '[자명 통과 금지] 소비가 있는 구체 물건이 이 세계에 있다', zr ? `${zr} 소비 ${ema[zr]}/날` : '없음');
+    if (zr) {
+      const d = L.detOf(VID, zr), was = d.short, had = Object.prototype.hasOwnProperty.call(sto, zr), q0 = sto[zr];
+      sto[zr] = 0; d.short = true;
+      let vz = null; try { vz = VV.build(p, VID).view.store; } finally { d.short = was; if (had) sto[zr] = q0; else delete sto[zr]; }
+      const z = vz && vz.short.rows.find((x) => x.res === zr);
+      ok(!!z && z.qty === 0 && z.daysOf === 0 && z.use === r2(ema[zr], 2) && !vz.rows.some((x) => x.res === zr), '바닥난 물건의 모자람 = 양 0 · 0일치 · 하루 수요 그대로(곳간 줄엔 없다 — 스냅숏이 빼는 줄)', z ? JSON.stringify(z) : '-');
+      ok(JSON.stringify(VV.build(p, VID).view.store) === JSON.stringify(S), '곳간 · 래치를 되돌리면 창고 칸도 처음 그대로');
+    }
+    // 값 래치 — 장부가 자기평균 창(`PRICE_WIN`)만큼 지켜본 물건에서만 키가 선다
+    ok(S.rows.every((r) => { const d = L.detOf(VID, r.res); const warm = !!d && (d.pN | 0) >= cfg.PRICE_WIN; return warm ? (r.priceUp === !!d.up && r.priceDown === !!d.down) : (!('priceUp' in r) && !('priceDown' in r)); }),
+      '값 래치 `priceUp`/`priceDown` = 장부 `detOf().up/down` · 창(`PRICE_WIN`)을 못 채운 물건은 키 없음', `창 ${cfg.PRICE_WIN}날 · 키 선 줄 ${S.rows.filter((r) => 'priceUp' in r).length}/${S.rows.length}`);
+    {
+      const r0 = S.rows.find((r) => L.detOf(VID, r.res));
+      const d = r0 && L.detOf(VID, r0.res), keep = d && { pN: d.pN, up: d.up, down: d.down };
+      let vw = null;
+      if (d) { d.pN = cfg.PRICE_WIN; d.up = true; d.down = false; try { vw = VV.build(p, VID).view.store.rows.find((x) => x.res === r0.res); } finally { Object.assign(d, keep); } }
+      ok(!!vw && vw.priceUp === true && vw.priceDown === false, '[자명 통과 금지] 창을 채우고 오름 래치가 선 물건이면 `priceUp` 참 · `priceDown` 거짓(래치만 잠시 세웠다 되돌림)', r0 ? r0.ko : '-');
+    }
+    // 값 오르내림 줄 — 이 마을 장부 링(`ringOf`)의 PRICE_SPIKE/DROP · 지난 PRICE_WIN 날 · 새것부터 · 하십시오체
+    const ring0 = L.ringOf(VID);
+    const nat = ring0.filter((e) => (e.type === 'PRICE_SPIKE' || e.type === 'PRICE_DROP') && day - (e.day | 0) < cfg.PRICE_WIN && day - (e.day | 0) >= 0);
+    ok(S.priceMoves.days === cfg.PRICE_WIN && S.priceMoves.rows.length + S.priceMoves.withheld === nat.length, '값 오르내림 줄 수 = 장부 링의 지난 창 값 사건 수(뭉뚱그린 것은 빼고 센다)', `${S.priceMoves.rows.length} + 뺀 ${S.priceMoves.withheld} = ${nat.length} · 창 ${S.priceMoves.days}날`);
+    const W = cfg.PRICE_WIN;
+    const inj = [
+      { day: day - W, vid: VID, type: 'PRICE_SPIKE', item: 'wood', mag: 2.1, meta: { p: 1, avg: 0.5 } },   // 창 밖 — 안 든다
+      { day: day - 7, vid: VID, type: 'PRICE_DROP', item: 'stone', mag: 0.08, meta: { p: 0.1, avg: 1.2 } },
+      { day: day - 3, vid: VID, type: 'STOCK_SHORTAGE', item: 'stone', mag: 0.4, meta: {} },             // 값 사건이 아니다 — 안 든다
+      { day: day - 2, vid: VID, type: 'PRICE_SPIKE', item: 'food', mag: 2.4, meta: { p: 3, avg: 1.2 } },  // 뭉뚱그린 것 — 빼고 센다
+      { day: day - 1, vid: VID, type: 'PRICE_SPIKE', item: 'wood', mag: 2.2, meta: { p: 2, avg: 0.9 } },
+    ];
+    let pm = null;
+    L.loadRing(VID, ring0.concat(inj));   // 장부의 복구 문(재기동이 DB 사건을 되돌리는 그 문) — 끝에 그대로 되돌린다
+    try { pm = VV.build(p, VID).view.store.priceMoves; } finally { L.loadRing(VID, ring0); }
+    const pr = pm ? pm.rows.filter((x) => x.day >= day - 7) : [];
+    ok(!!pm && pr.length === 2 && pr[0].res === 'wood' && pr[0].type === 'PRICE_SPIKE' && pr[0].ago === 1 && pr[1].res === 'stone' && pr[1].type === 'PRICE_DROP' && pr[1].ago === 7
+      && !pm.rows.some((x) => x.ago >= W) && pm.withheld === S.priceMoves.withheld + 1,
+      '[자명 통과 금지] 링에 값 사건을 넣으면 — 창 안 것만 · 새것부터 · 값 아닌 사건 0 · 뭉뚱그린 것은 빼고 센다', pr.map((x) => `${x.ago}일 전 ${x.ko} ${x.type}`).join(' · '));
+    ok(!!pm && pm.rows.every((x) => x.line === Ev.newsLine({ type: x.type, item: x.res }) && /니다\.$/.test(x.line)), '줄 = 같은 사건의 하십시오체(`Events.newsLine`)', pr.map((x) => x.line).join(' / '));
+    ok(!!pm && pm.rows.every((x) => Object.keys(x).sort().join() === 'ago,day,ko,line,res,type'), '값 수(`mag` · `meta.p/avg` — 장부의 그림자가격 원값)는 싣지 않는다 — 시세는 거래소 정본 칸 하나', pm && pm.rows[0] ? Object.keys(pm.rows[0]).join(',') : '-');
+    ok(JSON.stringify(L.ringOf(VID)) === JSON.stringify(ring0) && JSON.stringify(VV.build(p, VID).view.store) === JSON.stringify(S), '링을 되돌리면 창고 칸도 처음 그대로');
+    ok(!('history' in S) && !('trend' in S) && S.rows.every((r) => !('trend' in r) && !('yesterday' in r)), '지난 날마다의 시세 줄(30날 흐름 · 어제보다)은 저장 칸이 없어 키가 없다 — 회부 T1116 1');
+    const FS = FIX.view.store;
+    ok(JSON.stringify(Object.keys(FS).sort()) === JSON.stringify(STORE_KEYS) && Array.isArray(FS.short.rows) && Array.isArray(FS.glut.rows) && Array.isArray(FS.priceMoves.rows) && Number.isInteger(FS.priceMoves.days)
+      && FS.rows.some((r) => 'use' in r && 'priceUp' in r) && FS.short.rows.some((x) => x.qty === 0) && FS.priceMoves.rows.every((x) => Object.keys(x).sort().join() === 'ago,day,ko,line,res,type')
+      && FS.rows.every((r) => r.short === FS.short.rows.some((x) => x.res === r.res) && r.glut === FS.glut.rows.some((x) => x.res === r.res)),
+      '고정 자료에도 같은 새 칸(`use` · `priceUp`/`priceDown` · `short` · `glut` · `priceMoves`) — 세션12 가 같은 모양을 본다');
   }
   {
     const tb = V.villageTradeBoard(VID, p.x, p.y, p.inventory, 'wood');

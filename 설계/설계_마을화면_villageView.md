@@ -5,6 +5,7 @@
 > 칸 전수표(시안 칸 하나하나 → 서버 정본 파일:줄 · 있음/파생/없음)는 `보고/T1072_2026-11-02.md`.
 > T1084(2026-11-02): 없던 29칸 중 지금 세계에서 셀 수 있는 둘을 더했다 — `projects.now[]` 집터 줄 `bedsGain` · 새 줄 `kind:'clear'`(`fields` · `crew`). **새 칸만** — 옛 이름 · 뜻 무변. 29칸 표 `보고/T1084_2026-11-02.md`.
 > T1105(2026-11-03): PM 임시 `vvAdapt` 가 비워 둔 칸 중 서버에 이미 있는 값 셋을 더했다 — `head.region`(지역 이름 = 그 존의 `displayName`) · `dash.foodDays`(먹을 것 며칠치) · `dash.fuelCov` · `dash.fuelShort`(땔감 충당 몫 · 모자람). **새 칸만** — 옛 이름 · 뜻 무변. 겨울 준비 %(분모) · 인구 증감 · 다음 일 한 줄은 여전히 키가 없다. 화면 칸 ← 서버 칸 표 `보고/T1105_2026-11-03.md`.
+> T1116(2026-11-03): 창고 탭(재민 11-01 "창고 · 각 물품별 시세")에 서버에 이미 있는 값을 더했다 — 곳간 줄 `use`(하루 수요) · `priceUp`/`priceDown`(장부 값 래치) · `store.short`/`store.glut`(모자란 것 · 남는 것 줄 — 곳간이 바닥난 물건 포함) · `store.priceMoves`(이 마을 장부의 지난 30날 값 오르내림 사건). **새 칸만** — 옛 이름 · 뜻 무변. 물품별 **날마다의** 시세 흐름(30날 선) · 어제보다는 저장 칸이 없어 키가 없다(회부 T1116 1). 칸 표 `보고/T1116_2026-11-03.md`.
 
 ## 0. 규약
 * **있는 칸만 싣는다.** 서버에 없는 칸은 키 자체가 없다(빈 문자열 · 0 으로 채우지 않는다) — 회부 `인계/회부.md` `T1072`.
@@ -54,8 +55,13 @@
 | | `byJob[]` `{ job, ko, n }` | arr | 몸의 `simJob` 집계 · 이름표 `zone.js JOB_KR_NPC` | 직업별 수 "어부 14" |
 | | `people[]` `{ pid, name, job, jobKo, act, chief }` | arr | 몸 `name` · `simJob` · 행위 라벨 `_lifeAct` · 촌장 = `chiefOf` | 사람 칸 |
 | `store` | `rows[]` `{ res, ko, qty, daysOf, short, glut }` | arr | 곳간 `playerVillageInventory().groups` · 래치 `ledger.detOf(vid,res)` · 소비 `econ._consEMA` | "곳간에 있는 것" · 넉넉함 · "모자란 것"(`short`) |
+| | `rows[].use` (T1116) | num | 하루 수요 = econ 소비 EMA `_consEMA[res]`(`daysOf` 의 분모 그대로 · 소수 둘째 자리) · 소비 0 이면 키 없음 | 넉넉함 옆 "하루 n씩 씁니다" 자리 |
+| | `rows[].priceUp` · `priceDown` (T1116) | bool | 사건 장부 값 래치 `detOf().up/down`(`PRICE_SPIKE`/`PRICE_DROP` 이 선 뒤 풀리기 전까지 참 · 30날 자기평균 대비) · 장부가 그 물건 값을 창(`events.CFG.PRICE_WIN` 30날)만큼 지켜보기 전이면(재기동 직후 포함) **키 없음** | "값 ▲" · "값 ▼"(⚠"어제보다"가 아니다 — 회부) |
 | | `shortDays` · `glutDays` | num | `events.CFG.SHORT_DAYS` · `GLUT_DAYS`(넉넉함 기준 — 사건 장부 정본) | 넉넉함 막대의 눈금 |
 | | `withheld` | int | 뭉뚱그린 품목이라 뺀 줄 수 | — |
+| | `short` (T1116) `{ rows[] { res, ko, qty, daysOf, use? }, withheld }` | obj | 사건 장부 모자람 래치(`STOCK_SHORTAGE` · `detOf().short`)가 선 물건 전부 — 후보 = 곳간 줄 ∪ `_consEMA` 키(래치는 소비가 있는 물건에서만 선다) · **곳간이 바닥난 물건도 든다**(`qty:0` · `daysOf:0` — 스냅숏엔 줄이 없다) · 차례 = 곳간 스냅숏 차례 뒤 `_consEMA` 차례 · 뭉뚱그린 것은 빼고 `withheld` | "모자란 것" 판 |
+| | `glut` (T1116) `{ rows[] { res, ko, qty, daysOf, use? }, withheld }` | obj | 같은 장부의 넘침 래치(`STOCK_GLUT` · `detOf().glut`) | "남는 것"(시안에 자리 없음 · 회부) |
+| | `priceMoves` (T1116) `{ rows[] { res, ko, type, day, ago, line }, withheld, days }` | obj | 이 마을 장부 링(`ledger.ringOf(vid)` — DB `village_events` 에서 되살린 것 포함)의 `PRICE_SPIKE`/`PRICE_DROP` 중 지난 `days`(= `PRICE_WIN` 30)날 것 · 새것부터 · `line` = 하십시오체 `events.newsLine` · 값 수(`mag` · `meta`)는 안 싣는다(그림자가격 원값 — 시세는 `prices` 칸 하나) | 물품별 "n일 전 값이 올랐습니다" 줄(⚠날마다의 시세 선이 아니다 — 회부) |
 | `prices` | 가까이: `{ numeraire, numeraireKo, spread, rows[], basis[], withheld }` | obj | `villageTradeBoard(vid, x, y, inv, numeraire)` | "시세 (조 기준)" · "시세 기준" 버튼 |
 | | `rows[]` `{ res, ko, num, glut, canGive, canTake, mine }` | arr | 거래소 행 그대로(`num` = 기준 품목 몇 개 값) | 시세 열 |
 | | `basis[]` `{ res, ko, mine }` | arr | 내 짐에 있고 낼 수 있는 구체 품목(`mine>0 ∧ canGive`) | 시세 기준 고르기 |
@@ -99,4 +105,5 @@
 * 받기: `full:true` 면 칸 덩어리를 갈아 끼우고, `full:false` 면 온 칸만 바꾼다(다른 마을 · 지난 seq 는 버린다). 바뀐 칸을 읽는 판(머리 · 탭)만 다시 짓는다.
 * 없는 칸은 화면에도 없다 — 줄 · 카드를 통째로 안 그린다(빈 문자열 · 0 · 예시 문장 0).
 * 클라가 만드는 것은 문장 틀(하십시오체) · 막대 비율(넉넉함 = `daysOf / glutDays` · 공정 = `stage / stages` · 부탁 = `filled / qty`) · 공사 줄 이름(`kind` 로 — 서버가 `name` 을 안 싣는다)뿐이다.
+* [T1116] 창고 탭 새 칸 — `store.short.rows` 는 `rows[].short` 로 거르는 것보다 넓다(곳간이 바닥난 물건이 든다) · `priceUp`/`priceDown` · `priceMoves` 는 키가 있을 때만 그린다 · 날마다의 시세 선 · 어제보다는 그리지 않는다(키 없음).
 * 아직 서버에 없는 칸(T1105 가 셀 것) — 키가 오면 그린다: `head.region` · `dash.popDelta` · `dash.winter[] { label, frac, short }` · `dash.workNext` · `members.delta` · `projects.next[]`(문장 줄).
