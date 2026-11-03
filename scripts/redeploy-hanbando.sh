@@ -69,10 +69,11 @@ elif [ -n "$BEFORE" ] && git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
   if [ -z "$CHANGED" ]; then
     DO_CENTRAL=0; DO_ZONE=0; WHY="배포된 커밋과 같다 — 바뀐 파일 0"
   else
+    # ★[PM 11-03] `echo "$CHANGED" | grep -q` 금지 — pipefail 아래서 grep -q 가 먼저 끝나면 echo 가 SIGPIPE(141) 로 죽어 판정이 거짓이 된다(바뀐 파일 1,649개 판에서 central · zone 둘 다 "건너뛴다" — 서울이 갱신 안 됨). here-string 으로 넣는다.
     # 존이 굽는 것: server/** · sim/** · package*.json · Dockerfile.zone
     #   (public/** · *.md · scripts/** 는 존이 쓰지 않는다)
-    if echo "$CHANGED" | grep -qvE '^(public/|scripts/|.*\.md$)'; then DO_ZONE=1; else DO_ZONE=0; fi
-    if echo "$CHANGED" | grep -qE '^(public/|server/|sim/|package.*\.json|Dockerfile\.central)'; then DO_CENTRAL=1; else DO_CENTRAL=0; fi
+    if grep -qvE '^(public/|scripts/|.*\.md$)' <<< "$CHANGED"; then DO_ZONE=1; else DO_ZONE=0; fi
+    if grep -qE '^(public/|server/|sim/|package.*\.json|Dockerfile\.central)' <<< "$CHANGED"; then DO_CENTRAL=1; else DO_CENTRAL=0; fi
     WHY="바뀐 파일 $(echo "$CHANGED" | wc -l | tr -d ' ')개 · ${BEFORE:0:8}..${AFTER:0:8}"
   fi
 fi
