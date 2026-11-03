@@ -15,13 +15,13 @@
 //   ★[T1083] 그린 DOM 에 `vvSkin` 이 붙인다(글자는 잎 칸 `vv-t` 하나씩 · 막대 `vv-bar` · 버튼 `vv-btn` · 선 `vv-rl` · 테두리 겹 `vv-fr`). 모듈이 없으면 배치 CSS 의 회색 판 그대로.
 //   재질을 여기서 따로 만들지 않는다(사본 금지). 본문 18px 아래 0 · 이모지 0(닫기 · 사람 그림은 선 SVG).
 // ★제4 규약: 최상위 실행문 0(분할 규약) — 선언만. 판 DOM · 스타일 · 키는 **처음 열 때** 붙인다.
-// ★손잡이 `T1070_VILLAGE_VIEW`(URL 인자 · ★기본 끔): `=1` 이면 Shift+G 가 이 화면을 연다. 끔이면 종전 게시판 판 그대로(`47-s-board.js`).
-//   [T1103] 서버 자료(T1072 · T1084)는 왔다 — 기본 켬 · 옛 게시판 판 걷기는 PM 판정(회부).
+// ★손잡이 `T1070_VILLAGE_VIEW`(URL 인자 · ★[T1137 · 재민 11-03] **기본 켬**): Shift+G 가 이 화면을 연다. `=0` 이면 종전 게시판 판 그대로(`47-s-board.js`).
+//   [T1103] 서버 자료(T1072 · T1084)는 왔다 — 옛 게시판 판 걷기는 PM 판정(회부).
 
 let vvData = null, vvVid = null, vvTab = 'dash', vvMemAll = false, vvWired = false;
 let vvRaw = null, vvSeq = 0, vvNum = null;   // ★[T1103] 서버 칸 덩어리(바뀐 칸만 오면 그 칸만 갈아 끼운다) · 마지막 seq · 고른 시세 기준(res id)
 
-function vvKnobOn() { try { return new URLSearchParams(location.search).get('T1070_VILLAGE_VIEW') === '1'; } catch (e) { return false; } }
+function vvKnobOn() { try { return new URLSearchParams(location.search).get('T1070_VILLAGE_VIEW') !== '0'; } catch (e) { return true; } }   // ★[T1137] 켬 기본(`=0` 만 끔)
 
 // ★★[T1103] 서버 `villageView`(T1072 · T1084 · 모양 정본 `설계/설계_마을화면_villageView.md`) → 화면이 읽는 꼴. **맞추는 자리는 이 함수 하나.**
 //   · 서버에 없는 칸은 꼴에도 없다(빈 문자열 · 0 으로 채우지 않는다) — 그리는 쪽은 없는 칸의 줄 · 카드를 통째로 안 그린다.
@@ -69,6 +69,9 @@ function vvAdapt(raw) {
   return {
     vid: H.vid, name: H.name || '', region: H.region || null, chief: (H.chief && vvNm(H.chief.name)) || null, age: num(H.age),
     member: !!(Me && Me.member), contrib: (Me && num(Me.need) > 0) ? { n: Me.contrib | 0, need: Me.need | 0 } : null, left: Me ? num(Me.left) : null,
+    //   ★[T1137] 가입 문(서버 `me.open` 이 있을 때만) — 인정 · 다시 들기 남은 분 · 촌장(탈퇴 단추를 안 그린다) · 수수료율(서버 값 그대로 · 퍼센트로만 바꾼다)
+    open: !!(Me && Me.open), recognized: !!(Me && Me.recognized), coolMin: Me ? (num(Me.coolMin) || 0) : 0, chiefMe: !!(Me && Me.chief),
+    fee: (Me && num(Me.fee) != null) ? { now: Me.fee, base: num(Me.feeBase), member: num(Me.feeMember) } : null,
     stats: { pop: num(Da.pop), popDelta: num(Da.popDelta), season: (H.cal && H.cal.seasonKo) || null, toWinter: num(Da.toWinter),
       winter: Array.isArray(Da.winter) ? Da.winter : null, workN: num(Da.projectsN), workNext: Da.workNext || null },
     requests: rows(raw.requests).map((r) => ({ item: r.ko || r.res, res: r.res, qty: r.qty, filled: r.filled | 0, rew: r.rewKo ? `${r.rewKo} ${r.rewQty}` : null })),
@@ -251,7 +254,7 @@ function vvRender() {
     head.innerHTML = `<div class="vv-col">${vvT(D.name, 52, 'serif', 'vvName')}`
       + `${vvT([D.region, D.chief ? `촌장 ${D.chief}` : null, D.age != null ? `${D.age}일째` : null].filter(Boolean).join(' · '), 18)}</div>`
       + `<div class="vv-tabs">${tabs.map(([k, l]) => `<button class="vv-tab" data-vv="tab" data-k="${k}">${vvT(l, 24, 'sansm')}${vvRl()}</button>`).join('')}</div>`
-      + `<div class="vv-meter">${(!D.member && C && C.need > 0) ? `<div><div class="vv-line">${vvT('마을 사람이 되기까지', 20)}${vvT(`${C.n} / ${C.need}`, 24, 'sans', 'vvContrib')}</div><div style="width:290px;margin-top:8px">${vvBar(C.n / C.need)}</div></div>` : ''}`
+      + `<div class="vv-meter">${((D.open ? (!D.recognized && C && C.n < C.need) : !D.member) && C && C.need > 0) ? `<div><div class="vv-line">${vvT(D.open ? '구성원으로 인정되기까지' : '마을 사람이 되기까지', 20)}${vvT(`${Math.min(C.n, C.need)} / ${C.need}`, 24, 'sans', 'vvContrib')}</div><div style="width:290px;margin-top:8px">${vvBar(Math.min(1, C.n / C.need))}</div></div>` : ''}`
       + `${closeBtn}</div>`;
     head.classList.add('vv-plate');
     vvSkin(head);
@@ -273,7 +276,8 @@ function vvRender() {
 function vvDash(D) {
   let h = '';
   //   가입 안내 — 서버 계량기(`me.contrib` · `need` · `left`)만. 마을 사람이 되면 얻는 것 · "부탁 하나면" 같은 줄은 서버에 없어 안 그린다(회부).
-  if (!D.member && D.contrib) {
+  if (D.open) h += vvJoinPlate(D);   // ★[T1137] 가입 · 탈퇴 · 인정(켬 — 아래 종전 판 대신)
+  else if (!D.member && D.contrib) {
     h += `<div class="vv-plate" style="display:grid;grid-template-columns:1.6fr 1fr;gap:24px;align-items:center">`
       + `<div class="vv-col">${vvT('아직 이 마을 사람이 아닙니다', 38, 'serif')}<div style="height:8px"></div>${vvT('마을의 부탁을 들어주면 기여가 쌓입니다.', 20)}`
       + `${D.left > 0 ? vvT(`${D.left} 더 모으면 ${D.name} 사람이 될 수 있습니다.`, 20, 'sansm', 'vvLeft') : ''}</div>`
@@ -293,6 +297,29 @@ function vvDash(D) {
     + `${vvBtn('가진 것 주기', `data-vv="give" data-i="${i}"`)}</div>`)) || vvEmpty('지금은 부탁이 없습니다.')}</div>`;
   h += `<div class="vv-plate">${vvT('마을 소식', 32, 'serif')}${vvRows((D.news || []).map((n) => `<div class="vv-row vv-news" style="grid-template-columns:1fr"><div class="vv-col">${vvT(n.when, 18)}${vvT(n.text, 20)}</div></div>`)) || vvEmpty('아직 들려온 소식이 없습니다.')}</div>`;
   return h + '</div>';
+}
+
+// ★[T1137] 가입 판 — 셋 중 하나(아직 아님 · 마을 사람 · 인정 구성원). 단추는 이미 있는 길(채팅 명령 `/가입` · `/탈퇴` — 제2 규약 · 서버가 판정한다).
+const vvPct = (r) => `${Math.round(r * 1000) / 10}%`;
+function vvFeeLine(D) {
+  const F = D.fee;
+  if (!F || !(F.base > 0)) return '';
+  return F.member != null && F.member < F.base ? `거래소 수수료 ${vvPct(F.base)} · 인정 구성원 ${vvPct(F.member)}` : `거래소 수수료 ${vvPct(F.base)}`;
+}
+function vvJoinPlate(D) {
+  const left = D.left != null ? D.left : 0, fee = vvFeeLine(D);
+  const plate = (title, lines, btns) => `<div class="vv-plate" style="display:grid;grid-template-columns:1.6fr 1fr;gap:24px;align-items:center">`
+    + `<div class="vv-col">${vvT(title, 38, 'serif', 'vvJoinTitle')}<div style="height:8px"></div>${lines.filter(Boolean).map((l, i) => vvT(l, 20, i === 0 ? 'sansm' : 'sans', i === 0 ? 'vvJoinLine' : null)).join('')}</div>`
+    + `<div style="display:flex;gap:12px;justify-content:flex-end">${btns.join('')}</div></div>`;
+  if (!D.member) {
+    const cool = D.coolMin > 0 ? `마을을 떠난 지 얼마 되지 않았습니다. ${D.coolMin >= 60 ? `${Math.floor(D.coolMin / 60)}시간${D.coolMin % 60 ? ` ${D.coolMin % 60}분` : ''}` : `${D.coolMin}분`} 뒤에 다시 들 수 있습니다.` : null;
+    return plate('아직 이 마을 사람이 아닙니다', [cool || '지금 바로 들 수 있습니다.',
+      left > 0 ? `부탁을 ${left}건 더 채우면 구성원으로 인정됩니다(거래소 할인 · 영토 안 집터).` : '부탁은 이미 다 채웠습니다. 들면 곧 인정 구성원입니다(거래소 할인 · 영토 안 집터).', fee],
+      [cool ? '' : vvBtn('가입', 'data-vv="join" id="vvJoin"', true), vvBtn('부탁 보기', 'data-vv="req"')]);
+  }
+  const quit = D.chiefMe ? '' : vvBtn('탈퇴', 'data-vv="quit" id="vvQuit"');
+  if (!D.recognized) return plate('이 마을 사람입니다', [`구성원으로 인정되기까지 부탁 ${left}건이 남았습니다.`, '떠나면 1시간 뒤에 다시 들 수 있습니다.', fee], [vvBtn('부탁 보기', 'data-vv="req"', true), quit]);
+  return plate('인정 구성원입니다', ['할인 · 영토 안 집터', fee], [vvBtn('내 땅 정하기', 'data-vv="claim"', true), quit]);
 }
 
 function vvProj(D) {
@@ -358,6 +385,8 @@ function vvOnClick(e) {
   else if (a === 'more') { vvMemAll = true; vvRender(); }
   else if (a === 'req') { vvTab = 'dash'; vvRender(); const r = document.getElementById('vvReq'); if (r) r.scrollIntoView({ block: 'start' }); }
   else if (a === 'claim') vvSend({ type: 'claim', kind: 'personal' });   // 개인 사유지 — C 키와 같은 문(T45)
+  else if (a === 'join') vvSend({ type: 'chat', text: '/가입' });   // ★[T1137] 가입 — 채팅 명령과 같은 문(앞에 선 마을 · 서버가 판정)
+  else if (a === 'quit') vvSend({ type: 'chat', text: '/탈퇴' });   // ★[T1137] 탈퇴 — 채팅 명령과 같은 문
   else if (a === 'give' && D) { const r = (D.requests || [])[+b.dataset.i]; if (r) vvSend({ type: 'village_deliver', vid: vvVid, item: r.res }); }   // 게시판 줄 버튼과 같은 문(부탁 품목 = res id)
   else if (a === 'bring' && D) {   // 기부 — 회관 기부 단추와 같은 문(T769) · 그 자재로 들어가는 내 물건(서버 `give`) 중 든 것 · 모자란 만큼까지(서버가 최종 판정)
     const p = ((D.projects || {}).active || [])[+b.dataset.i];

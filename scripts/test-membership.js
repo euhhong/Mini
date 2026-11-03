@@ -305,6 +305,8 @@ console.log('\n⑧ 탈퇴 · 추방 — 기여는 남는다 (이력서 캐논)')
   const r = M.leave(p);
   ok(r.ok && !M.memberOf(p), `스스로 나간다`);
   ok(M.contribOf(p.playerId) === k0, `나가도 누적 기여는 그대로다`, `${k0} → ${M.contribOf(p.playerId)}`);
+  // ★[T1137] 켬 — 탈퇴 · 추방 뒤 다시 들기는 1시간(실시간) 막힌다. 막힘을 먼저 재고, 1시간이 지난 몸(시각 칸을 지난 때로)에서 아래 종전 판정을 그대로 잰다.
+  if (M.T1137) { const r1 = M.accept(p, VID); ok(!r1.ok && M.coolLeft(p) > 0 && /뒤에 다시 들 수/.test(r1.err || ''), `★[T1137] 1시간 안 다시 들기는 막힌다`, r1.err); p.memberCool = Date.now() - 1; }
   // 다시 들어올 수 있다(기여가 남아 있으니 문턱은 이미 넘었다)
   ok(M.accept(p, VID).ok, `기여가 남아 있어 다시 들어올 수 있다`);
   // 추방 — 촌장(같은 마을 사람)만

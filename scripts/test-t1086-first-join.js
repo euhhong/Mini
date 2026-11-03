@@ -383,7 +383,8 @@ try {
     '먹선 — 단추 CSS 는 토큰만 · 단추만 눌림을 먹는다 · 모서리 · 그림자 0', block.replace(/\s+/g, ' ').slice(0, 80));
   const zn = rd('server/zone.js');
   ok(/\.\.\.\(process\.env\.T1086_FIRST_JOIN !== '0' \? \{ firstJoin: \{ cost: CLAIM_COST\.personal \} \} : \{\}\)/.test(zn), '서버 손잡이 — welcome `uiCfg.firstJoin` · 터 값 = `CLAIM_COST.personal`(클라 상수 0)');
-  ok(/if \(Membership\.firstJoinChat\(player, text\)\) return;[^\n]*\n\s*if \(Membership\.handleChat\(player, text\)\) \{ Onboarding\.pushState\(player\); return; \}/.test(zn), '채팅 길 — 첫 의뢰 권함 문이 종전 소속 문 바로 앞 · 소속 명령 뒤 칸 갱신');
+  //   ★[T1137] 채팅 갈래의 세 줄이 `_t1137Chat` 한 함수로 옮겨 갔다(차례 · 칸 갱신 무변 · 마을 화면 칸 갱신이 켬에서 붙는다) — 같은 차례를 그 자리에서 잰다
+  ok(/if \(Membership\.firstJoinChat\(player, text\)\) (return;|\{[^\n]*return true; \})[^\n]*\n\s*if \(Membership\.handleChat\(player, text\)\) \{ Onboarding\.pushState\(player\);[^\n]*(return;|return true;) \}/.test(zn), '채팅 길 — 첫 의뢰 권함 문이 종전 소속 문 바로 앞 · 소속 명령 뒤 칸 갱신');
   ok(/offerJoin: \(p, vid\) => Membership\.offerFirst\(p, vid\)/.test(zn) && /joinOf: \(p\) => Membership\.joinOf\(p\)/.test(zn) && /lotClaimed: \(player\) => _t1086LotClaimed\(player\)/.test(zn),
     '존은 부르는 법만 넘긴다(권함 · 형편 · 빈터 터 — 정본은 membership · onboarding · claims)');
   const bub = rd('public/client/41-h-bubble.js'), rl = rd('public/client/34-m-renderloop.js');

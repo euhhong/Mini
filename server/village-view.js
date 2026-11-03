@@ -80,7 +80,14 @@ function _head(src, vil) {
 function _me(player, vil) {
   let ps = null; try { ps = H.Membership && H.Membership.publicState ? H.Membership.publicState(player, vil) : null; } catch (e) { ps = null; }
   if (!ps) return null;
-  return { member: ps.vid != null && (ps.vid | 0) === (vil.dbId | 0), memberVid: ps.vid, contrib: ps.contrib | 0, need: ps.need | 0, left: Math.max(0, (ps.need | 0) - (ps.contrib | 0)), chief: !!ps.chief, offer: ps.offer };
+  const me = { member: ps.vid != null && (ps.vid | 0) === (vil.dbId | 0), memberVid: ps.vid, contrib: ps.contrib | 0, need: ps.need | 0, left: Math.max(0, (ps.need | 0) - (ps.contrib | 0)), chief: !!ps.chief, offer: ps.offer };
+  //   ★[T1137] 켬(`ps.open`)에서만 칸 — 가입 문 · 인정 구성원 · 다시 들기(분 · 올림 — 1분에 한 번만 바뀐다) · 이 마을 수수료율(끔 = 종전 바이트)
+  if (ps.open) {
+    me.open = true; me.recognized = !!ps.recognized && me.member;
+    me.coolMin = ps.coolMs > 0 ? Math.max(1, Math.ceil(ps.coolMs / 60000)) : 0;
+    if (ps.fee != null) { me.fee = ps.fee; me.feeBase = ps.feeBase; me.feeMember = ps.feeMember; }
+  }
+  return me;
 }
 // 부탁 — 게시판 줄 그대로. 구하는 품목이 뭉뚱그린 것이면 줄째 빼고 센다(`withheld`).
 //   갚는 품목만 뭉뚱그린 것이면(거의 `food` 곡식) 부탁은 싣고 **갚는 칸 · 문장**(`boardLine` = "나무 18 → 곡식 4")만 뺀다(`rewardWithheld`).
@@ -337,4 +344,4 @@ function tickAll() {
 }
 function stats() { return Object.assign({ openNow: OPEN.size, avgUs: ST.builds ? +(ST.buildUs / ST.builds).toFixed(1) : 0, tickMs: TICK_MS }, ST); }
 
-module.exports = { init, build, pricesKey, open, close, isOpen, refresh, poke, tickAll, stats, toWinter, LUMPED, isLumped, SLOTS, TICK_MS };
+module.exports = { meOf: _me, init, build, pricesKey, open, close, isOpen, refresh, poke, tickAll, stats, toWinter, LUMPED, isLumped, SLOTS, TICK_MS };

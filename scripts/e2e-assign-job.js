@@ -68,7 +68,7 @@ process.on('exit', shutdown);
   // 입장 — 로비 버튼이 켜질 때(존 목록이 살아 있을 때)까지 기다렸다 누른다(꺼진 버튼을 누르면 조용히 멈춘다)
   async function enter(pg) {
     for (let t = 0; t < 4; t++) {
-      await pg.goto(`http://localhost:${CPORT}/`, { waitUntil: 'domcontentloaded' });
+      await pg.goto(`http://localhost:${CPORT}/?T1070_VILLAGE_VIEW=0`, { waitUntil: 'domcontentloaded' });   // ★[T1137] 마을 화면이 켬 기본이 됐다 — 이 하네스는 Shift+G 의 **게시판 판**(끔 갈래 · `47-s-board.js`)을 잰다
       try { await pg.waitForSelector('#enter:not([disabled])', { timeout: 20000 }); break; } catch (e) {}
     }
     await pg.click('#enter');

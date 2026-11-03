@@ -498,8 +498,19 @@ function quote(ledger, econV2, vil, vid, giveRes, takeRes, giveQty, opts) {
       out.why = _whyNot(econV2, v, giveRes, takeRes, out.cap, cap, u1, more);
     }
   }
+  //   ★[T1137] 수수료 — 호스트가 율(`opts.feeRate`)을 넘길 때만(0 · 없음 = 칸 없음 = 종전 바이트). 실행과 같은 함수(`_feeOf`)로 낸다.
+  const _fr = Number(o.feeRate) || 0;
+  if (_fr > 0) {
+    const n = (want > 0) ? (out.giveNeeded | 0) : (out.giveUsed != null ? (out.giveUsed | 0) : (_gN || Math.floor(q / ((Number(o.perItem) > 0) ? Number(o.perItem) : 1) + 1e-9)));
+    const fee = _feeOf(n, _fr);
+    out.feeRate = _fr; out.fee = fee; out.giveTotal = n + fee;
+    if (fee > 0 && _G && _G.have < n + fee) out.feeShort = `수수료 ${Events.koRes(giveRes)} ${fee}개까지 내려면 ${n + fee}개가 있어야 하는데 ${_G.have}개뿐입니다.`;
+  }
   return out;
 }
+// ★★[T1137 2026-11-04 · ★재민 11-03] **거래소 수수료 = 물건** — 낼 낱개 n 에 율을 곱해 **올림**(낼 양 올림 · 캐논 ②) · 그 낱개는 값을 매기지 않고
+//   그 마을 곳간에 그대로 들어간다(넣는 길은 거래 몫과 같은 `deposit` 한 번 · 화폐 0). 견적(`quote`) · 실행(`exchange`)이 이 함수 하나를 부른다.
+function _feeOf(n, rate) { return (n > 0 && rate > 0) ? Math.ceil(n * rate - 1e-9) : 0; }
 
 // ── 실행 — 원자적 ────────────────────────────────────────────────────────────
 //   ★순서가 곧 안전이다(B-1 과 동형): ① 견적 ② **재고를 먼저 잡는다** ③ 내 물건을 뺀다
@@ -598,13 +609,18 @@ function exchange(a) {
     return { ok: false, err: '그 양으로는 한 개도 바꿀 수 없습니다. 더 내야 합니다.' };
   }
 
+  //   ★[T1137] 수수료(물건) — 낼 낱개 give 에 율을 곱해 올림 · 모자라면 거래 전에 막는다(견적이 같은 말을 미리 보인다 · 율 0 = 이 줄 무동작)
+  const feeRate = Number(a.feeRate) || 0;
+  const fee = _feeOf(give, feeRate);
+  if (fee > 0 && have < give + fee) return { ok: false, err: `수수료 ${Events.koRes(giveRes)} ${fee}개까지 내려면 ${give + fee}개가 있어야 하는데 ${have}개뿐입니다.` };
+
   // ② 재고를 **먼저** 잡는다(동시 경쟁의 관문)
   const before = +((v.storage || {})[takeRes] || 0);
   if (before < spend) return { ok: false, err: '마을 재고가 방금 줄었습니다. 다시 해 보십시오.' };
   v.storage[takeRes] = +(before - spend).toFixed(3);
 
   // ③④ 내 물건 → 곳간(정본 deposit). 실패하면 ⑤ 되돌린다.
-  const want = wantW;
+  const want = fee > 0 ? _pick(give + fee) : wantW;   // ★[T1137] 수수료 낱개도 같은 넣기 한 번(고르기는 같은 차례라 앞 give 개는 값을 매긴 그 개체들이다)
   const dep = deposit(vil, inventory, want, unitsOf || undefined);
   if (!dep || !dep.ok) {
     v.storage[takeRes] = before;                      // ⑤ 되돌림
@@ -618,7 +634,8 @@ function exchange(a) {
            gaveItems: dep.taken, tookItem: takeItem, ratio: qt.ratio,
            giveUnits: +giveUnits.toFixed(3), perItem: +perItem.toFixed(3),
            capped: q0 !== give, wanted: q0, wantTake: wantTake > 0 ? wantTake : null,
-           stockAfter: +v.storage[takeRes].toFixed(3), ...(conv ? { takeUnits: spend } : {}) };   // ★[T748] 켬이면 나간 단위도
+           stockAfter: +v.storage[takeRes].toFixed(3), ...(conv ? { takeUnits: spend } : {}),   // ★[T748] 켬이면 나간 단위도
+           ...(fee > 0 ? { fee, feeRate, feeUnits: +(_units(want) - giveUnits).toFixed(3) } : {}) };   // ★[T1137] 수수료(낱개 · 율 · 곳간에 든 단위)
 }
 
 module.exports = { CFG, KO_NUM, board, quote, exchange, tradableIn, tradableOut, lockedRewards, T807_ON, T835_ON, T965_ON, T976_ON, T988_ON, T999_ON };

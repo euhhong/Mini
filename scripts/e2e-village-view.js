@@ -3,7 +3,7 @@
 // @nightly A   ← 야간 세 밤 분할(T238) — 지금 가장 작은 묶음(A 22 · B 23 · C 26)
 // === scripts/e2e-village-view.js — 마을 화면 · 메뉴 넷 실클라 E2E (T1070 · T1083 · ★T1103 서버 자료) ==========================
 //
-// ★무엇: 마을 중심 앞에서 Shift+G(손잡이 `?T1070_VILLAGE_VIEW=1`)로 마을 화면이 열리고 · 서버가 `villageView`(T1072 · T1084)를 보내고 ·
+// ★무엇: 마을 중심 앞에서 Shift+G(손잡이 `?T1070_VILLAGE_VIEW` — ★T1137 부터 켬 기본 · `=0` 만 끔)로 마을 화면이 열리고 · 서버가 `villageView`(T1072 · T1084)를 보내고 ·
 //   탭 넷(대시보드 · 프로젝트 · 구성원 · 창고)의 **숫자 = 서버가 보낸 값**(받은 웹소켓 프레임과 대조)이고 · 버튼이 **이미 있는 길**(납품 · 개인 사유지 ·
 //   기부 · 시세 기준)을 부르고 · 시세 기준 고르기는 이름을 보이고 res id 를 보내고 · 멀어지면 서버의 바뀐 칸(`gate` · `prices`)만 와도
 //   창고 시세가 "가까이 가야 볼 수 있습니다"로 바뀌고 · 닫으면 서버에 닫기를 알리고 · 글자 18px 이상 · 이모지 0 · 손잡이 끔이면 종전 게시판 판.
@@ -78,13 +78,13 @@ async function enterAndGo(page, V) {
   const errs = [], sent = [], got = [];
   page.on('pageerror', (e) => errs.push(String(e.message).slice(0, 160)));
   page.on('websocket', (ws) => {
-    ws.on('framesent', (f) => { const d = typeof f.payload === 'string' ? f.payload : ''; if (/village_deliver|village_donate|"claim"|village_view/.test(d)) { try { sent.push(JSON.parse(d)); } catch (e) {} } });
+    ws.on('framesent', (f) => { const d = typeof f.payload === 'string' ? f.payload : ''; if (/village_deliver|village_donate|"claim"|village_view|"\/가입"|"\/탈퇴"/.test(d)) { try { sent.push(JSON.parse(d)); } catch (e) {} } });   // ★[T1137] 가입 · 탈퇴 단추(채팅 명령 문)
     ws.on('framereceived', (f) => { const d = typeof f.payload === 'string' ? f.payload : ''; if (d.indexOf('"village_view"') >= 0) { try { const m = JSON.parse(d); if (m.type === 'village_view') got.push(m); } catch (e) {} } });
   });
   // 서버가 보낸 칸을 클라와 같은 규칙으로 쌓는다(통째 = 갈아 끼움 · 바뀐 칸 = 그 칸만) — 화면과 대조할 "서버 값"
   const srv = () => { let raw = null; for (const m of got) { if (m.vid !== V.id) continue; if (m.full) raw = Object.assign({}, m.view); else if (raw && m.slots) Object.assign(raw, m.slots); } return raw; };
   const waitFrame = async (pred, ms) => { for (let t = 0; t < (ms || 10000) / 200; t++) { const r = srv(); if (r && pred(r)) return r; await sleep(200); } return null; };
-  await page.goto(`http://localhost:${CPORT}/?T1070_VILLAGE_VIEW=1`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`http://localhost:${CPORT}/`, { waitUntil: 'domcontentloaded' });   // ★[T1137] 주소창 칸 없이 — 켬 기본을 그대로 잰다(① `knob === true`)
   // ★[PM land1038] 서버 villageView(T1072)가 이제 진짜 자료를 보낸다 — 이 하네스는 임시 자료(ui-draft) 판이라 서버 자료를 받지 않게 막는다(서버 자료 판은 T1103 이 이 하네스를 옮긴다).
   await page.evaluate(() => { const _o = window.villageViewOnMessage; window.villageViewOnMessage = function (v) { if (v && v.head) return; return _o(v); }; });
   const near = await enterAndGo(page, V);
@@ -112,7 +112,13 @@ async function enterAndGo(page, V) {
   const txts = (sel) => page.evaluate((s) => [...document.querySelectorAll(s)].map((e) => (e.getAttribute('aria-label') || e.textContent).trim()), sel);
   ok((await txt('#vvName')) === S0.head.name, '② 마을 이름 = 서버 `head.name`', await txt('#vvName'));
   const me = S0.me;
-  if (me && !me.member) {
+  if (me && me.open) {   // ★[T1137] 켬 — 머리줄 "구성원으로 인정되기까지" · 가입 판(아직 이 마을 사람이 아님 · 지금 바로 들 수 있음 · 인정까지 남은 부탁)
+    ok((await txt('#vvContrib')) === `${Math.min(me.contrib, me.need)} / ${me.need}`, '② [T1137] 머리줄 "구성원으로 인정되기까지 n / m" = 서버 `me.contrib` / `me.need`', await txt('#vvContrib'));
+    if (!me.member) {
+      ok((await txt('#vvJoinTitle')) === '아직 이 마을 사람이 아닙니다' && (await txt('#vvJoinLine')) === (me.coolMin > 0 ? (await txt('#vvJoinLine')) : '지금 바로 들 수 있습니다.'), '② [T1137] 가입 판 — 아직 아님 · 지금 바로 들 수 있음', `${await txt('#vvJoinTitle')} · ${await txt('#vvJoinLine')}`);
+      ok(!!(await page.$('#vvJoin')) === !(me.coolMin > 0), '② [T1137] 「가입」 단추 — 다시 들기를 기다리는 동안만 없다', String(!!(await page.$('#vvJoin'))));
+    }
+  } else if (me && !me.member) {
     ok((await txt('#vvContrib')) === `${me.contrib} / ${me.need}`, '② 머리줄 "마을 사람이 되기까지 n / m" = 서버 `me.contrib` / `me.need`', await txt('#vvContrib'));
     ok(me.left > 0 ? (await txt('#vvLeft')) === `${me.left} 더 모으면 ${S0.head.name} 사람이 될 수 있습니다.` : !(await page.$('#vvLeft')), '② 가입 안내 "n 더 모으면" = 서버 `me.left`', String(await txt('#vvLeft')));
   } else ok(!(await page.$('#vvContrib')), '② 이 마을 사람이면 가입 계량기가 없다');
@@ -131,10 +137,18 @@ async function enterAndGo(page, V) {
   // ③ 버튼 — 이미 있는 길만(품목은 res id)
   sent.length = 0;
   await page.click('#vvReq [data-vv="give"]');
-  if (me && !me.member) await page.click('[data-vv="claim"]');
+  if (me && !me.member && !me.open) await page.click('[data-vv="claim"]');
+  if (me && !me.member && me.open) await page.click('[data-vv="join"]');   // ★[T1137] 가입 단추
   await sleep(500);
   ok(sent.some((m) => m.type === 'village_deliver' && m.vid === V.id && m.item === S0.requests.rows[0].res), '③ "가진 것 주기" = 그 부탁의 납품(`village_deliver` + 품목 res id — 게시판 줄 버튼과 같은 문)', JSON.stringify(sent.filter((m) => m.type === 'village_deliver')));
-  if (me && !me.member) ok(sent.some((m) => m.type === 'claim' && m.kind === 'personal'), '③ "내 땅 정하기" = 개인 사유지(`claim` personal — C 키와 같은 문 · T45)');
+  if (me && !me.member && !me.open) ok(sent.some((m) => m.type === 'claim' && m.kind === 'personal'), '③ "내 땅 정하기" = 개인 사유지(`claim` personal — C 키와 같은 문 · T45)');
+  if (me && !me.member && me.open) {   // ★[T1137] 「가입」 = 채팅 `/가입` 과 같은 문 · 서버가 앉히면 화면이 "이 마을 사람입니다"로 바뀐다
+    ok(sent.some((m) => m.type === 'chat' && m.text === '/가입'), '③ [T1137] 「가입」 = 채팅 `/가입`(같은 문)', JSON.stringify(sent.filter((m) => m.type === 'chat')));
+    const S1 = await waitFrame((r) => r.me && r.me.member === true, 8000);
+    await sleep(400);
+    ok(!!S1 && (await txt('#vvJoinTitle')) === '이 마을 사람입니다' && !!(await page.$('#vvQuit')), '③ [T1137] 들고 나면 판이 "이 마을 사람입니다" · 「탈퇴」 단추', `${S1 ? 'member' : '안 옴'} · ${await txt('#vvJoinTitle')}`);
+    await page.screenshot({ path: path.join(SHOTS, `${PFX}vv-joined.png`) });
+  }
 
   // ④ 탭 넷
   const tab = async (k) => { await page.click(`.vv-tab[data-k="${k}"]`); await sleep(300); return page.evaluate(() => window.__vvState().tab); };
@@ -273,14 +287,14 @@ async function enterAndGo(page, V) {
   }
   ok(!errs.length, '페이지 오류 0', errs.slice(0, 3).join(' | '));
 
-  // ⑧ 손잡이 끔 — 종전 게시판 판 그대로
+  // ⑧ 손잡이 끔 — 종전 게시판 판 그대로(★[T1137] 기본이 켬이 됐다 — 끔은 주소창 `=0`)
   const p2 = await browser.newPage({ viewport: { width: 1440, height: 1080 } });
-  await p2.goto(`http://localhost:${CPORT}/`, { waitUntil: 'domcontentloaded' });
+  await p2.goto(`http://localhost:${CPORT}/?T1070_VILLAGE_VIEW=0`, { waitUntil: 'domcontentloaded' });
   const near2 = await enterAndGo(p2, V);
   await p2.keyboard.press('Shift+g');
   let board = false;
   for (let i = 0; i < 20 && !board; i++) { await sleep(500); board = await p2.evaluate(() => { const b = document.getElementById('boardPane'); return !!b && !b.classList.contains('hidden'); }); }
-  ok(near2 === V.id && board && !(await p2.evaluate(() => { const p = document.getElementById('vvPane'); return !!p && !p.classList.contains('hidden'); })), '⑧ 손잡이 끔(기본)이면 Shift+G = 종전 게시판 판 · 마을 화면 안 열림');
+  ok(near2 === V.id && board && !(await p2.evaluate(() => { const p = document.getElementById('vvPane'); return !!p && !p.classList.contains('hidden'); })), '⑧ 손잡이 끔(`=0` · ★T1137 부터 기본은 켬)이면 Shift+G = 종전 게시판 판 · 마을 화면 안 열림');
   await p2.screenshot({ path: path.join(SHOTS, `${PFX}vv-knob-off.png`) });
 
   await browser.close(); shutdown();
