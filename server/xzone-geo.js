@@ -105,19 +105,46 @@ function _splitRoute(pts, rA, rB) {
 // ── 두 존 걸음표 — { dist: { a: { b: econ 거리 } }, split: { a: { b: { fA, ptA, ptB, ptsA, ptsB } } } }
 //   rosterA/B = [{ name, cx, cy }](제 존 로컬 칸) · infoR = econ `infoRange` · splitR = 경계 칸·길을 낼 거리 상한(econ)
 //   ptA/ptsA 는 **A 로컬 px** · ptB/ptsB 는 **B 로컬 px**(받는 존이 제 좌표로 몸을 세운다).
-function crossGeo(q) {
-  const { ZONES, P, SZ } = _mods();
+//   ★[T1139] 틀(합친 어댑터 · 마을 줄 · 두 사각)과 쌍 하나의 길을 꺼냈다(`_frame` · `_pairSplit`) — 늦게 파는 일꾼(`lazySplit`)이
+//     **같은 두 함수**를 부른다(사본 0). 답은 글자 그대로다(같은 차례 · 같은 식).
+function _frame(q) {
+  const { ZONES, SZ } = _mods();
   const A = q.A, B = q.B, rA = q.rosterA || [], rB = q.rosterB || [];
-  const t0 = Date.now();
   const U = unionAdapter([A, B], { coast: q.coast });
   const offA = { x: ZONES[A].worldOffsetX - U.x0, y: ZONES[A].worldOffsetY - U.y0 };
   const offB = { x: ZONES[B].worldOffsetX - U.x0, y: ZONES[B].worldOffsetY - U.y0 };
   const vil = [];
   for (const v of rA) vil.push({ z: A, name: v.name, ux: v.cx + offA.x / SZ, uy: v.cy + offA.y / SZ });
   for (const v of rB) vil.push({ z: B, name: v.name, ux: v.cx + offB.x / SZ, uy: v.cy + offB.y / SZ });
-  const M = bfsMatrix(U.ta, U.ZONE, vil.map((v) => ({ x: v.ux * 2.5, y: v.uy * 2.5 })));
+  const recA = { x0: offA.x, y0: offA.y, x1: offA.x + ZONES[A].zoneWidth, y1: offA.y + ZONES[A].zoneHeight };
+  const recB = { x0: offB.x, y0: offB.y, x1: offB.x + ZONES[B].zoneWidth, y1: offB.y + ZONES[B].zoneHeight };
+  return { A, B, rA, rB, U, offA, offB, vil, nA: rA.length, recA, recB };
+}
+const _frameBfs = (F) => bfsMatrix(F.U.ta, F.U.ZONE, F.vil.map((v) => ({ x: v.ux * 2.5, y: v.uy * 2.5 })));
+// 쌍 하나(i = A 마을 · j = B 마을 — `vil` 번호)의 경계 칸·두 구간 길 — 정본 교역로 A\*(`computeRoutePts`) · 못 판 쌍 = null
+function _pairSplit(F, i, j) {
+  const { P, SZ } = _mods();
+  const { vil, offA, offB } = F;
+  const px = (v) => ({ x: (v.ux + 0.5) * SZ, y: (v.uy + 0.5) * SZ });
+  const a = px(vil[i]), b = px(vil[j]);
+  const pts = _quiet(() => P._routeProbe.pts(a.x, a.y, b.x, b.y));
+  const sp = pts ? _splitRoute(pts, F.recA, F.recB) : null;
+  if (!sp) return null;
+  const toA = (p) => ({ x: Math.round(p.x - offA.x), y: Math.round(p.y - offA.y) });
+  const toB = (p) => ({ x: Math.round(p.x - offB.x), y: Math.round(p.y - offB.y) });
+  const fA = (sp.lenA + sp.lenB) > 0 ? sp.lenA / (sp.lenA + sp.lenB) : 0.5;
+  return { multi: sp.multi, e: {
+    fA: +fA.toFixed(4), ptA: toA(sp.partA[sp.partA.length - 1]), ptB: toB(sp.partB[0]),
+    ptsA: sp.partA.map(toA), ptsB: sp.partB.map(toB),
+  } };
+}
+function crossGeo(q) {
+  const { P } = _mods();
+  const t0 = Date.now();
+  const F = _frame(q);
+  const { A, B, rB, vil, nA } = F;
+  const M = _frameBfs(F);
   const bfsMs = Date.now() - t0;
-  const nA = rA.length;
   const dist = {};
   for (let i = 0; i < nA; i++) {
     const row = dist[vil[i].name] = {};
@@ -125,8 +152,6 @@ function crossGeo(q) {
   }
   // 경계 칸·두 구간 길 — 정본 교역로 A\*(`computeRoutePts`)를 합친 격자 위에서(같은 어댑터 · 같은 격자)
   const t1 = Date.now();
-  const recA = { x0: offA.x, y0: offA.y, x1: offA.x + ZONES[A].zoneWidth, y1: offA.y + ZONES[A].zoneHeight };
-  const recB = { x0: offB.x, y0: offB.y, x1: offB.x + ZONES[B].zoneWidth, y1: offB.y + ZONES[B].zoneHeight };
   const splitR = q.splitR != null ? q.splitR : Infinity;
   const split = {};
   let routed = 0, multi = 0, failed = 0;
@@ -134,19 +159,10 @@ function crossGeo(q) {
   for (let i = 0; i < nA; i++) for (let j = nA; j < vil.length; j++) {
     const d = dist[vil[i].name][vil[j].name];
     if (d == null || !(d <= splitR)) continue;
-    const px = (v) => ({ x: (v.ux + 0.5) * SZ, y: (v.uy + 0.5) * SZ });
-    const a = px(vil[i]), b = px(vil[j]);
-    const pts = _quiet(() => P._routeProbe.pts(a.x, a.y, b.x, b.y));
-    const sp = pts ? _splitRoute(pts, recA, recB) : null;
-    if (!sp) { failed++; continue; }
-    routed++; if (sp.multi) multi++;
-    const toA = (p) => ({ x: Math.round(p.x - offA.x), y: Math.round(p.y - offA.y) });
-    const toB = (p) => ({ x: Math.round(p.x - offB.x), y: Math.round(p.y - offB.y) });
-    const fA = (sp.lenA + sp.lenB) > 0 ? sp.lenA / (sp.lenA + sp.lenB) : 0.5;
-    (split[vil[i].name] || (split[vil[i].name] = {}))[vil[j].name] = {
-      fA: +fA.toFixed(4), ptA: toA(sp.partA[sp.partA.length - 1]), ptB: toB(sp.partB[0]),
-      ptsA: sp.partA.map(toA), ptsB: sp.partB.map(toB),
-    };
+    const s = _pairSplit(F, i, j);
+    if (!s) { failed++; continue; }
+    routed++; if (s.multi) multi++;
+    (split[vil[i].name] || (split[vil[i].name] = {}))[vil[j].name] = s.e;
   }
   _quiet(() => P._routeProbe.reset());
   return { A, B, nA, nB: rB.length, dist, split, ms: { bfs: bfsMs, route: Date.now() - t1 }, routed, multi, failed };
@@ -209,11 +225,67 @@ function sharedCrossGeo(q) {
   }
 }
 
-module.exports = { zoneAdapter, unionAdapter, bfsMatrix, crossGeo, sharedCrossGeo, _geoKey, _splitRoute, _mods };
+// ── ★★[T1139 2026-11-03 · ★PM 판정대기 문 20 ⓒ] **물은 쌍만 판다** — 하네스 전용(존 서버 손잡이 `T1139_XZ_LAZY` · 기본 끔 = 종전 한 벌)
+//   T682 §3: 걸음표 길 시간의 69%가 끝내 못 판 먼 쌍 753 이다. econ 이 경계 칸·길(`split`)을 묻는 쌍은 둘뿐이다 —
+//     ⓐ 떠날 때(`_XZ.split(제 마을, 스텁)` — 걸음 ≤ infoRange 일 때만 · `economy-sim-v2` 교역 고리 `dist > infoR` 거름 뒤)
+//     ⓑ 돌아갈 때(`X.split(c.to, c.from)` · 몸 길 `splitNames` — 우회(재routing)로 닿은 마을이면 ⓐ 밖의 쌍일 수 있다)
+//   ⇒ 한 벌은 `splitR = infoRange`(ⓐ 전부 · `setGeo` 의 '2km 안' 셈 전부)로 미리 판다. 그 밖의 쌍은 **물을 때** 이 일꾼이 판다(같은 틀 ·
+//     같은 BFS 뒤 · 같은 `_pairSplit`) — 답은 미리 판 한 벌의 그 쌍과 글자 같다(`scripts/t1139-lazy-proof.js` 가 전 쌍을 거꾸로 물어 `cmp`).
+//   묻는 쪽(존 본 스레드 · 자 워커)은 답이 올 때까지 기다린다(`Atomics.wait` — econ 이 `split` 을 동기로 읽는다 · 몸 없는 캐러밴 0).
+//   일꾼은 만들 때 바로 띄워 틀을 데운다(처음 묻는 틱이 틀 굽는 시간을 기다리지 않게). 하네스 아닌 판은 이 함수를 안 부른다.
+//   q = 한 벌을 판 그 질문(`splitR` 이 든) · r = 그 답 · opt.env = 일꾼 env · opt.onAsk(a, b, e, ms) = 물은 쌍마다(관측)
+function lazySplit(q, r, opt) {
+  opt = opt || {};
+  const { Worker, MessageChannel, receiveMessageOnPort } = require('worker_threads');
+  const splitR = q.splitR != null ? q.splitR : Infinity;
+  const rA = q.rosterA || [], rB = q.rosterB || [], nA = rA.length;
+  const idA = new Map(rA.map((v, i) => [v.name, i])), idB = new Map(rB.map((v, j) => [v.name, nA + j]));
+  const ch = new MessageChannel(), sab = new SharedArrayBuffer(4), flag = new Int32Array(sab), port = ch.port1;
+  const wk = new Worker(__filename, { workerData: { xzoneLazy: { q, port: ch.port2, flag: sab } }, transferList: [ch.port2],
+    env: opt.env || process.env, stdout: true, stderr: true });
+  wk.stdout.resume(); wk.stderr.resume(); wk.on('error', () => {}); wk.unref();
+  const memo = new Map();
+  const st = { asked: 0, found: 0, ms: 0, wallMs: 0 };
+  function get(a, b) {
+    const s = r.split[a] && r.split[a][b];
+    if (s) return s;
+    const d = r.dist[a] ? r.dist[a][b] : undefined;
+    if (d == null || d <= splitR || !idA.has(a) || !idB.has(b)) return null;   // 한 벌이 판 쌍(못 판 쌍 = 빈손) · 걸음 없는 쌍 = 종전 그대로
+    const k = a + '\u0000' + b;
+    if (memo.has(k)) return memo.get(k);
+    const t0 = Date.now();
+    Atomics.store(flag, 0, 0);
+    port.postMessage({ i: idA.get(a), j: idB.get(b) });
+    let m;
+    for (;;) { m = receiveMessageOnPort(port); if (m) break; Atomics.wait(flag, 0, 0); Atomics.store(flag, 0, 0); }
+    const o = m.message;
+    if (!o.ok) throw new Error(`xzone-geo 늦게 파기 실패(${a}+${b}): ${o.err}`);
+    const e = o.e || null;
+    memo.set(k, e);
+    st.asked++; if (e) st.found++; st.ms += o.ms; st.wallMs += Date.now() - t0;
+    if (opt.onAsk) opt.onAsk(a, b, e, o.ms);
+    return e;
+  }
+  return { get, st, close: () => { try { wk.terminate(); } catch (e) {} } };
+}
+
+module.exports = { zoneAdapter, unionAdapter, bfsMatrix, crossGeo, sharedCrossGeo, lazySplit, _geoKey, _splitRoute, _frame, _pairSplit, _mods };
 
 // ── 워커 입구 — 존 서버 경계 호스트가 `new Worker(__filename, { workerData: { xzoneGeo: q } })` 로 띄운다 ──
 {
   let wt = null; try { wt = require('worker_threads'); } catch (e) {}
+  // ★[T1139] 늦게 파는 일꾼 — 틀 · BFS(한 벌을 판 일꾼과 같은 차례) 뒤 물음마다 쌍 하나(`_pairSplit`)
+  if (wt && !wt.isMainThread && wt.workerData && wt.workerData.xzoneLazy) {
+    const L = wt.workerData.xzoneLazy, flag = new Int32Array(L.flag);
+    let F = null, err = null;
+    try { F = _frame(L.q); _frameBfs(F); _quiet(() => _mods().P._routeProbe.reset()); } catch (e) { err = String(e && e.stack || e); }
+    L.port.on('message', (m) => {
+      let out;
+      try { if (err) throw new Error(err); const t = Date.now(); const s = _pairSplit(F, m.i, m.j); out = { ok: true, e: s ? s.e : null, ms: Date.now() - t }; }
+      catch (e) { out = { ok: false, err: String(e && e.stack || e) }; }
+      L.port.postMessage(out); Atomics.store(flag, 0, 1); Atomics.notify(flag, 0);
+    });
+  }
   if (wt && !wt.isMainThread && wt.workerData && wt.workerData.xzoneGeo) {
     let out;
     try { out = { ok: true, r: sharedCrossGeo(wt.workerData.xzoneGeo) }; } catch (e) { out = { ok: false, err: String(e && e.stack || e) }; }

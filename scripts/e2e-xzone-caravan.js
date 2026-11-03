@@ -25,7 +25,9 @@
 //      닛폰 DB 메타 행에 그 캐러밴이 실린 것을 보고 SIGKILL → 같은 DB 로 다시 띄워 그 짐이 한반도 곳간에 드는지 센다(생성 · 소멸).
 //      ⓔ 뒤에 돈다(죽인 뒤엔 'arrive' = 'return' 셈이 판 밖이다). `XZ_KILL=0` 이면 건너뛴다.
 //
-// 실행: node scripts/e2e-xzone-caravan.js     (env: XZ_DAYMS 마을 하루 ms · 기본 3000 · XZ_WAIT_S 왕복 기다림 상한 · 기본 600)
+//   ★[T1139] 걸음표는 이 판에서 **물은 쌍만** 판다(두 존에 `T1139_XZ_LAZY=1` — 한 벌 = 걸음 ≤ infoRange · 그 밖은 econ · 몸 길이 물을 때 ·
+//      답은 전 쌍 한 벌과 글자 같다 — `scripts/t1139-lazy-proof.js`). 종전(전 쌍 한 벌)은 `T1139_XZ_LAZY=0`. 서버 기본은 끔(전 쌍)이다.
+// 실행: node scripts/e2e-xzone-caravan.js     (env: XZ_DAYMS 마을 하루 ms · 기본 3000 · XZ_WAIT_S 왕복 기다림 상한 · 기본 600 · T1139_XZ_LAZY 기본 1)
 'use strict';
 process.env.HANDOFF_ACK_MS = process.env.HANDOFF_ACK_MS || '3000'; process.env.HANDOFF_TOKEN_MS = process.env.HANDOFF_TOKEN_MS || '5000';   // ★[PM 11-03] 이 하네스는 종전 넘기 시한(3초 · 5초)으로 잰다 — 제품 기본은 12초 · 15초(server/zone.js HANDOFF_ACK_MS)
 const path = require('path');
@@ -76,6 +78,8 @@ const dist = (a, b) => (a && b) ? Math.hypot(a.x - b.x, a.y - b.y) : Infinity;
     VILLAGE_CARAVAN_MAX: '400', ENABLE_WILDLIFE: '0',
     T952_XZ_STAY: process.env.T952_XZ_STAY || '',   // ★[T952] 이 자에 준 그대로(끔 = 빈 값)
     T1030_XZ_MARKET: process.env.T1030_XZ_MARKET || '',   // ★[T1030] 이 자에 준 그대로(끔 = 빈 값)
+    //   ★[T1139] 걸음표는 **물은 쌍만** 판다(`server/xzone.js` 손잡이 `T1139_XZ_LAZY` — 서버 기본은 끔 = 전 쌍 한 벌) · `T1139_XZ_LAZY=0` 을 주면 종전(전 쌍)
+    T1139_XZ_LAZY: process.env.T1139_XZ_LAZY != null ? process.env.T1139_XZ_LAZY : '1',
     //   ★[T662] 걸음표 한 벌 파일 자리 — 이 판의 임시 폴더(판마다 처음부터 잰다 = 찬 판을 잰다 · 두 존이 같은 자리를 봐야 한 벌을 나눈다)
     T662_GEO_CACHE_DIR: process.env.T662_GEO_CACHE_DIR || `${DDIR}/geo` };
   const ups = {};
@@ -276,6 +280,9 @@ const dist = (a, b) => (a && b) ? Math.hypot(a.x - b.x, a.y - b.y) : Infinity;
   console.log(`  · [표] 한반도 넘김 ${H.st.crossArrive} · 돌려보냄 ${H.st.crossReturn}(경계 교역 성사 ${H.st.soldOk}) · 곳간 ${H.st.deposited} · 잃음 ${H.st.lost} · 몸 넘김 ${H.st.bodyOut} · 받은 몸 ${H.st.bodyIn} · econ 날 ${H.day}`);
   console.log(`  · [표 · T578 추신] 경계 칸까지 걸어간 뒤 넘김 — 한반도 ${H.st.walkWait | 0}(하루 넘겨 그 자리 ${H.st.walkWaitLate | 0}) · 닛폰 ${N.st.walkWait | 0}(${N.st.walkWaitLate | 0})`);
   console.log(`  · [표] 닛폰 넘김 ${N.st.crossArrive} · 돌려보냄 ${N.st.crossReturn}(경계 교역 성사 ${N.st.soldOk}) · 곳간 ${N.st.deposited} · 잃음 ${N.st.lost} · 몸 넘김 ${N.st.bodyOut} · 받은 몸 ${N.st.bodyIn} · econ 날 ${N.day}`);
+
+  { const lz = (g) => (g && g.lazy) ? `늦게 판 쌍 ${g.lazy.asked}(길 있음 ${g.lazy.found}) · ${(g.lazy.ms / 1000).toFixed(1)}s(기다림 ${(g.lazy.wallMs / 1000).toFixed(1)}s)` : '끔(전 쌍 한 벌)';
+    console.log(`  · [표 · T1139] 걸음표 — 한 벌 길 ${gh ? gh.routed : '-'}(못 판 ${gh ? gh.failed : '-'}) · 한반도 ${lz(H.geo && H.geo.nippon)} · 닛폰 ${lz(N.geo && N.geo.hanbando)}`); }
 
   // ── ⓗ [T1030] 존 하나가 중간에 죽는다 ─────────────────────────────────────────
   if (process.env.XZ_KILL !== '0') {
