@@ -10113,6 +10113,8 @@ const JOB_RES = { lumberjack: ['tree'], miner: ['rock', 'ore'], get forager() { 
 //     ⚠지어낸 수가 아니라 **그 표의 반경**이다. 넓히면(48셀) 나무 0 마을이 0 이 되는데 스캔이 8배다 —
 //       그 판정은 재민·PM 칸이라 여기서 안 고른다(보고 §회부).
 const T325_R = 16;
+// ★[T1107] 나무 재생 속도 배수 — 정본은 `chunk.js REGROW.REGROW_K`(env 를 읽는 자리 하나). 여기는 그 값을 묻기만 한다.
+const _t1107K = () => { try { return require('./chunk').REGROW.REGROW_K(); } catch (e) { return 0; } };
 // ★★★[T398 2026-09-26 · PM 판정 ① · 재민 거부권] **나무꾼의 숲은 영토 밖이다.**
 //   마을은 제 영토를 개간해 밭·집을 놓고(T378 — 마을 안엔 숲이 없다) 나무는 영토 **밖** 숲에서 벤다.
 //   그런데 종전 네모(회관 ±`T325_R`)는 **거의 전부 영토 안**이었다 — 마을별 중앙값 99.2% ⇒ 개간 뒤 켜면
@@ -13231,7 +13233,8 @@ function* _lifeDailySteps(vil) {   // 게임일 경계: 크루·클레임 재대
     }
     // ★★[T341] **재생** — T146 로지스틱. `r` 은 수식 하루 합에서 유도(econ 정본 `woodRegrowR`).
     //   그날 돌아오는 그루가 1 을 넘을 때마다 **가장 먼저 벴던 그루**부터 되살린다(오래 쉰 자리가 먼저 — 주사위 0).
-    if (_on) {
+    //   ★★[T1107 · 문 7-a] 손잡이 `T1107_REGROW_K` 켬(k > 0)이면 이 되살림은 안 돈다 — 벤 자리는 종 시계(`chunk.regrowStageOf` × k)로만 돌아온다(그루터기 → 어린나무 → 큰 나무).
+    if (_on && !(_t1107K() > 0)) {
       const _r = _lifeEcon().woodRegrowR(vil.econ, _S.K | 0, _S.wBar || 0);
       const _g = _lifeEcon().woodRegrowPerDay(_S.N | 0, _S.K | 0, _r);
       vil._t325Dbg.grow = +(_g || 0).toFixed(4);

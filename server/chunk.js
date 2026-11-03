@@ -197,6 +197,11 @@ const REGROW = {
   GREENS_Y: () => _rgNum('T372_GREENS_Y', REGROW.HERB_Y()),       // 나물 — 여러해살이 풀 그 자체
   HONEY_Y: () => _rgNum('T372_HONEY_Y', REGROW.BUSH_Y()),         // 벌집 — 연 1회 가을
   GRAPE_Y: () => _rgNum('T372_GRAPE_Y', REGROW.BUSH_Y()),         // 야생포도 — 연 1회 가을
+  // ★★[T1107 2026-11-03 · ★재민 11-02 문 7-a] 나무 재생 **속도 배수** — 손잡이 `T1107_REGROW_K`(끔 = 0 · 미설정 = 종전 바이트).
+  //   캐논(재민 09-23): 추상 없애기가 규약이고 **배수는 물리 파라미터로 써도 된다** — 나무 하나하나가 그루터기 → 어린나무 → 큰 나무로
+  //   실제로 자라되(종 시계 `stageYearsOf` · 칸마다 몸 · 보인다) 그 시계를 k 배 빨리 돌린다. 판 자 값 k ∈ {1, 2, 4, 8}(카드가 준 수).
+  //   켜면(k > 0) 생활층 헤드리스 하루의 T341 로지스틱 되살림(벤 자리를 수식 몫에 맞춰 통째로 되돌림)은 안 돈다 — 재생은 종 시계 하나다(villages.js 같은 손잡이).
+  REGROW_K: () => { const k = _rgNum('T1107_REGROW_K', 0); return k > 0 ? k : 0; },
 };
 
 // ══ ★★★[T372 2026-09-23] 군락 종 넷 — **정의만**. 세계에 심는 갈래는 한 줄도 안 지난다 ═══════
@@ -270,11 +275,13 @@ function regrowStageOf(type, elapsedDays, species) {
   if (d < 0) return null;                             // 벤 날을 모른다 — 종전대로 뺀다
   const Y = _yearDays();
   if (type === 'tree') {
+    const _k = REGROW.REGROW_K();
+    const dt = _k > 0 ? d * _k : d;                 // ★[T1107] 켬 = 종 시계를 k 배로(경과 날 × k) · 끔 = 종전
     let sY = REGROW.TREE_STUMP_Y(), fY = REGROW.TREE_FULL_Y();
     const T = _trees();
     if (species && T && T.ON()) { const g = T.stageYearsOf(species, sY, fY); sY = g[0]; fY = g[1]; }
-    if (d < sY * Y) return 'stump';
-    if (d < fY * Y) return 'sapling';
+    if (dt < sY * Y) return 'stump';
+    if (dt < fY * Y) return 'sapling';
     return 'mature';
   }
   if (type === 'berry_bush') return d < REGROW.BUSH_Y() * Y ? 'gone' : 'mature';
@@ -617,6 +624,32 @@ const terrain = require('./terrain');
 //   ⚠`onlyCell` 은 **빠른 길**도 연다(숲 그리드의 `gi` 를 산술로 건너뛴다 — 아래 T301 주석).
 //     그 산술이 틀리면 색인이 청크와 갈리므로, `scripts/test-resource-index.js` ⓐ 가
 //     **활성 청크 100개를 전수로** 맞대 본다(바이트 대조).
+// ★★[T1107] 마을 둘레 흩어진 나무 — 굽은 파일을 읽어 청크별로 나눈다(한 번 · 존마다 · 손잡이 값마다). 끔이면 파일도 안 읽는다.
+const T1107_VT = () => { const v = process.env.T1107_VILLAGE_TREES; return (v === 'low' || v === 'mid' || v === 'high') ? v : null; };
+const _vtCache = new Map();
+function _villageTreesOf(zoneId) {
+  const lv = T1107_VT(); if (!lv) return null;
+  const ck = zoneId + ':' + lv;
+  if (_vtCache.has(ck)) return _vtCache.get(ck);
+  let doc = null;
+  try { doc = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, `village-trees-${zoneId}.json`), 'utf8')); } catch (e) { doc = null; }
+  let out = null;
+  if (doc && Array.isArray(doc.villages)) {
+    const byChunk = new Map();
+    doc.villages.forEach((v, vi) => {
+      const n = (v.n && v.n[lv]) | 0;
+      for (let i = 0; i < n && i < v.t.length; i++) {
+        const x = v.t[i][0], y = v.t[i][1];
+        const k = Math.floor(x / CHUNK_SIZE) + ',' + Math.floor(y / CHUNK_SIZE);
+        if (!byChunk.has(k)) byChunk.set(k, []);
+        byChunk.get(k).push([x, y, `vt${vi}_${i}`, vi, i]);
+      }
+    });
+    out = { level: lv, byChunk };
+  }
+  _vtCache.set(ck, out);
+  return out;
+}
 function generateChunkResources(zoneId, biome, cx, cy, chunkSize, harvestedSet, gameDay, onlyCell) {
   // ★[T301] 거르개 — 개체 하나가 그 **구간** 안에 떨어지나.
   // ★[T317] 구간은 두 꼴을 받는다: `{cx,cy}`(셀 · 32px · T301 문법 그대로) · `{x0,y0,x1,y1}`(픽셀 상자).
@@ -848,6 +881,39 @@ function generateChunkResources(zoneId, biome, cx, cy, chunkSize, harvestedSet, 
         if (fsp && ftype === 'tree') fe.szf = +sz.toFixed(3);   // 크기 0..1 — 열매 재고가 이걸 읽는다(사본 0)
         if (_inCell && !_inCell(fe.x, fe.y)) continue;          // ★[T301] 셀 질의
         result.push(fe);
+      }
+    }
+  }
+
+  // ══ ★★[T1107 2026-11-03 · ★재민 11-02 문 7-b] 마을 둘레 **흩어진 나무** — 손잡이 `T1107_VILLAGE_TREES`(`low` · `mid` · `high` · 그 밖 · 미설정 = 끔 = 종전 바이트) ══
+  //   자리는 굽기(`scripts/plan-village-trees.js` → `server/village-trees-<존>.json` · 손편집 금지)가 정한다 — 외딴 나무 · 작은 나무 무리 · 밭둑 나무줄.
+  //   여기는 그 자리를 **나무로 실체화**할 뿐이다 — 흩뿌림 · 숲 격자 나무와 같은 몸(종 `_spAt` · 크기 · 키 · 그루터기 → 어린나무 → 큰 나무 `_treeStage` · T566 막힌 셀 'gone').
+  //   씨 키 `vt<마을>_<차례>` — 베면 장부에 서고 종 시계로 돌아온다(다른 나무와 같은 문).
+  {
+    const _vt = _villageTreesOf(zoneId);
+    const _lst = _vt ? _vt.byChunk.get(cx + ',' + cy) : null;
+    if (_lst) {
+      for (const q of _lst) {
+        const x = q[0], y = q[1];
+        if (_inCell && !_inCell(x, y)) continue;
+        if (terrain.isWaterCellLocal(zoneId, x, y)) continue;
+        if (typeof terrain.isRockCellLocal === 'function' && terrain.isRockCellLocal(zoneId, x, y)) continue;
+        const seedKey = q[2];
+        const vsp = _spAt(x, y);
+        let vstage = null;
+        if (harvestedSet && harvestedSet.has(seedKey)) {
+          vstage = _treeStage(seedKey, vsp, x, y);
+          if (vstage === null || vstage === 'gone') continue;
+        }
+        const sz = seedRand(zoneId, 820000 + q[3], q[4], 5);   // 크기(0~1) — 자리 씨와 독립(숲 격자 문법)
+        let vtype = 'tree', vhp = 3, vr = 4 + sz * 16, vh = 46 + sz * 120;
+        if (vstage === 'stump') { vtype = 'stump'; vhp = 0; vr *= 0.9; vh = 10; }
+        else if (vstage === 'sapling') { vtype = 'sapling'; vhp = RESOURCE_HP_TABLE.sapling; vr *= 0.45; vh *= 0.30; }
+        const ve = { id: `s_${seedKey}`, seedKey, isSeed: true, x, y, type: vtype, hp: vhp, maxHp: vhp, r: vr, h: vh };
+        if (vstage) ve.regrown = vstage;
+        if (vsp && vtype !== 'stump') ve.sp = vsp;
+        if (vsp && vtype === 'tree') ve.szf = +sz.toFixed(3);
+        result.push(ve);
       }
     }
   }
