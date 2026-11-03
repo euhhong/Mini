@@ -1,0 +1,265 @@
+{
+ "browser": "webkit",
+ "driver": "WebKitGTK MiniBrowser + WebKitWebDriver",
+ "version": "WebKitGTK 2.52.6",
+ "sizes": [
+  {
+   "W": 1440,
+   "H": 900,
+   "near": true,
+   "open": {
+    "total": 236,
+    "n": {
+     "plate": 8,
+     "frame": 2,
+     "rule": 8,
+     "button": 2,
+     "bar": 1,
+     "text": 32
+    },
+    "texts": 31,
+    "wait": 21,
+    "openCall": 21,
+    "skin": 57,
+    "render": 86,
+    "prof": {
+     "plate": 0,
+     "frame": 1,
+     "rule": 2,
+     "button": 7,
+     "bar": 1,
+     "text": 78
+    }
+   },
+   "reopen": {
+    "total": 195,
+    "n": {},
+    "texts": 108,
+    "wait": 62,
+    "openCall": 0,
+    "skin": 0,
+    "render": 1,
+    "prof": {
+     "plate": 0,
+     "frame": 0,
+     "rule": 0,
+     "button": 0,
+     "bar": 0,
+     "text": 0
+    }
+   },
+   "tabs": [
+    {
+     "total": 96,
+     "skin": 0,
+     "tab": "dash",
+     "text": 0
+    },
+    {
+     "total": 139,
+     "skin": 37,
+     "tab": "proj",
+     "text": 25
+    },
+    {
+     "total": 142,
+     "skin": 28,
+     "tab": "mem",
+     "text": 22
+    },
+    {
+     "total": 151,
+     "skin": 42,
+     "tab": "store",
+     "text": 32
+    }
+   ],
+   "tabs2": [
+    {
+     "total": 152,
+     "skin": 0,
+     "tab": "dash",
+     "text": 0
+    },
+    {
+     "total": 159,
+     "skin": 0,
+     "tab": "proj",
+     "text": 0
+    },
+    {
+     "total": 144,
+     "skin": 0,
+     "tab": "mem",
+     "text": 0
+    },
+    {
+     "total": 130,
+     "skin": 0,
+     "tab": "store",
+     "text": 0
+    }
+   ],
+   "shots": [
+    {
+     "tab": "dash",
+     "contrast": 8.71
+    },
+    {
+     "tab": "proj",
+     "contrast": 8.56
+    },
+    {
+     "tab": "mem",
+     "contrast": 8.34
+    },
+    {
+     "tab": "store",
+     "contrast": 8.79
+    }
+   ],
+   "rafOpen": {
+    "n": 41,
+    "p50": 75,
+    "p95": 83,
+    "max": 91
+   },
+   "rafClosed": {
+    "n": 41,
+    "p50": 74,
+    "p95": 91,
+    "max": 107
+   },
+   "pageErrors": []
+  },
+  {
+   "W": 1280,
+   "H": 720,
+   "near": true,
+   "open": {
+    "total": 285,
+    "n": {
+     "plate": 8,
+     "frame": 2,
+     "rule": 8,
+     "button": 2,
+     "bar": 1,
+     "text": 32
+    },
+    "texts": 31,
+    "wait": 109,
+    "openCall": 18,
+    "skin": 46,
+    "render": 76,
+    "prof": {
+     "plate": 0,
+     "frame": 1,
+     "rule": 1,
+     "button": 4,
+     "bar": 1,
+     "text": 69
+    }
+   },
+   "reopen": {
+    "total": 154,
+    "n": {},
+    "texts": 108,
+    "wait": 59,
+    "openCall": 0,
+    "skin": 0,
+    "render": 0,
+    "prof": {
+     "plate": 0,
+     "frame": 0,
+     "rule": 0,
+     "button": 0,
+     "bar": 0,
+     "text": 0
+    }
+   },
+   "tabs": [
+    {
+     "total": 94,
+     "skin": 0,
+     "tab": "dash",
+     "text": 0
+    },
+    {
+     "total": 138,
+     "skin": 38,
+     "tab": "proj",
+     "text": 28
+    },
+    {
+     "total": 177,
+     "skin": 46,
+     "tab": "mem",
+     "text": 37
+    },
+    {
+     "total": 111,
+     "skin": 37,
+     "tab": "store",
+     "text": 29
+    }
+   ],
+   "tabs2": [
+    {
+     "total": 102,
+     "skin": 0,
+     "tab": "dash",
+     "text": 0
+    },
+    {
+     "total": 115,
+     "skin": 0,
+     "tab": "proj",
+     "text": 0
+    },
+    {
+     "total": 118,
+     "skin": 0,
+     "tab": "mem",
+     "text": 0
+    },
+    {
+     "total": 110,
+     "skin": 0,
+     "tab": "store",
+     "text": 0
+    }
+   ],
+   "shots": [
+    {
+     "tab": "dash",
+     "contrast": 8.71
+    },
+    {
+     "tab": "proj",
+     "contrast": 8.56
+    },
+    {
+     "tab": "mem",
+     "contrast": 8.34
+    },
+    {
+     "tab": "store",
+     "contrast": 8.79
+    }
+   ],
+   "rafOpen": {
+    "n": 51,
+    "p50": 58,
+    "p95": 72,
+    "max": 73
+   },
+   "rafClosed": {
+    "n": 54,
+    "p50": 55,
+    "p95": 70,
+    "max": 75
+   },
+   "pageErrors": []
+  }
+ ]
+}

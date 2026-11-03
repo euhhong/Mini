@@ -98,6 +98,7 @@ const Oseok = (() => {
     const f = svg.querySelector('filter'); f.setAttribute('filterUnits', 'objectBoundingBox'); f.setAttribute('x', '-0.1'); f.setAttribute('y', '-0.3'); f.setAttribute('width', '1.2'); f.setAttribute('height', '1.6');
     document.body.appendChild(svg);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => redrawAll());
+    if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => cacheClear());   // ★[T1115] 글꼴이 새로 들어오면 떠 둔 판 그림은 낡았다(다음 그리기부터 새로)
     if (typeof matchMedia === 'function') { try { matchMedia(`(resolution: ${devicePixelRatio}dppx)`).addEventListener('change', () => redrawAll()); } catch (e) {} }
   }
 
@@ -135,12 +136,33 @@ const Oseok = (() => {
     ctx._osPat = ctx.createPattern(g, 'repeat'); ctx._osPatSrc = g; return ctx._osPat;
   };
 
+  // ★[T1115] 판 그림 캐시 — 같은 판 글자 · 같은 크기 판 선 · 테두리 · 막대는 한 번 판 그림을 그대로 옮긴다(벽 사본 겹치기를 다시 안 한다).
+  //   열쇠 = 부르는 쪽 열쇠(글자 · 글꼴 · 크기 | 모양 · 폭 · 높이 · 굵기 · 찬 몫) + 화소 배율 + 판 값(`C` 의 돌가루 · 배 · 벽 사본). 같은 열쇠면 같은 화소다(결정론).
+  //   글꼴이 늦게 오거나 DPR 이 바뀌면(`redrawAll`) · 글꼴 받기가 끝나면 비운다. 칸 수 상한 `CACHE_N`(오래 안 쓴 것부터 버린다).
+  const CACHE_N = 400;
+  const _cache = new Map();
+  const cacheStats = { hit: 0, miss: 0 };
+  const cfgKey = () => `${C.frost}|${C.groove}|${C.grain}|${C.ss}|${C.ssBig}|${C.rims.join(';')}|${C.rimsBig.join(';')}`;
+  function cacheClear() { _cache.clear(); }
+
   // mdraw(ctx) 가 지금 칠 색(fillStyle · strokeStyle)으로 판 모양을 그린다(CSS px 좌표 · 배율은 이미 걸림)
   // fill(ctx, w, h) 가 있으면 홈 안 색을 그것으로(막대) · kk = 크게 그리는 배
   //   판 모양을 마스크로 따로 두지 않고 그때그때 다시 그린다(글자 그리기는 글자 화소만 · 통째 옮기기보다 싸다)
-  function engraveCanvas(cv, cssW, cssH, mdraw, fill, kk, rims) {
+  function engraveCanvas(cv, cssW, cssH, mdraw, fill, kk, rims, key) {
     const d = (typeof devicePixelRatio === 'number' && devicePixelRatio > 0) ? devicePixelRatio : 1;
     const W = Math.max(1, Math.ceil(cssW * d)), H = Math.max(1, Math.ceil(cssH * d));
+    const ck = key != null ? `${key}|${cssW}|${cssH}|${d}|${kk || ''}|${cfgKey()}` : null;
+    if (ck) {
+      const hit = _cache.get(ck);
+      if (hit) {
+        _cache.delete(ck); _cache.set(ck, hit); cacheStats.hit++;
+        if (cv.width !== W) cv.width = W; if (cv.height !== H) cv.height = H;
+        cv.style.width = `${W / d}px`; cv.style.height = `${H / d}px`;
+        const o = ctx2(cv); o.setTransform(1, 0, 0, 1, 0, 0); o.globalAlpha = 1; o.globalCompositeOperation = 'source-over'; o.clearRect(0, 0, W, H); o.drawImage(hit, 0, 0);
+        return;
+      }
+      cacheStats.miss++;
+    }
     // 레티나(DPR 2 이상)는 이미 시안 SS 2 와 같은 화소 — 더 키우지 않는다
     const k = d >= 2 ? 1 : Math.max(1, (kk || C.ss) | 0), s = d * k, W2 = W * k, H2 = H * k;
     if (cv.width !== W) cv.width = W; if (cv.height !== H) cv.height = H;
@@ -165,6 +187,11 @@ const Oseok = (() => {
     reset(o); o.clearRect(0, 0, W, H);
     o.imageSmoothingEnabled = true; if ('imageSmoothingQuality' in o) o.imageSmoothingQuality = 'high';
     o.drawImage(_acc, 0, 0, W2, H2, 0, 0, W, H);
+    if (ck) {   // 판 그림을 한 장 떠 둔다(다음 같은 열쇠는 옮기기만)
+      const c2 = document.createElement('canvas'); c2.width = W; c2.height = H; ctx2(c2).drawImage(cv, 0, 0);
+      _cache.set(ck, c2);
+      if (_cache.size > CACHE_N) _cache.delete(_cache.keys().next().value);
+    }
   }
 
   const PAD = 3;   // 글자 캔버스 둘레 여유(px) — 어긋난 사본 · 획 끝 넘침
@@ -182,9 +209,9 @@ const Oseok = (() => {
     el.style.setProperty('--os-va', `${-(desc + PAD)}px`);
     // 획이 굵은 큰 글자(C.ssBig px 이상)는 1배로도 벽이 획을 덮지 않는다 — 화소 값이 크기 제곱으로 들므로 큰 글자만 1배
     const big = size >= C.ssBig;
-    engraveCanvas(cv, cw, ch, (m) => { m.font = fontCss(k, size); m.textBaseline = 'alphabetic'; m.fillText(s, PAD, PAD + asc); }, null, big ? 1 : C.ss, big ? C.rimsBig : C.rims);
+    engraveCanvas(cv, cw, ch, (m) => { m.font = fontCss(k, size); m.textBaseline = 'alphabetic'; m.fillText(s, PAD, PAD + asc); }, null, big ? 1 : C.ss, big ? C.rimsBig : C.rims, `t|${k}|${size}|${s}`);
   }
-  function redrawAll() { for (const el of live) { if (!el.isConnected) { live.delete(el); continue; } if (el._osRedraw) el._osRedraw(); } }
+  function redrawAll() { cacheClear(); for (const el of live) { if (!el.isConnected) { live.delete(el); continue; } if (el._osRedraw) el._osRedraw(); } }
 
   function setWay(el, w) { el.classList.remove('os-css', 'os-svg', 'os-cvhost'); el.classList.add(w === 'css' ? 'os-css' : w === 'svg' ? 'os-svg' : 'os-cvhost'); }
 
@@ -213,25 +240,25 @@ const Oseok = (() => {
   function ground(el, o) { install(); o = o || {}; el.classList.add('os-ground'); if (o.ox != null) el.style.backgroundPosition = `${-o.ox}px ${-o.oy}px`; return el; }
 
   // ── 판 선 · 사각 · 막대 — 같은 길로 판다 ─────────────────────────────────────────────────────
-  function shape(el, kind, o, drawMask, fill, cssFn) {
+  function shape(el, kind, o, drawMask, fill, cssFn, keyFn) {
     install(); const w = o.way || way;
     el.classList.add('os-e'); setWay(el, w === 'canvas' ? 'canvas' : w);
     el.classList.remove('os-cvhost');
     if (w === 'canvas') {
       el.classList.remove('os-rule', 'os-frame', 'os-bar'); el.style.background = 'none'; el.style.border = '0';
       let cv = el._osCv; if (!cv) { cv = el._osCv = document.createElement('canvas'); cv.style.position = 'absolute'; cv.style.left = cv.style.top = '0'; cv.setAttribute('aria-hidden', 'true'); el.textContent = ''; el.appendChild(cv); }
-      el._osRedraw = () => { const r = { w: o.w != null ? o.w : el.clientWidth, h: o.h != null ? o.h : el.clientHeight }; engraveCanvas(cv, r.w, r.h, (m) => drawMask(m, r.w, r.h), fill ? (c) => fill(c, r.w, r.h) : null); };
+      el._osRedraw = () => { const r = { w: o.w != null ? o.w : el.clientWidth, h: o.h != null ? o.h : el.clientHeight }; engraveCanvas(cv, r.w, r.h, (m) => drawMask(m, r.w, r.h), fill ? (c) => fill(c, r.w, r.h) : null, undefined, undefined, keyFn ? keyFn() : undefined); };
       live.add(el); el._osRedraw();
     } else { el.classList.add('os-' + kind); cssFn(); }
     return el;
   }
   function rule(el, o) {
     o = o || {}; const lw = o.lw || 1;
-    return shape(el, 'rule', o, (m, w, h) => { m.fillRect(0, (h - lw) / 2, w, lw); }, null, () => {});
+    return shape(el, 'rule', o, (m, w, h) => { m.fillRect(0, (h - lw) / 2, w, lw); }, null, () => {}, () => `r|${lw}`);
   }
   function frame(el, o) {
     o = o || {}; const lw = o.lw || 2;
-    return shape(el, 'frame', o, (m, w, h) => { m.lineWidth = lw; m.strokeRect(lw / 2, lw / 2, w - lw, h - lw); }, null, () => { el.style.borderWidth = `${lw}px`; });
+    return shape(el, 'frame', o, (m, w, h) => { m.lineWidth = lw; m.strokeRect(lw / 2, lw / 2, w - lw, h - lw); }, null, () => { el.style.borderWidth = `${lw}px`; }, () => `f|${lw}`);
   }
   function bar(el, p, o) {
     o = o || {}; p = Math.max(0, Math.min(1, +p || 0));
@@ -240,7 +267,7 @@ const Oseok = (() => {
     el._osShaped = true; el._osWayB = o.way || way;
     el.setAttribute('role', 'progressbar'); el.setAttribute('aria-valuemin', '0'); el.setAttribute('aria-valuemax', '100');
     return shape(el, 'bar', o, (m, w, h) => { m.fillRect(0, 0, w, h); }, (c, w, h) => { c.fillStyle = gray(C.groove); c.fillRect(0, 0, w, h); c.fillStyle = frostFill(c); c.fillRect(0, 0, w * el._osP, h); },
-      () => { el.textContent = ''; const i = document.createElement('i'); i.style.width = `${p * 100}%`; el.appendChild(i); });
+      () => { el.textContent = ''; const i = document.createElement('i'); i.style.width = `${p * 100}%`; el.appendChild(i); }, () => `b|${el._osP}`);
   }
   function button(el, s, o) {
     o = o || {}; install();
@@ -263,7 +290,7 @@ const Oseok = (() => {
   }
 
   return {
-    C, FONTS, fontCss, install, text, plate, ground, rule, frame, bar, button, redrawAll,
+    C, FONTS, fontCss, install, text, plate, ground, rule, frame, bar, button, redrawAll, cacheStats, cacheClear,   // ★[T1115] 판 그림 캐시 셈 · 비우기(값 · 하네스)
     get way() { return way; }, set way(w) { way = w; },
     ready() { install(); return (document.fonts && document.fonts.load) ? Promise.all(Object.keys(FONTS).map((k) => document.fonts.load(fontCss(k, 20), '가A'))).then(() => document.fonts.ready) : Promise.resolve(); },
   };
