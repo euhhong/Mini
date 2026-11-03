@@ -200,6 +200,28 @@ async function enterAndGo(page, V) {
   ok(sizes.every((s) => s.min >= 18), '⑤ 본문 18px 아래 0(네 탭)', sizes.map((s) => `${s.min}px「${s.minText}」`).join(' · '));
   ok(sizes.every((s) => !s.emoji.length), '⑤ 이모지 0(네 탭)', sizes.map((s) => s.emoji.join('|')).join(' '));
 
+  // ⑤b [T1115] 같은 마을을 닫았다 다시 열면 — 서버는 통째를 다시 보내지만 화면은 칸마다 견줘 바뀐 칸을 읽는 판만 다시 짓는다
+  {
+    await tab('dash');
+    await page.evaluate(() => { document.getElementById('vvName').dataset.keep = '1'; const p = document.getElementById('vvPop'); if (p) p.dataset.keep = '1'; });
+    const before = srv();
+    sent.length = 0; const n0 = got.length;
+    await page.keyboard.press('Shift+g');   // 닫기(열린 채 다시 누름)
+    await sleep(400);
+    ok(!(await page.evaluate(() => window.__vvState().open)) && sent.some((m) => m.type === 'village_view_close'), '⑤b Shift+G 를 다시 누르면 닫힌다 · 서버에 닫기를 알린다');
+    await page.keyboard.press('Shift+g');   // 다시 열기
+    let full2 = null;
+    for (let t = 0; t < 50 && !full2; t++) { full2 = got.slice(n0).find((m) => m.vid === V.id && m.full === true) || null; if (!full2) await sleep(200); }
+    await sleep(400);
+    ok(!!full2 && (await page.evaluate(() => window.__vvState().open)), '⑤b 다시 열면 서버가 통째를 다시 보낸다', full2 ? `seq ${full2.seq}` : '안 왔다');
+    const same = (k) => JSON.stringify(before[k]) === JSON.stringify(full2.view[k]);
+    const keep = await page.evaluate(() => ({ name: (document.getElementById('vvName') || {}).dataset?.keep === '1', pop: (document.getElementById('vvPop') || {}).dataset?.keep === '1' }));
+    ok(!!full2 && (same('head') && same('me') ? keep.name : !keep.name), '⑤b [T1115] 머리 판 — 머리가 읽는 칸(`head` · `me`)이 같으면 다시 안 짓고, 다르면 다시 짓는다', `head ${same('head') ? '같음' : '다름'} · me ${same('me') ? '같음' : '다름'} · 머리 판 ${keep.name ? '그대로' : '새로'}`);
+    const dashSame = ['head', 'me', 'dash', 'requests', 'news'].every(same);
+    ok(!!full2 && (dashSame ? keep.pop : !keep.pop), '⑤b [T1115] 대시보드 판 — 읽는 칸이 같으면 그대로 · 다르면 새로(사는 사람 칸)', `${dashSame ? '같음' : '다름'} · ${keep.pop ? '그대로' : '새로'}`);
+    ok(!!full2 && (await txt('#vvPop')) === `${full2.view.dash.pop}명` && (await txt('#vvName')) === full2.view.head.name, '⑤b 다시 연 화면의 수 = 새 통째의 서버 값', `${await txt('#vvPop')}`);
+  }
+
   // ⑥ 멀어지면 — 서버가 바뀐 칸(`gate` · `prices`)만 보내고 화면이 그 칸만으로 바뀐다(원격 시세 0)
   await tab('store');
   await page.evaluate(() => { document.getElementById('vvName').dataset.keep = '1'; });   // 머리 판 표지 — 바뀐 칸(`gate` · `prices`)엔 머리를 다시 짓지 않는다
@@ -241,6 +263,8 @@ async function enterAndGo(page, V) {
     const names = await page.evaluate(() => [...document.querySelectorAll('#vvBody .vv-tabbody[data-k="proj"] .vv-proj')].map((c) => { const t = c.querySelector('.vv-t'); return (t.getAttribute('aria-label') || t.textContent).trim(); }));
     ok(JSON.stringify(names) === JSON.stringify(['움집 짓기', '갈매가 맡긴 움집', '밭 일구기', '임업2로 가는 행상']), '⑨ 공사 줄 넷 — 이름은 서버 `kind` 로(서버가 이름을 안 싣는다 · 설계 §3)', names.join(' · '));
     ok((await txts('#vvBody .vv-tabbody[data-k="proj"] .vv-t')).includes('다 지으면 침상이 6 늘어납니다.'), '⑨ 집터 `bedsGain` → "다 지으면 침상이 n 늘어납니다."(T1084)');
+    await page.evaluate(() => window.__sendPrimary({ type: '__e2e_give', items: { wood: 3 } }));   // 앞 ③ "가진 것 주기"가 짐의 나무를 다 바쳤을 수 있다(부탁 양은 세계마다 다르다)
+    await sleep(700);
     sent.length = 0;
     await page.click('[data-vv="bring"]');
     await sleep(400);

@@ -90,7 +90,13 @@ let vvDirty = new Set(VV_ALL);
 function villageViewOnMessage(msg) {
   if (!msg || typeof msg !== 'object') return;
   if (vvVid != null && msg.vid != null && (msg.vid | 0) !== (vvVid | 0)) return;
-  if (msg.full) { vvRaw = Object.assign({}, msg.view || {}); vvSeq = msg.seq | 0; for (const k of VV_ALL) vvDirty.add(k); }
+  //   ★[T1115] 통째도 칸마다 견줘 바뀐 칸을 읽는 판만 낡았다고 한다 — 같은 마을을 닫았다 다시 열면 서버는 통째를 다시 보내지만 대개 몇 칸만 다르다(지어 둔 판은 그대로 둔다).
+  if (msg.full) {
+    const nv = msg.view || {};
+    if (vvRaw && vvData) { for (const k of new Set([...Object.keys(vvRaw), ...Object.keys(nv)])) if (JSON.stringify(vvRaw[k]) !== JSON.stringify(nv[k])) for (const q of (VV_SLOT_PANES[k] || VV_ALL)) vvDirty.add(q); }
+    else for (const k of VV_ALL) vvDirty.add(k);
+    vvRaw = Object.assign({}, nv); vvSeq = msg.seq | 0;
+  }
   else if (msg.slots && vvRaw) { if ((msg.seq | 0) <= vvSeq) return; Object.assign(vvRaw, msg.slots); vvSeq = msg.seq | 0; for (const k of Object.keys(msg.slots)) for (const q of (VV_SLOT_PANES[k] || VV_ALL)) vvDirty.add(q); }
   else return;
   vvData = vvAdapt(vvRaw);
@@ -207,14 +213,20 @@ function vvSkin(root) {
   const t0 = performance.now();
   const pane = document.getElementById('vvPane');
   if (pane && !pane._vvGround) { Oseok.ground(pane, { ox: 0, oy: 0 }); pane._vvGround = true; }
-  const pr = pane ? pane.getBoundingClientRect() : { left: 0, top: 0 };
-  for (const el of [...(root.matches && root.matches('.vv-plate') ? [root] : []), ...root.querySelectorAll('.vv-plate')]) { const r = el.getBoundingClientRect(); Oseok.plate(el, { ox: r.left - pr.left, oy: r.top - pr.top }); }   // 뿌리 자신이 판(머리)이면 그것도
+  //   ★[T1115] 읽기와 쓰기를 묶는다 — 판 글자(쓰기만 · 배치를 안 읽는다)를 먼저 다 입히고, 크기를 한 번에 다 읽은 뒤, 막대 · 선 · 테두리 · 버튼 · 판을 쓴다.
+  //   종전엔 칸마다 크기 읽기(clientWidth) → 캔버스 쓰기를 번갈아 해 칸 수만큼 배치를 다시 셈했다.
   for (const el of root.querySelectorAll('.vv-t')) Oseok.text(el, el.textContent, { size: +el.dataset.sz || 18, font: el.dataset.f || 'sansm' });
-  for (const el of root.querySelectorAll('.vv-bar')) Oseok.bar(el, +el.dataset.p || 0, { w: el.clientWidth, h: el.clientHeight });
-  for (const el of root.querySelectorAll('.vv-rl')) { if (el.clientWidth > 0) Oseok.rule(el, { lw: 1.4, w: el.clientWidth, h: el.clientHeight }); }
-  for (const el of root.querySelectorAll('.vv-fr')) Oseok.frame(el, { lw: 1.6, w: el.clientWidth, h: el.clientHeight });
+  const pr = pane ? pane.getBoundingClientRect() : { left: 0, top: 0 };
+  const plates = [...(root.matches && root.matches('.vv-plate') ? [root] : []), ...root.querySelectorAll('.vv-plate')].map((el) => [el, el.getBoundingClientRect()]);   // 뿌리 자신이 판(머리)이면 그것도
+  const sz = (el) => [el, el.clientWidth, el.clientHeight];
+  const bars = [...root.querySelectorAll('.vv-bar')].map(sz), rules = [...root.querySelectorAll('.vv-rl')].map(sz), frames = [...root.querySelectorAll('.vv-fr')].map(sz);
   //   버튼은 입히기 전에 배치가 정한 폭 · 높이를 박는다(모듈의 `.os-btn` 은 안쪽 여백이 0 이라 그대로 두면 글자 폭으로 줄어든다)
-  for (const el of root.querySelectorAll('.vv-btn')) { if (!el._osBtn) { el.style.width = `${el.offsetWidth}px`; el.style.height = `${el.offsetHeight}px`; } Oseok.button(el, el.dataset.label, { primary: !!el.dataset.main, size: 20, font: 'sans', w: el.offsetWidth, h: el.offsetHeight }); }
+  const btns = [...root.querySelectorAll('.vv-btn')].map((el) => [el, el.offsetWidth, el.offsetHeight]);
+  for (const [el, r] of plates) Oseok.plate(el, { ox: r.left - pr.left, oy: r.top - pr.top });
+  for (const [el, w, h] of bars) Oseok.bar(el, +el.dataset.p || 0, { w, h });
+  for (const [el, w, h] of rules) if (w > 0) Oseok.rule(el, { lw: 1.4, w, h });
+  for (const [el, w, h] of frames) Oseok.frame(el, { lw: 1.6, w, h });
+  for (const [el, w, h] of btns) { if (!el._osBtn) { el.style.width = `${w}px`; el.style.height = `${h}px`; } Oseok.button(el, el.dataset.label, { primary: !!el.dataset.main, size: 20, font: 'sans', w, h }); }
   vvSkinMs = performance.now() - t0;
 }
 
