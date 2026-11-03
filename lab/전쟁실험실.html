@@ -4757,7 +4757,12 @@ const DERIVED_KG = {
 
 // ── 정본 접근자 ─────────────────────────────────────────────────────────────
 //   순서: 별칭 → specialty(정본) → 코어 표 → 플레이어 전용 유도값.
-function kgOf(id) {
+// ★★[T1128 · 손잡이 `T1128_KCAL_TIDY` 켬 기본 · `=0` = 이 갈래가 안 선다(종전 바이트)] 어종별 건어물 · 생선 절임 · 표에 무게 없는 민물 어종 —
+//   **표의 주인이 채운다**(`fish-preserve.js` — 원물 kg × 이 표의 말림 · 절임 비 · 민물 표 몸 크기 · 수를 여기 안 적는다 · 갯벌 · 사냥 고기 줄과 같은 문법).
+//   ⚠늦게 부른다(맞물림 금지) · 둘째 인자 `noFp` = 그 파일이 원물 · 비를 물으러 다시 부를 때(되부름 금지).
+let _FP = null;
+function _fp() { if (_FP === null) { try { _FP = require('./fish-preserve'); } catch (e) { _FP = false; } } return _FP || null; }
+function kgOf(id, noFp) {
   if (!id) return null;
   const key = ITEM_ALIAS[id] || id;
   const sp = Specialty.RESOURCES && Specialty.RESOURCES[key];
@@ -4766,6 +4771,7 @@ function kgOf(id) {
   if (DERIVED_KG[id] > 0) return DERIVED_KG[id];
   // ★[작물 층] specialty·코어·유도표에 없는 작물/씨앗 — crops 정본에게 묻는다(마지막 갈래).
   if (Crops) { if (Crops.isCrop(id)) return Crops.kgOf(id); if (Crops.isSeed(id)) return Crops.SEED_KG; }
+  if (!noFp) { const FP = _fp(); if (FP && FP.ON && typeof FP.kgOf === 'function') { const k = FP.kgOf(id, kgOf); if (k > 0) return k; } }   // ★[T1128]
   return null;
 }
 // 못 찾으면 0 이 아니라 **기본값**을 준다 — 0 이면 "무게 없는 물건"이 조용히 생긴다.
@@ -4781,6 +4787,7 @@ function catalog() {
   for (const k of Object.keys(DERIVED_KG)) if (out[k] == null) out[k] = DERIVED_KG[k];
   for (const [item, key] of Object.entries(ITEM_ALIAS)) if (out[item] == null && out[key] != null) out[item] = out[key];
   if (Crops) for (const [k, w] of Object.entries(Crops.weightMap())) if (out[k] == null) out[k] = w;
+  { const FP = _fp(); if (FP && FP.ON && typeof FP.items === 'function') for (const k of [...Object.keys(FP.items()), ...FP.species()]) if (out[k] == null) { const w = kgOf(k); if (w > 0) out[k] = w; } }   // ★[T1128]
   return out;
 }
 // 알려진 아이디 전부(하네스 전수 스윕용)
@@ -7451,7 +7458,7 @@ function resolveFrom(rec, inventory) {
     const n = Math.floor(Number(inv[it]) || 0);
     if (n > bestN) { bestN = n; best = it; }
   }
-  return Object.assign({}, rec, { from: best, fromAny: rec.from });
+  return Object.assign({}, rec, { from: best, fromAny: rec.from }, (rec.outBy && rec.outBy[best]) ? { out: rec.outBy[best] } : {});   // ★[T1128] 어종마다 산출(`outBy` — 켬만 칸이 선다)
 }
 
 // ★레시피 정본. `from` = 입력 로트 품목(배열이면 `resolveFrom` 이 푼다) · `out` = 산출 · `needs` = 추가 소모
@@ -7486,6 +7493,18 @@ const PRESERVE = {
   dry_seaweed: { label: '해조 말리기', kind: 'dry',    facilityKo: '건조대',
                  from: 'seaweed',   out: 'dried_seaweed', days: PRESERVE_DAYS.dry, needs: {} },
 };
+// ★★[T1128 2026-11-04 · ★재민 11-03 문 9-a ㄱ · 손잡이 `T1128_KCAL_TIDY` 켬 기본 · `=0` = 이 블록이 아무것도 안 한다(종전 바이트)] **어종마다 가공품.**
+//   위 두 줄(`dry_fish` · `pickle_fish`)은 어종 집합을 받는데 산출이 하나였다 — 건어물 1개 = 첫 종(`fish`)의 열량 445.5 · 생선 절임 = 남새 절임(150).
+//   켜면 산출이 넣은 어종을 따른다(`outBy` — `resolveFrom` 이 푼 그 종의 품목 · 레시피 줄 · 읽는 자리 여덟은 그대로).
+//   품목(이름 · 보관일)은 `fish-preserve.js` 가 정본이다(원재료 어종 표에서 유도 · 여기 옮겨 적지 않는다) · 보관일은 그 가공의 곡선 그대로.
+{ let _FP = null; try { _FP = require('./fish-preserve'); } catch (e) { _FP = null; }
+  if (_FP && _FP.ON && typeof _FP.items === 'function') {
+    const _shelf = { dry: PRESERVED_ITEMS.dried_fish.shelf, pickle: PRESERVED_ITEMS.pickled_veg.shelf };
+    for (const [id, it] of Object.entries(_FP.items())) { PRESERVED_ITEMS[id] = { ko: it.ko, shelf: _shelf[it.kind] }; SHELF_DAYS[id] = _shelf[it.kind]; }
+    PRESERVE.dry_fish.outBy = _FP.outBy('dry');
+    PRESERVE.pickle_fish.outBy = _FP.outBy('pickle');
+    PRESERVE.pickle_fish.out = 'pickled_fish';   // 이름 없는 잡어(`fish`)를 절이면 생선 절임(남새 절임이 아니다)
+  } }
 
 // 이 레시피를 지금 걸 수 있나 — **상한 재료는 못 넣는다**(상한 걸 말려도 상한 것이다).
 //   반환: { ok, err } · `fresh` 는 부르는 쪽이 `ofAges` 로 이미 잰 값이다.

@@ -258,7 +258,7 @@ function resolveFrom(rec, inventory) {
     const n = Math.floor(Number(inv[it]) || 0);
     if (n > bestN) { bestN = n; best = it; }
   }
-  return Object.assign({}, rec, { from: best, fromAny: rec.from });
+  return Object.assign({}, rec, { from: best, fromAny: rec.from }, (rec.outBy && rec.outBy[best]) ? { out: rec.outBy[best] } : {});   // ★[T1128] 어종마다 산출(`outBy` — 켬만 칸이 선다)
 }
 
 // ★레시피 정본. `from` = 입력 로트 품목(배열이면 `resolveFrom` 이 푼다) · `out` = 산출 · `needs` = 추가 소모
@@ -293,6 +293,18 @@ const PRESERVE = {
   dry_seaweed: { label: '해조 말리기', kind: 'dry',    facilityKo: '건조대',
                  from: 'seaweed',   out: 'dried_seaweed', days: PRESERVE_DAYS.dry, needs: {} },
 };
+// ★★[T1128 2026-11-04 · ★재민 11-03 문 9-a ㄱ · 손잡이 `T1128_KCAL_TIDY` 켬 기본 · `=0` = 이 블록이 아무것도 안 한다(종전 바이트)] **어종마다 가공품.**
+//   위 두 줄(`dry_fish` · `pickle_fish`)은 어종 집합을 받는데 산출이 하나였다 — 건어물 1개 = 첫 종(`fish`)의 열량 445.5 · 생선 절임 = 남새 절임(150).
+//   켜면 산출이 넣은 어종을 따른다(`outBy` — `resolveFrom` 이 푼 그 종의 품목 · 레시피 줄 · 읽는 자리 여덟은 그대로).
+//   품목(이름 · 보관일)은 `fish-preserve.js` 가 정본이다(원재료 어종 표에서 유도 · 여기 옮겨 적지 않는다) · 보관일은 그 가공의 곡선 그대로.
+{ let _FP = null; try { _FP = require('./fish-preserve'); } catch (e) { _FP = null; }
+  if (_FP && _FP.ON && typeof _FP.items === 'function') {
+    const _shelf = { dry: PRESERVED_ITEMS.dried_fish.shelf, pickle: PRESERVED_ITEMS.pickled_veg.shelf };
+    for (const [id, it] of Object.entries(_FP.items())) { PRESERVED_ITEMS[id] = { ko: it.ko, shelf: _shelf[it.kind] }; SHELF_DAYS[id] = _shelf[it.kind]; }
+    PRESERVE.dry_fish.outBy = _FP.outBy('dry');
+    PRESERVE.pickle_fish.outBy = _FP.outBy('pickle');
+    PRESERVE.pickle_fish.out = 'pickled_fish';   // 이름 없는 잡어(`fish`)를 절이면 생선 절임(남새 절임이 아니다)
+  } }
 
 // 이 레시피를 지금 걸 수 있나 — **상한 재료는 못 넣는다**(상한 걸 말려도 상한 것이다).
 //   반환: { ok, err } · `fresh` 는 부르는 쪽이 `ofAges` 로 이미 잰 값이다.

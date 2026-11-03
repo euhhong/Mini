@@ -223,7 +223,9 @@ say('\n② 켬 — 회관 넣기 → 장부 레코드 → 꺼내기: 그 나이�
   const bear = (led || []).filter((r) => r.f0 < 1);
   ok(Array.isArray(led) && led.length === 2 && bear.length === 1 && near(bear[0].u, zOn.Adep, 1e-6) && near(bear[0].f0, 0.5, 1e-3) && bear[0].m === 0.7 && bear[0].w === 0.55 && led[0] === led.find((r) => r.f0 < 1) || (led && led[0].f0 < 1),
     '★★② 장부 — 넣은 곰고기 레코드 하나(단위 = 칸의 실제 증가 · 접힌 신선도 f0 0.5 · 곳간 자리) + econ 몫 레코드(f0 1) · 곰고기가 앞(사흘 전 순간)', JSON.stringify(led));
-  pre(zOn.Awd > 2 && zOn.Awd < zOn.Adep, '꺼낸 단위 < 넣은 곰고기 단위(곰고기 레코드에서만 나온다)', `${zOn.Awd} < ${zOn.Adep}`);
+  // ★[T1128 문 10 ㄴ · 켬 기본] 꺼낸 개수 = 넣은 품목 개수 — 3단위 청함(대표 개수 ⌊3 × 2,450 ÷ 1,200⌋ = 6)이 곰고기 6개의 단위(6 × 1,610 × 0.5 ÷ 2,450)를 뺀다(끔 = 종전 하한 2)
+  const _t1128 = require(SV('fish-preserve.js')).ON;
+  pre((_t1128 ? near(zOn.Awd, 6 * zOn.kcal.bear * 0.5 / D, 1e-4) : zOn.Awd > 2) && zOn.Awd < zOn.Adep, '꺼낸 단위 < 넣은 곰고기 단위(곰고기 레코드에서만 나온다)' + (_t1128 ? ' · [T1128] = 곰고기 6개의 단위' : ''), `${zOn.Awd} < ${zOn.Adep}`);
   // ★[T768 · 재민 10-15 ⓑ] 넣은 물건 그대로 — 곰고기 레코드는 곰고기로(낱개 = 그 품목의 열량 · 나이는 레코드째) · 대표 품목은 econ 몫에서만
   ok(A.bear.length >= 1 && A.bear.every((l) => near(l.f, 0.5, 1e-3)) && A.game.length === 0, '★★② [T768] 꺼낸 것은 **넣은 곰고기 그대로**(곰고기 · 그 나이 f 0.5 · 오늘 것으로 안 바뀐다) — 대표 품목(사슴·들짐승고기)으로 안 바뀐다', JSON.stringify({ bear: A.bear, game: A.game }));
   const n = A.bear.reduce((s, l) => s + l.n, 0);

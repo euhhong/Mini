@@ -109,7 +109,7 @@ function _elevOf(v) {   // 그 마을 고도(km) — econ 정본 한 함수
 function _gElev(v) { return T856 ? _elevOf(v) : 0; }   // 곳간 구간의 고도
 // 자리를 바꾼다 — 정산 먼저(지난 구간에 새 배율이 소급되지 않게)
 function _restamp(r, pf, nf) { _settle(r, nf); r.m = pf.m; r.w = pf.w; return r; }
-function _copy(r, u) { const o = { k: r.k, u, f0: r.f0 == null ? 1 : r.f0, e: r.e, t: r.t, m: r.m, w: r.w }; if (r.it != null) o.it = r.it; return o; }   // ★[T768] 품목은 따라간다(없으면 칸도 없다 — 옛 꼴 그대로)
+function _copy(r, u) { const o = { k: r.k, u, f0: r.f0 == null ? 1 : r.f0, e: r.e, t: r.t, m: r.m, w: r.w }; if (r.it != null) o.it = r.it; if (r.pu != null) o.pu = r.pu; return o; }   // ★[T768] 품목은 따라간다(없으면 칸도 없다 — 옛 꼴 그대로)
 function _sortK(arr) { arr.sort((a, b) => (a.k - b.k) || ((+b.e || 0) - (+a.e || 0))); return arr; }
 
 // ══ ★[T789] 상한 레코드 — 판정 · 사람의 눈 · 하루 마감 버림 ═══════════════════════════════════════════════
@@ -464,7 +464,7 @@ function recsFromPlayer(recs, item, units, unitsMode, today) {
     if (!(ws[i] > EPS)) return;
     out.push({ k: Number.isFinite(r.k) ? r.k : Math.floor(r.d) * _day(), u: units * ws[i] / W, f0: unitsMode ? Math.max(1e-6, fs[i]) : 1,
       e: +r.e || 0, t: (r.t == null) ? (Number.isFinite(r.k) ? r.k / _day() : Math.floor(r.d)) : +r.t, m: r.m == null ? 1 : r.m, w: r.w == null ? 0 : r.w,
-      it: item });   // ★[T768] 넣은 그 품목
+      it: item, ...(_t1128On() && (+r.n || 0) > EPS ? { pu: (units * ws[i] / W) / (+r.n) } : {}) });   // ★[T768] 넣은 그 품목 · ★[T1128] 켬 = 한 개의 단위(넣은 그 순간 — 꺼낼 때 개수 = 단위 ÷ pu)
   });
   if (out.length) { ST.itemTag += out.length; ST.itemTagU += units; }
   return out;
@@ -498,6 +498,7 @@ function recsToPlayer(recs, give) {
 function recsToItems(recs, give, item, kcalOf) {
   const by = {};
   if (!Array.isArray(recs) || !recs.length || !(give > 0)) return by;
+  if (_t1128BC && kcalOf) { const bc = _t1128ByCount(recs, give, item, kcalOf); if (bc) return bc; }   // ★[T1128 문 10] 꺼내기 문 — 레코드마다 넣은 개수 그대로
   const own = [], other = [];
   for (const r of recs) { ((r && r.it != null && r.it !== item) ? other : own).push(r); if (r && r.it != null) ST.itemGiveU += +r.u || 0; }
   if (!other.length) { const pr = recsToPlayer(recs, give); if (pr.length) by[item] = pr; return by; }
@@ -515,6 +516,42 @@ function recsToItems(recs, give, item, kcalOf) {
     (by[r.it] || (by[r.it] = [])).push({ d: Math.floor(r.k / _day()), k: r.k, n, e: r.e, t: r.t, m: r.m, w: r.w });
     ST.itemSwapU += r.u; ST.itemSwapRecs++;
   }
+  return by;
+}
+
+// ★★[T1128 문 10 · 손잡이 `T1128_KCAL_TIDY` — 존이 꺼내기 문(`_t732Wrap`)에서만 `byCount` 를 세운다 · 끄면 이 함수를 아무도 안 부른다] **레코드마다 넣은 개수 그대로.**
+//   (존이 꺼내기 문 동안 `byCount(true)` 를 세운다 — 다른 문(거래소 받기 · 게시판 보상)은 종전 셈 그대로)
+//   레코드 한 개의 개수 = 단위 × 하루치 ÷ (그 품목 한 개의 열량 × 넣을 때 접힌 신선도 f0) — 넣을 때 적은 그 개수(문 `villages.playerVillageWithdraw` 가 같은 셈으로 단위를 뺐다).
+//   끝수는 문이 정한 개수(`give`)에 맞춘다(합이 1e-3 안일 때만 · 가장 큰 레코드에). 열량을 모르는 품목이 끼면 null(종전 셈).
+let _t1128Fp = null;
+function _t1128On() { if (_t1128Fp === null) { try { _t1128Fp = require('./fish-preserve'); } catch (e) { _t1128Fp = false; } } return !!(_t1128Fp && _t1128Fp.ON); }
+let _t1128BC = false;   // 꺼내기 문 동안만 참(존 `_t732Wrap` 이 `byCount(true/false)` 로 세운다)
+function byCount(on) { _t1128BC = !!on; return _t1128BC; }
+let _t1128K = null;
+function _t1128Day() { if (_t1128K === null) { try { _t1128K = require('./kcal'); } catch (e) { _t1128K = false; } } return _t1128K && _t1128K.DAY_KCAL > 0 ? _t1128K.DAY_KCAL : 0; }
+//   레코드 한 개의 개수 — 넣을 때 적은 한 개의 단위(`pu` · 넣은 그 순간 · 실제 무게 · 신선도째)가 있으면 단위 ÷ pu · 없으면(econ 이 만든 것 · 옛 레코드) 열량으로(단위 × 하루치 ÷ (열량 × f0)) · 모르면 −1
+function _t1128CountOf(r, it, kcalOf, D) {
+  if (r.pu > 0) return (+r.u || 0) / r.pu;
+  const kX = +kcalOf(it) || 0; if (!(kX > 0) || !(D > 0)) return -1;
+  const f0 = r.f0 == null ? 1 : +r.f0;
+  return (+r.u || 0) * D / (kX * Math.max(1e-6, f0));
+}
+function _t1128ByCount(recs, give, item, kcalOf) {
+  const D = _t1128Day(); if (!(D > 0)) return null;
+  const by = {}, nf = _nowFrac(), rows = [];
+  let S = 0;
+  for (const r0 of recs) {
+    const r = _settle(_copy(r0, r0.u), nf);
+    const it = r.it != null ? r.it : item;
+    const n = +(_t1128CountOf(r, it, kcalOf, D) || 0).toFixed(6);
+    if (n < 0) return null;
+    if (!(n > 0)) continue;
+    const o = { d: Math.floor(r.k / _day()), k: r.k, n, e: r.e, t: r.t, m: r.m, w: r.w };
+    (by[it] || (by[it] = [])).push(o); rows.push(o); S += n;
+    if (r.it != null) { ST.itemGiveU += +r0.u || 0; if (r.it !== item) { ST.itemSwapU += r.u; ST.itemSwapRecs++; } }
+  }
+  const fix = +(give - S).toFixed(6);
+  if (fix !== 0 && Math.abs(fix) < 1e-3 && rows.length) { let big = rows[0]; for (const o of rows) if (o.n > big.n) big = o; big.n = +(big.n + fix).toFixed(6); }
   return by;
 }
 
@@ -618,7 +655,7 @@ function handRecs(p, item, n, per) {
   for (const r of out) {
     const q = +r.n || 0; if (!(q > EPS)) continue;
     const k = Number.isFinite(r.k) ? r.k : Math.floor(+r.d || 0) * _day();
-    recs.push({ k, u: q * W, f0: 1, e: +r.e || 0, t: (r.t == null) ? k / _day() : +r.t, m: r.m == null ? 1 : r.m, w: r.w == null ? 0 : r.w, it: item });   // ★[T768] 손이 넣은 그 품목
+    recs.push({ k, u: q * W, f0: 1, e: +r.e || 0, t: (r.t == null) ? k / _day() : +r.t, m: r.m == null ? 1 : r.m, w: r.w == null ? 0 : r.w, it: item, ...(_t1128On() ? { pu: W } : {}) });   // ★[T768] 손이 넣은 그 품목 · ★[T1128] 한 개의 단위
   }
   if (recs.length) { ST.handRecs += recs.length; ST.handU += _sumU(recs); ST.itemTag += recs.length; ST.itemTagU += _sumU(recs); }
   return recs;
@@ -838,7 +875,7 @@ function rotOf(reset) { const o = Object.assign({}, ROT); if (reset) for (const 
 
 module.exports = { ON, T840, T856, legSettle: _legSettle, elevOf: _elevOf, attach, sync, pushIn, clearIn, capBegin, capEnd, suspend, txBegin, txEnd, isWrapped,
   tickBegin, tickEnd, doorBegin, doorEnd, doorIn, doorRest, doorCap,
-  recsFromPlayer, recsToPlayer, recsToItems, hooks, cargo, unload, bounce, cargoDump, cargoLoad, packFrom, packKeep, giveBegin, giveEnd,
+  recsFromPlayer, recsToPlayer, recsToItems, byCount, countOf: _t1128CountOf, hooks, cargo, unload, bounce, cargoDump, cargoLoad, packFrom, packKeep, giveBegin, giveEnd,
   itemSums, checkItems, itemFlow, eaten,   // ★[T768] 품목 칸 · 품목 불변식 · 마을이 먹은 품목
   T789, viewBegin, viewEnd, rotOf,         // ★[T789] 손잡이 · 사람의 눈(시세 · 견적) · 썩어 없어진 품목
   dump, ledger, attached, freshOf, stats, check,
