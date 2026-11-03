@@ -412,7 +412,9 @@ async function found(C, base, centers) {
   ok(A.msgs.some((m) => m.type === 'village_inventory'), 'Ⓣ4 [C1] 회관 열람 = **마을 사람**(촌장 아닌 A 도 본다)');
   snd(Cc, { type: 'teleport_debug', x: hx + 40, y: hy + 40 }); await sleep(800);
   Cc.notices.length = 0; Cc.msgs.length = 0; snd(Cc, { type: 'village_inventory', buildingId: hid }); await sleep(900);
-  ok(!Cc.msgs.some((m) => m.type === 'village_inventory') && Cc.notices.some((t) => /볼 수 없습니다/.test(t)), 'Ⓣ5 [C1] 남의 마을 사람은 못 본다', lastN(Cc));
+  if (process.env.T1132_HALL_VIEW === '0') ok(!Cc.msgs.some((m) => m.type === 'village_inventory') && Cc.notices.some((t) => /볼 수 없습니다/.test(t)), 'Ⓣ5 [C1] 남의 마을 사람은 못 본다(T1132 끔 · 종전)', lastN(Cc));
+  else { const iv = Cc.msgs.filter((m) => m.type === 'village_inventory').pop();   // ★[T1132] 켬(기본) — 보기는 가까이 온 누구나 · 읽기 전용(이방인 받기 칸 없음)
+    ok(!!iv && iv.inv.viewOnly === true && iv.inv.welcome == null, 'Ⓣ5 [C1 · ★T1132] 남의 마을 사람도 회관 곁에선 **본다** — 읽기 전용(이방인 받기 칸 없음)', JSON.stringify(iv ? { viewOnly: iv.inv.viewOnly, welcome: iv.inv.welcome != null } : lastN(Cc))); }
   B.msgs.length = 0; Cc.msgs.length = 0;
   chat(A, '/t 물레 소식'); await sleep(1200);
   const tB = B.msgs.find((m) => m.type === 'chat' && m.text === '물레 소식'), tC = Cc.msgs.find((m) => m.type === 'chat' && m.text === '물레 소식');
