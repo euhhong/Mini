@@ -64,79 +64,9 @@ const PAGE_RECTS = `(() => { const pr = (e) => { const r = e.getBoundingClientRe
   const texts = [...document.querySelectorAll('#vvBody .vv-t canvas')].filter((e) => e.offsetParent !== null).map(pr);
   return { plates, texts, dpr: devicePixelRatio }; })()`;
 
-// ── 두 브라우저 손잡이 — evaluate · screenshot · viewport · goto · key ────────────────────────────
-async function playwrightDriver(kind) {
-  const PW = require('playwright');
-  const browser = await PW[kind].launch();
-  return {
-    name: kind, version: browser.version(),
-    async page(W, H) {
-      const page = await browser.newPage({ viewport: { width: W, height: H } });
-      return {
-        goto: (u) => page.goto(u, { waitUntil: 'domcontentloaded' }),
-        ev: (src) => page.evaluate(src),
-        shot: (file) => page.screenshot({ path: file }),
-        close: () => page.close(),
-      };
-    },
-    close: () => browser.close(),
-  };
-}
-async function webkitGtkDriver() {
-  const which = (b) => spawnSync('sh', ['-c', `command -v ${b}`]).stdout.toString().trim();
-  if (!which('WebKitWebDriver') || !which('Xvfb')) throw new Error('WebKitGTK 길이 없다 — apt-get install webkit2gtk-driver xvfb');
-  const MB = ['/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/MiniBrowser', '/usr/lib/x86_64-linux-gnu/webkitgtk-6.0/MiniBrowser'].find((p) => fs.existsSync(p));
-  const DISP = ':' + (90 + (process.pid % 9)), WPORT = 4444 + (process.pid % 50);
-  boot('Xvfb', [DISP, '-screen', '0', '1700x1300x24']);
-  await sleep(800);
-  boot('WebKitWebDriver', [`--port=${WPORT}`], { DISPLAY: DISP });
-  await sleep(800);
-  const B = `http://127.0.0.1:${WPORT}`;
-  const j = async (m, p, b) => { const r = await fetch(B + p, { method: m, headers: { 'content-type': 'application/json' }, body: b ? JSON.stringify(b) : undefined }); const o = await r.json(); if (o.value && o.value.error) throw new Error(`${p}: ${o.value.error} ${o.value.message}`); return o.value; };
-  let ver = null;
-  return {
-    name: 'webkit', get version() { return ver; },
-    async page(W, H) {
-      const s = await j('POST', '/session', { capabilities: { alwaysMatch: { browserName: 'MiniBrowser', 'webkitgtk:browserOptions': { binary: MB, args: ['--automation'] } } } });
-      ver = `WebKitGTK ${s.capabilities.browserVersion}`;
-      const id = s.sessionId;
-      // 창 크기 → 보이는 칸이 W×H 가 되게(창 장식 몫을 한 번 재서 더한다)
-      await j('POST', `/session/${id}/window/rect`, { width: W, height: H });
-      const inner = await j('POST', `/session/${id}/execute/sync`, { script: 'return [innerWidth, innerHeight]', args: [] });
-      await j('POST', `/session/${id}/window/rect`, { width: W + (W - inner[0]), height: H + (H - inner[1]) });
-      return {
-        goto: (u) => j('POST', `/session/${id}/url`, { url: u }),
-        ev: (src) => j('POST', `/session/${id}/execute/sync`, { script: `return (${src});`, args: [] }),
-        shot: async (file) => { const b64 = await j('GET', `/session/${id}/screenshot`); fs.writeFileSync(file, Buffer.from(b64, 'base64')); },
-        close: () => j('DELETE', `/session/${id}`),
-      };
-    },
-    close: async () => {},
-  };
-}
-
-// 사진에서 대비 — PNG 디코드(PIL 없이 · node zlib) → 판 가운데 띠 밝기 · 글자 캔버스 자리 99.5% 밝기
-function pngGray(file) {
-  const zlib = require('zlib'); const b = fs.readFileSync(file);
-  let o = 8, W = 0, H = 0, ct = 0, idat = [];
-  while (o < b.length) { const len = b.readUInt32BE(o), t = b.toString('ascii', o + 4, o + 8), d = b.subarray(o + 8, o + 8 + len); if (t === 'IHDR') { W = d.readUInt32BE(0); H = d.readUInt32BE(4); ct = d[9]; } else if (t === 'IDAT') idat.push(d); o += 12 + len; }
-  const raw = zlib.inflateSync(Buffer.concat(idat)), bpp = ct === 6 ? 4 : 3, st = W * bpp, px = Buffer.alloc(W * H * bpp);
-  for (let y = 0; y < H; y++) { const f = raw[y * (st + 1)], src = raw.subarray(y * (st + 1) + 1, (y + 1) * (st + 1)), dst = px.subarray(y * st, (y + 1) * st), up = y ? px.subarray((y - 1) * st, y * st) : null;
-    for (let i = 0; i < st; i++) { const a = i >= bpp ? dst[i - bpp] : 0, u = up ? up[i] : 0, c = (up && i >= bpp) ? up[i - bpp] : 0; let v = src[i];
-      if (f === 1) v += a; else if (f === 2) v += u; else if (f === 3) v += (a + u) >> 1; else if (f === 4) { const p = a + u - c, pa = Math.abs(p - a), pb = Math.abs(p - u), pc = Math.abs(p - c); v += (pa <= pb && pa <= pc) ? a : (pb <= pc ? u : c); } dst[i] = v & 255; } }
-  const lin = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
-  return { W, H, L: (x, y) => { const i = (y * W + x) * bpp; return 0.2126 * lin(px[i]) + 0.7152 * lin(px[i + 1]) + 0.0722 * lin(px[i + 2]); } };
-}
-function contrastOf(file, rects) {
-  const g = pngGray(file), s = rects.dpr || 1;
-  const plateL = [], textL = [];
-  for (const [x, y, w, h] of rects.plates) { const cy = Math.round((y + h / 2) * s); for (let i = Math.round((x + w * 0.45) * s); i < Math.round((x + w * 0.55) * s); i++) if (i >= 0 && i < g.W && cy >= 0 && cy < g.H) plateL.push(g.L(i, cy)); }
-  for (const [x, y, w, h] of rects.texts) for (let yy = Math.round(y * s); yy < Math.round((y + h) * s); yy++) for (let xx = Math.round(x * s); xx < Math.round((x + w) * s); xx++) if (xx >= 0 && xx < g.W && yy >= 0 && yy < g.H) textL.push(g.L(xx, yy));
-  if (!plateL.length || !textL.length) return null;
-  plateL.sort((a, b) => a - b); textL.sort((a, b) => a - b);
-  const pL = plateL[plateL.length >> 1], tL = textL[Math.floor(textL.length * 0.995)];
-  return +((tL + 0.05) / (pL + 0.05)).toFixed(2);
-}
+// ── 두 브라우저 손잡이 · 사진 대비 — `scripts/browser-driver.js`(★[T1124] 떼어 냄 · 사본 0) ─────────────────────
+const BD = require('./browser-driver');
+const contrastOf = BD.contrastOf;
 
 (async () => {
   const c = boot(process.execPath, [path.join(ROOT, 'server', 'central.js')], { PORT: String(CPORT), DB_PATH: CDB, PUBLIC_HOST: 'localhost', ENABLED_ZONES: 'hanbando' });
@@ -148,8 +78,7 @@ function contrastOf(file, rects) {
   let rows = []; for (let i = 0; i < 60 && !rows.length; i++) { try { rows = new DatabaseSync(ZDB).prepare('SELECT id, cx, cy FROM villages WHERE zone = ?').all('hanbando'); } catch (e) {} if (!rows.length) await sleep(1000); }
   const V = rows[0];
   let D;
-  if (BR === 'webkit') { try { D = await playwrightDriver('webkit'); D.version; } catch (e) { D = await webkitGtkDriver(); } }
-  else D = await playwrightDriver('chromium');
+  D = await BD.open(BR, boot);
   const out = { browser: BR, driver: null, version: null, sizes: [] };
   for (const [W, H] of SIZES) {
     const pg = await D.page(W, H);

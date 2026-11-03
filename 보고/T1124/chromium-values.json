@@ -1,0 +1,124 @@
+{
+ "browser": "chromium",
+ "version": "153.0.8010.12",
+ "on": {
+  "로비": {
+   "visible": true,
+   "plate": true,
+   "min": 18,
+   "n": 45,
+   "emoji": 0,
+   "contrast": 7.73
+  },
+  "HUD 위쪽 줄": {
+   "visible": true,
+   "plate": true,
+   "min": 18,
+   "n": 6,
+   "emoji": 0,
+   "contrast": 7.85
+  },
+  "가방": {
+   "visible": true,
+   "plate": true,
+   "min": 18,
+   "n": 19,
+   "emoji": 0,
+   "contrast": 11.76
+  },
+  "제작": {
+   "visible": true,
+   "plate": true,
+   "min": 18,
+   "n": 68,
+   "emoji": 0,
+   "contrast": 11.76
+  },
+  "게시판": {
+   "visible": true,
+   "plate": true,
+   "min": 18,
+   "n": 17,
+   "emoji": 0,
+   "contrast": 7.61
+  },
+  "알림": {
+   "visible": true,
+   "plate": true,
+   "min": 18,
+   "n": 1,
+   "emoji": 0,
+   "contrast": 8.1
+  },
+  "frames": {
+   "invOpenMs": 54.5,
+   "rafOpen": "33.3 / 50.1 / 66.6",
+   "rafClosed": "33.3 / 50 / 50.1",
+   "p50Open": 33.3,
+   "p50Closed": 33.3
+  },
+  "floor": {
+   "on": true,
+   "floored": 273,
+   "passes": 210,
+   "ms": 23.7
+  }
+ },
+ "off": {
+  "로비": {
+   "visible": true,
+   "plate": false,
+   "min": 10,
+   "n": 45,
+   "emoji": 0,
+   "contrast": 17.58
+  },
+  "HUD 위쪽 줄": {
+   "visible": true,
+   "plate": false,
+   "min": 12,
+   "n": 6,
+   "emoji": 0,
+   "contrast": 15.08
+  },
+  "가방": {
+   "visible": true,
+   "plate": false,
+   "min": 10,
+   "n": 19,
+   "emoji": 0,
+   "contrast": 17.58
+  },
+  "제작": {
+   "visible": true,
+   "plate": false,
+   "min": 11,
+   "n": 68,
+   "emoji": 0,
+   "contrast": 12.79
+  },
+  "게시판": {
+   "visible": true,
+   "plate": false,
+   "min": 10,
+   "n": 17,
+   "emoji": 0,
+   "contrast": 17.19
+  },
+  "알림": {
+   "visible": true,
+   "plate": false,
+   "min": 12,
+   "n": 1,
+   "emoji": 0,
+   "contrast": null
+  },
+  "frames": {
+   "invOpenMs": 105.5,
+   "rafOpen": "50 / 66.7 / 100.0",
+   "rafClosed": "50 / 66.7 / 83.3",
+   "p50Open": 50,
+   "p50Closed": 50
+  }
+ }
+}

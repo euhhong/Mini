@@ -57,7 +57,9 @@ const Oseok = (() => {
     const img2 = (n) => `image-set(url(${B}${n}.png) 1x, url(${B}${n}@2x.png) 2x)`;
     const ff = Object.values(FONTS).map((f) => `@font-face{font-family:${f.fam};font-weight:${f.w};font-display:block;src:url(${B}fonts/${f.file}.woff2) format('woff2')}`).join('\n');
     const st = document.createElement('style'); st.id = 'oseok-style';
+    // ★[T1124] 판 · 바닥 무늬를 변수로도 내놓는다 — 배경을 id 규칙이 쥔 판(옆 판 · 가방 · 알림 …)에 화면 전체 층(`52-w-oseok-all.js`)이 같은 무늬를 얹는다(값 사본 0).
     st.textContent = `${ff}
+:root{--os-plate-col:${gray(0.26)};--os-plate-img:${img('plate')};--os-ground-col:${gray(0.0715)};--os-ground-img:${img('ground')}}
 .os-ground{isolation:isolate;background-color:${gray(0.0715)};background-image:${img('ground')};background-image:${img2('ground')};background-size:512px 512px}
 :where(.os-plate){position:relative}
 .os-plate{background-color:${gray(0.26)};background-image:${img('plate')};background-image:${img2('plate')};background-size:512px 512px}
