@@ -1071,13 +1071,40 @@ const T747_BODY = process.env.T747_BODY_KEEP !== '0';   // ★[PM 10-14] 켬 기
 const _T747_KEYS = ['simJob', 'x', 'y', 'hp', '_rest', 'inventory', '_t312U', '_t312Kg', '_t368H', '_t368N', '_t717L', '_t733F',
   '_lifeTask', '_farmK', '_fOutD', '_workSite', '_jobN', '_fishSpotX', '_fishSpotY', '_t340N', '_t724Site', '_huntBud', '_huntKil',
   '_sh', '_hd', '_half'];   // 신원 해시 캐시(존 `_shOf` 가 `playerId` — 스폰마다 무작위 꼬리 — 로 먼저 세우면 다시 뜬 몸의 주사위 씨가 바뀐다) · 그날 반일 굴림(같은 날 다시 굴리지 않게)
+// ★★[T1133 2026-11-04 · ★PM 11-03 판정대기 문 17 ㄱ "몸 영속과 같이 저장"] 손잡이 `T1133_BAG_PERSIST`(★켬 기본 후보 · `=0` = 종전 글자).
+//   원정 몸 짐의 로트 줄(`granary-lots.js` `BAG` — 몸 밖 WeakMap · T748)은 몸이 다시 뜨면 새 객체라 잃었다: 양(`inventory` — 위 T747 칸)은 남고 날짜만 사라져
+//   그 짐이 늙기를 잃었다(신선도 캐논 ★재민 10-12 · 10-14 "아이템마다 신선도를 따로"). 켜면 몸 줄에 두 칸을 더 싣는다(몸 필드 0 · 새 수 0):
+//     · `_bag` — 그 몸의 짐 줄(`G.bagDump` — 곳간 장부와 같은 저장 꼴 `_rd` 하나) · `_packOf` — 그 짐의 원정 표식(`_warPackOf` · 짐 줄이 있을 때만)
+//   되살릴 때 같은 자리 몸에 다시 건다(`G.bagLoad`) — 귀환 · 내려놓기(`_warRationLayDownBody` · `_warRationCollect`)가 그 표식 · 줄로 레코드째 곳간에 내린다.
+//   ⚠진행 중 전쟁 자체는 아직 재기동에 안 실린다(T742 회부 1) — 그 판에선 짐이 몸 손에 날짜째 남는다(양은 종전에도 남았다 · 늙기가 이어진다).
+const T1133_BAG = process.env.T1133_BAG_PERSIST !== '0';
+const _t1133Stat = { saved: 0, savedRecs: 0, restored: 0, restoredRecs: 0, spill: 0 };
+//   크기 자(읽기만 · 계측) — 지금 저장하면 몸 줄에 더해질 짐 칸 바이트(`_bag` · `_packOf`) · 짐 든 몸 · 레코드 · 마을마다
+function _t1133Sizes() {
+  const G = _t748G(), P = state.deps && state.deps.players; if (!G || !P) return null;
+  const out = { bodies: 0, recs: 0, bytes: 0, vils: 0, maxVilBytes: 0, maxBodyBytes: 0 };
+  for (const vil of (state.villages || [])) {
+    let vb = 0;
+    for (const pid of (vil.npcPids || [])) {
+      const b = P.get(pid); if (!b) continue;
+      const bg = G.bagDump(b, true); if (!bg) continue;
+      const add = { _bag: bg }; if (b._warPackOf != null) add._packOf = b._warPackOf;
+      const n = Buffer.byteLength(JSON.stringify(add)) - 1;   // 몸 줄 객체에 칸으로 들 때의 늘음(바깥 괄호 하나 몫 · 쉼표 하나 몫)
+      out.bodies++; for (const res in bg) out.recs += bg[res].length; out.bytes += n; vb += n; if (n > out.maxBodyBytes) out.maxBodyBytes = n;
+    }
+    if (vb > 0) { out.vils++; if (vb > out.maxVilBytes) out.maxVilBytes = vb; }
+  }
+  return out;
+}
 function _t747Pack(vil) {
   const P = state.deps && state.deps.players; if (!P || !vil.npcPids) return null;
   const rows = [];
+  const _G = T1133_BAG ? _t748G() : null;
   for (let i = 0; i < vil.npcPids.length; i++) {
     const b = P.get(vil.npcPids[i]); if (!b) { rows.push(null); continue; }
     const o = {};
     for (const k of _T747_KEYS) { const x = b[k]; if (x !== undefined && x !== null) o[k] = _t740Enc(x); }
+    if (_G) { const bg = _G.bagDump(b); if (bg) { o._bag = bg; if (b._warPackOf != null) o._packOf = b._warPackOf; _t1133Stat.saved++; for (const res in bg) _t1133Stat.savedRecs += bg[res].length; } }   // ★[T1133] 몸 짐 줄(있을 때만 — 없으면 칸 0 · 종전 바이트)
     if (o._lifeTask && o._lifeTask.k === 'greet') delete o._lifeTask;   // 인사(T529)는 그 사람 · 그 순간의 일 — 싣지 않는다
     rows.push(o);
   }
@@ -1097,13 +1124,14 @@ function _t747Restore() {
     if (!Array.isArray(rows)) continue;
     const dropped = [];
     R.villages++;
-    const spill = [];
+    const spill = [], spillBag = [];
     for (let i = 0; i < rows.length; i++) {
       const S0 = rows[i]; if (!S0) continue;
       const S = _t740Dec(S0);
       const b = i < vil.npcPids.length ? P.get(vil.npcPids[i]) : null;
-      if (!b) { if (S.inventory) spill.push(S.inventory); continue; }
+      if (!b) { if (S.inventory) spill.push(S.inventory); if (S._bag) spillBag.push(S._bag); continue; }
       R.bodies++;
+      if (S._bag && T1133_BAG) { const _G = _t748G(); const n = _G ? _G.bagLoad(b, S._bag) : 0; if (n) { _t1133Stat.restored++; _t1133Stat.restoredRecs += n; if (S._packOf != null) b._warPackOf = S._packOf; } }   // ★[T1133] 같은 자리 몸에 짐 줄 · 표식(끄면 칸을 안 읽는다)
       if (S.simJob != null && b.simJob !== S.simJob) { R.jobMiss++; b.simJob = S.simJob; }   // 같은 자리 = 같은 몸(직업도 그 몸의 것)
       if (Number.isFinite(S.x) && Number.isFinite(S.y)) { b.x = S.x; b.y = S.y; b.targetX = S.x; b.targetY = S.y; b.vx = 0; b.vy = 0; R.moved++; }
       if (Number.isFinite(S.hp) && S.hp > 0) { _setHp(b, Math.min(S.hp, b.maxHp || S.hp), 'restore'); if (b.hp < (b.maxHp || 100)) R.hpLow++; }   // ★[T942] 문으로
@@ -1122,6 +1150,7 @@ function _t747Restore() {
     if (spill.length) {   // 저장된 몸이 지금보다 많았다 — 남은 손은 첫 몸에(소멸 0)
       const b0 = vil.npcPids.length ? P.get(vil.npcPids[0]) : null;
       if (b0) { b0.inventory = b0.inventory || {}; for (const inv of spill) for (const k in inv) if (typeof inv[k] === 'number' && inv[k] > 0 && k !== 'seed_berry') { b0.inventory[k] = +((b0.inventory[k] || 0) + inv[k]).toFixed(6); R.extraHands++; } }
+      if (b0 && T1133_BAG && spillBag.length) { const _G = _t748G(); if (_G) for (const bg of spillBag) { const n = _G.bagLoad(b0, bg); if (n) { _t1133Stat.spill++; _t1133Stat.restoredRecs += n; } } }   // ★[T1133] 그 손의 짐 줄도 같은 몸에(날짜째 · 소멸 0)
     }
     //   마을 클레임 그림자 — 저장 순간 그대로 · 푼 진행 작업의 몫만 뺀다 · 광부 손 합은 되돌린 손에서 다시 센다(T724 가 해 질 녘에 다시 세는 그 합)
     if (SH) {
@@ -9034,7 +9063,7 @@ function __p3Bind(mock) {
     T790_NO_SNAP, _t790Stat, _t790Mark, _t790Lag, _warSetupReturn, _warPaceReturn,   // ★[T790] 하네스(`test-war-nosnap`)가 운영과 같은 문을 부른다(내보내기만)
     _t804Way, _t804WalkOut, _t804Stat, _warWalkGroupTo,   // ★[T804] 걷는 몸의 길 · 전진 풀기 걸음 — 하네스가 운영과 같은 문을 부른다(내보내기만)
     _t821Stat,   // ★[T821] 재개형 걸음 탐색 셈(내보내기만 — 관찰자 · 하네스)
-    T822_BODY_SEED, _t822Rekey, _t833Boot, _t747Pack, _t747Restore, _warDespawnPid, serializeEcon, restoreEcon, _t728Meta,   // ★[T833] 몸 주사위 신원 · 다시 뜬 판 — 하네스(`test-body-seed-restart`)가 운영과 같은 문을 부른다(내보내기만)
+    T822_BODY_SEED, _t822Rekey, _t833Boot, _t747Pack, _t747Restore, t1133Stat: () => Object.assign({ on: T1133_BAG }, _t1133Stat), _warDespawnPid, serializeEcon, restoreEcon, _t728Meta,   // ★[T833] 몸 주사위 신원 · 다시 뜬 판 — 하네스(`test-body-seed-restart`)가 운영과 같은 문을 부른다(내보내기만)
     _warDraftPids, _warReleasePid, econDayToMs, _warEnsureBody, _warSampleComp, _vbFootprint,
     threatOf, _warWriteThreats, _warOutMul, _lifeJobSites, _lifeJobSiteOK, _warRoutePts, _warTreeCell, computeRoutePts,
     _t619Region, _t619RedigKeep,   // ★[T619] 쌍 둘레 · 다시 파기 거르개 — 자(`t619-h-audit`)가 **이 함수**로 센다(사본 0)
@@ -15305,7 +15334,7 @@ function __rumorProbe() {
     rumor: Object.assign({}, L.rumorStats) };
 }
 
-module.exports = { t750CastPre, t750Stat: () => _t750Stat, t719ReachPre, t719Stat: () => _t719Stat, t731Stat: () => _t731Stat, t1013Stat: () => Object.assign({ on: T1013_BAND_DAY }, _t1013Stat),   // ★[T1013] 사냥터 짓기 몫 셈(계측 전용)   // ★[T731] 현지 자정 창 증인(켬에서만 찬다)
+module.exports = { t750CastPre, t750Stat: () => _t750Stat, t719ReachPre, t719Stat: () => _t719Stat, t731Stat: () => _t731Stat, t1013Stat: () => Object.assign({ on: T1013_BAND_DAY }, _t1013Stat), t1133Stat: () => Object.assign({ on: T1133_BAG }, _t1133Stat), t1133Sizes: _t1133Sizes,   // ★[T1133] 몸 짐 줄 영속 셈 · 크기 자(계측 전용)   // ★[T1013] 사냥터 짓기 몫 셈(계측 전용)   // ★[T731] 현지 자정 창 증인(켬에서만 찬다)
   streamStat, fishPerf, woodPerf, foragePerf, farmPerf,   // ★[T316] `/perf` 가 내주는 어부 관측(손잡이 끔이면 null) · ★[T325] 나무꾼 · ★[T347] 채집도 같은 꼴 · ★[T368] 농부
   T856_LAND_ELEV, _t856LandElev,   // ★[T856] 마을 고도 — 하네스(`test-land-elev`)가 같은 함수를 부른다(사본 0)
   _t400BuildDay, _t400PerLoad, _t400Crew, _t400From,   // ★[T400] 집 행위 1층 — 하네스가 같은 함수를 부른다(사본 0)

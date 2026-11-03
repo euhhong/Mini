@@ -70,6 +70,7 @@ let _door = null;    // 사람의 문 — { held: Map(v → {재화: 단위}), c
 const ST = { attached: 0, seeded: 0, seededU: 0, restored: 0, t716In: 0, newLots: 0, moved: 0, outRecs: 0, debtU: 0,
   wrappedLate: 0, adopted: 0, drift: 0, driftU: 0, cargoIn: 0, cargoOut: 0, txRollback: 0, doors: 0, doorNoRec: 0, doorStale: 0, giveNoRec: 0, giveNoRecU: 0,
   // ★[T748] 켬 전용 일곱 길 — 손 · 대기 칸 · 몸 짐 · 갱 비축 · 존 경계(센다 · 판정 0)
+  bagSave: 0, bagLoad: 0,   // ★[T1133] 몸 짐 줄 — 저장한 몸 · 되살린 레코드
   handRecs: 0, handU: 0, pockIn: 0, pockNew: 0, pockOut: 0, pockSeed: 0, pockDrift: 0, pockDriftU: 0,
   bagIn: 0, bagNew: 0, bagOut: 0, gangIn: 0, gangOut: 0, gangSeed: 0, gangDrift: 0, gangDriftU: 0, denIn: 0, xzOut: 0, xzIn: 0,
   // ★[T768] 품목 실은 레코드 — 싣기(문 · 손) · 장부에 든/난 단위 · 마을이 먹은(econ 줄이기) · 사람에게 그 품목으로 준 · 대표 품목과 달라 바꿔 준 · 짐에 실린
@@ -290,7 +291,7 @@ function attach(v, saved, seedK) {
   const L = LED.get(v);
   const k = Number.isFinite(seedK) ? seedK : _kNow();
   if (saved && saved.L && typeof saved.L === 'object') {
-    for (const [res, recs] of Object.entries(saved.L)) if (Array.isArray(recs) && recs.length && !L[res]) { L[res] = recs.filter((r) => r && r.u > EPS).map((r) => Object.assign({}, r)); for (const r of L[res]) _itIn(v, r.it, r.u); }   // ★[T768] 저장된 품목 칸째 · 셈은 붙은 그 순간부터(든 것 = 복원한 것)
+    for (const [res, recs] of Object.entries(saved.L)) if (Array.isArray(recs) && recs.length && !L[res]) { L[res] = _ri(recs); for (const r of L[res]) _itIn(v, r.it, r.u); }   // ★[T768] 저장된 품목 칸째 · 셈은 붙은 그 순간부터(든 것 = 복원한 것)
     if (saved.D && typeof saved.D === 'object') DEBT.set(v, Object.assign({}, saved.D));
     ST.restored++;
   } else if (v._t716Lots && typeof v._t716Lots === 'object') {
@@ -698,6 +699,25 @@ function bagTake(p, keys) {   // 짐을 다 내린다 — { 재화: rec[] }(내�
   return Object.keys(out).length ? out : null;
 }
 function bagOf(p) { return BAG.get(p) || null; }
+// ★★[T1133 2026-11-04 · 판정대기 문 17 ㄱ · 손잡이는 villages `T1133_BAG_PERSIST`] 몸 짐 줄을 **몸 영속과 같이** — 저장 꼴은 곳간 장부와 같은 `_rd`(사본 0).
+//   몸 밖 `BAG`(WeakMap)는 실행 중 그대로 둔다(몸 필드 0 · 몸 객체가 다시 뜨면 새 객체다) — 저장 순간에만 몸 줄(T747 `_t747Pack`)로 옮겨 적고, 되살린 몸에 다시 건다.
+function bagDump(p, look) {   // `look` = 재기만(셈 0 — 크기 자 `villages.t1133Sizes`)
+  const B = BAG.get(p); if (!B) return null;
+  const o = {}; for (const [res, recs] of Object.entries(B)) if (recs && recs.length) o[res] = recs.map(_rd);
+  if (!Object.keys(o).length) return null;
+  if (!look) ST.bagSave++;
+  return o;
+}
+//   되살린 몸에 건다 — 이미 줄이 있으면(남은 손이 첫 몸에 더해지는 자리) 오래된 것부터 섞는다. 건 레코드 수를 돌려준다.
+function bagLoad(p, saved) {
+  if (!ON || !p || !saved || typeof saved !== 'object') return 0;
+  let n = 0; const add = {};
+  for (const [res, recs] of Object.entries(saved)) { const a = _ri(recs); if (a.length) { add[res] = a; n += a.length; } }
+  if (!n) return 0;
+  let B = BAG.get(p); if (!B) { B = {}; BAG.set(p, B); }
+  for (const [res, a] of Object.entries(add)) B[res] = _sortK((B[res] || []).concat(a));
+  ST.bagLoad += n; return n;
+}
 // 레코드 묶음 { 재화: rec[] } 끼리 — 더하기 · 품목 u 만큼 오래된 것부터 떼기(묶음에서 빠진다)
 function lotsAdd(into, add) { if (!add) return into; const o = into || {}; for (const [res, recs] of Object.entries(add)) if (recs && recs.length) (o[res] || (o[res] = [])).push(...recs.map((r) => _copy(r, +r.u || 0))); for (const res of Object.keys(o)) _sortK(o[res]); return o; }
 function lotsTake(lots, res, u) { const arr = lots && lots[res]; if (!arr || !(u > EPS)) return []; const out = _fifo(arr, u); if (!arr.length) delete lots[res]; return out; }
@@ -709,8 +729,8 @@ function gangSync(g) {   // 줄 합 = 갱 비축(어긋나면 고치고 센다 �
   const want = Math.max(0, +g.food || 0), a = GANG.get(g) || [], have = _sumU(a), dd = want - have;
   if (Math.abs(dd) > 1e-6 * Math.max(1, want)) { ST.gangDrift++; ST.gangDriftU += Math.abs(dd); if (dd > 0) { a.push(_recAt(_kNow(), dd, _gran())); _sortK(a); } else _fifo(a, -dd); GANG.set(g, a); }
 }
-function gangDump(g) { const a = GANG.get(g); return (a && a.length) ? a.map((r) => { const o = { k: r.k, u: +r.u.toFixed(9), f0: r.f0 == null ? 1 : r.f0, e: r.e, t: r.t, m: r.m, w: r.w }; if (r.it != null) o.it = r.it; return o; }) : null; }   // ★[T768] 품목 칸째(있을 때만)
-function gangLoad(g, saved) { if (g && Array.isArray(saved) && saved.length) GANG.set(g, saved.filter((r) => r && r.u > EPS).map((r) => Object.assign({}, r))); }
+function gangDump(g) { const a = GANG.get(g); return (a && a.length) ? a.map(_rd) : null; }   // ★[T768] 품목 칸째(있을 때만) · ★[T1133] 저장 꼴은 `_rd` 하나
+function gangLoad(g, saved) { if (g && Array.isArray(saved) && saved.length) GANG.set(g, _ri(saved)); }
 function gangOf(g) { return GANG.get(g) || null; }
 // 소굴 어댑터(econ 꼴 `{ storage }`)에 갱 줄을 붙인다 — 곳간처럼 뗀다(전쟁 정본 `_warFoodTake` 의 capBegin/capEnd 가 레코드를 모은다)
 const DEN_RES = ['food', 'fish', 'meat', 'cooked_food', 'vegetable'];
@@ -754,10 +774,13 @@ function decaySkip(v, r) {
 if (T789) hooks.decaySkip = decaySkip;
 
 // ══ 영속 · 보기 · 자 ═════════════════════════════════════════════════════════════════════════════
+//   레코드 한 줄의 저장 꼴 — 곳간 장부(`dump`) · 갱 비축(`gangDump`) · 몸 짐(`bagDump` · T1133)이 다 이 하나를 쓴다(사본 0).
+function _rd(r) { const o = { k: r.k, u: +r.u.toFixed(9), f0: r.f0 == null ? 1 : r.f0, e: r.e, t: r.t, m: r.m, w: r.w }; if (r.it != null) o.it = r.it; return o; }   // ★[T768] 품목 칸째(있을 때만 — 옛 꼴은 칸이 없다)
+//   저장 꼴 → 레코드(되읽기) — 곳간 장부 되살림(`attach`) · 갱 비축(`gangLoad`)과 같은 꼴(빈 · 0 단위 줄은 버린다)
+function _ri(recs) { return (Array.isArray(recs) ? recs : []).filter((r) => r && r.u > EPS).map((r) => Object.assign({}, r)); }
 function dump(v) {
   const L = LED.get(v); if (!L) return null;
   const out = { L: {}, D: Object.assign({}, DEBT.get(v) || {}) };
-  const _rd = (r) => { const o = { k: r.k, u: +r.u.toFixed(9), f0: r.f0 == null ? 1 : r.f0, e: r.e, t: r.t, m: r.m, w: r.w }; if (r.it != null) o.it = r.it; return o; };   // ★[T768] 품목 칸째(있을 때만 — 옛 꼴은 칸이 없다)
   for (const [res, recs] of Object.entries(L)) if (recs && recs.length) out.L[res] = recs.map(_rd);
   // ★[T748] 대기 칸 줄(있을 때만 — 없으면 칸이 안 생긴다)
   const P = POCK.get(v);
@@ -844,5 +867,5 @@ module.exports = { ON, T840, T856, legSettle: _legSettle, elevOf: _elevOf, attac
   dump, ledger, attached, freshOf, stats, check,
   // ★[T748] 켬 전용 일곱 길
   POCK_KEYS, handRecs, doorOpen, doorShut, pockPut, pockTake, pendIn, pendOut, pock: (v, key, res) => _pock(v, key, res, false),
-  bagPut, bagNote, bagOut, bagTake, bagOf, lotsAdd, lotsTake, checkBag,
+  bagPut, bagNote, bagOut, bagTake, bagOf, bagDump, bagLoad, lotsAdd, lotsTake, checkBag,
   gangIn, gangOut, gangSync, gangDump, gangLoad, gangOf, checkGang, denAttach, denSync, xzOut, xzIn };
