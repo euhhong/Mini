@@ -26,6 +26,7 @@ let onbArrive = null;           // ★[T1064] 도착 기록(서버 `arrivalOf` �
 let onbGreetGot = null;         // ★[T1064] 촌장 첫 인사를 받았나 — 'greet' 한 통 그대로 { vid, quest, lines }(빈 판이면 quest null)
 let onbNextLast = null;         // ★[T1064] 「지금 할 일」 칸이 마지막으로 그린 것(하네스 읽기 훅)
 let onbJoin = null;             // ★[T1086] 서버가 실어 보낸 가입 형편 { member:{vid,name}|null, offer:vid|null } — 켬(`uiCfg.firstJoin`)일 때만 온다
+let onbNeeds = [];              // ★[T1120] 서버가 거절하며 실어 보낸 막힘(`notice.need`) — 안 풀린 것만 · 맨 끝이 「지금 할 일」이 말하는 것(켬 `uiCfg.nextTool` 일 때만 쌓인다)
 
 // ── 존 HTTP 주소 — 로비는 central 오리진에서 뜨고 존은 다른 호스트다 ────────────
 //   `/startinfo` 는 존이 CORS 를 열어 답한다(`/lifedbg` 와 같은 규약).
@@ -454,6 +455,112 @@ function onbNextPress(act) {
   else return false;
   return true;
 }
+// ══ ★★[T1120 2026-11-03] 다음 막힘 — 서버가 도구 · 재료가 모자라 거절한 일을 「지금 할 일」이 잇는다(촌장 문 밖에서도) ═══════════
+//   ★왜 [카드 T1120 · 보고/T1093] 첫 30분 실기 막힘 셋 중 둘이 돌이었다 — 곡괭이(나무 3 · 돌 5)에 드는 바위를 도구 문(T1065)이 막는데
+//     급조 돌괭이 길을 몰라 6분을 걸었고, 세 막힘 자리 모두 이 칸은 "마을로 들어가기"였다(촌장 문 밖 사람에게 돌 · 곡괭이 말이 없다).
+//   ★규약 넷:
+//     ① 보이는 것 = 일어난 것 — 서버가 거절하며 실어 보낸 칸(`notice.need` — {verb} 도구 문 · {tool} 가질 도구 · {craft} 만들 것)만 잇는다.
+//        그 사람이 무엇을 하려는지 칸이 지레짐작하지 않는다(목표를 지어내지 않는다 · 거절이 없으면 종전 칸 그대로).
+//     ② 사다리는 표에서 — 도구 문 표(welcome `uiCfg.nextTool` = 서버 `T1065_NEED` 를 옮긴 꼴) · 레시피(`recipes`) · 이름(`itemKo`) · 동사(`resourceVerbs`).
+//        모자란 재료가 또 도구 문에 걸리면(곡괭이 → 돌 → 채석 → 조잡한 돌괭이) 한 칸 더 내려간다. 새 수 0 — 글자의 수는 레시피 · 짐에서만.
+//     ③ 풀리면 내려놓는다 — 그 일이 이제 되면(손에 맞는 도구 · 가진 도구 · 만든 것) 그 막힘을 지우고 그 앞 막힘 · 종전 단계(T1064 · T1086)로 돌아간다.
+//     ④ 손잡이 `T1120_NEXT_TOOL`(서버 env → welcome `uiCfg.nextTool` · 켬 기본 후보 · `=0` 이면 칸이 없다 = 이 갈래가 안 선다 = 종전 칸).
+//   ★순수 함수(입력 → 한 칸 · DOM 0) — `onbNextPlan` 이 부른다. 하네스(`test-t1120-next-tool`)가 제품 글자 그대로 부른다. 조사는 `vvJosa`(52-v · 문장 틀용 정본).
+// 알림의 `need` 하나를 쌓는다 — 같은 막힘은 맨 끝으로 옮긴다(칸 꼴은 서버가 내는 것뿐이라 저절로 몇 가지로 묶인다)
+function onbNeedNote(need) {
+  if (!need || typeof need !== 'object' || !(typeof uiCfg !== 'undefined' && uiCfg && uiCfg.nextTool)) return false;
+  const key = JSON.stringify(need);
+  onbNeeds = onbNeeds.filter((n) => JSON.stringify(n) !== key);
+  onbNeeds.push(need);
+  return true;
+}
+// 안 풀린 맨 끝 막힘 — 풀린 것(한 칸도 못 고르는 것)은 내려놓고 그 앞 막힘을 본다
+function onbNeedPick(I) {
+  while (onbNeeds.length) {
+    const n = onbNeeds[onbNeeds.length - 1];
+    if (onbToolStep(I, n, null, null)) return n;
+    onbNeeds.pop();
+  }
+  return null;
+}
+// 그 도구를 가졌나 · 손에 들었나(깨진 것 0) — 서버 `hasTool`(가진 것) · `_t1065Gate`(손에 든 것)와 같은 뜻
+function onbToolHas(I, ok, inHand) {
+  return (I.tools || []).some((t) => t && t.d > 0 && ok.indexOf(t.type) >= 0 && (!inHand || t.id === I.held));
+}
+// 사다리 한 칸 — 목표 하나({verb} 도구 문 · {tool} 가질 도구 · {craft, by?} 만들 것 — by = 그 도구 문의 급조 도구) →
+//   { do: equip | craft | fetch | gather, what, verb, make, res, from } | null(풀렸다 · 말할 길이 없다)
+//   seen = 지나온 도구 문 — 같은 문이 또 나오면 멈춘다(표가 돌아도 끝난다)
+function onbToolStep(I, goal, from, seen) {
+  const T = (I && I.toolCfg) || null;
+  if (!T || !goal) return null;
+  const V = T.verbs || {}, R = I.recipes || {}, bag = I.bag || {};
+  if (goal.craft) {
+    if (!R[goal.craft]) return null;
+    if (!goal.by && onbToolHas(I, [goal.craft], false)) return null;   // 만들었다
+    const cost = R[goal.craft].cost || {};
+    const miss = Object.keys(cost).filter((k) => (bag[k] || 0) < cost[k]);
+    const by = goal.by || null;
+    if (!miss.length) return { do: 'craft', what: goal.craft, verb: by, from };
+    const m = miss[0], w = (T.via || {})[m];
+    if (w && V[w.verb]) {   // 모자란 재료가 도구 문에 걸린다(돌 → 채석) — 그 문부터
+      const sub = onbToolStep(I, { verb: w.verb }, { craft: goal.craft, need: m }, seen);
+      if (sub) return sub;
+      return { do: 'gather', what: m, verb: w.verb, res: w.res, make: goal.craft, from };
+    }
+    return { do: 'fetch', what: m, make: goal.craft, verb: by, from };
+  }
+  if (goal.verb) {
+    const v = V[goal.verb];
+    if (!v || (seen && seen.indexOf(goal.verb) >= 0)) return null;
+    if (onbToolHas(I, v.ok, true) || (v.slot && I.slotted && I.slotted(v.slot))) return null;   // 손에 맞는 것을 들었다 — 풀렸다
+    const own = (I.tools || []).find((t) => t && t.d > 0 && v.ok.indexOf(t.type) >= 0);
+    if (own) return { do: 'equip', what: own.type, verb: goal.verb, from };
+    return onbToolStep(I, { craft: v.make, by: goal.verb }, from, (seen || []).concat([goal.verb]));
+  }
+  if (goal.tool) {
+    if (onbToolHas(I, [goal.tool], false)) return null;   // 가졌다(움집 터파기 · 시공은 가지면 된다)
+    return onbToolStep(I, { craft: goal.tool }, from, seen);
+  }
+  return null;
+}
+// 한 칸의 글자 — { stage: 'tool', item, guide, target: null, step } | null. 문장 틀은 서버 거절 문장(T1065 · `doCraft`)의 꼴 그대로.
+function onbToolPlan(I) {
+  const T = (I && I.toolCfg) || null;
+  if (!T || !I.need) return null;
+  const st = onbToolStep(I, I.need, null, null);
+  if (!st) return null;
+  const V = T.verbs || {}, R = I.recipes || {}, bag = I.bag || {};
+  const ko = (k) => (I.itemKo ? I.itemKo(k) : String(k));
+  const jo = (w, a, b) => (typeof vvJosa === 'function' ? vvJosa(w, a, b) : a);
+  const K = (k) => ({ k });
+  const costOf = (key) => (R[key] && R[key].cost) || {};
+  const list = (key, f) => Object.keys(costOf(key)).map((k) => `${ko(k)} ${f(k)}개`).join(', ');
+  const need = (key) => list(key, (k) => costOf(key)[k]);
+  const have = (key) => `지금 ${list(key, (k) => Math.floor(bag[k] || 0))}가 있습니다.`;
+  const verbOf = (key) => st.verb || Object.keys(V).find((k) => V[k].make === key) || null;
+  // 앞 막힘 한 줄 — 이 칸이 무엇에 드는 것인가(곡괭이에 돌이 듭니다)
+  const up = (st.from && st.from.craft && st.from.need) ? `${ko(st.from.craft)}에 ${ko(st.from.need)}${jo(ko(st.from.need), '이', '가')} 듭니다. ` : '';
+  const step = { do: st.do, what: st.what, verb: st.verb || null, make: st.make || null, res: st.res || null };
+  const out = (item, guide) => ({ stage: 'tool', item, guide, target: null, step });
+  if (st.do === 'equip') {
+    const L = ko(st.what), v = V[st.verb] || {};
+    return out(`${L} 손에 들기`, [`${up}${L}${jo(L, '을', '를')} 손에 들어야 ${v.act} 수 있습니다. 가방에서 골라 손에 드십시오. 가방은 `, K('I'), ' 키로 엽니다.']);
+  }
+  if (st.do === 'craft') {
+    const L = ko(st.what), vk = verbOf(st.what), v = vk ? V[vk] : null;
+    return out(`${L} 만들기`, [`${up}${v ? `${L}${jo(L, '이', '가')} 있어야 ${v.act} 수 있습니다. ` : ''}재료가 다 있습니다. 제작 창에서 ${L}${jo(L, '을', '를')} 만드십시오. 제작 창은 `, K('K'), ' 키로 엽니다.']);
+  }
+  if (st.do === 'fetch') {
+    const L = ko(st.make), vk = verbOf(st.make), v = vk ? V[vk] : null;
+    const head = v ? `${L}${jo(L, '이', '가')} 있어야 ${v.act} 수 있습니다. ${need(st.make)}로 제작 창에서 만들 수 있습니다.${v.hint ? ` ${v.hint}` : ''} `
+      : `${L}${jo(L, '을', '를')} 만들려면 ${need(st.make)}가 있어야 합니다. `;
+    return out(`${L} 만들기`, [`${up}${head}${have(st.make)}`]);
+  }
+  const L = ko(st.make), v = V[st.verb] || {}, rk = ko(st.res);
+  const word = (I.resVerb && I.resVerb[st.res]) || null;
+  return out(word ? `${rk} ${word}` : `${ko(st.what)} 모으기`,
+    [`${up}${L}${jo(L, '을', '를')} 만들려면 ${need(st.make)}가 있어야 합니다. ${have(st.make)} ${rk} 곁에서 `, K('E'), ` 키로 ${v.act} 수 있습니다.`]);
+}
 // 단계 고르기 — **순수 함수**(입력 한 벌 → 계획 한 벌 · DOM 0). 하네스(`test-t1064-next-step`)가 제품 글자 그대로 부른다.
 //   I = { state, arrive, greet, nearVid, me:{x,y}, off:{x,y}, anchor(vid) → {x,y,name} 절대, itemKo(k) }
 //   돌려주는 것 = { stage, place, item, guide:[글자 | {k:단축키}], target:{x,y} 절대 | null }
@@ -475,7 +582,7 @@ function onbNextPlan(I) {
   if (here) place = `${here.name} 마을 안`;
   else if (inLot && homeName) place = `${homeName} ${arr && arr.kind === 'dock' ? '나루터' : '어귀'}`;
   else if (homeName) place = `${homeName} 마을 밖`;
-  let p = onbJoinPlan(I, s, lot, inLot, K);   // ★[T1086] 켬이면 가입 · 터 잡기 · 집 짓기가 먼저 선다(끔 · 해당 없음 = null)
+  let p = onbToolPlan(I) || onbJoinPlan(I, s, lot, inLot, K);   // ★[T1120] 서버가 거절한 막힘이 안 풀렸으면 그것이 맨 먼저(끔 · 막힘 없음 = null) · ★[T1086] 켬이면 가입 · 터 잡기 · 집 짓기가 먼저 선다(끔 · 해당 없음 = null)
   if (p) {
     // ★[T1086] 위에서 골랐다 — 종전 차례를 안 탄다
   } else if (s.lotOk) {
@@ -517,7 +624,7 @@ function onbNextPlan(I) {
 // 입력 한 벌 — 이미 있는 전역에서 **읽기만** 한다(좌표: 서버가 주는 것은 존 로컬 → 1차 존 오프셋을 더해 절대).
 function onbNextInputs() {
   const c = (typeof conns !== 'undefined' && typeof primaryZoneId !== 'undefined') ? conns.get(primaryZoneId) : null;
-  return {
+  const I = {
     state: onbState, arrive: onbArrive, greet: onbGreetGot,
     nearVid: (typeof evNearVid !== 'undefined') ? evNearVid : null,
     me: (typeof myAbsPredicted !== 'undefined' && myAbsPredicted) ? { x: myAbsPredicted.x, y: myAbsPredicted.y } : null,
@@ -533,7 +640,18 @@ function onbNextInputs() {
     inv: (typeof inventory !== 'undefined' && inventory) ? { wood: inventory.wood | 0, stone: inventory.stone | 0 } : null,
     myLot: onbMyLot(c, { x: (c && c.meta && c.meta.worldOffsetX) || 0, y: (c && c.meta && c.meta.worldOffsetY) || 0 },
       (typeof myAbsPredicted !== 'undefined' && myAbsPredicted) ? myAbsPredicted : null),
+    // ★[T1120] 다음 막힘 — 도구 문 표(welcome) · 레시피 · 짐 · 손 도구(가진 것 · 든 것) · 작업대 장비 칸 · 자연물 동사 이름(전부 이미 받은 것 · 읽기만)
+    toolCfg: (typeof uiCfg !== 'undefined' && uiCfg && uiCfg.nextTool) || null,
+    recipes: (typeof recipes !== 'undefined' && recipes) || null,
+    bag: (typeof inventory !== 'undefined' && inventory) || null,
+    tools: (typeof toolItems !== 'undefined' && Array.isArray(toolItems)) ? toolItems : null,
+    held: (typeof equipped !== 'undefined') ? equipped : null,
+    slotted: (slot) => !!(typeof equipSlots !== 'undefined' && equipSlots && equipSlots[slot] && typeof equipment !== 'undefined'
+      && Array.isArray(equipment) && equipment.some((e) => e && e.id === equipSlots[slot])),
+    resVerb: (typeof resourceVerbs !== 'undefined' && resourceVerbs) || null,
   };
+  I.need = I.toolCfg ? onbNeedPick(I) : null;   // ★[T1120] 안 풀린 맨 끝 막힘(풀린 것은 여기서 내려놓는다)
+  return I;
 }
 function onbNextEsc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function onbEnsureNext() {
@@ -620,7 +738,8 @@ function onbNextRender() {
   el.classList.remove('hidden');
   onbNextLast = { stage: p.stage, place: p.place, item: p.item,
     guide: p.guide.map((x) => (x && x.k != null) ? `[${x.k}]` : x).join(''),
-    target: p.target ? { x: Math.round(p.target.x), y: Math.round(p.target.y) } : null, angle: ang, btn: p.btn || null };
+    target: p.target ? { x: Math.round(p.target.x), y: Math.round(p.target.y) } : null, angle: ang, btn: p.btn || null,
+    ...(p.step ? { step: p.step } : {}) };   // ★[T1120] 다음 막힘 칸이면 그 한 칸(무엇을 · 어느 문 — 하네스 읽기 · 끔 = 칸 없음 = 종전 꼴)
   return p;
 }
 // 하네스 훅 — **읽기 전용만**. 발신은 기존 `window.__sendPrimary` 를 쓴다(새 창구 안 만든다).

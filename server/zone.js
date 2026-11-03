@@ -3025,7 +3025,7 @@ function _t1065Gate(player, kind, quiet) {   // quiet = 고르기만(셈 안 함
   const N = T1065_NEED[kind];
   if (!N) return null;
   const eq = getEquippedTool(player);
-  if ((eq && eq.d > 0 && N.ok(eq.type)) || (N.slot && getEquippedEquipment(player, N.slot))) { if (!quiet) _t1065Stat.pass[kind] = (_t1065Stat.pass[kind] || 0) + 1; return null; }
+  if ((eq && eq.d > 0 && N.ok(eq.type)) || (N.slot && getEquippedEquipment(player, N.slot))) { if (!quiet) _t1065Stat.pass[kind] = (_t1065Stat.pass[kind] || 0) + 1; if (player._t1120Told) player._t1120Told[kind] = 0; return null; }   // ★[T1120 ②] 문이 열렸다 — 줍기 갈래 이유 한 줄을 다시 말할 수 있게 비운다(끔이면 `_t1120Told` 가 안 선다)
   if (quiet) return true;
   _t1065Stat.refuse[kind] = (_t1065Stat.refuse[kind] || 0) + 1;
   if (N.none) return `${N.none}${_t1065Jo(N.none, '이', '가')} 있어야 ${N.act} 수 있습니다. ${N.none}${_t1065Jo(N.none, '은', '는')} 아직 만들 수 없습니다.`;
@@ -3038,6 +3038,56 @@ function _t1065Gate(player, kind, quiet) {   // quiet = 고르기만(셈 안 함
 // 자연물 → 그 일의 동사(벌목 · 채석) · 나머지는 맨손(null)
 const _t1065ResKind = (r) => { const t = r && r.type; return (t === 'tree' || t === 'sapling') ? 'chop' : (t === 'rock' || t === 'ore' || t === 'meteorite') ? 'quarry' : null; };
 const _t1065ResGate = (player, r, quiet) => { const k = _t1065ResKind(r); return k ? _t1065Gate(player, k, quiet) : null; };
+// ★★[T1120 2026-11-03 · 카드 T1120 "첫 30분 — 「지금 할 일」이 돌 · 곡괭이 · 급조 돌괭이 길을 말한다"]
+//   T1093 실기 막힘 둘([잠자리] · [움집] "화면에 안 보여")이 돌이었다 — 곡괭이(나무 3 · 돌 5)에 드는 바위를 도구 문(위 T1065)이 막는데
+//   급조 돌괭이 길을 몰라 6분을 걸었고, 그 세 자리 모두 「지금 할 일」(T1064 칸)은 "마을로 들어가기"였다.
+//   손잡이 `T1120_NEXT_TOOL`(켬 기본 후보 · `=0` = 종전 — 알림 · welcome 바이트 그대로):
+//     ① 도구 · 재료가 모자라 거절한 알림에 **무엇이 모자랐나** 한 칸(`need` = {verb} 도구 문 · {tool} 가질 도구 · {craft} 만들 것)을 싣는다 —
+//        클라 칸(70-lobby `onbToolPlan`)이 그 칸과 아래 표(welcome `uiCfg.nextTool`) · 레시피 · 짐으로 다음 막힘 한 줄을 고른다(판정은 여기 · 칸은 잇기만).
+//     ② 맨손 E 가 도구 문에 걸린 자연물 곁에서 줍기로 빠질 때(`tryGather` 줍기 갈래) 줍기는 그대로 하고 그 자리에서 **왜 안 캐지나**(위 T1065 문장)를 한 번 말한다
+//        (한 번 = 그 일의 문이 이 사람에게 열릴 때까지 · E 반복 1초마다 같은 말을 쌓지 않는다 — 문이 열리면 비운다).
+//   ★새 수 0: 표(`T1065_NEED` · `RECIPES` · 전리품 `lootOfResource` · 줍기 `Forage.KO`)를 클라가 읽을 꼴로 옮겨 실을 뿐이다(문장 · 수 · 문 무변).
+const T1120_NEXT_TOOL = process.env.T1120_NEXT_TOOL !== '0';
+const _t1120N = (need) => ((T1120_NEXT_TOOL && need) ? { need } : {});   // 알림에 펼쳐 넣는 칸(끔 = 빈 칸 = 종전 바이트)
+let _t1120CfgMemo = null;
+// welcome `uiCfg.nextTool` — { gate, verbs: { 동사: { ok:[손에 맞는 도구], make, act, slot?, hint? } }, via: { 재료: { verb, res } } }
+//   ok = 정본 도구 이름 전부(`RECIPES` · `TOOL_EFFECTS`)를 술어(`N.ok`)에 물어 뽑는다 · 만들 길이 없는 동사(활)는 싣지 않는다(칸이 말할 길이 없다).
+//   via = 문 걸린 자연물(`_t1065ResKind`)의 전리품 중 맨손 길(줍기 · 문 없는 자연물 전리품)로는 안 나오는 재료 → 그 일 · 그 자연물(돌 → 채석 · 바위).
+//   도구 문 끔(`T1065_TOOL_GATE=0`)이면 verbs · via 가 빈다(맨손으로 다 캔다 — 칸은 재료만 말한다).
+function _t1120Cfg() {
+  if (_t1120CfgMemo) return _t1120CfgMemo;
+  const verbs = {}, via = {};
+  if (T1065_TOOL_GATE) {
+    const types = [...new Set([...Object.keys(RECIPES), ...Object.keys(TOOL_EFFECTS)])];
+    for (const [k, N] of Object.entries(T1065_NEED)) {
+      if (!N.make || !RECIPES[N.make]) continue;
+      verbs[k] = Object.assign({ ok: types.filter((t) => N.ok(t)), make: N.make, act: N.act }, N.slot ? { slot: N.slot } : {}, N.hint ? { hint: N.hint } : {});
+    }
+    const lootKeys = (t) => { try { return Object.keys(lootOfResource({ type: t, x: 0, y: 0 }) || {}); } catch (e) { return []; } };
+    const resTypes = Object.keys(ItemLabel.RESOURCE_VERBS);
+    const bare = new Set(Object.keys(Forage.KO));
+    for (const t of resTypes) if (!_t1065ResKind({ type: t })) for (const k of lootKeys(t)) bare.add(k);
+    for (const t of resTypes) {
+      const v = _t1065ResKind({ type: t });
+      if (!v || !verbs[v]) continue;
+      for (const k of lootKeys(t)) if (!bare.has(k) && !via[k]) via[k] = { verb: v, res: t };
+    }
+  }
+  _t1120CfgMemo = { gate: T1065_TOOL_GATE, verbs, via };
+  return _t1120CfgMemo;
+}
+// ② 줍기 갈래의 이유 한 줄 — 그 일(채석 · 벌목)의 문이 이 사람에게 열릴 때까지 한 번(`_t1065Gate` 통과 갈래가 비운다)
+function _t1120Tell(player, r) {
+  const k = _t1065ResKind(r);
+  if (!T1120_NEXT_TOOL || !k || !player || player.isNpc) return false;
+  const told = player._t1120Told || (player._t1120Told = {});
+  if (told[k]) return false;
+  const why = _t1065Gate(player, k);
+  if (!why) return false;
+  told[k] = 1;
+  send(player.ws, { type: 'notice', text: why, kind: 'gather', need: { verb: k } });   // `stop` 없음 — 줍기는 된다(E 반복을 멈추지 않는다)
+  return true;
+}
 const PLAYER_MAX_HP = 100;
 // ★★[T942 2026-10-27] **HP 문(`setHp` · T109)의 낱말 표 둘 — 자리만 여기로**(글자 · 값 그대로). 마을 몸(NPC) HP 도 그 문으로 쓰는데(`SimVillages.init` 의 `setHp`)
 //   다시 뜬 판 몸 복원(`villages._t747Restore` · T747 켬 기본)이 `SimVillages.init(...)` **안에서** 바로 돌아 문을 부른다 — 표가 문 곁(그 init 줄보다 아래)에
@@ -7209,7 +7259,8 @@ async function _acceptConnection(ws, req, C) {
       ...(process.env.T1059_PICK_TOP !== '0' ? { pickTop: true } : {}),   // [T1059 · 켬 기본 후보] 겹친 사람 위 우클릭 · 커서 이름표는 그 프레임에 **그린** 사람 중 위에 그려진(렌더 정렬 키가 큰 · 같으면 누른 점에서 가까운) 사람을 고른다(46-h-verbs `pickAt`) · 되돌림 `T1059_PICK_TOP=0` 이면 칸이 없다(옛 welcome · 상자 안 첫 사람)
       ...(process.env.T1020_STOP_MENU !== '0' ? { stopMenu: true } : {}),   // [T1020 · 켬 기본 후보] 맥락 메뉴의 "… 멈추기" 줄은 **누를 때도 멈추기만** 한다(46-h-verbs · 메뉴를 연 뒤 반복이 저절로 멎었으면 새로 시작하지 않는다) · 되돌림 `T1020_STOP_MENU=0` 이면 칸이 없다(옛 토글)
       ...(process.env.T1064_NEXT_STEP !== '0' ? { nextStep: true } : {}),   // [T1064 · 켬 기본 후보] 「지금 할 일」 칸 하나 — 서버가 이미 보내는 대본 상태(onboarding_state · 촌장 첫 인사 · 도착 기록)에서 클라가 다음 행동 한 줄과 그 쪽을 지도 판 밑에 그린다(70-lobby `onbNextRender` · 서버 동작 무변) · 되돌림 `T1064_NEXT_STEP=0` 이면 칸이 없다(옛 welcome · 종전 화면)
-      ...(process.env.T1086_FIRST_JOIN !== '0' ? { firstJoin: { cost: CLAIM_COST.personal } } : {}),   // [T1086 · 켬 기본 후보] 첫 의뢰 = 빈터 + 마을 사람 권함(onboarding · membership) — 「지금 할 일」 칸이 가입 · 터 잡기 · 집 짓기 단계와 단추를 낸다 · 터 값은 서버 정본(`CLAIM_COST.personal` — 클라 상수 0) · 되돌림 `T1086_FIRST_JOIN=0` 이면 칸 없음(종전 K-2 · T1064 칸)
+      ...(process.env.T1086_FIRST_JOIN !== '0' ? { firstJoin: { cost: CLAIM_COST.personal } } : {}),
+      ...(T1120_NEXT_TOOL ? { nextTool: _t1120Cfg() } : {}),   // [T1120 · 켬 기본 후보] 다음 막힘 — 거절 알림의 `need` 칸을 「지금 할 일」이 잇는 데 쓰는 표(도구 문 `T1065_NEED` · 재료 → 그 일 · 자연물 — 서버 정본을 옮긴 꼴 · 클라 상수 0) · 되돌림 `T1120_NEXT_TOOL=0` 이면 칸이 없다(옛 welcome · T1064 · T1086 칸 그대로)   // [T1086 · 켬 기본 후보] 첫 의뢰 = 빈터 + 마을 사람 권함(onboarding · membership) — 「지금 할 일」 칸이 가입 · 터 잡기 · 집 짓기 단계와 단추를 낸다 · 터 값은 서버 정본(`CLAIM_COST.personal` — 클라 상수 0) · 되돌림 `T1086_FIRST_JOIN=0` 이면 칸 없음(종전 K-2 · T1064 칸)
       ...(process.env.T970_CUT_NEAR !== '0' ? { cutNear: true } : {}),   // [T970 · ★T981 켬 기본 — PM 10-28] 클라 산 가르기 붙듦(`_mtCutHold` — 가르기 조각을 만든 띠)을 카메라 둘레(이번 판 산 수집 창의 청크 · 그 청크의 지금 띠)만 남긴다(11-r1-mountain `_mtCutHoldSweep` · 상한 64/48 그대로) · 되돌림 `T970_CUT_NEAR=0` 이면 칸이 없다(옛 welcome · 종전 붙듦)
       ...(process.env.T981_MT_NEAR !== '0' ? { mtNear: true } : {}),   // [T981 · ★T997 켬 기본 — PM 10-29] 클라 산 굽다 만 청크(`_mt3Jobs`)를 이번 판 산 수집 창 것만 남기고 · 가르기 붙듦이 비면 가르기 판 둘(`_mtMaskCv` · `_mtStripCv`)을 만들 때 크기로 되돌린다(11-r1-mountain `_mtNearSweep` · T970 회부 2) · 되돌림 `T981_MT_NEAR=0` 이면 칸이 없다(옛 welcome · 종전 그대로)
       ...(_streamOn() ? { streams: Streams.wireOf(ZONE_ID) ? Streams.wireOf(ZONE_ID).ver : true, streamSlow: Streams.STREAM_SLOW0 } : {}),   // [T585] 개울 — 클라가 `/streams.bin` 을 받아 그리고 걸음 예측에 쓴다(배율도 서버 정본 수)
@@ -8659,7 +8710,7 @@ function doCraftItem(player, recipeName) {
   }
   // 14.52: requiresTool은 도구 — 내구도 양수 체크
   if (recipe.requiresTool && !hasTool(player, recipe.requiresTool)) {
-    send(player.ws, { type: 'notice', text: `${recipe.requiresTool}이(가) 없거나 깨졌습니다.` }); return;
+    send(player.ws, { type: 'notice', text: `${recipe.requiresTool}이(가) 없거나 깨졌습니다.`, ..._t1120N({ tool: recipe.requiresTool }) }); return;   // ★[T1120] 가질 도구(기둥 · 서까래 = 도끼 · 켬만 · 글자는 그대로 — 회부)
   }
   for (const [it, amt] of Object.entries(recipe.from)) {
     if ((player.inventory[it] || 0) < amt) {
@@ -9566,7 +9617,7 @@ function doCraft(player, recipeName) {
   const lack = Object.entries(cost).filter(([k, v]) => (player.inventory[k] || 0) < v);
   if (lack.length) {
     const need = Object.entries(cost).map(([k, v]) => `${ITEM_LABEL_SERVER[k] || k} ${v}`).join(', ');
-    send(player.ws, { type: 'notice', text: `${recipe.label}을(를) 만들려면 ${need}이(가) 있어야 합니다.` });
+    send(player.ws, { type: 'notice', text: `${recipe.label}을(를) 만들려면 ${need}이(가) 있어야 합니다.`, ..._t1120N({ craft: recipeName }) });   // ★[T1120] 무엇을 못 만들었나(켬만 · 끔 = 종전 바이트)
     return;
   }
   for (const [k, v] of Object.entries(cost)) player.inventory[k] = (player.inventory[k] || 0) - v;
@@ -9855,7 +9906,7 @@ function tryFishCast(player) {
   // ★[T609 ②] 끌어올리는 중(싸움 단계 — 손잡이 `T609_BIG_WINDOW` a·b 켬만 생긴다) — 새로 던지지 않는다.
   if (cur && cur.state === 'fight') { send(player.ws, { type: 'notice', text: '🎣 끌어올리는 중입니다. 조금만 기다리십시오.' }); return; }
   // ★[T1065] 낚싯대가 있어야 던진다(챔질 · 끌어올리기는 위 두 갈래 — 이미 던진 줄은 그대로) · 끔 = 종전(맨손 낚시)
-  { const why = _t1065Gate(player, 'fish'); if (why) { send(player.ws, { type: 'notice', text: why, kind: 'fishing' }); return; } }
+  { const why = _t1065Gate(player, 'fish'); if (why) { send(player.ws, { type: 'notice', text: why, kind: 'fishing', ..._t1120N({ verb: 'fish' }) }); return; } }   // ★[T1120] 어느 도구 문(켬만)
   const tgt = _castTargetFor(player);
   if (!tgt) { send(player.ws, { type: 'notice', text: '🎣 여기서는 물에 닿지 않습니다. 물가로 더 가까이 가십시오.' }); return; }
   // ★[T593 ③] 그 물·그 철에 사는 종이 없으면 던지지 않는다(NPC 어부의 `'none'` 과 같은 자리 — 빈 바늘을 만들지 않는다).
@@ -10858,7 +10909,7 @@ function tryGather(player, resId, water) {
   }
   //   ★[T1065] 맨손이면 손에 맞는 것을 고른다(덤불 · 약초) → 없으면 줍기 → 주울 것도 없으면 건너뛴 그것의 이유 한 줄(숲에서 맨손 E = 잔가지 줍기)
   if (!best && refused && !Forage.sourceAt(player.x, player.y, _forageCtx(player))) { gatherResource(player, refused.r); return; }
-  if (!best) { tryForage(player); return; }
+  if (!best) { tryForage(player); if (refused) _t1120Tell(player, refused.r); return; }   // ★[T1120 ②] 줍기는 그대로 · 건너뛴 자연물이 있으면 왜 안 캐지나 한 번(끔 = 무동작)
   gatherResource(player, best);
 }
 
@@ -10904,7 +10955,7 @@ function gatherResource(player, best) {
   }
 
   // ★[T1065] 벌목 · 채석은 손에 든 도구가 있어야 — 없으면 이유 한 줄(끔 · 그 밖의 자연물 = 이 줄 통과 · 종전)
-  { const why = _t1065ResGate(player, best); if (why) { send(player.ws, { type: 'notice', text: why, kind: 'gather', stop: 'gather' }); return; } }   // `stop` = 클라 채집 반복을 멈춘다(될 수 없는 일을 1초마다 다시 보내지 않게)
+  { const why = _t1065ResGate(player, best); if (why) { if (T1120_NEXT_TOOL) (player._t1120Told || (player._t1120Told = {}))[_t1065ResKind(best)] = 1; send(player.ws, { type: 'notice', text: why, kind: 'gather', stop: 'gather', ..._t1120N({ verb: _t1065ResKind(best) }) }); return; } }   // `stop` = 클라 채집 반복을 멈춘다(될 수 없는 일을 1초마다 다시 보내지 않게)
   // 14.53: 장착 instance 기반 도구 효과
   const eqInst = getEquippedTool(player);
   const eff = eqInst ? TOOL_EFFECTS[eqInst.type] : null;
@@ -11901,7 +11952,7 @@ function tryHutStart(player, atX, atY) {
     x0 = gx - 3; y0 = gy - 4; x1 = gx + 2; y1 = gy - 1;
   }
   const st = HUT_STAGES[0];
-  if (!hasTool(player, st.tool)) { send(player.ws, { type: 'notice', text: `${st.label}에는 곡괭이가 있어야 합니다.` }); return; }
+  if (!hasTool(player, st.tool)) { send(player.ws, { type: 'notice', text: `${st.label}에는 곡괭이가 있어야 합니다.`, ..._t1120N({ tool: st.tool }) }); return; }   // ★[T1120] 가질 도구(켬만)
   for (let x = x0 - 1; x <= x1 + 1; x++) for (let y = y0 - 1; y <= y1 + 1; y++) {
     const px = x * SZg + SZg / 2, py = y * SZg + SZg / 2;
     if (isTerrainBlockedLocal(px, py)) { send(player.ws, { type: 'notice', text: '물·바위를 피해서 파야 합니다' }); return; }
@@ -12139,7 +12190,7 @@ function _siteStart(player, atX, atY, spec) {
   const cl = spec.claim ? spec.claim(player, x0, y0, x1, y1) : _claimFootprint(player, x0, y0, x1, y1);
   if (cl.err) { send(player.ws, { type: 'notice', text: `${spec.ko} — ${cl.err}` }); return; }
   const st = spec.stages[0];
-  if (st.tool && !hasTool(player, st.tool)) { send(player.ws, { type: 'notice', text: `${st.label}에는 ${ITEM_LABEL_SERVER[st.tool] || st.tool}이(가) 있어야 합니다.` }); return; }
+  if (st.tool && !hasTool(player, st.tool)) { send(player.ws, { type: 'notice', text: `${st.label}에는 ${ITEM_LABEL_SERVER[st.tool] || st.tool}이(가) 있어야 합니다.`, ..._t1120N({ tool: st.tool }) }); return; }   // ★[T1120] 가질 도구(켬만)
   for (const [it, amt] of Object.entries(st.need)) {
     if ((player.inventory[it] || 0) < amt) { send(player.ws, { type: 'notice', text: `${st.label} — 재료 부족: ${ITEM_LABEL_SERVER[it] || it} ${player.inventory[it] || 0}/${amt}` }); return; }
   }
@@ -13059,6 +13110,7 @@ function __testBind() {
     T1009_WILD_DOOR,   // ★[T1009] 야생 그림자 문 하네스(`test-wild-door` · 내보내기만)
     T1032_NPC_KILL, T1025_EV_CORPSE,   // ★[T1032] 같은 하네스가 판을 읽는다(내보내기만)
     T1065_TOOL_GATE, _t1065Gate, t1065Stat: _t1065Stat, PLAYER_ATTACK_DAMAGE, arrows,   // ★[T1065] 도구 문 하네스(`test-t1065-tool-gate` · 내보내기만)
+    T1120_NEXT_TOOL, _t1120Cfg, tryHutStart,   // ★[T1120] 다음 막힘 하네스(`test-t1120-next-tool` — 거절 알림 `need` · welcome 표 · 움집 터파기 문 · 내보내기만)
     // ── ★[T636] 사체 드롭 kg E2E(test-drop-kg.js) ── 실서버 spawnCorpse/butcherCorpse 를 그대로 쓴다(읽기·부르기만)
     spawnCorpse, butcherCorpse, corpses, t1025Corpse: _t1025Corpse,   // ★[T1025] 사체 장부 미룸 셈(탐침이 읽는다)
     // ── 조업 진척 계약 E2E(2026-08-02e ⑤) ── 시간은 벽시계라 하네스가 job.until 을 당겨 검증한다
@@ -13575,7 +13627,7 @@ async function tryAttack(player) {
   if (now - player.lastAttackAt < PLAYER_ATTACK_COOLDOWN_MS) return;
   player.lastAttackAt = now;
   // ★[T1065] 맨손으로는 싸우지 않는다 — 손에 든 도구 · 무기 장비가 있어야(끔 = 종전 맨손 피해)
-  { const why = _t1065Gate(player, 'attack'); if (why) { send(player.ws, { type: 'notice', text: why, kind: 'combat' }); return; } }
+  { const why = _t1065Gate(player, 'attack'); if (why) { send(player.ws, { type: 'notice', text: why, kind: 'combat', ..._t1120N({ verb: 'attack' }) }); return; } }   // ★[T1120] 어느 도구 문(켬만)
 
   // 14.53: 장착 instance 기반 무기 효과
   const eqInst = getEquippedTool(player);

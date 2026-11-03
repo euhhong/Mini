@@ -32,10 +32,15 @@
 //   ⓓ 쉼터 길 한 번 실패 = 영영 포기 → 3분 쉬고 다시(걸려 본 칸 비움) · 실패마다 걸린 자리 · 벽 변 · 도랑을 적는다
 //   ⓔ 입 셋 — `--shots <dir>`(막힘 순간 사람 창 한 장 + 「지금 할 일」 글자) · `--reach <px,…>`(쉼터 길 시험) · `--old-bot`(T1093 앞 손으로 실기 막힘 다시 세우기)
 //   서버 손잡이 `T1093_SHELTER_ROOF`(쉼터 지붕 선언)는 자의 "쉼터를 알아본 길"(지붕 선언 · 이름표만)로 잰다.
+// ★★[T1120 2026-11-03] `--panel-bot` — 「지금 할 일」을 읽는 손(서버 손잡이 `T1120_NEXT_TOOL` 끔 ↔ 켬을 재는 자):
+//   T1093 새 손에서 **사다리(`toolFirst` — 급조 돌괭이 · 돌도끼 먼저)만 뺐다** — 그 앎을 이제 칸이 준다(켬). 칸이 다음 막힘(`stage: 'tool'`)을 말하면
+//   그 한 칸(읽기 훅 `__t1064Next().step` — 만들기 · 손에 들기 · 맨손 줍기 · 캐기)을 그대로 한다. 알림 글자는 안 읽는다(끔 ↔ 켬 차이가 칸에서만 나게).
+//   맨손으로 못 따는 소스(도구 문에 걸린 바위 · 나무)만 화면에 있으면 **한 번** 눌러 본다(사람이 바위를 우클릭 채굴해 보는 그 한 번 — 서버 거절이 칸에 막힘을 싣는다).
+//   `--shots` 면 칸이 새 막힘 한 칸을 처음 말한 순간도 찍는다.
 //
 // 실행: node scripts/e2e-first30.js --season spring|summer|winter --start day|night [--cap 30] [--out /tmp/t511/x.json]
 //          [--chief] [--quest-fixture] [--warm-db <초>] [--vid <n>] [--econ-days <n>] [--no-align] [--headed]
-//          [--shots <디렉터리>] [--shot-size 1280x800] [--old-bot]
+//          [--shots <디렉터리>] [--shot-size 1280x800] [--old-bot] [--panel-bot]
 //        node scripts/e2e-first30.js --no-align --reach 448,704,960 [--reach-dirs 8] [--shots <dir>]   (쉼터 길 시험 — 본판 대신 · T1093)
 //        node scripts/e2e-first30.js --table <json…|디렉터리>        (표 입 — 세계를 안 띄운다)
 //        node scripts/e2e-first30.js --shelters                     (쉼터 입 — 한 존 전수 50곳의 쉼터↔도착점 거리 표 · 걷지 않는다)
@@ -97,8 +102,9 @@ const REACH_K = +val('--reach-dirs', '16');
 // ★[T1093] `--old-bot` — T1093 앞 손(돌괭이 사다리 0 · 쉼터 한 번 실패 = 영영 포기)으로 돈다. 눈 · 이름표 · 사진은 새 것 그대로 —
 //   land1038 실기 막힘을 **같은 손으로 다시 세우고** 그 순간을 찍어 귀속하는 판(보고 ① · ④). 기본은 새 손.
 const OLDBOT = argv.includes('--old-bot');
+const PANELBOT = argv.includes('--panel-bot');   // ★[T1120] 「지금 할 일」을 읽는 손(머리 주석)
 const CPORT = PB, ZPORT = PB + 10, IPORT = PB + 47;
-const TAG = `${SEASON}-${START}${CHIEF ? '-chief' : ''}${QFIX ? 'Q' : ''}${ECON_DAYS ? 'E' + ECON_DAYS : ''}${WARMDB ? 'L' + WARMDB : ''}`;
+const TAG = `${SEASON}-${START}${PANELBOT ? '-panel' : ''}${CHIEF ? '-chief' : ''}${QFIX ? 'Q' : ''}${ECON_DAYS ? 'E' + ECON_DAYS : ''}${WARMDB ? 'L' + WARMDB : ''}`;
 const say = (s) => process.stdout.write(s + '\n');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 if (!['spring', 'summer', 'winter', 'autumn'].includes(SEASON) || !['day', 'night'].includes(START)) { say('인자 오류'); process.exit(2); }
@@ -254,7 +260,7 @@ function waterKind(cx, cy) { const k = ck(cx, cy); let v = _water.get(k); if (v 
 const N4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];   // ★`tryGather` 가 물을 보는 순서 그대로(+x, −x, +y, −y)
 
 // ── 결과 그릇 ─────────────────────────────────────────────────────────────────
-const R = { tag: TAG, oldBot: OLDBOT, season: SEASON, seasonDay: SDAY, start: START, chief: CHIEF, questFixture: QFIX, econDays: ECON_DAYS, warmDbSec: WARMDB, pickVid: PICK, capMin: CAP_MIN, gate: C.GATE, keep: KEEP,
+const R = { tag: TAG, oldBot: OLDBOT, panelBot: PANELBOT, season: SEASON, seasonDay: SDAY, start: START, chief: CHIEF, questFixture: QFIX, econDays: ECON_DAYS, warmDbSec: WARMDB, pickVid: PICK, capMin: CAP_MIN, gate: C.GATE, keep: KEEP,
   consts: C, milestones: {}, blockers: [], breaches: [], samples: [], stage1: {}, legs: [], notes: [], errors: [], explore: { legs: 0, sec: 0 }, shots: [] };
 let T0 = 0;                                   // 도착 순간(실시각 ms)
 const tSec = () => (T0 ? +((Date.now() - T0) / 1000).toFixed(1) : 0);
@@ -839,7 +845,7 @@ async function fetchOne(item) {
   const rs = visRes(src.res);
   const fc = src.forage ? forageCells(src.forage) : [];
   const cand = byDist(me, rs.map((r) => ({ r, p: r })).concat(fc.map((c) => ({ c, p: ctr(c.x, c.y) }))), (o) => o.p);
-  if (!cand.length) return explore(item);
+  if (!cand.length) { if (PANELBOT && await tryGated([item])) return true; return explore(item); }   // ★[T1120] 맨손으로 못 따는 소스만 있으면 한 번 눌러 본다
   const o = cand[0].a;
   if (o.r) {
     const t0 = Date.now();
@@ -857,7 +863,7 @@ async function fetchOne(item) {
 //   레시피 · 도구 이름은 존 정본(`RECIPES` · `T1065_NEED` 와 같은 짝)에서 읽는다 — 사본 0. 끔(`T1065_TOOL_GATE=0`)이면 무동작(null).
 const LADDER = { wood: { has: ['axe', 'crude_axe'], make: 'crude_axe' }, stone: { has: ['pickaxe', 'crude_pick'], make: 'crude_pick' } };
 async function toolFirst(miss) {   // → null(사다리 몫 없음) | true/false(한 걸음 했다/못 했다)
-  if (!GATE || OLDBOT) return null;
+  if (!GATE || OLDBOT || PANELBOT) return null;   // ★[T1120] 칸을 읽는 손은 사다리를 모른다(칸이 말해야 안다)
   for (const it of miss) {
     const L = LADDER[it]; if (!L || _has(L.has)) continue;
     const rc = Z.RECIPES[L.make] && Z.RECIPES[L.make].cost; if (!rc) continue;
@@ -884,7 +890,7 @@ async function fetchMissing(need) {   // need = {item: n} — 모자란 것 중 
     for (const r of visRes(src.res)) { const d = Math.hypot(r.x - me.x, r.y - me.y); if (!best || d < best.d) best = { it, r, d }; }
     if (src.forage) for (const c of forageCells(src.forage)) { const p = ctr(c.x, c.y); const d = Math.hypot(p.x - me.x, p.y - me.y) + 64; if (!best || d < best.d) best = { it, c, d }; }
   }
-  if (!best) return explore(miss.join('+'));
+  if (!best) { if (PANELBOT && await tryGated(miss)) return true; return explore(miss.join('+')); }   // ★[T1120] 맨손으로 못 따는 소스만 있으면 한 번 눌러 본다
   if (best.r) {
     const t0 = Date.now();
     const g = await gatherRes(best.r);
@@ -893,6 +899,49 @@ async function fetchMissing(need) {   // need = {item: n} — 모자란 것 중 
   }
   if (SRC[best.it].forage === 'fiber') return goReeds(need.fiber || 99);
   return goForage(SRC[best.it].forage);
+}
+
+// ★[T1120] 「지금 할 일」 읽기(훅 `__t1064Next` — 칸이 마지막에 그린 것 · 읽기만)
+async function panelNow() { return ev(() => (window.__t1064Next ? window.__t1064Next() : null)).catch(() => null); }
+// ★[T1120] 맨손으로 못 따는 소스(도구 문에 걸린 바위 · 나무)만 화면에 있으면 **한 번** 눌러 본다 — 사람이 바위를 우클릭해 "채굴"을 눌러 보는 그 한 번.
+//   서버가 거절하며 알림에 막힘을 싣는다(켬) — 칸이 그걸 잇는다. 품목마다 한 판에 한 번(끔 판도 같은 한 번 · 칸이 무엇을 말하나만 다르다).
+const triedGate = new Set();
+async function tryGated(items) {
+  const me = await meL();
+  let best = null;
+  for (const it of items) {
+    if (triedGate.has(it) || !SRC[it]) continue;
+    for (const r of RES) {
+      if (!r.on || !SRC[it].res.includes(r.t) || !gatedOut(r) || unreach.has(r.id) || keepHitStand(r)) continue;
+      const d = Math.hypot(r.x - me.x, r.y - me.y); if (!best || d < best.d) best = { it, r, d };
+    }
+  }
+  if (!best) return false;
+  triedGate.add(best.it);
+  const t0 = Date.now();
+  const w = await walkTo(standAround(best.r.x, best.r.y, STAND).filter((g) => !blockedCell(g.x, g.y)), 10);
+  if (w.ok) { await send({ type: 'gather', resId: best.r.id }); await sleep(1200); }   // ★우클릭 메뉴 "채굴"이 보내는 그 한 줄(맨손 — 서버가 거절한다)
+  const n = await panelNow();
+  R.legs.push({ t: tSec(), kind: 'try-gated', item: best.it, res: best.r.t, ok: w.ok, reason: w.reason || null, sec: +((Date.now() - t0) / 1000).toFixed(1), panel: n ? `${n.stage}:${n.item}` : null });
+  R.notes.push(`${tSec()}s [${CUR}] 맨손으로 ${best.r.t} 눌러 봄(${best.it}) — 칸 ${n ? `「${n.item}」` : '없음'}`);
+  return true;
+}
+// ★[T1120] 칸이 말한 한 칸을 한다 — 만들기 · 손에 들기 · 맨손 줍기 · 캐기(무엇을 = 칸의 `step` · 글자는 안 읽는다)
+async function followPanel(n) {
+  const st = n && n.step; if (!st) return false;
+  (R.panel || (R.panel = [])).push({ t: tSec(), item: n.item, do: st.do, what: st.what });
+  if (st.do === 'craft') {
+    if (await craft('craft', st.what, (q) => toolHas(q, st.what))) mark(st.what === 'pickaxe' ? '곡괭이(손 제작)' : `${(Z.RECIPES[st.what] && Z.RECIPES[st.what].label) || st.what}(칸 따라 손 제작)`);
+    else block(CUR, `칸이 말한 craft ${st.what} 가 안 됐다`);
+    return true;
+  }
+  if (st.do === 'equip') {
+    const s = await state();
+    const inst = (s.tools || []).find((x) => x.type === st.what && x.d > 0);
+    if (inst) { await send({ type: 'equip', toolItemId: inst.id }); await sleep(300); }   // ★가방에서 골라 손에 드는 그 한 줄
+    return true;
+  }
+  return fetchOne(st.what);   // fetch(맨손 줍기) · gather(손에 든 도구로 캐기) — 그 품목을 가장 가까운 소스에서
 }
 
 // ── 불·쉼·집 ─────────────────────────────────────────────────────────────────
@@ -1270,12 +1319,25 @@ async function sampleOnce() {
       }
       return fetchMissing(rc); } },
     { key: '불', when: () => !R.milestones['첫 불'], run: () => makeFire() },
+    { key: '칸', when: () => !!(PANELBOT && _pn && _pn.stage === 'tool' && _pn.step), run: () => followPanel(_pn) },   // ★[T1120] 칸이 다음 막힘을 말하면 그 한 칸(잠자리 · 움집 앞)
     { key: '잠자리', when: () => !R.milestones['첫 잠자리'], run: () => sleepStep() },
     { key: '움집', when: () => !(site && site.done), run: () => hutStep() },   // 쉼터를 찾은 뒤에도 셋째 단(내 움집)이 어디까지 가나
   ];
+  let _pn = null;   // ★[T1120] 이번 차례에 칸이 말한 것
+  const panelFirst = new Set();
   while (!timeUp()) {
     let did = false;
     try {
+      if (PANELBOT) {
+        _pn = await panelNow();
+        if (_pn && _pn.stage === 'tool' && _pn.item && !panelFirst.has(_pn.item)) {   // 칸이 새 막힘 한 칸을 처음 말한 순간(분 · 사진)
+          panelFirst.add(_pn.item);
+          (R.panelFirst || (R.panelFirst = [])).push({ t: tSec(), item: _pn.item, guide: _pn.guide, step: _pn.step });
+          mark('칸 다음 막힘', { item: _pn.item });
+          say(`  ☞ ${(tSec() / 60).toFixed(2)}분  칸 「${_pn.item}」 ${_pn.guide}`);
+          if (SHOTS) { _shotQ.push({ label: `칸-${_pn.item}`, need: '칸', reason: _pn.guide }); await flushShots(); }   // 칸이 그 말을 하고 있는 그 화면
+        }
+      }
       const s = await state();
       const b = s.body || {};
       const x = { coldSt: ((b.moodles || []).find((m) => m.axis === 'cold') || {}).stage | 0,
