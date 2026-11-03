@@ -3,6 +3,13 @@
 > ★이 파일은 **영역 소유 세션만** 갱신한다. 다른 영역에 쓸 말이 생기면 `인계/회부.md` 에 한 줄.
 > 원문은 `_아카이브_2026-08_다음세션_인계.md` 에 그대로 동결돼 있다(족보 · 삭제 금지).
 > 이사할 때 **문장을 한 글자도 안 고쳤다** — 낡아 보이는 줄엔 `[낡음? 확인 필요]` 표만 붙였다.
+## T1130. ★★2026-11-04 — **서버가 없는 존에는 묻지 않는다** — central `/zones` 존 칸 `hosted`(손잡이 `T1130_HOSTED` · 켬 기본 후보 · 승인 대기 · 보고/T1130_2026-11-04.md)
+
+* 재민 11-03 실기(사파리 · https 전환 뒤): 콘솔 TLS 오류 수십 줄. 클라가 개울(`00-const` `loadStreams` → `<존>/streams.bin`)과 큰 지도(`80-bigmap` `zoneBase` → `<존>/bigmap.png`)를 `zonesMeta` 26존 다에 묻는다 — 서버 없는 존(중원 · 베링 …)의 주소는 `hostFromEnv` 끝(`PUBLIC_HOST` = 서울 IP)으로 떨어져 `https://<IP>/…` = 인증서 불일치.
+* 서버: 술어 하나 `zone-config` `hostedZoneIds(env)` — 선 존 = ⓐ `ENABLED_ZONES` 에 든 존 ⓑ `ZONE_HOST_<ID>` 가 선 존 ⓒ `ZONE_HOSTS[id]` 가 `PUBLIC_HOST` 와 다른 존(26존 표가 공용 주소로 채운 칸은 호스트가 아니다 · 한반도 주소가 표로 실린 판도 놓치지 않는다). 하나도 안 서면 null(한 대 배포 · 로컬 = 모름 → 칸 0). central 은 기동 때 한 번 읽고(`T1130_HOSTED_SET`) `/zones` 존마다 `hosted: true|false` · 기동 한 줄 `[central] T1130 hosted — 선 존 … · hosted:false N곳`(배포 뒤 `docker logs` 로 본다).
+* 클라: `_t1130Skip(z)`(00-const) = `hosted === false` 이고 그 존에 소켓이 안 붙었다 → 개울은 건너뛴다(`_streamZ` 에 안 적는다 — 붙은 뒤 다시 부른다) · 큰 지도는 주소 없음(`no-url` · 종전 실패 꼴 그대로). 칸이 없으면(끔 · 옛 central · 모름) 종전대로 다 묻는다. **붙은 존은 표시와 상관없이 묻는다** — 표시가 틀린 존에 붙으면 그 welcome 에서 개울을 다시 부른다(`30-n-net` welcome 머리).
+* 자: `scripts/test-t1130-hosted.js`(@regress · 술어 일곱 · central 네 판(켬 · 끔 바이트 같음 · 모름 · ENABLED_ZONES) · 실클라 세 판 — 켬 서버 없는 존 요청 0 · 끔 꼴 36 · 표시 틀림에도 내가 선 존은 받음).
+
 ## T1024. ★★2026-10-31 — 첫 재시도도 백오프 간격(`T1024_FIRST_WAIT` 켬 기본 · central `/zones` 칸 `firstWait`)
 
 * `33-m-conn.js` `ensurePrimaryConnection`: `_reconnAt` 이 0(처음 · welcome 뒤 풀림)이면 종전엔 간격 없이 곧바로 붙었다. 켬 = 끊긴 주 소켓을 **처음 본 프레임**에 `_reconnAt = now` 로 시계만 세우고 돌아간다 → 첫 재시도도 `_reconnectDelayMs()`(확정 오류 15초 · 아니면 1초부터 지수 · 기존 수).

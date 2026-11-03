@@ -164,7 +164,8 @@ if (process.env.T769_SUB === 'zone') {
     V.__labProbe._distProbe.setup(null, null, null, E1);
     out.board = bd ? { ok: !!bd.ok, keys: Object.keys(bd).sort(), head: Object.prototype.hasOwnProperty.call(bd, 'head') } : null;
     //   납품 — 품목 미지정 길(서버가 고른다)을 그대로 부른다. 품목 지정 길은 곧장 장부 정본(`Events.deliverToVillage`)으로 가는데
-    //   랩은 villages.js 의 장부 모듈 칸을 안 세운다(`_initLedger` = 존 부팅) ⇒ 그 길은 본문(소스)으로 본다: 겨울 갈래 · 겨울 표지 0.
+    //   이 판정은 그 길을 본문(소스)으로 본다: 겨울 갈래 · 겨울 표지 0. (★[T1130] 랩 문 `_memberProbe.setup` 이 이제 장부 모듈 칸(`Events`)도 세운다 —
+    //   종전엔 장부만 세워 위 게시판이 T1103 뒤로 `briefLine` 에서 죽었다. 이 줄은 종전대로 본문을 본다 · 새 판정 0)
     { const inv2 = { food: 5 }; const r2 = safe('deliver2', () => V.villageDeliver(3, AT[3].x, AT[3].y, inv2, null, null));
       const src = String(V.villageDeliver);
       out.deliver = { err2: r2 && r2.err, left2: inv2.food, winter2: !!(r2 && r2.winter), foodReq: (L.board(3) || []).filter((x) => x.item === 'food').length,

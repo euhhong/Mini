@@ -72,6 +72,9 @@
     const zm = getZonesMeta();
     const m = zm && zm[zid];
     if (!m || !m.wsUrl) return null;
+    //   ★[T1130] central `/zones` 가 호스트 없는 존이라 적었으면(`hosted === false`) 주소 없음과 같다(그림 · 조각을 안 묻는다 — 그 칸은 종전 실패 꼴 그대로).
+    //     칸이 없으면(끔 · 옛 central) 종전대로 · 소켓이 붙은 존은 표시와 상관없이 묻는다 — 술어는 00-const `_t1130Skip` 하나(개울과 같은 것).
+    if (typeof _t1130Skip === 'function' && _t1130Skip(m)) return null;
     return String(m.wsUrl).replace(/^wss:/, 'https:').replace(/^ws:/, 'http:').replace(/\/+$/, '');
   }
   function _dirty() { cacheTerrainVersion++; needsRedraw = true; }

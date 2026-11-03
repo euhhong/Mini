@@ -1100,10 +1100,15 @@ function cropSprite(stage, crop) {
   //   그림(연한 파랑 · 큰 물과 다른 얕은 물)과 걸음 예측(개울 칸 ×`uiCfg.streamSlow` — 서버 `move-model groundMult` 와 같은 칸·같은 수)이 이것만 본다.
   //   welcome `uiCfg.streams` 가 오면 아는 뭍 존마다 한 번 받는다(없는 존은 404 → 개울 0). 받기 전엔 개울 없음(= 종전 그대로).
   const _streamZ = new Map();   // zid → { st:'loading'|'ok'|'none', NX, NY, bits }
+  // ★[T1130] central `/zones` 가 그 존에 호스트가 없다고 적었으면(`hosted === false` · 손잡이 `T1130_HOSTED`) 묻지 않는다 — 서버가 없는 존의 주소는
+  //   공용 주소(서울 IP)로 떨어져 https 에서 인증서 오류 줄만 남겼다(★재민 11-03 사파리). 칸이 없으면(끔 · 옛 central · 모름) 종전대로 묻는다.
+  //   그 존에 소켓이 붙어 있으면(주 · 관측) 표시와 상관없이 묻는다 — 붙었다 = 호스트가 있다(표시가 틀린 판에서도 내가 선 존의 개울 · 지도는 받는다).
+  //   건너뛴 존은 `_streamZ` 에 안 적는다 — 붙은 뒤 다음 부름(welcome)에서 받는다.
+  function _t1130Skip(z) { return !!(z && z.hosted === false && !(typeof conns !== 'undefined' && conns && conns.has(z.id))); }
   function loadStreams() {
     if (!(typeof uiCfg !== 'undefined' && uiCfg && uiCfg.streams)) return;
     for (const z of Object.values(zonesMeta || {})) {
-      if (!z || z.isOcean || !z.wsUrl || _streamZ.has(z.id)) continue;
+      if (!z || z.isOcean || !z.wsUrl || _streamZ.has(z.id) || _t1130Skip(z)) continue;
       const r = { st: 'loading' }; _streamZ.set(z.id, r);
       const base = String(z.wsUrl).replace(/^wss:/, 'https:').replace(/^ws:/, 'http:').replace(/\/+$/, '');
       fetch(base + '/streams.bin').then((res) => (res.ok ? res.arrayBuffer() : null)).then((ab) => {
