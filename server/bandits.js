@@ -75,7 +75,8 @@ const FIXTURE = process.env.BANDIT_FIXTURE || '';
 //        이유(보고/T577 §2-3 · §3-ⓓ): econ 기아 보호막(`SHIELD_DAYS` 365)과 도적 보호기가 **같은 날** 걷혀 첫해 겨울 끝 굶는 마을이
 //        한 주에 해체됐다(3시드 해체 51 중 39 가 day 375~394). 끔 판 빈 13 → 켬 판 1(시드 1020 · 800일).
 const T577_WALK = process.env.T577_CAND_WALK === '1';
-const T1075_HAPPY_EQ = process.env.T1075_HAPPY_EQ === '1';   // ★[T1075 ④ · T1109] 켬 = 불행 이탈이 몸으로 걷는다(econ `world.t1075Emigrate` 문을 이 층이 단다 · 걷기 문 `walkToVillage` 하나 · 끔 = 문 없음 · 종전 바이트)
+const T1075_HAPPY_EQ = process.env.T1075_HAPPY_EQ === '1';
+const T1134_HAPPY_TARGET = process.env.T1134_HAPPY_TARGET === '1';   // ★[T1134] 켬 = 불행 이탈(h < 0.25)은 **더 행복한** 이웃만 받는다(받을 곳이 덜 행복하면 아무도 안 떠난다 · 소멸 0)   // ★[T1075 ④ · T1109] 켬 = 불행 이탈이 몸으로 걷는다(econ `world.t1075Emigrate` 문을 이 층이 단다 · 걷기 문 `walkToVillage` 하나 · 끔 = 문 없음 · 종전 바이트)
 // ★★[T1039 2026-11-02 · T1022 회부 1 · 캐논 F7 "같은 몸" · ★재민 11-01 판정 "걸어간 몸이 단"(`walk` 정본 · `spawn` 대조 판)] **도적 전환 — 한 사람 몸 하나**.
 //   손잡이 `T1039_BANDIT_BODY` — 값 `walk` | `spawn` · 없음(그 밖) = 종전 글자(아래 갈래 줄이 하나도 안 닿는다).
 //   종전: 해체 그날 단이 서고(`GANGS` · 습격 길목 `pairSync`) · 그날 끝 `syncBodies` 가 은거지 곁에 단 몸 min(3, n) 을 **새로** 세운다 · 그 사람들의 마을 몸은
@@ -220,11 +221,13 @@ function _t577Walk(vil, day) {   // ⓐ 남은 사람 → 가장 가까운 산 �
 function _t1075Leave(econV, npc, day) {   // econ 이 그날(`day`)을 준다
   if (!S.host || !S.host.t765Depart) return false;
   const vil = S.host.villages.find((x) => x.econ === econV); if (!vil) return false;
-  return walkToVillage(vil, [npc], day != null ? day | 0 : (S.host.world ? S.host.world.day | 0 : 0), 'unhappy') > 0;
+  const _hOf = (x) => (x && x.econ && x.econ.lastStats && typeof x.econ.lastStats.happiness === 'number') ? x.econ.lastStats.happiness : null;
+  const accept = T1134_HAPPY_TARGET ? (to) => { const a = _hOf(vil), b = _hOf(to); return a != null && b != null && b > a; } : null;   // ★[T1134] 더 행복한 마을만
+  return walkToVillage(vil, [npc], day != null ? day | 0 : (S.host.world ? S.host.world.day | 0 : 0), 'unhappy', accept) > 0;
 }
 //   people = 그 마을 econ 명부에 지금 있는 사람 객체들(받는 마을을 고른 뒤에만 명부에서 뺀다 — 갈 곳이 없으면 아무것도 안 바꾸고 0).
 //   켬 = 받는 마을은 길 거리(거리행렬 · 호스트 `t1080Pick`) 최근접 · 제 짐(호스트 `t1080Pack`)을 지고 떠난다 · 끔 = T765 그대로(곧은 거리 `_nearLive`).
-function walkToVillage(vil, people, day, why) {
+function walkToVillage(vil, people, day, why, accept) {   // accept(받는 마을) → bool — 있으면 고른 마을이 그 술어를 지나야 떠난다(★[T1134] · 없으면 종전)
   const e = vil && vil.econ; if (!e || !people || !people.length) return 0;
   const unhappy = why === 'unhappy';   // ★[T1075] 불행 이탈 — 몸 문이 있을 때만(아래 몸 없는 옮김 갈래로 안 간다)
   if (unhappy && !S.host.t765Depart) return 0;
@@ -233,6 +236,7 @@ function walkToVillage(vil, people, day, why) {
   if (life) { const P = S.host.t1080Pick([{ vil, off: 0 }], new Set([vil])); if (P) { best = P.vil; bd = Math.hypot(best.ccx - vil.ccx, best.ccy - vil.ccy); } }
   else ({ best, bd } = _nearLive(vil, vil.ccx, vil.ccy));
   if (!best) return 0;
+  if (typeof accept === 'function' && !accept(best)) return 0;   // ★[T1134] 받을 곳이 받지 않으면 아무것도 안 바꾼다
   const set = new Set(people), moved = [];
   for (let i = e.npcs.length - 1; i >= 0; i--) if (set.has(e.npcs[i])) moved.unshift(e.npcs.splice(i, 1)[0]);
   if (!moved.length) return 0;
@@ -1465,7 +1469,7 @@ function bindHost() {
 }
 function _bindRest(host, day0) {
   installHooks();
-  if (T1075_HAPPY_EQ && host.world) host.world.t1075Emigrate = _t1075Leave;   // ★[T1075 ④] 불행 이탈 몸 문(끔 = 안 단다 · 걷기 문 `walkToVillage` 하나)
+  if ((T1075_HAPPY_EQ || T1134_HAPPY_TARGET) && host.world) host.world.t1075Emigrate = _t1075Leave;   // ★[T1134] 목표 행복 판도 같은 몸 문   // ★[T1075 ④] 불행 이탈 몸 문(끔 = 안 단다 · 걷기 문 `walkToVillage` 하나)
   pairSync();
   S.lastDay = day0; // 다음 econ 경계부터 데일리(재부팅 당일 이중 실행 방지) · ★[T640] 조각 판이면 부팅 날(그 사이 넘긴 경계는 다음 틱이 잇는다)
   S.ready = true;

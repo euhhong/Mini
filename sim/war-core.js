@@ -532,9 +532,13 @@ function _opDefEstPack(force) { return Math.max(8, Math.min(14, WAR_SIEGE_PACK *
 // ⚠전쟁이 없는 세계(랩·3시드 판)엔 마크가 하나도 없다 ⇒ 이 절 전체가 **종전 비트**다.
 // ═══════════════════════════════════════════════════════════════════════════
 // 한 사람을 econ 에서 빼는 자리(사망) — 사본 0.
+// ★[T1134] 겪은 일 — 마을 칸 `_t1134E` 에 한 몫(손잡이 `T1134_HAPPY_TARGET` 끔 = 무동작 · econ 이 반감기 30날로 줄인다)
+function _t1134On() { return typeof process !== 'undefined' && !!process.env && process.env.T1134_HAPPY_TARGET === '1'; }
+function _t1134Ev(e, amt) { if (e && amt > 0 && _t1134On()) e._t1134E = (e._t1134E || 0) + amt; }
 function _warRemoveNpc(e, npc) {
   if (!e || !e.npcs || !npc) return false;
   const j = e.npcs.indexOf(npc); if (j < 0) return false;
+  _t1134Ev(e, 1 / e.npcs.length);   // ★[T1134] 전사 · 포로 한 사람 = 1/N(빠지기 전 인구)
   e.npcs.splice(j, 1);
   if (e.counts && npc.currentJob && !npc._warDraft) e.counts[npc.currentJob] = Math.max(0, (e.counts[npc.currentJob] || 0) - 1);
   if (npc._warDraft) { delete npc._warDraft; if (npc._warPid != null) delete npc._warPid; }   // 비워 둔 자리는 안 돌려준다(전사)
@@ -817,6 +821,7 @@ function createWar(opts) {
     const e = vil && vil.econ; let k = 0;
     const _pack = _rationActOn();   // ★[T423] 원정군은 팩을 먹는다 — 마을 식사 명부에서 빠진다(econ 이 이 표식을 본다 · 끔이면 안 붙는다)
     for (let i = 0; i < (n | 0); i++) { const npc = _warDraftPick(e, null); if (!npc) break; _warDraftMark(e, npc, null); npc._warDraft = (warId | 0) || 1; if (_pack) npc._warPack = 1; k++; }
+    if (e && e.npcs && e.npcs.length) _t1134Ev(e, k / e.npcs.length);   // ★[T1134] 징발로 집 비움 — 한 사람 1/N
     return k;
   }
   function warDraftReleasePid(vil, pid) {
@@ -853,6 +858,10 @@ function createWar(opts) {
   //   호스트가 못 받으면(몸 없음·헤드리스·끔) 종전과 한 글자 같은 즉시 이동. 반환 = 뗀 양(정산 수 · 로그·통계 무변).
   function _warLootMove(w, D, A, amount, kind) {
     if (!(amount > 0)) return 0;
+    if (_t1134On()) { const fe0 = Math.max(0, _feOf(D)), got = _warLootMove0(w, D, A, amount, kind); if (fe0 > 0) _t1134Ev(D, got / fe0); return got; }   // ★[T1134] 곳간 약탈 — 빼앗긴 몫(그 전 곳간 대비)
+    return _warLootMove0(w, D, A, amount, kind);
+  }
+  function _warLootMove0(w, D, A, amount, kind) {
     if (!(w && _lootActOn() && _rationActOn() && w._packOnBodies && typeof opts.lootCarry === 'function')) return _warFoodMove(D, A, amount);
     const t = _warFoodTake(D, amount, FOOD);
     if (t.got > 0) { let ok = false; try { ok = !!opts.lootCarry(w, t.items, kind, t.lots || null); } catch (_) { ok = false; } if (!ok) _warFoodGive(A, t.items, 1, t.lots); }   // ★[T748] 뗀 레코드째 몸에(호스트 · 끄면 넷째 인수 null)

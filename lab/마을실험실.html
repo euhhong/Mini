@@ -10414,7 +10414,32 @@ const T1075_HAPPY_EQ = (typeof process !== 'undefined' && process.env && process
 const HAPPY_EQ_HALF_DAYS = 30;
 const Equilibrium = require('./equilibrium.js');   // ★[T1109] 평형 회귀 한 곳(T1076 · T1075 — 번들은 `build-econ-bundle` 이 같은 파일을 싣는다)
 // ③ 사망 계단 — 굶어 죽은 사람 하나(죽음 직전 인구 n)
-function _t1075Starved(v, n) { if (T1075_HAPPY_EQ && v._H != null && n > 0) { v._H = Math.max(0, v._H - 1 / n); if (v.lastStats) v.lastStats.happiness = v._H; } }   // 소비자도 계단 뒤 값을 읽는다
+function _t1075Starved(v, n) {
+  if (T1134_HAPPY_TARGET) { if (n > 0) v._t1134E = (v._t1134E || 0) + 1 / n; return; }   // ★[T1134] 켬 = 죽음은 '겪은 일'(목표를 내린다) — T1075 계단은 안 탄다
+  if (T1075_HAPPY_EQ && v._H != null && n > 0) { v._H = Math.max(0, v._H - 1 / n); if (v.lastStats) v.lastStats.happiness = v._H; }
+}   // 소비자도 계단 뒤 값을 읽는다
+// ★★[T1134 2026-11-04 · ★재민 11-03 판정 ⑤ ㄱ] **행복 = 목표로 다가가는 값(배너로드 사기 꼴) · 인구만큼 불만** — 손잡이 `T1134_HAPPY_TARGET`(**끔 기본** · `=1` 만 켬 · 끔 = 종전 바이트).
+//   목표 h* = 0.5 + 좋은 것 − c · N − 겪은 일  (0 ~ 1 로 자름 · 날마다 다시 셈 · 지금 h 를 안 읽는다)
+//     좋은 것 = `_computeVillageStats` 의 행복 합 그대로(창고 포화 · 음식 가짓수 · 여가 · 추위 옷 · 옷감 품질 · 가죽 물건 — 무게 그대로 · 기준만 0.5 위로)
+//     인구 항 = c · N(ㄱ 선형) — c 는 env `T1134_C`(손으로 박지 않는다 · 보고가 끔 판의 '좋은 것 ÷ 인구' 분포에서 세 값을 재어 고른다 · 미설정 = 0)
+//     겪은 일 E(마을 칸 `v._t1134E` · 반감기 30날 = `HAPPY_EQ_HALF_DAYS`) — 하나씩 계단:
+//       굶어 죽음 +1/N(T1075 ③ 그 꼴) · 굶주림 날 +(굶는 몫)/14(빚이 죽음 문턱 14날에 닿으면 한 사람 몫 — T1074 `FD_DEATH_DAYS`) ·
+//       전사 · 포로 +1/N · 징발 +1/N(war-core) · 곳간 약탈 + 빼앗긴 몫(빼앗긴 식량 ÷ 그 전 곳간)(war-core).
+//   실제 h(마을 칸 `v._H`) 는 목표로 다가간다: `Equilibrium.step(h, h*, T)` — 반감기 T = env `T1134_HALF`(미설정 = 30 · HAPPY_EQ_HALF_DAYS).
+//     같은 조건이면 출발값과 무관하게 같은 값으로 간다(test-happy-converge).
+//   효과: 출생 항 그대로(h 를 읽는다) · 불행은 죽이지 않는다(T1075 ④ — 출생을 먼저 깎는다) · **h < 0.25 일 때만** 남는 몫이 이탈 압력(더 행복한 이웃이 받을 때만 걷는다).
+//   T1075 와 같이 켜면 T1134 가 이긴다(목표 · 계단 · 이탈 문턱).
+const T1134_HAPPY_TARGET = (typeof process !== 'undefined' && process.env && process.env.T1134_HAPPY_TARGET === '1');
+const T1134_EMIG_H = 0.25;   // ★재민 11-03 카드(이주 문턱)
+function t1134C() { const x = (typeof process !== 'undefined' && process.env) ? parseFloat(process.env.T1134_C) : NaN; return Number.isFinite(x) && x > 0 ? x : 0; }
+function t1134Half() { const x = (typeof process !== 'undefined' && process.env) ? parseFloat(process.env.T1134_HALF) : NaN; return Number.isFinite(x) && x > 0 ? x : HAPPY_EQ_HALF_DAYS; }
+//   하루 한 걸음 — 좋은 것 G · 인구 N · 오늘 굶주림 몫 hungerShare(0~1) → { target, h }. 마을 칸 둘(`_t1134E` · `_H`)만 쓴다(하네스가 이 함수를 그대로 부른다).
+function t1134Step(v, G, N, hungerShare) {
+  v._t1134E = (v._t1134E || 0) * Equilibrium.keep(HAPPY_EQ_HALF_DAYS) + (hungerShare > 0 ? hungerShare / FD_DEATH_DAYS : 0);
+  const target = Math.max(0, Math.min(1, 0.5 + G - t1134C() * N - v._t1134E));
+  v._H = v._H == null ? target : Equilibrium.step(v._H, target, t1134Half());
+  return { target, h: v._H };
+}
 // ★★[T931 2026-10-26 · T924 회부 2-ⓐ · 재민 10-24 "창고에 식량이 있는데 자유민이 그렇게 빨리 죽어?"]
 //   **식량 자리 K 에도 신뢰 관성** — 손잡이 `T931_SLOTK_EMA`(★[T943] **켬 기본 = `'season'`** · 되돌림 `'0'` = 끔 = 종전 바이트 · `'1'` = 값 전체 · 그 밖 · 미설정 = `'season'` · 브라우저 랩 = `'season'`).
 //   ★[T943 2026-10-27 · PM 결정 — T931 회부 1 = `'season'`(카드 글자 "계절 배수에"의 꼴 · 서버 띠 그날 굶주림 0 인 죽음 −45% · 랩 −23%)] T931 보고 §7 · T943 보고.
@@ -13624,7 +13649,12 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
   // Phase 5-5-econ-d: 마을 stat 기반 인구·이주 보정
   const stats = _computeVillageStats(v, N);
   let _healthTerm = 0, _happyTerm = 0, _prestigeTerm = 0, _t1075Emig = 0;
-  if (stats && T1075_HAPPY_EQ) {   // ★[T1075 ①②] 그날 값 = 평형 H* · 실제 H 는 마을 칸이 기억한다(소비자 — 일 배수 · 도적 층 — 는 H 를 읽는다)
+  if (stats && T1134_HAPPY_TARGET) {   // ★[T1134] 목표 행복 — 좋은 것(그날 합) · 인구 · 겪은 일 → 목표 · 실제 h 는 목표로
+    const _fd = T1074_FOOD_DEBT ? foodDebtOf(v) : null;
+    const _hsh = _fd ? (_fd.n > 0 ? _fd.starving / _fd.n : 0) : (_hungerTerm < 0 ? 1 : 0);   // 오늘 굶는 몫(빚 판 = 굶는 사람 ÷ 인구 · 종전 판 = 마을 굶주림 날이면 1)
+    const _r = t1134Step(v, stats.happiness, N, _hsh);
+    stats.happinessGoods = stats.happiness; stats.happinessEq = _r.target; stats.happiness = _r.h;
+  } else if (stats && T1075_HAPPY_EQ) {   // ★[T1075 ①②] 그날 값 = 평형 H* · 실제 H 는 마을 칸이 기억한다(소비자 — 일 배수 · 도적 층 — 는 H 를 읽는다)
     const _fd = T1074_FOOD_DEBT ? foodDebtOf(v) : null;
     const _hs = stats.happiness * (_fd ? (1 - Math.min(1, _fd.mean / FD_DEATH_DAYS)) : 1);
     v._H = v._H == null ? _hs : _hs + (v._H - _hs) * Equilibrium.keep(HAPPY_EQ_HALF_DAYS);
@@ -13637,10 +13667,11 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
     _healthTerm = (stats.health - 0.5) * 0.4 * N * POP_GROWTH_RATE;
     // ★위신재(사치)→인구 보너스 — prestige는 순보너스(0 기준, 있으면 +). 사치 수입을 정당화 = 진짜 수요 근거.
     _prestigeTerm = Math.min(PRESTIGE_MOD_CAP, (stats.prestige || 0) * PRESTIGE_GROWTH_W) * N * POP_GROWTH_RATE;
-    if (T1075_HAPPY_EQ && _happyTerm < 0) {   // ★[T1075 ④] 불행은 죽이지 않는다 — 출생을 먼저 깎고 남는 몫은 이탈 압력
+    if ((T1075_HAPPY_EQ || T1134_HAPPY_TARGET) && _happyTerm < 0) {   // ★[T1075 ④] 불행은 죽이지 않는다 — 출생을 먼저 깎고 남는 몫은 이탈 압력
       const _oth = dP + _healthTerm + _prestigeTerm, _aft = _oth + _happyTerm;
       dP = _oth > 0 ? Math.max(0, _aft) : _oth;
       _t1075Emig = _oth > 0 ? Math.max(0, -_aft) : -_happyTerm;
+      if (T1134_HAPPY_TARGET && !(stats.happiness < T1134_EMIG_H)) _t1075Emig = 0;   // ★[T1134] 이탈은 h < 0.25 일 때만(그 위는 출생만 깎인다)
     } else dP += _happyTerm + _healthTerm + _prestigeTerm;
     v.lastStats = stats;
   }
@@ -13741,7 +13772,7 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
   }
 
   // ★★[T1075 ④] 이탈 — 불행 압력이 1 을 채우면 가장 젊은 자유민 1명이 몸으로 이웃 마을까지 걷는다(호스트 길 위 장부 · 하루 상한 = 인구 상한과 같은 N × POP_MAX_DELTA_PCT)
-  if (T1075_HAPPY_EQ) {
+  if (T1075_HAPPY_EQ || T1134_HAPPY_TARGET) {   // ★[T1134] 같은 이탈 문(호스트가 더 행복한 이웃만 받는다)
     const _cap = N * POP_MAX_DELTA_PCT, _go = v._world && typeof v._world.t1075Emigrate === 'function' ? v._world.t1075Emigrate : null;
     if (_go) v._emigAccum = Math.min(_cap + 0.9, (v._emigAccum || 0) + Math.min(_cap, _t1075Emig));
     else if (_t1075Emig > 0) v._emigLost = (v._emigLost || 0) + _t1075Emig;   // 걸을 길 없는 판 — 아무도 안 떠난다(소멸 0)
@@ -15440,7 +15471,8 @@ module.exports = {
   assignNPCJob, assignableJobs, JOB_SWITCH_COOLDOWN,
   t1113On, t1113Unhappy, t1113Happy, t1113LowMul, t1113IsFood, T1113_HAPPY_MID,   // ★[T1113] 행복 낮을 때 효과 셋 — war-core · 서버 · 하네스가 같은 술어를 읽는다(사본 0)   // ★[T1085] 촌장 지정 — 서버 동사 `assign_job` 이 부른다(규칙 사본 0)
   _autoSwitchJobForTest: autoSwitchJob, _switchNPCJobForTest: switchNPCJob,   // ★[T1085] 하네스가 자율 전환 그 함수를 부른다(시험 이름 · 사본 0)
-  T1075_HAPPY_EQ, HAPPY_EQ_HALF_DAYS,   // ★[T1075] 행복 평형 손잡이 · 반감기(평형 함수는 `sim/equilibrium.js` 하나 — T1076 과 같이 쓴다)
+  T1075_HAPPY_EQ, HAPPY_EQ_HALF_DAYS,
+  T1134_HAPPY_TARGET, T1134_EMIG_H, t1134C, t1134Half, t1134Step,   // ★[T1134] 목표 행복 — 하네스 · 호스트가 같은 함수를 읽는다   // ★[T1075] 행복 평형 손잡이 · 반감기(평형 함수는 `sim/equilibrium.js` 하나 — T1076 과 같이 쓴다)
   foodDebtOf, T1074_FOOD_DEBT,   // ★[T1074] 식량 빚 읽는 함수 하나(T1075 가 읽는다)
   __t1074: { _fdEaters, _fdNeed, _fdSettle, _fdDeathIdx, FD_ADAPT_MAX, FD_ADAPT_DOWN_DAYS, FD_ADAPT_UP_DAYS, FD_DEATH_DAYS, FD_REPAY_MAX, T1117_FD_EVID },   // 하네스 훅(test-t1074-food-debt)
   T860_ON, CATCH_FROM, PRESERVE_FROM, _preserveSurplus, _t860Begin, _t860Dry, T877_ON, _t860Unit, PRESERVED_FOODS, PRESERVE_YIELD, PRESERVE_FOOD_FACTOR, FORAGE_FOOD_FACTOR,   // ★[T860] 잡은 날 말리기 — 손잡이 · 잡은 칸 표(하네스가 spoil 정본과 대조한다 · 사본 0) · 갈무리 한 걸음
