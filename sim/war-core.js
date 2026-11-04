@@ -426,8 +426,8 @@ function _capComplete(fromVil, toVil, npc) {
 // ★[T423] 짐이 먹는다(군량 = 행위 ⓐ) — 손잡이 `T423_RATION_ACT`. 끔이면 아래 문들이 한 글자도 안 돈다.
 //   ★★[T861 2026-10-22] **켬 기본**(★PM 10-22 · T845 — 징발 묶임 · 몰사 0 · 재민 09-26 캐논 ⓐ 군량은 짐이 먹는다) — `!== '0'` · 되돌림 `T423_RATION_ACT=0`(= T861 전 바이트).
 function _rationActOn() { return typeof process !== 'undefined' && !!process.env && process.env.T423_RATION_ACT !== '0'; }
-// ★★[T466] 약탈 = 행위(군량 행위 ⓒ · PM #68 · 재민 "즉시 판정이 아니라 물리 노획 → 운반 → 귀가 저장") — 손잡이 `T466_LOOT_ACT`.
-//   ★★[T1168 2026-11-05 · 카드 감 K28 · 추상 없애기 캐논] **켬 기본** — `!== '0'` · 되돌림 `T466_LOOT_ACT=0`(= T1168 전 바이트 · 서버 `server/villages.js` 같은 글자).
+// ★★[T466] 약탈 = 행위(군량 행위 ⓒ · PM #68 · 재민 "즉시 판정이 아니라 물리 노획 → 운반 → 귀가 저장") — 손잡이(아래 줄 글자 하나).
+//   ★★[T1168 2026-11-05 · 카드 감 K28 · 추상 없애기 캐논] **켬 기본** — `!== '0'` · 되돌림 `=0`(= T1168 전 바이트 · 서버 `server/villages.js` 같은 글자).
 function _lootActOn() { return typeof process !== 'undefined' && !!process.env && process.env.T466_LOOT_ACT !== '0'; }
 //   ★★[T1094 2026-11-03 · ★PM 11-02 캐논 문 5 = ㄱ(재민 보고됨)] **켬 기본** — 원정이 집 곳간 무기를 실어 간다(돌아오면 다시 곳간 · 소멸 0) · `!== '0'` · 되돌림 `T403_ARMS_LEDGER=0`(= T1094 전 바이트).
 //     문 6(몸이 질 수 있는 만큼만 · 못 지는 몫은 집 곳간에)은 호스트(`server/villages.js` `T1094_CARRY_CAP`)가 몸에 실을 때 건다 — 장부에서 그 몫을 빼고 곳간에 되돌린다(아래 `rationLeave` · 호스트 무기 줄).

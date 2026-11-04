@@ -1084,7 +1084,7 @@ function rationActPart() {
     const code = (t) => t.replace(/\/\/.*$/gm, '');
     const blk = VS9.slice(VS9.indexOf('function _t906Day(ent)'), VS9.indexOf('let _armyMoraleMod = null;'));
     ok(!/T906_ARMY_STARVE/.test(code(VS9)) && !/T906_ARMY_STARVE/.test(code(WC9)) && !/function _t906(Mode|Step|Sat|Die|Live|Wipe)\b/.test(VS9) && !/warDraftKillPid/.test(code(WC9))
-      && /B\.decayStep\(h, T, 1\)/.test(blk) && /B\.extremeHpRate\(sc\)\.rate/.test(blk) && typeof H._t906Day === 'function' && !('_t906Die' in H) && !('warDraftKillPid' in (H.state.war || {})),
+      && /B\.decayStep\(h, T, 1\)/.test(blk) && /B\.extremeHpRate\(sc\)\.rate/.test(blk) && (() => { const B9 = SimVillages.__p3Bind({}); return typeof B9._t906Day === 'function' && !('_t906Die' in B9); })() && !('warDraftKillPid' in WarCore.createWar({ villages: [], world: { day: 0, _warWars: [], _warTributes: [], _warSeq: 1 }, seed: 1, log: () => {} })),
       'ⓥ·T906 걷음 — 손잡이 글자 0(코드) · 판 함수(Mode · Step · Sat · Die · Live · Wipe · war-core warDraftKillPid) 0 · 남은 하루(`_t906Day`)는 Body 정본(`decayStep` · `extremeHpRate`)', '');
   }
   // 이중 0 — 원정군은 마을 식사 명부에서 빠진다(econ 한 줄)
@@ -1195,7 +1195,7 @@ function berryArrowPart() {
 function lootActPart() {
   const KEYS = ['T423_RATION_ACT', 'T441_FORAGE_MARCH', 'T347_FORAGE_ACT', 'T466_LOOT_ACT'];
   const keep = KEYS.map(k => [k, process.env[k]]);
-  const env = (v) => { KEYS.forEach((k, i) => { if (v[i]) process.env[k] = '1'; else if (k === 'T423_RATION_ACT') process.env[k] = '0'; else delete process.env[k]; }); };
+  const env = (v) => { KEYS.forEach((k, i) => { if (v[i]) process.env[k] = '1'; else if (k === 'T423_RATION_ACT' || k === 'T466_LOOT_ACT') process.env[k] = '0'; else delete process.env[k]; }); };   // ★[T1168] T466 켬 기본 — 끔 판은 `=0`
   const run = (v, o) => { env(v); groveReset(); try { return runScenario(o); } finally { env([0, 0, 0, 0]); } };
   const sig = (r) => JSON.stringify({ e: r.ended, h: r.posHash, s: r.stat, ph: r.phase, c: r.counts });
   const bkNo = (r) => { const b = Object.assign({}, r.book || {}); for (const k of Object.keys(b)) if (/^loot|^home|^fgLoot/.test(k)) delete b[k]; return JSON.stringify(b); };
@@ -1259,7 +1259,7 @@ function lootActPart() {
 function punitivePart() {
   const KEYS = ['T423_RATION_ACT', 'T441_FORAGE_MARCH', 'T347_FORAGE_ACT', 'T466_LOOT_ACT', 'T476_PUNITIVE'];
   const keep = KEYS.map(k => [k, process.env[k]]);
-  const env = (v) => { KEYS.forEach((k, i) => { if (v[i]) process.env[k] = '1'; else if (k === 'T423_RATION_ACT') process.env[k] = '0'; else delete process.env[k]; }); };
+  const env = (v) => { KEYS.forEach((k, i) => { if (v[i]) process.env[k] = '1'; else if (k === 'T423_RATION_ACT' || k === 'T466_LOOT_ACT') process.env[k] = '0'; else delete process.env[k]; }); };   // ★[T1168] T466 켬 기본 — 끔 판은 `=0`
   const run = (v, o) => { env(v); groveReset(); try { return runScenario(o); } finally { env([0, 0, 0, 0, 0]); } };
   const n3 = (a, b) => Math.abs((a || 0) - (b || 0)) <= 1e-6;
   const O = (den, x) => Object.assign({ seed: 11, viewer: true, untilHome: true, econFood: true, maxTicks: 30 * 60 * 20, den }, x || {});
@@ -1304,7 +1304,7 @@ function punitivePart() {
 function oddsRealPart() {
   const KEYS = ['T423_RATION_ACT', 'T441_FORAGE_MARCH', 'T347_FORAGE_ACT', 'T466_LOOT_ACT', 'T476_PUNITIVE', 'T502_ODDS_REAL'];
   const keep = KEYS.map(k => [k, process.env[k]]);
-  const env = (v) => { KEYS.forEach((k, i) => { if (v[i]) process.env[k] = '1'; else if (k === 'T423_RATION_ACT') process.env[k] = '0'; else delete process.env[k]; }); };
+  const env = (v) => { KEYS.forEach((k, i) => { if (v[i]) process.env[k] = '1'; else if (k === 'T423_RATION_ACT' || k === 'T466_LOOT_ACT') process.env[k] = '0'; else delete process.env[k]; }); };   // ★[T1168] T466 켬 기본 — 끔 판은 `=0`
   const run = (v, o) => { env(v); groveReset(); try { return runScenario(o); } finally { env([0, 0, 0, 0, 0, 0]); } };
   const O = (den) => ({ seed: 11, viewer: true, untilHome: true, econFood: true, maxTicks: 30 * 60 * 20, den });
   say("\n[ⓩ'] 토벌 승산 해부 — 어느 항이 갱을 부풀리나 · 팔 `T502_ODDS_REAL`(갱 = 몸 n · 직업 bandit · 무기 0 · 비축)");
@@ -1346,7 +1346,7 @@ function oddsRealPart() {
 function gangArmsPart() {
   const KEYS = ['T423_RATION_ACT', 'T441_FORAGE_MARCH', 'T347_FORAGE_ACT', 'T466_LOOT_ACT', 'T476_PUNITIVE', 'T502_ODDS_REAL', 'T521_GANG_ARMS'];
   const keep = KEYS.map(k => [k, process.env[k]]);
-  const env = (v) => { KEYS.forEach((k, i) => { if (v[i]) process.env[k] = '1'; else if (k === 'T423_RATION_ACT') process.env[k] = '0'; else delete process.env[k]; }); };
+  const env = (v) => { KEYS.forEach((k, i) => { if (v[i]) process.env[k] = '1'; else if (k === 'T423_RATION_ACT' || k === 'T466_LOOT_ACT') process.env[k] = '0'; else delete process.env[k]; }); };   // ★[T1168] T466 켬 기본 — 끔 판은 `=0`
   const run = (v, o) => { env(v); groveReset(); try { return runScenario(o); } finally { env([0, 0, 0, 0, 0, 0, 0]); } };
   const O = (den) => ({ seed: 11, viewer: true, untilHome: true, econFood: true, maxTicks: 30 * 60 * 20, den });
   const B = R('server/bandits.js');
