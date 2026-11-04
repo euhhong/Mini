@@ -70,9 +70,12 @@ if (RESUME) {
 const KEYNAME = String(flag('key', '') || (RESUME && last.key && last.key !== '기본' ? last.key : '')).replace(/[^A-Za-z0-9가-힣_-]/g, '');   // 이어서면 그 대화의 키
 const KEYFILE = process.env.MINI_API_KEYFILE || path.join(KEYDIR, KEYNAME ? `key-${KEYNAME}` : 'key');
 const KEYLABEL = KEYNAME || '기본';
-const cardArg = RESUME ? '' : words.find((x) => /^T\d+$/i.test(x));
+// 카드 번호 — `T1160` 낱말이거나, 말 속의 `T1160` · `1160 카드` · `1160번` 도 카드로 읽는다(★재민 11-04 "1160 카드 수행해" 가 말로 시킨 일로 빠졌다)
+const _cardM = RESUME ? null : (words.find((x) => /^T\d+$/i.test(x)) || (words.join(' ').match(/(?:^|[^A-Za-z0-9])T(\d{3,5})(?![0-9])/i) || [])[0] || (words.join(' ').match(/(?:^|\s)(\d{3,5})\s*(?:번|카드|card)/i) || [])[1]);
+const cardArg = _cardM ? 'T' + String(_cardM).replace(/[^0-9]/g, '') : '';
 const card = RESUME ? last.card : (cardArg ? cardArg.toUpperCase() : 'API');
-const FREE = cardArg ? '' : words.join(' ').trim();      // 카드 번호가 아니면 = 재민이 말로 시킨 일 (이어서면 = 이어서 할 말)
+const FREE = cardArg ? '' : words.join(' ').trim();
+const SAID = cardArg && words.join(' ').trim() !== cardArg && !/^T\d+$/i.test(words.join(' ').trim()) ? words.join(' ').trim() : '';   // 카드와 같이 한 말(덧붙임으로 싣는다)      // 카드 번호가 아니면 = 재민이 말로 시킨 일 (이어서면 = 이어서 할 말)
 const IS_FREE = RESUME ? !!last.free : !cardArg;
 const MODEL = String(flag('model', 'opus'));
 // ★재민 11-04 "한도 15달러 제한 풀어줘 · 무제한으로" — 기본은 카드 상한 · 주기 상한 둘 다 없음(Console 의 달 한도가 마지막 둑). 걸고 싶으면 --budget=N · --cap=N.
@@ -86,7 +89,7 @@ const CYCLE_DAY = Number(flag('cycle-day', 4));          // 크레딧 들어오�
 const DRY = !!flag('dry', false);
 const ONCE = !!flag('once', false);                      // 끝나고 이어서 묻지 않음
 const NO_SANDBOX = !!flag('no-sandbox', false);
-const EXTRA = flag('note', '');                           // 카드에 덧붙일 한 줄(선택)
+const EXTRA = [flag('note', ''), typeof SAID === 'string' ? SAID : ''].filter(Boolean).join(' · ');                           // 카드에 덧붙일 한 줄(선택)
 
 if (!RESUME && !cardArg && !FREE) { console.log('쓰는 법: node run.mjs T1150 [--model=opus|sonnet] [--budget=15] [--dry] [--once] [--no-sandbox] [--note="…"] [--key=<이름>]\n      또는: node run.mjs "말로 시킬 일"\n      또는: node run.mjs --resume ["이어서 할 말"]'); process.exit(1); }
 
@@ -288,7 +291,7 @@ const options = (budgetLeft, resume) => ({
       allowWrite: [WT, path.join(MINI, '산그림'), path.join(BASE, 'tmp'), path.join(HOME, '.npm'), path.join(HOME, '.cache'), os.tmpdir()],
       denyRead: [PATFILE, path.dirname(KEYFILE), path.join(HOME, '.ssh')],
     },
-    network: { allowedDomains: ['github.com', 'api.github.com', 'codeload.github.com', 'objects.githubusercontent.com', 'registry.npmjs.org', 'pypi.org', 'files.pythonhosted.org', 'mini-saebeol.duckdns.org'] },
+    network: { allowLocalBinding: true, allowedDomains: ['github.com', 'api.github.com', 'codeload.github.com', 'objects.githubusercontent.com', 'registry.npmjs.org', 'pypi.org', 'files.pythonhosted.org', 'mini-saebeol.duckdns.org'] },
     credentials: { envVars: [{ name: 'ANTHROPIC_API_KEY', mode: 'deny' }] },
   },
 });
