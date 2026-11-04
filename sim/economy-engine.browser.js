@@ -7,7 +7,7 @@
   //   실제로 터졌다: rational picker 에 전사 줄을 넣자 warriorTarget(process.env.PEACE_W)이
   //   랩에서 처음 호출돼 즉사했다 — CLI 하네스는 못 잡는 브라우저 전용 지뢰라 여기서 구조적으로 막는다.
   var process=(typeof root.process!=='undefined'&&root.process)?root.process:{env:{}};
-  function req(p){ if(/equilibrium/.test(p))return modules.equil; if(/(^|[/])carry$/.test(p))return modules.carry; if(/(^|[/])weather$/.test(p))return modules.weather; if(/(^|[/])salt$/.test(p))return modules.salt; if(/(^|[/])tidal$/.test(p))return modules.tidal; if(/(^|[/])animals$/.test(p))return modules.animals; if(/(^|[/])game-meat$/.test(p))return modules.gmeat; if(/(^|[/])spoil$/.test(p))return modules.spoil; if(/(^|[/])lots$/.test(p))return modules.lots; if(/crops[.]json$/.test(p))return modules.cropsData; if(/crop-cal/.test(p))return modules.cropcal; if(/(^|[/])events$/.test(p))return modules.events; if(/(^|[/])crops$/.test(p))return modules.crops; if(/calendar/.test(p))return modules.cal; if(/zone-config/.test(p))return modules.zcfg; if(/weights$/.test(p))return modules.wts; if(/hut-stages/.test(p))return modules.hut; if(/stone-uses/.test(p))return modules.stoneu; if(/granary-stages/.test(p))return modules.granst; if(/smelt-uses/.test(p))return modules.smeltu; if(/village-layout/.test(p))return modules.vlayout; if(/era/.test(p))return modules.era; if(/specialty/.test(p))return modules.specialty; if(/economy-sim-v2/.test(p))return modules.v2; if(/economy-sim/.test(p))return modules.v1; return {}; }
+  function req(p){ if(/move-model/.test(p))return modules.movem; if(/equilibrium/.test(p))return modules.equil; if(/(^|[/])carry$/.test(p))return modules.carry; if(/(^|[/])weather$/.test(p))return modules.weather; if(/(^|[/])salt$/.test(p))return modules.salt; if(/(^|[/])tidal$/.test(p))return modules.tidal; if(/(^|[/])animals$/.test(p))return modules.animals; if(/(^|[/])game-meat$/.test(p))return modules.gmeat; if(/(^|[/])spoil$/.test(p))return modules.spoil; if(/(^|[/])lots$/.test(p))return modules.lots; if(/crops[.]json$/.test(p))return modules.cropsData; if(/crop-cal/.test(p))return modules.cropcal; if(/(^|[/])events$/.test(p))return modules.events; if(/(^|[/])crops$/.test(p))return modules.crops; if(/calendar/.test(p))return modules.cal; if(/zone-config/.test(p))return modules.zcfg; if(/weights$/.test(p))return modules.wts; if(/hut-stages/.test(p))return modules.hut; if(/stone-uses/.test(p))return modules.stoneu; if(/granary-stages/.test(p))return modules.granst; if(/smelt-uses/.test(p))return modules.smeltu; if(/village-layout/.test(p))return modules.vlayout; if(/era/.test(p))return modules.era; if(/specialty/.test(p))return modules.specialty; if(/economy-sim-v2/.test(p))return modules.v2; if(/economy-sim/.test(p))return modules.v1; return {}; }
   modules["cal"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
 // === server/calendar.js — 달력 정본 하나: 그레고리력 (T570 · 재민 10-02) ================================
 //
@@ -9128,6 +9128,144 @@ module.exports = { CFG, MOVE_CURVE, STAGE_AT, R1,
   CARRIER_SLOT, carrierOf, carrierBonus, carrierWorking };
 
 ;return module.exports;})();
+  modules["movem"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+// =============================================================================
+// public/move-model.js — **플레이어 이동 모델 정본**(서버·클라 공용) [재민 확정 2026-08-30]
+//
+// ★★사본 금지. 서버는 `require('../public/move-model.js')` 로 **이 파일 자체**를 읽고,
+//   클라는 `<script src="move-model.js">` 로 **같은 파일**을 읽는다.
+//   `soil-base.js` 가 세운 그 규약이다. 왜 이게 급소인가:
+//     이동 적분이 두 벌이면 서버 권위와 클라 예측이 **매 틱 몇 px씩 갈라지고**,
+//     리컨실리에이션이 그 차이를 매 틱 되돌린다 = **캐릭터가 떤다**(러버밴딩).
+//     legacy 시절에도 두 벌이었고(zone.js 7409 · client.js 7310) 두 곳의 곱셈 순서가
+//     달라 마지막 ULP 가 어긋났다. 가속 모델은 상태(속도)를 들고 다니므로 그 어긋남이
+//     **누적**된다 — 두 벌이면 반드시 터진다. ⇒ 한 함수로 못 박는다.
+//
+// ★★이동을 고치려면 **이 파일만** 고쳐라. zone.js·client.js 는 이 함수를 부르기만 한다.
+//
+// 좌표·단위: px, 초. 속도는 px/s. dt 는 초.
+//   콜라이더(벽·나무·지형)는 **호출자의 몫**이다 — 이 모듈은 위치를 모른다.
+//   이 모듈이 내는 것은 "이 스텝의 속도"와 "이 스텝의 위치 델타(dx,dy)" 둘뿐이고,
+//   호출자가 그 델타를 자기 콜라이더에 통과시킨다(서버·클라의 콜라이더 미러는 종전 그대로).
+//
+// === 모델 ===
+//   legacy : 종전과 동일. 입력 → **즉시** 최고속. 상태 없음. (기본값)
+//   accel  : 속도 벡터에 등가속/등감속. 방향 전환은 벡터 가속이 자연히 부드럽게 한다.
+//            ★별도 각가속도 상태 없음(재민 확정 — 8방향 스프라이트에선 벡터 회전으로 충분).
+//
+// === 적분 ===
+//   세미-임플리싯 오일러: **속도를 먼저** 갱신하고, 그 새 속도로 위치를 옮긴다.
+//   dt 는 인자다 — 프레임레이트 상수를 이 파일 어디에도 쓰지 마라.
+//   (속도는 고정 입력에서 dt 불변이 **정확**하다. 위치는 램프 구간에서만 a·dt²/4 만큼
+//    스텝 크기에 따라 갈리는데, 램프가 끝나면 더 안 벌어진다. `test-move` ① 이 그 상한을 못 박는다.)
+// =============================================================================
+(function (root) {
+  'use strict';
+
+  // === 손잡이 정본 ===
+  //   서버는 env 로 읽어 `paramsFrom()` 에 넘기고, 그 표를 그대로 클라에 실어 보낸다
+  //   (`welcome.moveCfg`). 클라가 자기 기본값을 들고 있으면 그게 곧 두 번째 사본이다.
+  var DEFAULTS = {
+    model: 'legacy',      // MOVE_MODEL=legacy|accel
+    baseSpeed: 64,        // MOVE_SPEED (px/s) — 정본은 zone.js. 여기 값은 fallback 일 뿐
+    sprintMult: 2.5,      // SPRINT_MULT
+    accelT: 0.20,         // MOVE_ACCEL_T  — 0 → (현재)최고속 도달 초
+    decelT: 0.15,         // MOVE_DECEL_T  — 키 뗌 → 정지 초
+    aimSpeedFrac: 0.45,   // MOVE_AIM_SPEED_FRAC — 조준 중 이속 배율
+  };
+
+  function paramsFrom(src) {
+    var s = src || {};
+    return {
+      model: (s.model === 'accel') ? 'accel' : 'legacy',
+      baseSpeed: num(s.baseSpeed, DEFAULTS.baseSpeed),
+      sprintMult: num(s.sprintMult, DEFAULTS.sprintMult),
+      accelT: Math.max(1e-4, num(s.accelT, DEFAULTS.accelT)),
+      decelT: Math.max(1e-4, num(s.decelT, DEFAULTS.decelT)),
+      aimSpeedFrac: num(s.aimSpeedFrac, DEFAULTS.aimSpeedFrac),
+      // ★★[T194 2026-09-12] **나무 접선 슬라이드 손잡이 — 한 곳에서 실어 나른다.**
+      //   이 칸은 적분에 안 쓰인다(이 모듈은 값을 **나르기만** 한다). 그런데 여기 있어야 하는 이유:
+      //   서버 `movePlayerStep` 과 클라 `predictStep` 이 **같은 손잡이**를 봐야 되감기가 0 이다.
+      //   `welcome.moveCfg` 가 이미 이 객체를 통째로 나르므로, 칸 하나면 새 메시지도 새 env 도 없다
+      //   (클라에 `T194_SLIDE` 를 따로 적으면 그게 사본이고, 끄는 날 한쪽만 꺼진다).
+      slide: !(s.slide === false || s.slide === 0 || s.slide === '0'),
+    };
+  }
+  function num(v, d) { var n = (typeof v === 'number') ? v : parseFloat(v); return (isFinite(n)) ? n : d; }
+
+  // === 배율 한 곳 ===
+  //   ★종전엔 "최고속에만" 곱했다. 가속 모델에선 **가속에도** 같은 배율이 곱해진다 —
+  //     무거우면 출발이 굼뜨다. 무게가 몸이 된다.
+  //   ★곱셈 순서는 **서버 legacy 식과 글자 그대로 같다**(zone.js 옛 7409줄):
+  //       (w/len) * BASE * min(1,hyp) * spMult * bodyMult
+  //     클라 옛 식은 `w * (BASE*sp*body)` 라 마지막 ULP 가 서버와 달랐다. 이제 둘 다 이 줄을 쓴다.
+  function maxSpeedOf(P, sprint, bodyMult, aim) {
+    var m = P.baseSpeed * (sprint ? P.sprintMult : 1) * bodyMult;
+    if (aim) m = m * P.aimSpeedFrac;
+    return m;
+  }
+
+  // === 한 스텝 ===
+  //   state : { vx, vy }  — accel 모드에서만 의미가 있다(호출자가 보관·복원한다)
+  //   input : { wx, wy, sprint, bodyMult, aim, groundMult }   wx,wy 는 **정규화된 월드 방향**(정지=0,0) · groundMult = 땅 배율(개울 · 없으면 1)
+  //   dt    : 초
+  //   반환  : { vx, vy, dx, dy }  — dx,dy 는 콜라이더 **통과 전** 위치 델타
+  function stepMove(state, input, dt, params) {
+    var P = params || DEFAULTS;
+    var wx = num(input && input.wx, 0), wy = num(input && input.wy, 0);
+    var bodyMult = num(input && input.bodyMult, 1);
+    // ★★[T585] 땅 배율 — 개울 칸 위 사람 걸음 ×0.5(`server/streams.js STREAM_SLOW0` · 서버 `zone.js` 와 클라 `31-m-move.js` 가 같은 칸에서 같은 수를 넘긴다).
+    //   몸 배율과 **같은 자리**에 곱한다(최고속·가속 둘 다 — 개울에 들면 굼떠지고 나오면 다시 붙는다). 1 이면 곱하지 않는다(종전 비트 그대로).
+    var groundMult = num(input && input.groundMult, 1);
+    if (groundMult !== 1) bodyMult = bodyMult * groundMult;
+    var sprint = !!(input && input.sprint), aim = !!(input && input.aim);
+    var hyp = Math.hypot(wx, wy), len = hyp || 1;
+    var vmax = maxSpeedOf(P, sprint, bodyMult, aim);
+
+    if (P.model !== 'accel') {
+      // --- legacy: 입력이 곧 속도. 상태 없음(서버 옛 식과 **비트 동일**) ---
+      var lvx = (wx / len) * P.baseSpeed * Math.min(1, hyp) * (sprint ? P.sprintMult : 1) * bodyMult;
+      var lvy = (wy / len) * P.baseSpeed * Math.min(1, hyp) * (sprint ? P.sprintMult : 1) * bodyMult;
+      if (aim) { lvx = lvx * P.aimSpeedFrac; lvy = lvy * P.aimSpeedFrac; }
+      return { vx: lvx, vy: lvy, dx: lvx * dt, dy: lvy * dt };
+    }
+
+    // --- accel: 목표 속도로 **등가속** 접근 ---
+    var vx = num(state && state.vx, 0), vy = num(state && state.vy, 0);
+    var tvx = (wx / len) * vmax * Math.min(1, hyp);
+    var tvy = (wy / len) * vmax * Math.min(1, hyp);
+    var stopping = (wx === 0 && wy === 0);
+    // ★가속도에도 배율이 산다: vmax 가 bodyMult 를 품고 있으므로 rate 가 함께 줄어든다.
+    var rate = vmax / (stopping ? P.decelT : P.accelT);
+    var dvx = tvx - vx, dvy = tvy - vy;
+    var d = Math.hypot(dvx, dvy);
+    var step = rate * dt;
+    if (d <= step || d === 0) { vx = tvx; vy = tvy; }          // 도달 — 넘어서지 않는다
+    else { vx += (dvx / d) * step; vy += (dvy / d) * step; }    // 벡터 가속(급반전도 이 한 줄이 처리)
+    return { vx: vx, vy: vy, dx: vx * dt, dy: vy * dt };        // 세미-임플리싯: 새 속도로 옮긴다
+  }
+
+  // === 서버 검증용 — 이 모델이 한 스텝에 낼 수 있는 **최대 이동 px** ===
+  //   스피드핵 경계. accel 이라고 legacy 보다 커지지 않는다(최고속이 상한이므로) —
+  //   그래도 "모델이 허용하는 최대 + 여유"라는 계약을 한 곳에 둔다.
+  function maxStepPx(params, dt, bodyMultMax) {
+    var P = params || DEFAULTS;
+    var vmax = P.baseSpeed * P.sprintMult * num(bodyMultMax, 1);
+    return vmax * dt;
+  }
+
+  var API = {
+    DEFAULTS: DEFAULTS,
+    paramsFrom: paramsFrom,
+    maxSpeedOf: maxSpeedOf,
+    stepMove: stepMove,
+    maxStepPx: maxStepPx,
+  };
+  if (typeof module !== 'undefined' && module.exports) module.exports = API;
+  else root.MoveModel = API;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+;return module.exports;})();
   modules["equil"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
 // === sim/equilibrium.js — 평형 회귀 한 곳(★재민 11-02 "현재가 높으면 기본 변화량이 마이너스, 낮으면 플러스") ===
 //   T1076(원정 사기)이 처음 쓰고, T1075(마을 행복 평형)가 같은 함수를 쓴다 — 사본 0.
@@ -15881,7 +16019,8 @@ function travelDaysForDistance(dist) {
 //     켤 때 move-model 을 같이 싣는다 · 안 실으면 아래 함수가 소리 내 던진다).
 //   ⚠[T496] 소문은 이제 이 시계의 거울이 아니다 — 소문 = 몸(아래 T489 · **기본 켬**)이라 이 손잡이를 켜면 캐러밴·소문이 **같은 몸 시계**에 선다
 //     (T474 켜기 조건 ① 이 풀렸다). `T489_RUMOR_SPLIT=0`(종전 거울 500)과 같이 켜면 그땐 시계 둘이다 — `test-events ⑲` 의 종전 갈래가 빨개진다.
-const T474_CARAVAN_WALK = (typeof process !== 'undefined' && process.env && process.env.T474_CARAVAN_WALK === '1');
+//   ★★[PM land1045 · ★재민 11-04 "걸음도 반드시 켜야 해"] **켬 기본** — `0` 한 글자만 끔(= 종전 500 · 비트 동일). 번들은 몸 정본(`public/move-model.js`)을 싣는다(build-econ-bundle).
+const T474_CARAVAN_WALK = (typeof process !== 'undefined' && process.env && process.env.T474_CARAVAN_WALK !== '0');
 const ECON_PER_CELL = 2.5;   // ★거울 — 호스트 좌표 규약(villages.js `PX_PER_ECON = SZ / 2.5` · `ev.coord = 셀×2.5` · t17-metrics · 랩) · 계약 ⑱
 function caravanWalkPerDay() {   // 몸 하루 걸음(econ 단위/일) — 켬이 쓰고, 표(scripts/t474-clocks.js)가 부른다(사본 0)
   const MM = require('../public/move-model');

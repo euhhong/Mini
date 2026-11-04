@@ -300,7 +300,8 @@ function travelDaysForDistance(dist) {
 //     켤 때 move-model 을 같이 싣는다 · 안 실으면 아래 함수가 소리 내 던진다).
 //   ⚠[T496] 소문은 이제 이 시계의 거울이 아니다 — 소문 = 몸(아래 T489 · **기본 켬**)이라 이 손잡이를 켜면 캐러밴·소문이 **같은 몸 시계**에 선다
 //     (T474 켜기 조건 ① 이 풀렸다). `T489_RUMOR_SPLIT=0`(종전 거울 500)과 같이 켜면 그땐 시계 둘이다 — `test-events ⑲` 의 종전 갈래가 빨개진다.
-const T474_CARAVAN_WALK = (typeof process !== 'undefined' && process.env && process.env.T474_CARAVAN_WALK === '1');
+//   ★★[PM land1045 · ★재민 11-04 "걸음도 반드시 켜야 해"] **켬 기본** — `0` 한 글자만 끔(= 종전 500 · 비트 동일). 번들은 몸 정본(`public/move-model.js`)을 싣는다(build-econ-bundle).
+const T474_CARAVAN_WALK = (typeof process !== 'undefined' && process.env && process.env.T474_CARAVAN_WALK !== '0');
 const ECON_PER_CELL = 2.5;   // ★거울 — 호스트 좌표 규약(villages.js `PX_PER_ECON = SZ / 2.5` · `ev.coord = 셀×2.5` · t17-metrics · 랩) · 계약 ⑱
 function caravanWalkPerDay() {   // 몸 하루 걸음(econ 단위/일) — 켬이 쓰고, 표(scripts/t474-clocks.js)가 부른다(사본 0)
   const MM = require('../public/move-model');

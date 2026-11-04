@@ -5,6 +5,7 @@
 //   ① 4일 안 후보 중 행복이 가장 높은 곳 · ② 4일 밖은 안 고른다 · ③ 떠나는 마을보다 안 행복하면 안 고른다(아무도 안 떠남 = null)
 //   ④ 침상이 꽉 찬 곳 · 곳간이 3일치 밑인 곳은 안 고른다 · ⑤ 같은 행복이면 가까운 곳 · ⑥ 고른 곳이 가장 가까운 곳인지 따로 센다(보고 칸).
 'use strict';
+if (process.env.T474_CARAVAN_WALK === undefined) process.env.T474_CARAVAN_WALK = '0';   // ★[PM land1045] T474 켬 기본 — 이 하네스의 판 · 픽스처(소문 ≠ 캐러밴 대조 · '교역로 4일' 이웃 표본)는 종전 캐러밴 시계(500) 위에서 짠 것이라 끔으로 묶는다(단언 무변 · 켬 세계는 test-move-soa ⑱ ⑲ · test-t1136-basket 이 잰다)
 const path = require('path');
 const fs = require('fs');
 const ROOT = path.join(__dirname, '..');

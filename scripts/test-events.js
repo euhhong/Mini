@@ -13,6 +13,7 @@
 //
 // 실행: node scripts/test-events.js
 'use strict';
+if (process.env.T474_CARAVAN_WALK === undefined) process.env.T474_CARAVAN_WALK = '0';   // ★[PM land1045] T474 켬 기본 — 이 하네스의 판 · 픽스처(소문 ≠ 캐러밴 대조 · '교역로 4일' 이웃 표본)는 종전 캐러밴 시계(500) 위에서 짠 것이라 끔으로 묶는다(단언 무변 · 켬 세계는 test-move-soa ⑱ ⑲ · test-t1136-basket 이 잰다)
 process.env.ENABLE_VILLAGES = process.env.ENABLE_VILLAGES || '0';   // villages.js 를 정본 함수용으로만 로드
 process.env.DB_PATH = process.env.DB_PATH || `/tmp/test-events-${process.pid}.db`;
 
