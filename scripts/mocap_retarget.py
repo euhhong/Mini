@@ -346,6 +346,20 @@ KEYS_PER_FRAME = 4              # 3D 클립의 판당 열쇠(`char_export_gltf.p
 # 시트 다리 뼈 → (자료 곡선 · 위상 어긋남) — 자료 각 = 땅 기준 시상각(앞으로 +) · 정강이 = 넓적다리 − 무릎 굽힘
 GAIT_LEGS = (("thighL", "thigh", 0.0), ("shinL", "shank", 0.0), ("thighR", "thigh", 0.5), ("shinR", "shank", 0.5))
 GAIT = {}                       # main() 이 채운다(`--probe` 는 모캡 그대로 잰다)
+# ★★[T1129 · ★재민 11-03 문 15 ⓑ "보폭을 맞춘다"] 보폭 배율 — 걷기·달리기 다리 마디의 땅 기준 시상각(넓적다리 · 정강이 · [3D] 발) × s.
+#   이동 속도(게임 수치 `MOVE_SPEED` · `SPRINT_MULT`)와 주기(시트 fps · 판 수)는 그대로 · 디딘 발이 땅 위에서 미끄러지지 않을 만큼 다리를 더(덜) 벌린다.
+#   s 는 표 하나(`assets-src/gait/stride_fit.json` — `scripts/t1129-stride-fit.py` 산물)에서 읽는다: 몸(시트 'sheet' · 3D 'M' · 'F') × 클립마다
+#   "디딘 발 미끄러짐(`t723-foot-slide.py` (나)) = 0" 이 되는 s(새 수 0 — 자가 정한다) · 표가 없으면 1(종전 그대로).
+STRIDE_PATH = os.path.join(ROOT, "assets-src", "gait", "stride_fit.json")
+
+
+def stride_scale(body, clip):
+    """보폭 배율 s — body = 'sheet'(2D 시트 한 몸) | 'M' | 'F'(3D) · 표가 없거나 칸이 없으면 1.0."""
+    if not os.path.exists(STRIDE_PATH):
+        return 1.0
+    with open(STRIDE_PATH, encoding="utf-8") as f:
+        tbl = json.load(f)
+    return float(((tbl.get("scale") or {}).get(body) or {}).get(clip, 1.0))
 
 
 def gait_tables():
@@ -497,7 +511,7 @@ def contact_plan(K, ph0, duty, eval_key, rise=None, label=""):
     return {"st": st, "sft": sft, "lift": lift, "hip": hip, "air": air}
 
 
-def retarget(path, nframes=8, loop=True, rule="cycle", bone="thighL", span=0, gait=None):
+def retarget(path, nframes=8, loop=True, rule="cycle", bone="thighL", span=0, gait=None, stride=1.0):
     """★[T723 ①] `gait` = 그 클립의 자료 표(`gait_norms.json` 의 walk/run) — 주면 다리 넷(넓적다리·정강이 × 좌우)의 시상각을
        자료 주기로 세운다(관상각 = BVH 0번 판 그대로 · 몸통·팔·머리는 모캡 그대로). 위상 = `gait_phase`(3D 와 같은 함수 · 같은 표본)."""
     nodes, order, frames, dt = parse_bvh(path)
@@ -512,6 +526,8 @@ def retarget(path, nframes=8, loop=True, rule="cycle", bone="thighL", span=0, ga
         pz = fk(nodes, order, frames[0])                                  # 0번 판(T자 보정 판) — 다리 곧게(시상 0 · 관상 ∓1°)
         beta0 = {nm: ab_of(seg_dir_body(pz, I, ja, jb), torso)[1] for nm, ja, jb, torso, _p in BONES}
         gi = {"phase0": ph0, "corr": round(corr, 4), "thighMocapDeg": [round(min(th_m), 2), round(max(th_m), 2)]}
+        if stride != 1.0:
+            gi["stride"] = stride                                         # ★[T1129] 보폭 배율(다리 시상각 × s · `stride_fit.json`)
         # ★[T746] 접지 재료 — 시트 굽기가 3D 와 같은 `contact_plan` 을 부른다(디딤 비율 · 공중 골반 높이 곡선 = `gait_norms.json` 그대로)
         gi["duty"] = gait["duty"]
         if gait.get("pelvisRise"):
@@ -534,7 +550,7 @@ def retarget(path, nframes=8, loop=True, rule="cycle", bone="thighL", span=0, ga
         if gi:
             # ★[T723 ①] 다리 = 자료 — 리그 사지 α 는 뒤로 + 라 자료 각(앞으로 +)의 부호를 뒤집는다 · β = 0번 판(3D 의 '곧게 선 다리'와 같은 판)
             for nm, seg, off in GAIT_LEGS:
-                world[nm] = (-math.radians(gait_cyc(gait[seg], ph0 + k / float(NFRAMES) + off)), beta0[nm])
+                world[nm] = (-math.radians(stride * gait_cyc(gait[seg], ph0 + k / float(NFRAMES) + off)), beta0[nm])   # ★[T1129] × 보폭 배율
         pose = {}
         for nm, _ja, _jb, torso, par in BONES:
             a, b = world[nm]
@@ -622,7 +638,8 @@ def main():
             print(f"[mocap] ⚠{fn} 이 없다 — {clip} 을 건너뛴다")
             continue
         nodes, order, frames, dt = parse_bvh(src)
-        poses, info = retarget(src, nf, loop, rule, bone, int(round(nf / fps / dt)), gait=GAIT.get(clip))
+        poses, info = retarget(src, nf, loop, rule, bone, int(round(nf / fps / dt)), gait=GAIT.get(clip),
+                               stride=stride_scale("sheet", clip) if clip in GAIT else 1.0)   # ★[T1129] 시트 보폭 배율
         info["nframes"], info["clipFps"], info["loop"], info["rule"] = nf, fps, loop, rule
         doc["clips"][clip] = poses
         info["file"] = fn

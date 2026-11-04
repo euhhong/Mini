@@ -1,5 +1,5 @@
 {
- "_": "[T545 · T604 · T654 · T664 · T685 · T708] char_export_gltf.py 산물 — 엔진이 읽는 규약. 클라는 이 수를 하드코딩하지 않는다(갖옷 = `coatKind` 재질이 `furOffsetAttr` 를 더한다).",
+ "_": "[T545 · T604 · T654 · T664 · T685 · T708 · T1129] char_export_gltf.py 산물 — 엔진이 읽는 규약. 클라는 이 수를 하드코딩하지 않는다(갖옷 = `coatKind` 재질이 `furOffsetAttr` 를 더한다).",
  "alphaTest": 0.5,
  "atlas": {
   "cells": {
@@ -45,14 +45,30 @@
     "belt": 3,
     "bumped": 22,
     "coat": {
+     "bands": {
+      "collar": {
+       "rings": 1,
+       "t": 0.790191
+      },
+      "cuff": {
+       "rings": 1,
+       "t": 0.622375
+      },
+      "hem": {
+       "rings": 1,
+       "t": 0.302957
+      }
+     },
+     "belt": "visible",
      "cut": {
-      "hem": "knee",
+      "hem": "sheet",
       "sleeve": "long"
      },
-     "drapeTop": 7,
-     "drapeTopZ": 1.11326,
-     "hem3": 0.42127,
+     "fit": "body",
+     "hem3": 0.61104,
+     "hemS": 0.7,
      "pad": 0.026471,
+     "pushed": 0,
      "sleeveRings": [
       1.405,
       1.3,
@@ -67,17 +83,49 @@
      "hem": "knee",
      "sleeve": "long"
     },
+    "furUV": [
+     [
+      0.016129,
+      0.983871,
+      0.937039,
+      0.992063
+     ],
+     [
+      0.016129,
+      0.983871,
+      0.610253,
+      0.619031
+     ],
+     [
+      0.016129,
+      0.409244,
+      0.407011,
+      0.422014
+     ],
+     [
+      0.441502,
+      0.83462,
+      0.407011,
+      0.422014
+     ]
+    ],
     "hem3": 0.42127,
     "hemS": 0.46,
     "inserted": 5,
+    "meshRings": {
+     "belt": 3,
+     "slvL": 9,
+     "slvR": 9,
+     "tube": 18
+    },
     "mhclo": {
      "base": {
-      "mhclo": "f073acacfce6bc49",
-      "obj": "53c2fddbe15140ae"
+      "mhclo": "e118eb532b4a745f",
+      "obj": "7f4faabe1cb2242f"
      },
      "fur": {
-      "mhclo": "d568312a678d8c46",
-      "obj": "8356082c81c1902d"
+      "mhclo": "c2f595e477e6d331",
+      "obj": "cadc59b4b65f1b6f"
      }
     },
     "rings": 14,
@@ -88,22 +136,38 @@
      0.370968,
      0.391138
     ],
-    "tris_base": 896,
-    "tris_fur": 896,
-    "verts_base": 498,
-    "verts_fur": 498
+    "tris_base": 1152,
+    "tris_fur": 1152,
+    "verts_base": 626,
+    "verts_fur": 626
    },
    "coat": {
+    "bands": {
+     "collar": {
+      "rings": 1,
+      "t": 0.790191
+     },
+     "cuff": {
+      "rings": 1,
+      "t": 0.622375
+     },
+     "hem": {
+      "rings": 1,
+      "t": 0.302957
+     }
+    },
+    "belt": "visible",
     "cut": {
-     "hem": "knee",
+     "hem": "sheet",
      "sleeve": "long"
     },
-    "drapeTop": 7,
-    "drapeTopZ": 1.11326,
-    "hem3": 0.42127,
-    "offsetMaxM": 0.06176,
-    "offsetZero": 50,
+    "fit": "body",
+    "hem3": 0.61104,
+    "hemS": 0.7,
+    "offsetMaxM": 0.20935,
+    "offsetZero": 386,
     "pad": 0.02824,
+    "pushed": 0,
     "sleeveRings": [
      1.405,
      1.3,
@@ -115,8 +179,46 @@
     ]
    },
    "furSkin": {
-    "over4": 90,
-    "verts": 498
+    "over4": 141,
+    "verts": 626
+   },
+   "gait": {
+    "run": {
+     "contact": {
+      "airKeys": 12,
+      "airLiftKeys": 0,
+      "airMinMm": 18.133,
+      "duty": 0.3151,
+      "liftKeys": 0,
+      "liftMaxDeg": 0.0,
+      "rule": "디딘 발(자료 디딤 구간) 살 가장 낮은 점 = 0 · 흔드는 발 땅 밑이면 넓적다리 들림 · 공중 = 자료 골반 높이(pelvisRise × 키)",
+      "stanceLowMm": [
+       -0.0,
+       0.0
+      ],
+      "swingMinMm": 18.133
+     },
+     "phase0": 0.228,
+     "stride": 1.154097
+    },
+    "walk": {
+     "contact": {
+      "airKeys": 0,
+      "airLiftKeys": 0,
+      "airMinMm": null,
+      "duty": 0.5658,
+      "liftKeys": 1,
+      "liftMaxDeg": 0.567,
+      "rule": "디딘 발(자료 디딤 구간) 살 가장 낮은 점 = 0 · 흔드는 발 땅 밑이면 넓적다리 들림 · 공중 = 자료 골반 높이(pelvisRise × 키)",
+      "stanceLowMm": [
+       -0.0,
+       24.596
+      ],
+      "swingMinMm": 0.0
+     },
+     "phase0": 0.329,
+     "stride": 1.139204
+    }
    },
    "mesh": "F_body",
    "node": "F",
@@ -160,12 +262,12 @@
      "RightUpLeg": 8.56
     }
    },
-   "tris": 5999,
+   "tris": 6000,
    "trisParts": {
     "brows": 192,
-    "cloth": 896,
+    "cloth": 1152,
     "eyes": 172,
-    "hair": 1571,
+    "hair": 1316,
     "skin": 3168
    }
   },
@@ -176,17 +278,37 @@
     "belt": 3,
     "bumped": 33,
     "coat": {
+     "bands": {
+      "collar": {
+       "rings": 2,
+       "t": 0.511758
+      },
+      "cuff": {
+       "rings": 1,
+       "t": 0.54599
+      },
+      "hem": {
+       "rings": 1,
+       "t": 0.315027
+      }
+     },
+     "belt": "visible",
      "cut": {
-      "hem": "knee",
+      "hem": "sheet",
       "sleeve": "long"
      },
-     "drapeTop": 5,
-     "drapeTopZ": 1.21156,
-     "hem3": 0.45898,
+     "fit": "body",
+     "hem3": 0.6769,
+     "hemS": 0.7,
      "pad": 0.028835,
+     "pushed": 0,
      "sleeveRings": [
       1.405,
+      1.3,
+      1.18,
       1.09,
+      0.99,
+      0.89,
       0.835
      ]
     },
@@ -194,17 +316,49 @@
      "hem": "sheet",
      "sleeve": "short"
     },
+    "furUV": [
+     [
+      0.016129,
+      0.983871,
+      0.967917,
+      0.992063
+     ],
+     [
+      0.016129,
+      0.983871,
+      0.706801,
+      0.715507
+     ],
+     [
+      0.016129,
+      0.429676,
+      0.618817,
+      0.622611
+     ],
+     [
+      0.461934,
+      0.875489,
+      0.618817,
+      0.622611
+     ]
+    ],
     "hem3": 0.6769,
     "hemS": 0.7,
     "inserted": 5,
+    "meshRings": {
+     "belt": 3,
+     "slvL": 9,
+     "slvR": 9,
+     "tube": 17
+    },
     "mhclo": {
      "base": {
-      "mhclo": "c48d63d9f83024c3",
-      "obj": "70a31a3f31713042"
+      "mhclo": "4e21429fa2e5bf0d",
+      "obj": "ad51f5d1fa5492f5"
      },
      "fur": {
-      "mhclo": "68c876cb7da93b26",
-      "obj": "d5a9cd880727f49b"
+      "mhclo": "dc97485d51b98798",
+      "obj": "5352fd8cf8739f92"
      }
     },
     "rings": 13,
@@ -215,31 +369,89 @@
      0.584864,
      0.602943
     ],
-    "tris_base": 608,
-    "tris_fur": 608,
-    "verts_base": 354,
-    "verts_fur": 354
+    "tris_base": 1120,
+    "tris_fur": 1120,
+    "verts_base": 610,
+    "verts_fur": 610
    },
    "coat": {
+    "bands": {
+     "collar": {
+      "rings": 2,
+      "t": 0.511758
+     },
+     "cuff": {
+      "rings": 1,
+      "t": 0.54599
+     },
+     "hem": {
+      "rings": 1,
+      "t": 0.315027
+     }
+    },
+    "belt": "visible",
     "cut": {
-     "hem": "knee",
+     "hem": "sheet",
      "sleeve": "long"
     },
-    "drapeTop": 5,
-    "drapeTopZ": 1.21156,
-    "hem3": 0.45898,
-    "offsetMaxM": 0.33555,
-    "offsetZero": 50,
+    "fit": "body",
+    "hem3": 0.6769,
+    "hemS": 0.7,
+    "offsetMaxM": 0.32928,
+    "offsetZero": 274,
     "pad": 0.028243,
+    "pushed": 0,
     "sleeveRings": [
      1.405,
+     1.3,
+     1.18,
      1.09,
+     0.99,
+     0.89,
      0.835
     ]
    },
    "furSkin": {
-    "over4": 97,
-    "verts": 354
+    "over4": 128,
+    "verts": 610
+   },
+   "gait": {
+    "run": {
+     "contact": {
+      "airKeys": 12,
+      "airLiftKeys": 0,
+      "airMinMm": 16.145,
+      "duty": 0.3151,
+      "liftKeys": 0,
+      "liftMaxDeg": 0.0,
+      "rule": "디딘 발(자료 디딤 구간) 살 가장 낮은 점 = 0 · 흔드는 발 땅 밑이면 넓적다리 들림 · 공중 = 자료 골반 높이(pelvisRise × 키)",
+      "stanceLowMm": [
+       -0.0,
+       0.0
+      ],
+      "swingMinMm": 16.145
+     },
+     "phase0": 0.228,
+     "stride": 1.123336
+    },
+    "walk": {
+     "contact": {
+      "airKeys": 0,
+      "airLiftKeys": 0,
+      "airMinMm": null,
+      "duty": 0.5658,
+      "liftKeys": 4,
+      "liftMaxDeg": 2.398,
+      "rule": "디딘 발(자료 디딤 구간) 살 가장 낮은 점 = 0 · 흔드는 발 땅 밑이면 넓적다리 들림 · 공중 = 자료 골반 높이(pelvisRise × 키)",
+      "stanceLowMm": [
+       -0.0,
+       19.865
+      ],
+      "swingMinMm": 0.0
+     },
+     "phase0": 0.329,
+     "stride": 1.107992
+    }
    },
    "mesh": "M_body",
    "node": "M",
@@ -283,12 +495,12 @@
      "RightUpLeg": 8.471
     }
    },
-   "tris": 6000,
+   "tris": 5999,
    "trisParts": {
     "brows": 192,
-    "cloth": 608,
+    "cloth": 1120,
     "eyes": 172,
-    "hair": 1888,
+    "hair": 1375,
     "skin": 3140
    }
   }
@@ -353,7 +565,7 @@
     "contact": {
      "airKeys": 12,
      "airLiftKeys": 0,
-     "airMinMm": 15.148,
+     "airMinMm": 16.145,
      "duty": 0.3151,
      "liftKeys": 0,
      "liftMaxDeg": 0.0,
@@ -362,15 +574,16 @@
       -0.0,
       0.0
      ],
-     "swingMinMm": 15.148
+     "swingMinMm": 16.145
     },
     "corr": 0.9965,
     "groundShiftMm": [
-     -1.93,
-     68.66
+     -1.85,
+     73.64
     ],
     "legs": "Fukuchi RK, Fukuchi CA, Duarte M (2017) · doi:10.7717/peerj.3298 · 45 · 28명",
     "phase0": 0.228,
+    "stride": 1.123336,
     "thighMocapDeg": [
      -35.09,
      41.76
@@ -424,22 +637,23 @@
      "airLiftKeys": 0,
      "airMinMm": null,
      "duty": 0.5658,
-     "liftKeys": 8,
-     "liftMaxDeg": 2.897,
+     "liftKeys": 4,
+     "liftMaxDeg": 2.398,
      "rule": "디딘 발(자료 디딤 구간) 살 가장 낮은 점 = 0 · 흔드는 발 땅 밑이면 넓적다리 들림 · 공중 = 자료 골반 높이(pelvisRise × 키)",
      "stanceLowMm": [
       -0.0,
-      10.058
+      19.865
      ],
-     "swingMinMm": -0.0
+     "swingMinMm": 0.0
     },
     "corr": 0.9914,
     "groundShiftMm": [
-     -2.0,
-     13.49
+     -1.95,
+     24.64
     ],
     "legs": "Fukuchi CA, Fukuchi RK, Duarte M (2018) · doi:10.7717/peerj.4640 · T08 · 23명",
     "phase0": 0.329,
+    "stride": 1.107992,
     "thighMocapDeg": [
      -30.93,
      34.32
@@ -469,7 +683,7 @@
   "fur"
  ],
  "coatKind": "fur",
- "coatNote": "[T708 ③] 옷 → 메시는 하나(옷 넷 = 재질) · 갖옷(`coatKind`) = 따로 지은 겉옷(생성기 — 본 옷과 같은 위상 · 단 무릎 · 긴팔 · 가슴 아래로 떨어지는 천 · 털 두께) — 정점 속성 `_furoffset`(옷 점 = 겉옷 자리 − 본 옷 자리 · m · glTF 축 · 그 밖 0)을 묶기 자세에서 더한 뒤 스키닝(엔진 셰이더 한 줄 — T654~T685 의 몸 부풀림 `_inflate` 를 걷었다) · [T664] 갖옷 면 법선 = 면 속성 `_furnormal`(겉옷의 면 법선 · 그 밖 0 — 갖옷 재질만 바꾼다) · [T685] 갖옷 몫 뼈 넷·무게 넷 = `_furjoints`(glTF 뼈 번호 u8)·`_furweights`(합 1) — 겉옷 기하를 MPFB 로 따로 묶은 무게(내보내기와 같은 규칙) · 갖옷 재질만 스키닝 뼈·무게를 갈아 끼운다 · 사용자 속성 넷 다 glTF 성긴 접근자(바탕 0)",
+ "coatNote": "[T708 ③ → T1129] 옷 → 메시는 하나(옷 넷 = 재질) · 갖옷(`coatKind`) = 따로 지은 겉옷(생성기 — 본 옷과 같은 위상 · [T1129] 몸에 붙는 얇은 가죽 판(본 옷 링) · 단 = 시트 단(무릎 위) · 긴팔(팔을 따라 가늘게) · 허리띠 겉 · 털 두께는 깃 · 소매 끝 · 단의 테에만 · 무늬 = 가죽 결 판 + 털 결 테) — 정점 속성 `_furoffset`(옷 점 = 겉옷 자리 − 본 옷 자리 · m · glTF 축 · 그 밖 0)을 묶기 자세에서 더한 뒤 스키닝(엔진 셰이더 한 줄 — T654~T685 의 몸 부풀림 `_inflate` 를 걷었다) · [T664] 갖옷 면 법선 = 면 속성 `_furnormal`(겉옷의 면 법선 · 그 밖 0 — 갖옷 재질만 바꾼다) · [T685] 갖옷 몫 뼈 넷·무게 넷 = `_furjoints`(glTF 뼈 번호 u8)·`_furweights`(합 1) — 겉옷 기하를 MPFB 로 따로 묶은 무게(내보내기와 같은 규칙) · 갖옷 재질만 스키닝 뼈·무게를 갈아 끼운다 · 사용자 속성 넷 다 glTF 성긴 접근자(바탕 0)",
  "defaultBody": "M",
  "exporter": "io_scene_gltf2 5.0.21",
  "fabric": {
@@ -483,6 +697,7 @@
  "furJointsAttr": "_furjoints",
  "furNormalAttr": "_furnormal",
  "furOffsetAttr": "_furoffset",
+ "furPanel": "Leather028",
  "furWeightsAttr": "_furweights",
  "glb": "char_body.glb",
  "height": 1.6,

@@ -597,28 +597,67 @@ def _tunic_mat(i, k):
     return 1 if fr > 0.35 else 0
 
 
-# ★[T81] 한 벌을 통째로 짓는 함수 — `pad` 는 **반지름에 더하는 두께(m)**.
-#   갖옷(모피)만 pad>0 이다: 털가죽은 부피가 있다. 색만으로는 가죽옷과 안 갈렸다(§0-ⓐ 실측:
-#   평균 |Δ휘도| 10.2 · 다른 화소 6.3% — 앞섶 신호 14.7 에 못 미친다). 실루엣은 색과 달리
-#   빛·색맹·압축에 안 무너지는 신호라 여기서 값을 치른다.
-def build_cloth(bucket, pad=0.0, suffix=""):
-    def _p(rings):   # (z, cx, cy, rx, ry) — 반지름 둘에만 더한다(자리·높이 무변)
-        return [(z, cx, cy, rx + pad, ry + pad) for (z, cx, cy, rx, ry) in rings]
-    tr, sk, bl = _p(TUNIC_R), _p(SKIRT_R), _p(BELT_R)
-    loft("tunic" + suffix, tr, blendw(TUNIC_R, [(0.80, 1.060, 'root'), (1.020, 1.50, 'spine')]),
+# ★[T81] 한 벌을 통째로 짓는 함수. ★★[T1129 · ★재민 11-03 문 14-a ㄴ "갈색 옷 버전은 너무 심하다 · 둘 다 돼지 같다"] 갖옷 = **몸에 붙는 얇은 겉옷 + 털 테**:
+#   종전(T81)은 본 옷 링 전부에 털 두께(`FUR_PAD`)를 더한 통이었다 — 어깨~단이 한 덩어리 네모 통으로 읽혔다(그림 `~/Mini/산그림/T708_몸.png` 첫 줄).
+#   ⇒ `coat=True` = 몸통 판은 본 옷 그 기하(얇은 가죽 면 — 가슴 링 · 허리 · 엉덩이 그대로) · 허리띠는 본 옷 자리(겉옷이 얇아 띠가 겉에 서서 허리가 잘록하다) ·
+#     단 = 본 옷 단(시트 `SKIRT_R` 맨 아래 — 무릎 위) · 소매 = 긴팔 가는 통(소매 끝 링의 여유를 손목까지 · 3D `char_clothes_mhclo` 의 긴팔 규칙과 같은 식) ·
+#     털 두께는 **깃(웃옷 맨 위 링) · 소매 끝(손목) · 단**에만 — 테 = 그 끝 링에서 겉면을 따라 `FUR_PAD` 만큼 들어간 자리까지 · 반지름 + `FUR_PAD`(새 수 0 — 두께 한 수).
+#   고증: 청동기 직접 근거 0(`설계/고증_청동기옷.md` — 가죽·털가죽은 후대 기록뿐 · 부여 "裘" 는 덧입은 것만 적혔다) — 꼴은 재민 눈 판정(보고/T1129 §2).
+def _edge_band(rings, end, pad):
+    """털 테 링 둘 — `rings` = [(z, cx, cy, rx, ry)] · `end` = 'top'(z 가 가장 큰 링 — 깃) | 'low'(z 가 가장 작은 링 — 단 · 소매 끝).
+       끝 링과 그 이웃 링 사이 겉면(높이 · 평균 반지름의 곧은 보간)을 따라 `pad` 만큼 들어간 자리 + 끝 링 · 둘 다 반지름 + `pad`. 아래→위 차례로 돌려준다."""
+    rs = sorted(rings, key=lambda r: r[0])
+    a, b = (rs[-1], rs[-2]) if end == 'top' else (rs[0], rs[1])
+    L = math.hypot(b[0] - a[0], ((b[3] + b[4]) - (a[3] + a[4])) / 2.0)
+    t = min(1.0, pad / L) if L > 0 else 1.0
+    m = tuple(a[i] + t * (b[i] - a[i]) for i in range(5))
+    ra = (a[0], a[1], a[2], a[3] + pad, a[4] + pad)
+    rm = (m[0], m[1], m[2], m[3] + pad, m[4] + pad)
+    return sorted([ra, rm], key=lambda r: r[0])
+
+
+def sleeve_long(sg):
+    """[T1129] 갖옷 긴팔 링(위→아래) — 시트 소매 `SLV_R` + 그 아래 팔 링(`ARM_R` · 손목 = `larm` 끝까지) × (팔 + 소매 끝 링의 여유) — 3D 긴팔과 같은 규칙."""
+    sr = [(z, 0, sg * ARM_Y, rx * LIMB_K, ry * LIMB_K) for (z, rx, ry) in SLV_R]
+    arm = sorted((z, rx * LIMB_K, ry * LIMB_K) for (z, rx, ry) in ARM_R)
+    def arm_at(z):
+        for (z0, x0, y0), (z1, x1, y1) in zip(arm, arm[1:]):
+            if z0 <= z <= z1:
+                f = (z - z0) / (z1 - z0) if z1 > z0 else 0.0
+                return x0 + f * (x1 - x0), y0 + f * (y1 - y0)
+        raise SystemExit(f"[char] ★팔 링 밖 높이 {z}")
+    zl = sr[-1][0]
+    e = (sr[-1][3] - arm_at(zl)[0], sr[-1][4] - arm_at(zl)[1])
+    z_wrist = Z_SHLD - 0.56                                   # 손목 = `larm` 뼈 끝(뼈 표 그대로)
+    for (z, rx, ry) in ARM_R:
+        if z_wrist - 1e-9 <= z < zl:
+            sr.append((z, 0, sg * ARM_Y, rx * LIMB_K + e[0], ry * LIMB_K + e[1]))
+    return sr
+
+
+def build_cloth(bucket, suffix="", coat=False):
+    pad = FUR_PAD if coat else 0.0
+    loft("tunic" + suffix, TUNIC_R, blendw(TUNIC_R, [(0.80, 1.060, 'root'), (1.020, 1.50, 'spine')]),
          M['hemp'], bucket, matfn=_tunic_mat, extra_mats=(M['cord'],))
-    loft("skirt" + suffix, sk, blendw(SKIRT_R, [(0.60, 1.00, 'root')]), M['hemp'], bucket)
-    loft("belt" + suffix, bl, blendw(BELT_R, [(0.95, 1.10, 'root')]), M['hemp2'], bucket)
+    loft("skirt" + suffix, SKIRT_R, blendw(SKIRT_R, [(0.60, 1.00, 'root')]), M['hemp'], bucket)
+    loft("belt" + suffix, BELT_R, blendw(BELT_R, [(0.95, 1.10, 'root')]), M['hemp2'], bucket)
+    if coat:                                                  # [T1129] 털 테 — 깃 · 단(소매 끝은 아래 소매에서)
+        cb = _edge_band(TUNIC_R, 'top', pad)
+        loft("collar" + suffix, cb, blendw(cb, [(0.80, 1.060, 'root'), (1.020, 1.50, 'spine')]), M['hemp'], bucket)
+        hb = _edge_band(SKIRT_R, 'low', pad)
+        loft("hem" + suffix, hb, blendw(hb, [(0.60, 1.00, 'root')]), M['hemp'], bucket)
     for _sg, _sf in ((+1, 'L'), (-1, 'R')):
-        _sr0 = [(z, 0, _sg * ARM_Y, rx * LIMB_K, ry * LIMB_K) for (z, rx, ry) in SLV_R]
-        _sr = [(z, cx, cy, rx + pad, ry + pad) for (z, cx, cy, rx, ry) in _sr0]
-        loft("slv" + _sf + suffix, _sr, blendw(_sr0, [(1.398, 1.46, 'spine'), (1.075, 1.412, 'uarm' + _sf)]),
-             M['hemp'], bucket)
+        _sbands = [(1.398, 1.46, 'spine'), (1.075, 1.412, 'uarm' + _sf)] + ([(0.830, 1.105, 'larm' + _sf)] if coat else [])   # 긴팔은 팔 로프트의 팔꿈치 띠까지(같은 수)
+        _sr = sleeve_long(_sg) if coat else [(z, 0, _sg * ARM_Y, rx * LIMB_K, ry * LIMB_K) for (z, rx, ry) in SLV_R]
+        loft("slv" + _sf + suffix, _sr, blendw(_sr, _sbands), M['hemp'], bucket)
+        if coat:
+            fb = _edge_band(_sr, 'low', pad)
+            loft("cuff" + _sf + suffix, fb, blendw(fb, _sbands), M['hemp'], bucket)
 
 
 build_cloth(CLOTH)                      # ★기본 한 벌 — 삼베를 포함한 다섯 재질이 이 기하를 공유한다
 CLOTH_FUR = []
-build_cloth(CLOTH_FUR, pad=FUR_PAD, suffix="_fur")   # 갖옷만 제 기하(털 두께)
+build_cloth(CLOTH_FUR, suffix="_fur", coat=True)   # 갖옷만 제 기하 — ★[T1129] 몸에 붙는 겉옷(본 옷 판) + 긴팔 + 털 테(깃 · 소매 끝 · 단)
 
 # ═══════════════ 등짐(지게) [T87 2026-09-03] ═══════════════
 #   ★형태 정본은 `props_render.py` 의 `m_carrier()` 다 — 가지 둘을 세우고 세장 셋을 지르고
