@@ -15158,7 +15158,7 @@ function _t1126Give(body, n) {
 //   ③ NPC 손의 돌 · 자갈 — 곳간에 닿는 순간 곳간으로(`villages.js` `_t1146HandIn` · T733 부산물 문과 같은 몸통)
 //   ⚠깎였지만 돌 한 개가 안 된 kg 은 저장하지 않는다(재시작이면 돌 한 개 안쪽을 잃는다 · 보고 회부).
 const StoneRule = require('./stone-rule');
-const T1146_STONE_RULE = process.env.T1146_STONE_RULE !== '0';
+const T1146_STONE_RULE = process.env.T1146_STONE_RULE === '1';   // ★[PM land1047] 끔 기본 — 첫 움집 30분 게이트 켬 0/3(T1146 회부 1 · 재민 판정 전)
 const T1146_ROCK = T1146_STONE_RULE && T1126_ROCK_YIELD;
 // 암반 한 타 kg(배수 1) — 채굴 정본 셋(덩이 kg · 덩이당 타수 · 곡괭이 배수)에서 · 바위는 그 × 금 간 돌 배수(`StoneRule.CRACK_X`)
 const T1146_K_BED = StoneRule.kIntact(Specialty.CHUNK_KG, Specialty.MINE_SWINGS_PER, TOOL_EFFECTS.pickaxe.gatherStoneMult);

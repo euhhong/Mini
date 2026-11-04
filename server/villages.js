@@ -9734,7 +9734,7 @@ function _t733HandIn(vil, npc) {
 //     (econ 돌 수식은 채집꾼 몫이다 — 바위를 치는 몸은 광맥 없는 마을의 광부 현장 갈래 `JOB_RES.miner` 뿐 · 그 수식은 원석을 낸다).
 //   부르는 자리 둘 = 곳간에 닿는 두 순간(T720 해 질 녘 정산 `_t720Settle` · 곳간② 저장 `_lifeGranStep`) — 돌만 든 손은 그것 때문에 곳간에 가지 않는다(`_t720Held` 무변).
 //   손잡이 `T1146_STONE_RULE`(켬 기본 후보 · `=0` = 종전 — 손에 남는다). 곳간이 안 받은 몫은 손에(받은 만큼만 뺀다).
-const T1146_STONE_RULE = process.env.T1146_STONE_RULE !== '0';
+const T1146_STONE_RULE = process.env.T1146_STONE_RULE === '1';   // ★[PM land1047] 끔 기본 — 첫 움집 30분 게이트 켬 0/3(T1146 회부 1 · 재민 판정 전)
 const _T1146_KEYS = ['stone', 'pebble'];
 function _t1146HandIn(vil, npc) {
   if (!T1146_STONE_RULE || !vil || !vil.econ) return 0;

@@ -225,7 +225,7 @@ const SRS = rd('server/stone-rule.js');
 const SR = require(path.join(ROOT, 'server', 'stone-rule.js'));
 
 sec('① 글자 — 손잡이 · 정본 모듈 하나 · 새 수 0 · 두 문 · 땅 채굴 무접촉 · 곳간 두 순간');
-ok(/const T1146_STONE_RULE = process\.env\.T1146_STONE_RULE !== '0';/.test(Z) && /const T1146_STONE_RULE = process\.env\.T1146_STONE_RULE !== '0';/.test(VIL), '손잡이 — 존 · 마을 둘 다 켬 기본(`=0` 만 끔)');
+ok(/const T1146_STONE_RULE = process\.env\.T1146_STONE_RULE === '1';/.test(Z) && /const T1146_STONE_RULE = process\.env\.T1146_STONE_RULE === '1';/.test(VIL), '손잡이 — 존 · 마을 둘 다 끔 기본(`=1` 만 켬 · PM land1047)');
 ok(/const T1146_ROCK = T1146_STONE_RULE && T1126_ROCK_YIELD;/.test(Z), '바위 규칙은 T1126 위에서만 선다(hp = 돌 수 정본 — T1126 끔이면 hp 4 는 돌 수가 아니다)');
 ok(/const StoneRule = require\('\.\/stone-rule'\);/.test(Z) && /const T1146_K_BED = StoneRule\.kIntact\(Specialty\.CHUNK_KG, Specialty\.MINE_SWINGS_PER, TOOL_EFFECTS\.pickaxe\.gatherStoneMult\);/.test(Z),
   '★암반 한 타 kg 은 채굴 정본 셋(덩이 kg · 덩이당 타수 · 곡괭이 배수)에서 — 손으로 적은 수 0');
@@ -271,7 +271,7 @@ sec('② 유도 — 출처 표의 비 · 땅 채굴 정본 · 무게 보존');
   ok(a.stone === 1 && a.pebble === 5 && Math.abs(a.crumbKg - 0.3) < 1e-9 && b.stone === 2 && b.pebble === 0 && b.crumbKg === 0 && c.stone === 1, '나눔 표본 — 7.3 kg = 돌 1 · 자갈 5 · 0.3 kg · 8 kg = 돌 2 · 끝 자리 소수(4 − 1e-9)는 돌 하나', JSON.stringify([a, b, c]));
 }
 
-const ON = run({}), OFF = run({ T1146_STONE_RULE: '0' }), NOGATE = run({ T1065_TOOL_GATE: '0' });
+const ON = run({ T1146_STONE_RULE: '1' }), OFF = run({ T1146_STONE_RULE: '0' }), NOGATE = run({ T1146_STONE_RULE: '1', T1065_TOOL_GATE: '0' });   // ★[PM land1047] 끔 기본 — 켬 판은 손잡이를 준다
 const kb = ON ? ON.kBed : 0, kPick = 3 * kb * SR.CRACK_X, kCrude = 2 * kb * SR.CRACK_X, kBare = kb * SR.CRACK_X;
 const firstAt = (k, kg) => Math.ceil(kg / k - 1e-9);
 
@@ -350,7 +350,7 @@ sec('⑦ 곳간 — NPC 손의 돌 · 자갈(진짜 econ 몸통)');
     const g=P.handIn(vil,npc); const a={gs:+(tot('stone')-t0.s).toFixed(6),gp:+(tot('pebble')-t0.p).toFixed(6),gw:+(tot('wood')-t0.w).toFixed(6),gr:vil._t1146Gr?Object.assign({},vil._t1146Gr):null};
     const npc2={inventory:{stone:2,pebble:1}}; const t1={s:tot('stone'),p:tot('pebble')}; P.settle(vil,npc2,Date.now(),{fw:-1});
     console.log(JSON.stringify(Object.assign({on:P.ON,keys:P.keys(),g,inv:npc.inventory},a,{inv2:npc2.inventory,gs2:+(tot('stone')-t1.s).toFixed(6),gp2:+(tot('pebble')-t1.p).toFixed(6)})))`;
-  const on = probe({}, js), off = probe({ T1146_STONE_RULE: '0' }, js);
+  const on = probe({ T1146_STONE_RULE: '1' }, js), off = probe({ T1146_STONE_RULE: '0' }, js);
   ok(on.on === true && on.keys.join() === 'stone,pebble' && on.g === 5 && on.inv.stone === 0 && on.inv.pebble === 0 && on.inv.wood === 1 && on.gs === 3 && on.gp === 2 && on.gw === 0 && on.gr && on.gr.stone === 3 && on.gr.pebble === 2,
     '★★켬 — 손의 돌 3 · 자갈 2 → 곳간 + 국고 = 든 몫(세금은 econ 몸통이 뗀다) · 손 0 · 통나무는 이 문 밖', JSON.stringify(on));
   ok(on.inv2 && on.inv2.stone === 0 && on.inv2.pebble === 0 && on.gs2 === 2 && on.gp2 === 1, '해 질 녘 정산(`_t720Settle`)으로 닿아도 같은 문', JSON.stringify({ inv2: on.inv2, gs2: on.gs2, gp2: on.gp2 }));
