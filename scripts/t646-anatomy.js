@@ -470,11 +470,11 @@ async function run(conf, tag, probe) {
   const INV_W = process.argv.includes('--inv-day') ? 'day' : 'night';   // ★[T968] `--inv-day` = 무효화를 낮 창 머리에(밤 창은 그대로 하루가 닫힐 때까지)
   const out = path.join(DIR, `${tag}.json`);
   if (fs.existsSync(out)) { console.log('있음', out); return; }
-  const dir = `/tmp/wt-t646-${tag}`;
+  const dir = `${require('os').tmpdir()}/wt-t646-${tag}`;   // ★[T1145] 사본 트리 · 판 DB 는 `TMPDIR` 아래(없으면 종전 /tmp)
   const _ri = process.argv.indexOf('--ref'), REF = _ri >= 0 ? process.argv[_ri + 1] : 'HEAD', SEG = process.argv.includes('--seg');
   const n = makeTree(dir, probe, REF, SEG);
   const CP = +(process.env.T646_PORT || 4010), ZP = CP + 1, SECRET = 't646';   // [T671] 판 둘을 나란히 돌릴 때 T646_PORT
-  const DB = `/tmp/t646-z-${tag}.db`, CDB = `/tmp/t646-c-${tag}.db`;
+  const DB = `${require('os').tmpdir()}/t646-z-${tag}.db`, CDB = `${require('os').tmpdir()}/t646-c-${tag}.db`;
   rmdb(DB); rmdb(CDB);
   for (const s of ['', '-wal', '-shm']) { try { fs.copyFileSync(TPL + s, DB + s); } catch (e) {} }
   const at = (Math.floor(fs.statSync(TPL).mtimeMs / DAY) + 2) * DAY - LEAD_S * 1000;   // T455 고정 원점(하루 경계 LEAD 초 앞)
@@ -539,7 +539,7 @@ async function run(conf, tag, probe) {
       const buf = fs.readFileSync(logp).subarray(mark).toString('utf8');
       const ana = buf.split('\n').filter((x) => x.startsWith('[T646] ')).map((x) => { try { return JSON.parse(x.slice(7)); } catch (e) { return null; } }).filter(Boolean);
       const t = p && p.tick && p.tick.ms;
-      slices.push({ k, mt0, mt1: Number(process.hrtime.bigint() / 1000n), phase: L && L.phase, p50: t && t.p50, p95: t && t.p95, max: t && t.max, ticks: p && p.tick && p.tick.n, npcs: null, ana, t678: (p && p.walk && p.walk.t678) || null });   // [T678] 문 그래프 관측(켬·견줌 판만)
+      slices.push({ k, mt0, mt1: Number(process.hrtime.bigint() / 1000n), phase: L && L.phase, p50: t && t.p50, p95: t && t.p95, max: t && t.max, ticks: p && p.tick && p.tick.n, npcs: null, ana, t678: (p && p.walk && p.walk.t678) || null, xyc: (p && p.walk && p.walk.xyc) || null });   // [T678] 문 그래프 관측(켬·견줌 판만) · ★[T1145] 열 칸 · 견줌(켬 · 견줌 판만)
       if (INV) { const pr = (p && p.econTick && p.econTick.probe) || {}, S = slices[slices.length - 1];   // ★[T945] 캐러밴 셈(줄 수 · probe 누계)
         S.arr = (buf.match(/캐러밴#\d+ 도착:/g) || []).length; S.ret = (buf.match(/귀환 출발/g) || []).length; S.astar = (buf.match(/교역로 A\*:/g) || []).length;
         S.t929 = pr.t929 || null; S.pathJobs = pr.pathJobs | 0; S.pathWait = pr.pathWait | 0; S.routeCold = pr.routeCold | 0;
