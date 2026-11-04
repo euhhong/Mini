@@ -1,0 +1,9 @@
+{
+  "name": "mini-api-session",
+  "private": true,
+  "description": "미니 API 세션(S-API) 러너 — Claude Agent SDK 로 카드 하나를 끝까지 (족보 755)",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node test-guard.mjs" },
+  "dependencies": { "@anthropic-ai/claude-agent-sdk": "0.3.318" }
+}
