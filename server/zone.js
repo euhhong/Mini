@@ -1932,6 +1932,11 @@ let _npcCursor = null;   // ★[T324 ⓒ] 결정 문 예산이 지난 틱에 멈
 // ★[T678] 문 그래프 손잡이·그릇(아래 `computeNpcPath` 머리글) — 다리·환호 무효화가 부팅 중 부를 수 있어 여기(위쪽)에 선언한다
 const T678_GATES = (process.env.T678_GATES || '').trim(), T678_ON = T678_GATES !== '0' && T678_GATES !== 'verify', T678_VERIFY = T678_GATES === 'verify';   // ★재민 10-11 켬 기본("청크 문 그래프 열어야지" · 되돌림 =0 · 견줌 =verify)
 let _t678G = null;
+// ★★[T1138 2026-11-04 · ★재민 판정 ㄱ(T756 ②)] **문 그래프 표가 칸 A* 보다 먼저** — 손잡이 `T1138_GATES_FIRST`(켬 기본 · `=0` = 종전).
+//   부팅 때 마을 묻기 창 청크를 미리 굽는다(`_t1138Prebake` · 아래 `_t678Tick` 곁). 다 구워지기 전 묻기는 아래 `_t1138Wait`(묻기 자리 머리글).
+const T1138_GATES_FIRST = T678_ON && process.env.T1138_GATES_FIRST !== '0';
+const _t1138W = new WeakMap();   // 몸 → 기다린 목표 열쇠(몸 필드 0 — T671 모양 그대로)
+const _t1138 = { on: T1138_GATES_FIRST, chunks: 0, t0: 0, doneAt: 0, steps: 0, stepMaxMs: 0, ms: 0, qUnknown: 0, wait: 0, after: 0, astar: 0, astarBoot: 0, firstQ: 0 };   // 관측(세계 무관)
 const _t678PH = require('perf_hooks').performance, _t678Now = () => _t678PH.now();   // 관측 시계(ms · 소수) — 세계 무관
 function _t678Perf(reset) {
   if (!_t678G) return null;
@@ -1957,7 +1962,8 @@ function walkPerf(reset) {
     if (reset) { _wwStat.ticks = 0; _wwStat.steps = 0; _wwStat.bad = 0; _wwStat.badTicks = 0; _wwStat.gateBad = 0; _wwStat.sample.length = 0; } }   // ★[T461]
   if (T774_ACTIVE_COL) o.t774 = Object.assign({}, _t774Stat);   // ★[T774] 열에서 읽은 수 · 술어로 간 수
   if (T676_STAMP || T676_VERIFY) { o.t676 = Object.assign({ mode: T676_STAMP ? 'on' : 'verify' }, _t676Stat); if (reset) { _t676Stat.ipaN = 0; _t676Stat.ipaBad = 0; _t676Stat.pvN = 0; _t676Stat.pvBad = 0; } }   // ★[T676] 견줌 셈
-  if (_t678o) o.t678 = _t678o;   // ★[T678] 문 그래프 관측(끔이면 칸 없음)
+  if (_t678o) o.t678 = _t678o;   // ★[T1138] 부팅 미리 굽기(청크 수 · 걸린 ms · 다 굽기 전 칸 A*)
+  if (_t678o) o.t678.t1138 = Object.assign({}, _t1138);   // ★[T678] 문 그래프 관측(끔이면 칸 없음)
   if (reset) { _walk.steps = 0; _walk.ej = 0; _walk.ejQ = 0; _walk.ejFail = 0; _walk.terrQ = 0; _walk.waterQ = 0; _walk.wallQ = 0; _walk.cut = 0; _walk.ejPids.clear(); }
   return o;
 }
@@ -4425,7 +4431,7 @@ const _t678Q = { calls: 0, nullFast: 0, gatePath: 0, fallback: 0, ms: 0, maxMs: 
 function _t678Init() {
   if (_t678G || !(T678_ON || T678_VERIFY)) return _t678G;
   const C = BUILDING_SIZE / 2, cs = Math.round(chunkManager.chunkSize / BUILDING_SIZE);
-  _t678G = require('./chunk-gates').create({ t734: T734_ASTAR_SLICE, stamp: T734_ASTAR_SLICE ? _t734Stamp : undefined, chunkCells: cs, cellsW: Math.ceil(ZONE.zoneWidth / BUILDING_SIZE), cellsH: Math.ceil(ZONE.zoneHeight / BUILDING_SIZE),
+  _t678G = require('./chunk-gates').create({ t734: T734_ASTAR_SLICE, front: T1138_GATES_FIRST, stamp: T734_ASTAR_SLICE ? _t734Stamp : undefined, chunkCells: cs, cellsW: Math.ceil(ZONE.zoneWidth / BUILDING_SIZE), cellsH: Math.ceil(ZONE.zoneHeight / BUILDING_SIZE),
     pass: (cx, cy) => !isTerrainBlockedLocal(cx * BUILDING_SIZE + C, cy * BUILDING_SIZE + C),
     step: (fx, fy, tx, ty) => !isBlockedByWall(fx * BUILDING_SIZE + C, fy * BUILDING_SIZE + C, tx * BUILDING_SIZE + C, ty * BUILDING_SIZE + C, 0),
     // ★[T679 ②] 표 상한 = 마을 수 × 주민 묻기 창이 걸치는 청크 수(반경 `_pfRadius` · 청크 크기 — 새 수 0) · 마을이 없으면 창 하나
@@ -4462,6 +4468,29 @@ function _t678Tick() {
   _t678Busy = G.busy();
   G.tick(1500, _t678Now);
   G.sweep(Math.ceil(G.size() / TICK_HZ), _t678Sig);   // 표마다 1초에 한 번(틱 Hz 그 수 · 새 수 0)
+}
+// ★[T1138] 부팅 미리 굽기 — 마을마다 가운데 칸 둘레 묻기 창(반경 `_pfRadius` · `route` 와 같은 창)을 가운데 청크부터 줄에 넣고,
+//   틱 밖 배경에서 한 걸음 4 ms 까지(T565 큰 지도 굽기 그 조각 · `setTimeout 0` — T333 지형 미리 굽기 그 꼴) 짓는다. 틱 안 짓기(예산 1,500)는 그대로 같이 돈다.
+//   표 그릇 · 짓기 · 술어는 틱 안 짓기와 같은 하나다(사본 0) — 달라지는 것은 **언제** 짓느냐뿐이다.
+function _t1138Prebake() {
+  if (!T1138_GATES_FIRST) return;
+  const G = _t678Init(); if (!G || !G.enqueueWindow) return;
+  let vs = []; try { vs = SimVillages.clientVillages ? (SimVillages.clientVillages() || []) : []; } catch (e) { return; }
+  const R = _pfRadius(true);
+  _t1138.t0 = _t678Now();
+  for (const v of vs) _t1138.chunks += G.enqueueWindow(v.cx | 0, v.cy | 0, R);
+  const step = () => {
+    if (!G.busy()) {
+      _t1138.doneAt = _t678Now(); _t1138.ms = +(_t1138.doneAt - _t1138.t0).toFixed(0);
+      console.log(`[${ZONE_ID}] 🚪 문 그래프 표 미리 굽기 — 마을 ${vs.length}곳 · 청크 ${_t1138.chunks} · ${_t1138.ms}ms · 걸음 ${_t1138.steps}(최대 ${_t1138.stepMaxMs.toFixed(1)}ms) · 그 사이 표 기다림 ${_t1138.wait} · 칸 A* ${_t1138.astarBoot}(기동 뒤 배경)`);
+      return;
+    }
+    const t = _t678Now(); let d = 0;
+    do { G.tick(1); d = _t678Now() - t; } while (G.busy() && d < 4);   // 한 걸음 4 ms 까지(T565 큰 지도 굽기 그 조각) — 술어 한 부름씩
+    _t1138.steps++; if (d > _t1138.stepMaxMs) _t1138.stepMaxMs = d;
+    setTimeout(step, 0);
+  };
+  setTimeout(step, 0);
 }
 // 문 길 → `pfFindPath` 꼴(셀 중심 · 마지막은 실제 목표 px) · 못 닿음 = null · 표 없음 = undefined
 const _t678Wp = (npc, cells) => { const C = BUILDING_SIZE / 2, wp = cells.map(([cx, cy]) => ({ x: cx * BUILDING_SIZE + C, y: cy * BUILDING_SIZE + C }));
@@ -4590,6 +4619,16 @@ function computeNpcPath(npc, now) {
     const _t0 = _t678Now(); _t678wp = _t678Route(npc); const _dt = _t678Now() - _t0;
     _t678Q.calls++; _t678Q.ms += _dt; if (_dt > _t678Q.maxMs) _t678Q.maxMs = _dt;
     if (_t678wp === null) _t678Q.nullFast++; else if (_t678wp) _t678Q.gatePath++; else _t678Q.fallback++;
+    // ★[T1138] 표 없는 창 — 칸 A* 대신 **표를 기다린다**: 못 찾은 청크는 줄 앞으로 섰다(`route` · `opt.front`). 이 자리의 답은 null
+    //   (= 종전 "길 못 찾음"의 그 걸음 — 목표 쪽 직선 · 다음 묻기는 종전 박자: A* 2초 간격 · 길 5초 만료 · 목표 바뀜). 다시 물을 때 표가 있으면 표 길.
+    //   같은 목표를 두 번째 물어도 표가 없으면 그때는 종전 칸 A*(기다림 한 번 — 줄이 끝내 안 닿는 판의 안전판).
+    if (T1138_GATES_FIRST) {
+      if (_t678wp === undefined) {
+        _t1138.qUnknown++; if (!_t1138.firstQ) _t1138.firstQ = +(_t678Now() - _t1138.t0).toFixed(0);
+        if (_t1138W.get(npc) !== npc._t670Tk) { _t1138W.set(npc, npc._t670Tk); _t678wp = null; _t1138.wait++; }
+        else { _t1138.astar++; if (!_t1138.doneAt) _t1138.astarBoot++; }
+      } else if (_t1138W.delete(npc)) _t1138.after++;
+    }
   }
   const wp = _t678wp !== undefined ? _t678wp : pfFindPath(npc.x, npc.y, npc.targetX, npc.targetY, {
     floor: npc.floor || 0,
@@ -16910,6 +16949,7 @@ function zonePublicMeta() {
 
 server.listen(PORT, () => {
   _t333Prebake();   // ★[T333] 기동을 막지 않고 배경으로 굽는다(위 주석)
+  _t1138Prebake();  // ★[T1138] 문 그래프 표 — 마을 묻기 창 먼저(배경 · 위 `_t678Tick` 곁 머리글)
   _t565Start();     // ★[T565] 큰 지도도 같은 결 — 배경에서 한 번(한 조각 4ms 까지)
   console.log(`[${ZONE_ID}] 🌏 zone server up on :${PORT}  latency=${LATENCY_MS}ms (RTT≈${LATENCY_MS*2}ms)  [netcode=K19 입력1개=1스텝]`);
   console.log(`        biome=${ZONE.biome}  rect=(${ZONE.worldOffsetX},${ZONE.worldOffsetY},${ZONE.zoneWidth}x${ZONE.zoneHeight})  neighbors=W:${NEIGHBOR.hasWest?'✓':'∅'} E:${NEIGHBOR.hasEast?'✓':'∅'} N:${NEIGHBOR.hasNorth?'✓':'∅'} S:${NEIGHBOR.hasSouth?'✓':'∅'}`);

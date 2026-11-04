@@ -20,7 +20,8 @@ const DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]];   // E S W N — 비트 1 2 4 8
 const UNR = 0xffff;
 
 function create(opt) {
-  const T734 = !!opt.t734;   // ★[T734] 손잡이(존 `T734_ASTAR_SLICE`) — 문 그래프 이완을 청크마다 문 목록으로(같은 이완 · 같은 차례 · 같은 답)
+  const T734 = !!opt.t734;
+  const FRONT = !!opt.front;   // ★[T1138] 묻기 못 찾은 청크를 줄 앞으로(존 `T1138_GATES_FIRST` · 끔 = 종전 줄 끝)   // ★[T734] 손잡이(존 `T734_ASTAR_SLICE`) — 문 그래프 이완을 청크마다 문 목록으로(같은 이완 · 같은 차례 · 같은 답)
   const C = opt.chunkCells, CW = opt.cellsW, CH = opt.cellsH;
   const NX = Math.ceil(CW / C), NY = Math.ceil(CH / C);
   const pass = opt.pass, step = opt.step;
@@ -140,6 +141,15 @@ function create(opt) {
     }
   }
   function enqueue(ci) { if (!queued.has(ci)) { queued.add(ci); queue.push(ci); } }
+  // ★[T1138] 묻기가 못 찾은 청크를 줄 **앞**으로(손잡이 `opt.front` · 존 `T1138_GATES_FIRST`) — 부팅 미리 굽기 줄 뒤에 서지 않게.
+  //   이미 줄에 선 청크는 그 자리에서 빼 앞으로 옮긴다(짓는 중인 청크는 그대로 이어 짓는다). 차례 = 창 안 차례 그대로.
+  function toFront(list) {
+    const set = new Set();
+    for (const ci of list) { if (building && building.ci === ci) continue; set.add(ci); }
+    if (!set.size) return;
+    let w = 0; for (let i = 0; i < queue.length; i++) { const ci = queue[i]; if (!set.has(ci)) queue[w++] = ci; } queue.length = w;
+    queue.unshift(...set); for (const ci of set) queued.add(ci);
+  }
   // 틱마다 — 예산(술어 부름 수)만큼 이어서 짓는다
   function tick(budget, nowMs) {
     if (!budget) return 0;
@@ -176,14 +186,15 @@ function create(opt) {
     const x0 = Math.max(0, Math.floor((sx - R) / C)), x1 = Math.min(NX - 1, Math.floor((sx + R) / C));
     const y0 = Math.max(0, Math.floor((sy - R) / C)), y1 = Math.min(NY - 1, Math.floor((sy + R) / C));
     let miss = false, stale = false;
-    const win = [];
+    const win = [], front = FRONT ? [] : null;
     for (let Y = y0; Y <= y1; Y++) for (let X = x0; X <= x1; X++) {
       const ci = Y * NX + X, r = recs.get(ci);
-      if (!r) { miss = true; enqueue(ci); continue; }
+      if (!r) { miss = true; if (FRONT) front.push(ci); else enqueue(ci); continue; }
       r.used = stamp;   // ★[T679] LRU — 창에 든 표
       if (r.gen !== gen || r.dirty) { stale = true; enqueue(ci); }
       win.push(r);
     }
+    if (FRONT && front.length) toFront(front);
     if (miss) { st.unknown++; return { res: 'unknown' }; }
     if (stale) st.stale++;
     const rs = recs.get(chunkOf(sx, sy)), rg = recs.get(chunkOf(gx, gy));
@@ -325,6 +336,19 @@ function create(opt) {
   function memBytes() { let b = 0; for (const r of recs.values()) { b += r.pass.length + r.open.length; for (const g of r.gates) b += g.T.length * 2 + 64; } return b; }
   function stats() { let gates = 0; for (const r of recs.values()) gates += r.gates.length; return Object.assign({ recs: recs.size, gates, queue: queue.length + (building ? 1 : 0), memMB: +(memBytes() / 1048576).toFixed(2), gen, NX, NY, C }, st); }
   function enqueueAll() { for (let ci = 0; ci < NX * NY; ci++) enqueue(ci); }   // 하네스 · 부팅 미리 굽기용(존은 안 부른다)
+  // ★[T1138] 부팅 미리 굽기 — 칸 (cx,cy) 둘레 반경 R 묻기 창(`route` 와 같은 창 · 같은 청크)을 가운데 청크부터 고리 차례로 줄에 넣는다.
+  //   존이 마을 가운데마다 부른다(마을 창만 · 표 수 ≤ 상한 `cap` = 마을 수 × 창 청크 수 그 수). 이미 새 표가 있거나 줄에 선 청크는 건너뛴다.
+  //   반환 = 새로 줄에 넣은 청크 수.
+  function enqueueWindow(cx, cy, R) {
+    const x0 = Math.max(0, Math.floor((cx - R) / C)), x1 = Math.min(NX - 1, Math.floor((cx + R) / C));
+    const y0 = Math.max(0, Math.floor((cy - R) / C)), y1 = Math.min(NY - 1, Math.floor((cy + R) / C));
+    const X0 = Math.floor(cx / C), Y0 = Math.floor(cy / C), list = [];
+    for (let Y = y0; Y <= y1; Y++) for (let X = x0; X <= x1; X++) list.push([Math.max(Math.abs(X - X0), Math.abs(Y - Y0)), Y * NX + X]);
+    list.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    let n = 0;
+    for (const [, ci] of list) { const r = recs.get(ci); if ((r && r.gen === gen && !r.dirty) || queued.has(ci) || (building && building.ci === ci)) continue; enqueue(ci); n++; }
+    return n;
+  }
   const windowChunks = (R) => { const k = 2 * Math.ceil(R / C) + 1; return Math.min(NX, k) * Math.min(NY, k); };   // 반경 R 묻기 창이 걸치는 청크 수(최대)
   const busy = () => queue.length > 0 || !!building;   // 짓기 줄이 있나(틱 머리 · 관측)
   // ★★[T734 ②] **같은 값을 내는 더 싼 자리** — 칸 A*(`pathfind.findPath`)가 묻는 두 술어(칸 통행 · 칸 → 이웃 간선)를 지은 표의 비트로 답한다.
@@ -354,7 +378,7 @@ function create(opt) {
     };
     return { pass: passAt, step };
   }
-  return { size: () => recs.size, busy, windowChunks, route, tick, sweep, invalidateAll, invalidateChunk, chunkOf, stats, enqueueAll, fastView, _recs: recs };
+  return { size: () => recs.size, busy, windowChunks, route, tick, sweep, invalidateAll, invalidateChunk, chunkOf, stats, enqueueAll, enqueueWindow, fastView, _recs: recs };
 }
 
 module.exports = { create, UNR };
