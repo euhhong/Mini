@@ -122,6 +122,39 @@ if (process.env.T1137_SUB === 'zone') {
       const qt = safe('quote2', () => V.villageTradeQuote(3, p.x, p.y, 'wood', 'food', 20, H._unitsOfFor(p), { inventory: p.inventory, feeRate: rate }));
       const w0 = st(3, 'wood'); safe('exec2', () => H.tryVillageTradeExec(p, 3, 'wood', 'food', 20, 0, 'food'));
       out.feeShort = { q: qt && qt.feeShort, woodUp: +(st(3, 'wood') - w0).toFixed(4), left: p.inventory.wood, note: last(p) }; }
+    // ⑫ ★[T1151] 끝수 장부 — 1개 거래 · 같은 사람이 되풀이 · 재접속 뒤 유지
+    {
+      //   한 개를 내도 한 개 이상 받는 짝을 고른다(곳간이 받는 품목 → 곡식 · 나무) — 시세는 세계가 정한다(고른 짝을 그대로 적는다)
+      const dep = V.playerVillageDepositMap(); let pick = null;
+      const D0 = mkP('anon_t1151_probe', 3); D0.x = AT[3].x; D0.y = AT[3].y;
+      for (const [it, res] of Object.entries(dep)) { for (const take of ['food', 'wood']) { if (res === take || pick) continue; D0.inventory = { [it]: 5 };
+        const q = safe('pq', () => V.villageTradeQuote(3, D0.x, D0.y, res, take, 1, H._unitsOfFor(D0), { inventory: D0.inventory }));
+        if (q && !q.err && q.take >= 1) pick = { it, res, take }; } }
+      out.pick = pick;
+      if (pick) {
+        const D = mkP('anon_t1151_d', 3); D._memberNearVid = 3; D.x = AT[3].x; D.y = AT[3].y; D.inventory = { [pick.it]: 60 };
+        const rate = M.feeRateOf(D, 3), seq = [];
+        for (let i = 0; i < 21; i++) {
+          const before = M.feeOweOf(D, 3);
+          const qt = safe('q1', () => V.villageTradeQuote(3, D.x, D.y, pick.res, pick.take, 1, H._unitsOfFor(D), { inventory: D.inventory, feeRate: rate, feeOwe: before }));
+          const inv0 = D.inventory[pick.it] || 0, s0 = st(3, pick.res);
+          safe('x1', () => H.tryVillageTradeExec(D, 3, pick.res, pick.take, 1, 0, 'food'));
+          seq.push({ before, qFee: qt && qt.fee, qOwe: qt && qt.feeOwe, gave: inv0 - (D.inventory[pick.it] || 0), owe: M.feeOweOf(D, 3), up: +(st(3, pick.res) - s0).toFixed(3), note: last(D) });
+        }
+        out.owe = { rate, seq };
+        //   재접속 — 몸 왕복(serializeBody → parseBody · 넘기와 같은 함수)
+        const B2 = H.serializeBody(D); const back = H.parseBody(JSON.parse(JSON.stringify(B2)), { vitals: true });
+        out.oweBody = { has: 'feeOwe' in B2, v: B2.feeOwe, back: back.feeOwe };
+        const D2 = mkP('anon_t1151_d2', 3); D2.feeOwe = back.feeOwe; D2.x = AT[3].x; D2.y = AT[3].y; D2.inventory = { [pick.it]: 5 };
+        const q2 = safe('q2', () => V.villageTradeQuote(3, D2.x, D2.y, pick.res, pick.take, 1, H._unitsOfFor(D2), { inventory: D2.inventory, feeRate: M.feeRateOf(D2, 3), feeOwe: M.feeOweOf(D2, 3) }));
+        out.oweAfter = { before: q2 && q2.feeOweBefore, owe: q2 && q2.feeOwe, mine: M.feeOweOf(D2, 3) };
+        //   1개만 가진 사람 — T1137 올림 판에선 막혔다(낼 1 + 수수료 1 > 1)
+        const O = mkP('anon_t1151_one', 3); O.x = AT[3].x; O.y = AT[3].y; O.inventory = { [pick.it]: 1 };
+        safe('one', () => H.tryVillageTradeExec(O, 3, pick.res, pick.take, 1, 0, 'food'));
+        out.one = { left: O.inventory[pick.it] || 0, got: O.inventory[dep[pick.it] === pick.take ? pick.it : (pick.take === 'food' ? Object.keys(dep).find((k) => dep[k] === 'food') : 'wood')] || 0, owe: M.feeOweOf(O, 3), note: last(O) };
+        const B3 = H.serializeBody(Q); out.oweNone = { has: 'feeOwe' in B3 };
+      }
+    }
     // ⑤ 꺼내기 — 비구성원 · 인정 구성원(NPC 마을) · 촌장(사람 마을)
     const wd = async (p, vid, q) => { const s0 = st(vid, 'food'); const r = safe('wd', () => H.tryVillageWithdraw(p, vid, 'food', q)); if (r && typeof r.then === 'function') await r; return +(s0 - st(vid, 'food')).toFixed(4); };
     out.wdQ = { took: await wd(Q, 3, 2), note: last(Q) };
@@ -178,10 +211,11 @@ const sub = (env) => {
 console.log('\n=== T1137 — 가입 · 탈퇴 언제든 · 다시 들기 1시간 · 인정 구성원 · 거래소 수수료 ===');
 const ON = sub({ T1137_FEE: '0.1', T1137_FEE_MEMBER: '0.05' });
 const OFF = sub({ T1137_MEMBER_OPEN: '0', T1137_FEE: '0.1', T1137_FEE_MEMBER: '0.05' });
-const ZERO = sub({});
+const ZERO = sub({ T1137_FEE: '0' });   // ★[T1151] 기본이 5% · 3% 가 됐다 — 율 0 은 되돌림 판
+const DEF = sub({});                   // ★[T1151] 손잡이 없음 = 5% · 인정 3% · 끝수 장부
 
 ok(ON.on === true && OFF.on === false && ZERO.on === true, "손잡이 — 없음 = 켬 · '0' = 끔", `${ON.on} / ${OFF.on} / ${ZERO.on}`);
-ok(!ON.errs.length && !OFF.errs.length && !ZERO.errs.length, '하위 실행 오류 0', JSON.stringify({ on: ON.errs, off: OFF.errs, zero: ZERO.errs }).slice(0, 600));
+ok(!ON.errs.length && !OFF.errs.length && !ZERO.errs.length && !DEF.errs.length, '하위 실행 오류 0', JSON.stringify({ on: ON.errs, off: OFF.errs, zero: ZERO.errs, def: DEF.errs }).slice(0, 600));
 
 console.log('\n① `/가입` 즉시');
 ok(ON.join.r === true && ON.join.member === 3 && ON.join.rec === false && ON.join.contrib === 0, '★문턱 없이 곧 마을 사람 · 인정은 아직 · 기여 0 그대로(계량기를 지어내지 않는다)', JSON.stringify(ON.join));
@@ -242,9 +276,29 @@ ok(OFF.join.r === false && OFF.join.member === null, '★`/가입` 은 명령이
 ok(OFF.fee.q.rate === 0 && OFF.fee.a.rate === 0 && OFF.fee.q.qFee == null && OFF.fee.q.gave === 20, '수수료 0 — 견적 칸 없음 · 낸 나무 20 그대로', JSON.stringify(OFF.fee.q));
 ok(OFF.quit.cool == null && OFF.pub.open == null, '탈퇴 뒤 다시 들기 0 · 화면 칸 0', JSON.stringify({ c: OFF.quit.cool, p: OFF.pub }));
 
-console.log('\n⑪ 수수료 손잡이 기본 0 — 종전 바이트');
+console.log('\n⑪ 수수료 율 0(`T1137_FEE=0` 되돌림) — 종전 바이트');
 ok(ZERO.fee.q.rate === 0 && ZERO.fee.a.rate === 0 && ZERO.fee.q.qFee == null && ZERO.fee.q.gave === 20 && ZERO.fee.a.gave === 20 && !/수수료/.test(ZERO.fee.q.note), '★율 0 = 견적 · 실행 · 알림에 수수료 0', ZERO.fee.q.note);
 ok(ZERO.join.member === 3 && ZERO.inTerr12.got === 1 && ZERO.inTerrBefore.got === 0, '가입 · 인정 문은 수수료와 무관하게 선다', JSON.stringify({ j: ZERO.join.member, b: ZERO.inTerrBefore.got, a: ZERO.inTerr12.got }));
+
+console.log('\n⑫ ★[T1151] 기본 5% · 인정 3% · 끝수 장부(사람 × 마을)');
+const DF = DEF.fee;
+ok(DF.q.rate === 0.05 && DF.b.rate === 0.05 && DF.a.rate === 0.03, '★손잡이 없음 = 기본 0.05 · 가입만 0.05 · 인정 구성원 0.03(★재민 "각각 5%, 3%")', `${DF.q.rate} / ${DF.b.rate} / ${DF.a.rate}`);
+ok(DF.q.qFee === 1 && DF.q.gave === 21 && DF.a.qFee === 0 && DF.a.gave === 20, '20개 — 비구성원 20 × 0.05 = 1(낼 21) · 인정 20 × 0.03 = 0.6 → 지금 0 · 끝수 0.6(낼 20)', `${DF.q.qFee}/${DF.q.gave} · ${DF.a.qFee}/${DF.a.gave}`);
+ok(/쌓인 수수료 0\.6 — 1이 되면 받습니다/.test(DF.a.note), '알림 — 쌓인 수수료 줄', DF.a.note);
+const S = (DEF.owe && DEF.owe.seq) || [];
+ok(!!DEF.pick && S.length === 21, '[상황] 한 개를 내도 한 개 이상 받는 짝이 있다(자명 통과 금지)', JSON.stringify(DEF.pick));
+ok(S.length && S[0].gave === 1 && S[0].qFee === 0 && S[0].owe === 0.05 && S[0].qOwe === 0.05, '★1개 거래가 선다 — 수수료 0 · 끝수 0.05 쌓임(T1137 올림 판에선 2개가 있어야 했다)', JSON.stringify(S[0]));
+const g19 = S.slice(0, 19).every((x, i) => x.gave === 1 && x.owe === Math.round((i + 1) * 5) / 100);
+ok(g19, '1 ~ 19번째 — 낱개 1 · 끝수 0.05 씩 쌓임(0.95 까지)', S.slice(0, 19).map((x) => x.owe).join(' '));
+ok(S[19] && S[19].qFee === 1 && S[19].gave === 2 && S[19].owe === 0 && /1개는 수수료로/.test(S[19].note), '★20번째 — 끝수가 1 이 되어 그 거래에서 1개 받음(낼 2) · 끝수 0', JSON.stringify(S[19]));
+ok(S[20] && S[20].gave === 1 && S[20].owe === 0.05, '21번째 — 다시 쌓임', JSON.stringify(S[20]));
+ok(S.every((x) => x.qFee === (x.gave - 1)), '★견적 = 실행(21번 모두 — 수수료 낱개)', S.map((x) => `${x.qFee}/${x.gave - 1}`).join(' '));
+ok(S.reduce((a, x) => a + (x.gave - 1), 0) === 1 && S[20].owe === 0.05, '긴 눈 — 21거래 × 0.05 = 1.05 = 낸 1 + 끝수 0.05(정확히 5%)');
+ok(DEF.oweBody.has && DEF.oweBody.v && DEF.oweBody.v[3] === 0.05 && DEF.oweBody.back && DEF.oweBody.back[3] === 0.05, '★재접속 · 넘기 — 끝수 장부가 몸 왕복(serializeBody → parseBody)에 산다', JSON.stringify(DEF.oweBody));
+ok(DEF.oweAfter.before === 0.05 && DEF.oweAfter.owe === 0.1 && DEF.oweAfter.mine === 0.05, '이어받은 몸의 견적이 그 끝수에서 센다(0.05 → 0.1)', JSON.stringify(DEF.oweAfter));
+ok(DEF.one.left === 0 && DEF.one.owe === 0.05, '★1개만 가진 사람도 거래한다(T1137 의 78건 막힘이 풀림)', JSON.stringify(DEF.one));
+ok(DEF.oweNone.has === false, '끝수가 없는 몸엔 칸도 없다', JSON.stringify(DEF.oweNone));
+ok(ON.owe && ON.owe.seq && ON.owe.seq[9] && ON.owe.seq[9].gave === 2 && ON.owe.seq[9].owe === 0, '율 0.1 판 — 10번째에 1개(같은 장부 · 율만 다르다)', ON.owe && JSON.stringify(ON.owe.seq[9]));
 
 console.log(`\n=== ${pass}/${fail} ===`);
 process.exit(fail ? 1 : 0);
