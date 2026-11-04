@@ -15358,7 +15358,9 @@ module.exports = { t750CastPre, t750Stat: () => _t750Stat, t719ReachPre, t719Sta
   playerVillages, villageByDbId,   // ★[T19] 사람이 세운 마을 — 이방인 받기 자격 판정이 읽는다
   shelterOf, hasShelter, addShelter, ensureShelter, pickShelterSpot, villageOfCell,   // ★[T62] 공용 쉼터 — 좌표 정본 하나
   cropAtCell,   // ★[T91 · T79c 회부 1] 그 칸의 작물 — claim 페이로드가 이걸 싣는다(사본 0)
-  playerVillageWithdraw, playerVillageWithdrawStock, villageWithdrawGate,   // ★[T11] 곳간 인출 — 납품의 역연산(같은 표·같은 환산율)
+  playerVillageWithdraw, playerVillageWithdrawStock, villageWithdrawGate,
+  villageNear: _villageNear,   // ★[T1132] 회관 패널 보기 · 기부 = 마을 화면 · 게시판 · 거래소와 같은 술어 하나(260px · 함수 그대로 — 사본 0)
+    // ★[T11] 곳간 인출 — 납품의 역연산(같은 표·같은 환산율)
   bodyExitStats, noteBodyExit, tickBodyExits,   // ★[T590] 줄어드는 몸 — 판 자(`t577-server-hook`)가 까닭별 수를 읽는다 · 하네스가 같은 문을 부른다
   t1039Stat: () => JSON.parse(JSON.stringify(_t1039Stat)),   // ★[T1039] 도적 전환 몸 증인(관찰기 `t1039-observe` · 하네스)
   t1078Life: (npc, now) => _t1078Life(npc, now),   // ★[T1078] 도적 단원 몸의 은거지 곁 일과(존 `decideNpcBehavior` 가 `_bdtGid` 가 선 몸에만 부른다 · 관찰기가 감싼다)

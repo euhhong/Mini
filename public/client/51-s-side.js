@@ -883,6 +883,8 @@
       //   그래서 날짜 옆에 **달력을 같이** 적는다. HUD 배지와 같은 값이면 시계가 하나라는 증거다.
       + (myCalendar ? `<span style="color:var(--dim-2)"> · ${myCalendar.label || `${myCalendar.year}년 ${myCalendar.seasonKo} ${myCalendar.dayOfSeason}일`}</span>` : '')
       + `</div>`;
+    //   ★[T1132] 그 마을 사람이 아니면 서버가 `inv.viewOnly` 를 싣는다 — 보기 · 기부만(꺼내기 · 이방인 받기 칸은 서버가 안 보낸다 · 판정은 서버)
+    if (inv.viewOnly) h += `<div data-pvi-viewonly style="padding:0 10px 8px;color:var(--dim-2);font-size:11px">이 마을 사람이 아니므로 볼 수만 있습니다. 기부는 누구나 할 수 있습니다.</div>`;
     h += `<div style="padding:0 10px 8px">식량 환산 <b>${inv.foodEquiv}</b>`
       + (inv.pop > 0 ? ` <span style="color:var(--dim-2)">(1인 ${inv.foodDays}일치)</span>` : '') + `</div>`;
     if (empty) {

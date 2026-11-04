@@ -12504,20 +12504,42 @@ function tryVillageAdvance(player, buildingId) {
 }
 // ★[배치 12 ③] 회관 클릭 = 재고 열람. 권한은 **노·숯가마와 같은 술어**(`_furnaceCanUse`)를 쓴다 —
 //   길드 땅에 세운 마을이면 길드원, 개인 땅이면 창설자 본인. 새 권한 개념을 만들지 않는다.
+// ★★[T1132 2026-11-04 · ★PM 11-03 판정대기 문 12 ㄱ "보기는 가까이 온 누구나 · 꺼내기는 촌장 · 기부는 누구나"] 손잡이 `T1132_HALL_VIEW`(켬 기본 · `=0` = 종전 글자).
+//   종전: 같은 곳간 재고를 두 문이 다르게 막았다 — 마을 화면 「창고」 = 거리 문(`_villageNear` 260px · 가입 무관) ↔ 회관 패널 = 회관 200px + 그 마을 사람(`_furnaceCanUse`).
+//   켬: 회관 패널 **보기 · 기부**의 문 = 마을 화면과 같은 술어 하나(`SimVillages.villageNear` = villages.js `_villageNear` 그 함수 · 사본 0).
+//     그 마을 사람이 아니면(`_furnaceCanUse` 거짓) 패널은 읽기 전용 — `inv.viewOnly` · 촌장 칸(이방인 받기 `welcome`)을 안 싣는다 · 기부 칸은 그대로(T769 누구나).
+//     꺼내기는 이 패널에 단추가 없고, 서버 문(`tryVillageWithdraw` → `Membership.withdrawChief`)이 촌장만 받는다(이 손잡이와 무관 · 클라 숨김에 기대지 않는다).
+//   회관(`village_hall`) 한 갈래만 — 다른 시설(`d.vid` · `d.tribeId`)의 문은 그대로다.
+const T1132_HALL_VIEW = process.env.T1132_HALL_VIEW !== '0';
+function _t1132Vil(player, b) {   // 켬 — 이 회관의 마을 + 마을 화면 문(260px). 반환 { vil } | { err }
+  const d = b.data || {};
+  const vil = SimVillages.playerVillageAt ? SimVillages.playerVillageAt(d.x0, d.y0) : null;
+  if (!vil) return { err: '이 회관에 딸린 마을을 찾지 못했습니다.' };
+  const g = SimVillages.villageNear ? SimVillages.villageNear(vil.dbId | 0, player.x, player.y) : { err: '마을 한가운데에서 너무 멉니다.' };
+  return g.err ? { err: g.err } : { vil };
+}
 function tryVillageInventory(player, buildingId) {
   const b = buildings.get(buildingId);
   if (!b || b.type !== 'village_hall') return;
+  let vil = null, member = true;
+  if (T1132_HALL_VIEW) {
+    const g = _t1132Vil(player, b);
+    if (g.err) { send(player.ws, { type: 'notice', text: g.err }); return; }
+    vil = g.vil; member = _furnaceCanUse(player, b);
+  } else {
   if (Math.hypot(b.x - player.x, b.y - player.y) > 200) { send(player.ws, { type: 'notice', text: '회관에서 너무 멀리 있습니다' }); return; }
   if (!_furnaceCanUse(player, b)) {
     send(player.ws, { type: 'notice', text: b.data && b.data.tribeId ? '우리 마을이 아니어서 재고를 볼 수 없습니다.' : '이 마을의 관리자가 아니어서 재고를 볼 수 없습니다.' });
     return;
   }
   const d = b.data || {};
-  const vil = SimVillages.playerVillageAt ? SimVillages.playerVillageAt(d.x0, d.y0) : null;
+  vil = SimVillages.playerVillageAt ? SimVillages.playerVillageAt(d.x0, d.y0) : null;
   if (!vil) { send(player.ws, { type: 'notice', text: '이 회관에 딸린 마을을 찾지 못했습니다.' }); return; }
+  }
   const inv = SimVillages.playerVillageInventory(vil);
   if (!inv) { send(player.ws, { type: 'notice', text: '재고를 읽지 못했습니다.' }); return; }
-  inv.welcome = _welcomeLine(vil.dbId);   // ★[T19] 이방인 받기 — **기존 payload 한 줄**(새 창구 0)
+  if (member) inv.welcome = _welcomeLine(vil.dbId);   // ★[T19] 이방인 받기 — **기존 payload 한 줄**(새 창구 0) · ★[T1132] 촌장 칸 — 그 마을 사람에게만
+  else inv.viewOnly = true;                            // ★[T1132] 그 마을 사람이 아니다 — 보기 · 기부만(꺼내기 · 이방인 받기 칸 없음)
   inv.hallId = buildingId;
   if (T769) inv.donate = true;            // ★[T769] 켬 = "넣기" 를 "기부"로(받는 것 없음) — 끔이면 이 칸이 없다
   send(player.ws, { type: 'village_inventory', inv });
@@ -12574,11 +12596,17 @@ function tryVillageDeposit(player, buildingId, want, _donVil) {
   else {
   const b = buildings.get(buildingId);
   if (!b || b.type !== 'village_hall') return;
+  if (T1132_HALL_VIEW && T769) {   // ★[T1132] 켬 — 패널 기부 문 = 패널 보기 문(마을 화면 · `/기부` 와 같은 260px 술어 · 누구나)
+    const g = _t1132Vil(player, b);
+    if (g.err) { send(player.ws, { type: 'notice', text: g.err }); return; }
+    vil = g.vil;
+  } else {
   if (Math.hypot(b.x - player.x, b.y - player.y) > 200) { send(player.ws, { type: 'notice', text: '회관에서 너무 멀리 있습니다' }); return; }
   if (!T769 && !_furnaceCanUse(player, b)) { send(player.ws, { type: 'notice', text: '이 마을의 관리자가 아닙니다' }); return; }   // ★[T769] 켬 = 누구나 기부(근접만)
   const d = b.data || {};
   vil = SimVillages.playerVillageAt ? SimVillages.playerVillageAt(d.x0, d.y0) : null;
   if (!vil) { send(player.ws, { type: 'notice', text: '이 회관에 딸린 마을을 찾지 못했습니다.' }); return; }
+  }
   }
   if (T725_HALL) {   // ★[T725 ①] 상한 것은 회관도 안 받는다 — 낼 품목(곳간이 받는 것 · 1개 이상)만 묻는다
     const _map = SimVillages.playerVillageDepositMap() || {};
@@ -13182,7 +13210,8 @@ function __testBind() {
     // ── 무게 모델(2026-08-27) ── 정본 모듈을 그대로 내준다(하네스가 곡선을 다시 짜면 사본이다)
     Weights, Carry, Lots, moveMultOf, zoneGameDay, COOK_RECIPES, doCook, _unitsOfFor,
     doEatDish,   // ★[T705] 요리 먹기 — 상한 재료 요리의 독소가 배탈 지수로 가는지(test-food-sick · 읽기·부르기만)
-    T769, tryVillageDonate, tryVillageInventory, central,   // ★[T769] 기부 · 촌장 꺼내기 하네스(`test-donate` · 회관 넣기는 아래 T725 줄의 `tryVillageDeposit`)
+    T769, tryVillageDonate, tryVillageInventory, central, T1132_HALL_VIEW,   // ★[T1132] 회관 보기 문 하네스(`test-t1132-hall-view`)
+      // ★[T769] 기부 · 촌장 꺼내기 하네스(`test-donate` · 회관 넣기는 아래 T725 줄의 `tryVillageDeposit`)
     T732_MOMENT, GL, _t732DoorBegin, _t732DoorEnd, _t732Wrap, _afterWithdraw, tryVillageWithdraw, tryVillageDeliver, Membership, doSellIronRelic,   // ★[T732] 곳간 문(test-granary-age · test-moment-lot · 읽기·부르기만)
     T725_HALL, tryVillageDeposit, tryVillageTradeExec,   // ★[T725 ①] 회관 넣기 문(test-hall-units · 읽기·부르기만)
     // ★[부패·보존 배치 2026-08-31] 하네스가 잡을 손잡이들

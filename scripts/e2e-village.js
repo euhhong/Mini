@@ -381,6 +381,10 @@ async function waitHttp(url, tries = 900) {
     const in2 = await page2.evaluate(() => !!(window.__getMyAbs && window.__getMyAbs()));
     ok(in2, '두 번째 플레이어가 접속했다(권한 검사의 전제)');
     if (in2) {
+      //   ★[T1132] 켬(기본) — 남도 회관 곁(마을 화면 문 260px 안)에선 읽기 전용으로 본다 ⇒ 막힘은 **거리**로 잰다: 회관에서 600px 떨어져 묻는다(끔 = 종전 자리 그대로)
+      const _tp = async (dx, dy) => page2.evaluate(([x, y]) => { const z = (window.__getZonesMeta ? window.__getZonesMeta()[window.__getPrimaryZoneId()] : null) || {};
+        window.__sendPrimary({ type: 'teleport_debug', x: Math.round(x - (z.worldOffsetX || 0)), y: Math.round(y - (z.worldOffsetY || 0)) }); }, [hall.wx + dx, hall.wy + dy]);
+      if (process.env.T1132_HALL_VIEW !== '0') { await _tp(600, 0); await sleep(1200); }
       await page2.evaluate(() => { window.__notices = []; window.__villageInv = null; });
       await page2.evaluate((id) => window.__sendPrimary({ type: 'village_inventory', buildingId: id }), hall.id);
       // ★고정 900ms → 폴링 5초 [2026-08-06 검증 세션]: econ day-100 경계 틱(~1초 스파이크)과 겹치면
@@ -397,7 +401,7 @@ async function waitHttp(url, tries = 900) {
       //     그런데 이 자리엔 촌장 브리핑(근접만으로 나간다)이 먼저 도착할 수 있고, 그러면 거절이
       //     오기 **전에** 판정해서 빨개진다(실제로 그랬다: 마지막 알림이 "10일 만이군…" 이었다).
       //     제품은 정상이다 — 거절은 그 뒤에 온다. ⇒ **찾는 것이 올 때까지** 기다린다(읽기는 무해).
-      const _denied = (t) => /관리자가 아닙니다|관리자가 아니어서|우리 마을이 아니어서|너무 멀리/.test(t);
+      const _denied = (t) => /관리자가 아닙니다|관리자가 아니어서|우리 마을이 아니어서|너무 멀리|너무 멉니다/.test(t);   // ★[T1132] 켬 = 멀면 마을 화면 문의 말(`_villageNear`)
       let nt3 = [];
       for (let i = 0; i < 25; i++) {
         await page2.evaluate((id) => window.__sendPrimary({ type: 'village_inventory', buildingId: id }), hall.id);
@@ -410,6 +414,24 @@ async function waitHttp(url, tries = 900) {
         `거부 사유가 한국어 계약 메시지다 — ${(nt3.filter(_denied)[0] || nt3.slice(-1)[0] || '(없음)')}`);
       await page2.screenshot({ path: `${SHOTS}/09-denied.png` }).catch(() => {});
       shots.push(`${SHOTS}/09-denied.png`);
+      // ★★[T1132] 켬(기본) — 보기는 가까이 온 누구나: 같은 두 번째 플레이어가 회관 곁(마을 화면 문 260px 안)으로 가면 패널이 **읽기 전용**으로 열린다
+      //   (`inv.viewOnly` · 이방인 받기 칸 없음 · 기부 칸 있음). 끔(`T1132_HALL_VIEW=0`)이면 이 자리는 종전처럼 거절이다(위 계약 말).
+      if (process.env.T1132_HALL_VIEW !== '0') {
+        await page2.evaluate(() => { window.__notices = []; window.__villageInv = null; });
+        await _tp(40, 40);   // 회관 곁(존 로컬 워프 — 위 `_tp`)
+        await sleep(1200);
+        let inv3 = null;
+        for (let i = 0; i < 25 && !inv3; i++) {
+          await page2.evaluate((id) => window.__sendPrimary({ type: 'village_inventory', buildingId: id }), hall.id);
+          await sleep(250);
+          inv3 = await page2.evaluate(() => window.__villageInv);
+        }
+        ok(!!inv3 && inv3.viewOnly === true && inv3.welcome == null && inv3.donate === true, `★[T1132] 남이 회관 곁에 오면 재고가 **읽기 전용**으로 온다(이방인 받기 칸 없음 · 기부 칸 있음) — ${JSON.stringify(inv3 ? { viewOnly: inv3.viewOnly, welcome: inv3.welcome != null, donate: inv3.donate } : { notes: (await page2.evaluate(() => (window.__notices || []).slice(-4))), me: await page2.evaluate(() => window.__getMyAbs && window.__getMyAbs()), hall: { x: hall.wx, y: hall.wy } })}`);
+        const ro = await page2.evaluate(() => { const el = document.getElementById('villageInvPanel'); return el ? { ro: !!el.querySelector('[data-pvi-viewonly]'), wel: !!el.querySelector('#pviWel'), shown: el.style.display !== 'none' } : null; });
+        ok(!!ro && ro.shown && ro.ro && !ro.wel, `★[T1132] 화면 — 패널에 "볼 수만 있습니다" 줄 · 이방인 받기 단추 없음 — ${JSON.stringify(ro)}`);
+        await page2.screenshot({ path: `${SHOTS}/10-viewonly.png` }).catch(() => {});
+        shots.push(`${SHOTS}/10-viewonly.png`);
+      }
     }
   }
 
