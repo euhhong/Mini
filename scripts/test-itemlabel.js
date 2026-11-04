@@ -243,7 +243,7 @@ console.log('\n=== [T66] 화면 규칙 B — 이모지 0 · 색은 토큰 하나
   //     그 판만 색 검사를 **조용히 빠져나간다**(빠뜨린 자리는 언젠가 리터럴이 들어온다).
   const DOM_ONLY = ['client/05-u-icon.js', 'client/44-h-hud.js', 'client/45-t-market.js',
     'client/47-s-board.js',
-    'client/50-i-panel.js', 'client/51-s-side.js', 'client/60-t-market.js',
+    'client/50-i-panel.js', 'client/51-s-side.js', 'client/52-w-oseok-all.js', 'client/60-t-market.js',   // ★[T1124] 화면 전체 오석 층도 판을 덮는 조각이다(값은 모듈 · 리터럴 0)
     'client/65-s-chronicle.js', 'client/70-lobby.js', 'client/99-main.js', 'index.html'];
   const seen = files.map(([f]) => f);
   ok(DOM_ONLY.every((f) => seen.includes(f)), '★⑫ 전제: 표의 조각이 전부 실재한다',

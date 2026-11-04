@@ -466,5 +466,7 @@
 // @@moved-end:14155
 
 // ★[T1070] 마을 화면 시험 훅 — 자료 넣기(T1072 전 임시 자료 · e2e) · 상태 읽기(최상위 실행문은 이 파일에만 — 분할 규약)
+if (oseokAllOn()) oseokAllInstall();   // ★[T1124] 오석 판을 화면 전체에(손잡이 `T1124_OSEOK_ALL` · 끔 = 먹선 그대로)
+window.__osaStats = () => ({ on: osaOn, floored: osaStats.floored, passes: osaStats.passes, ms: +osaStats.ms.toFixed(1) });   // ★[T1124] 시험 훅(읽기만)
 window.__vvInject = (v) => villageViewOnMessage(v);
 window.__vvState = () => ({ open: villageViewOpen(), tab: vvTab, vid: vvVid, far: vvFar(), knob: vvKnobOn(), seq: vvSeq, num: vvNum, data: !!vvData });   // ★[T1103] seq · 고른 기준 · 자료 유무
