@@ -10339,6 +10339,7 @@ function __farmBind() {
     lifeFarmDay, _lifeTasksPerFarmerDay,   // ★[T117] 하루치 작물 노동 정본 — 계측기가 이걸 부른다(사본 0)
     cropTaskOf, cropDoTask, cropDayTick, cropAfterHarvest,
     _t368Item, _t368Hold, _t368Deliver, _t368Attach, _farmGranary, _lifeHeadlessDay, _t368ZoneAwake,   // ★[T368] 하네스가 품목·손·귀환·헤드리스 끄기를 **정본 그대로** 부른다(사본 0)
+    _lifeNextFarmCell, t1144Stat: () => JSON.parse(JSON.stringify(_t1144S)), T1144_LIFE_EVENT,   // ★[T1144] 증인이 밭 칸 물음을 정본 그대로 부른다(켬 · 증인 갈래는 env)
     L_WATERGAP, L_WEEDS, L_PESTP, L_QW, L_QP, L_QMIN, L_QREC };
 }
 // ★[헤드리스 일일 결산 — 사용자 "아무도 안 보는 마을도 일과가 작동해야 하는 거 아냐?"] 동면 마을(관측자 없음)의
@@ -10449,7 +10450,7 @@ const _t1144S = { farm: { calls: 0, cells: 0, reuse: 0, re: 0, reSame: 0, full: 
 function _t1144Farm(vil, day) {
   const fs = vil._farmSet, ds = vil._drySet, cr = vil._crop;
   let F = _t1144F.get(vil);
-  if (!F || F.fs !== fs || F.ds !== ds || F.cr !== cr || F.n !== fs.size || F.dn !== ds.size) {   // ⓓ 다시 짓기
+  if (!F || F.fs !== fs || F.ds !== ds || F.cr !== cr || ((F.n !== fs.size || F.dn !== ds.size) && T1144_BRK !== 'size')) {   // ⓓ 다시 짓기(미끼 `size` 는 증인만)
     const n = fs.size, keys = new Array(n), px = new Float64Array(n), py = new Float64Array(n);
     let i = 0;
     for (const k of fs) { const ci = k.indexOf(','); keys[i] = k; px[i] = +k.slice(0, ci) * SZ + SZ / 2; py[i] = +k.slice(ci + 1) * SZ + SZ / 2; i++; }
@@ -15799,7 +15800,7 @@ module.exports = { t750CastPre, t750Stat: () => _t750Stat, t719ReachPre, t719Sta
           const ev = vil.econ; if (!ev || !ev.npcs || !ev.npcs.length) continue;
           n += lifeFarmDay(vil, day, (ev.counts && ev.counts.farmer) || 0, onDid ? (k, t, c0, p0, e1) => onDid(vil, k, t, c0, p0, e1) : null);
           for (const [k, e] of vil._crop) cropDayTick(e, !vil._drySet.has(k), day, k);   // 라이브 하루 경계와 같은 줄
-          if (T1144_LIFE_EVENT) _t1144DirtyAll(vil);   // ★[T1144 ①ⓒ] 같은 사건(라이브 줄과 같이)
+          if (T1144_LIFE_EVENT && T1144_BRK !== 'day') _t1144DirtyAll(vil);   // ★[T1144 ①ⓒ] 같은 사건(라이브 줄과 같이 · 미끼 `day` 는 증인만)
         }
         return n;
       },
