@@ -121,12 +121,12 @@
     add('rock', 'rock', 6); add('rock', 'mossrock', 6); add('ore', 'ore', 6); add('bush', 'bush', 6); add('herb', 'herb', 6);
   })();
   const NATURE_BASE_W = { rock: 44, mossrock: 44, ore: 42, bush: 40, herb: 30 };   // ★인게임 기준 폭(px) — 대형안[사용자 확정]: 그리기=×1.5(약초 ×1.25) → 바위 66·광맥 63·덤불 60·약초 38px(나무 ~78px과 동급). 자산 해상도 무관 화면 크기 고정
-  function drawNatureSprite(cls, x, y, seedX, seedY, scale) {   // 위치 해시로 변형 고정(깜빡임 없음) — 바닥 중심 앵커+그림자
+  function drawNatureSprite(cls, x, y, seedX, seedY, scale, kf) {   // 위치 해시로 변형 고정(깜빡임 없음) — 바닥 중심 앵커+그림자 · ★[T1126] kf = 남은 몸 배율(바위 — 없으면 1 = 종전 크기)
     const arr = NATURE_SPRITES[cls]; if (!arr || !_natureLoaded) return false;
     const hsh = _treeHash(seedX != null ? seedX : x, seedY != null ? seedY : y);
     const im = arr[(hsh * arr.length) | 0];
     if (!im || !im.complete || !im.naturalHeight) return false;
-    const sc = scale || 1.5, w = (NATURE_BASE_W[cls] || 26) * sc, hh = w * (im.naturalHeight / im.naturalWidth);
+    const sc = (scale || 1.5) * (kf || 1), w = (NATURE_BASE_W[cls] || 26) * sc, hh = w * (im.naturalHeight / im.naturalWidth);
     ctx.fillStyle = 'rgba(0,0,0,0.20)';
     ctx.beginPath(); ctx.ellipse(x, y + 3, w * 0.42, w * 0.16, 0, 0, Math.PI * 2); ctx.fill();
     ctx.drawImage(im, x - w / 2, y - hh + 5, w, hh);
@@ -373,8 +373,17 @@
     ctx.fill();
   }
 
-  function drawRockIso(x, y, seedX, seedY) {
-    if (drawNatureSprite('rock', x, y, seedX, seedY)) return;   // ★에셋 3차: 스프라이트 우선(로드 전 절차 폴백)
+  // ★★[T1126 2026-11-04 · ★재민 11-03 판정 ⓐ] 바위가 작아지다 사라진다 — 남은 hp 비율로 그림을 줄인다(새 그림 0 · 축소 렌더).
+  //   단계 셋(카드 "둘 ~ 셋") — 남은 몸 = ⅓ · ⅔ · 온전(hp 비율을 올림) · hp 한 점 = 돌 하나 = 같은 부피라서 남은 부피 비율 → 길이 = 세제곱근.
+  //   켬은 welcome `uiCfg.rockYield`(서버 손잡이 `T1126_ROCK_YIELD`) 가 있을 때만 — 없으면 1(끔 = 종전 그림 그대로). hp · maxHp 는 이미 받는다(`resource_update`).
+  function rockShrinkK(r) {
+    if (!(typeof uiCfg !== 'undefined' && uiCfg && uiCfg.rockYield) || !r || !(r.maxHp > 0) || !(r.hp > 0) || r.hp >= r.maxHp) return 1;
+    return Math.cbrt(Math.ceil(3 * r.hp / r.maxHp) / 3);
+  }
+  function drawRockIso(x, y, seedX, seedY, k) {   // ★[T1126] k = 남은 몸 배율(`rockShrinkK` · 없으면 1 = 종전 그림)
+    if (drawNatureSprite('rock', x, y, seedX, seedY, null, k)) return;   // ★에셋 3차: 스프라이트 우선(로드 전 절차 폴백)
+    const kz = (k > 0 && k < 1) ? k : 1;   // ★[T1126] 폴백 그림도 같은 배율(바닥 앵커 그대로)
+    if (kz !== 1) { ctx.save(); ctx.translate(x, y); ctx.scale(kz, kz); ctx.translate(-x, -y); }
     ctx.fillStyle = 'rgba(0,0,0,0.35)';
     ctx.beginPath(); ctx.ellipse(x, y + 3, 11, 4, 0, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath();
@@ -391,6 +400,7 @@
     ctx.moveTo(x - 4, y - 5); ctx.lineTo(x + 2, y - 7); ctx.lineTo(x + 0, y - 3);
     ctx.closePath();
     ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.fill();
+    if (kz !== 1) ctx.restore();
   }
 
   function drawBerryBushIso(x, y, seedX, seedY) {

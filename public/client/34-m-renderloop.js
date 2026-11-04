@@ -1583,7 +1583,7 @@
         // ★[T122] 벤 자리의 두 단계 — 크기는 **서버가 이미 줄여 보냈다**(클라가 배율을 짓지 않는다).
         else if (item.r.type === 'stump') drawStumpIso(s.x, s.y, item.r.r || 7, item.r.h || 10, item.ax, item.ay);
         else if (item.r.type === 'sapling') drawSaplingIso(s.x, s.y, item.r.r || 4, item.r.h || 20, item.ax, item.ay, item.r.sp);
-        else if (item.r.type === 'rock') drawRockIso(s.x, s.y, item.ax, item.ay);
+        else if (item.r.type === 'rock') drawRockIso(s.x, s.y, item.ax, item.ay, rockShrinkK(item.r));   // ★[T1126] 남은 몸만큼(끔 = 1)
         else if (item.r.type === 'berry_bush') drawBerryBushIso(s.x, s.y, item.ax, item.ay);
         else if (item.r.type === 'water_pool') drawWaterPoolIso(s.x, s.y);
         else if (item.r.type === 'herb') drawHerbIso(s.x, s.y, item.ax, item.ay);
