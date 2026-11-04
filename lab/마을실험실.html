@@ -111,7 +111,7 @@
   //   실제로 터졌다: rational picker 에 전사 줄을 넣자 warriorTarget(process.env.PEACE_W)이
   //   랩에서 처음 호출돼 즉사했다 — CLI 하네스는 못 잡는 브라우저 전용 지뢰라 여기서 구조적으로 막는다.
   var process=(typeof root.process!=='undefined'&&root.process)?root.process:{env:{}};
-  function req(p){ if(/(^|[/])carry$/.test(p))return modules.carry; if(/(^|[/])weather$/.test(p))return modules.weather; if(/(^|[/])salt$/.test(p))return modules.salt; if(/(^|[/])tidal$/.test(p))return modules.tidal; if(/(^|[/])animals$/.test(p))return modules.animals; if(/(^|[/])game-meat$/.test(p))return modules.gmeat; if(/(^|[/])spoil$/.test(p))return modules.spoil; if(/(^|[/])lots$/.test(p))return modules.lots; if(/crops[.]json$/.test(p))return modules.cropsData; if(/crop-cal/.test(p))return modules.cropcal; if(/(^|[/])events$/.test(p))return modules.events; if(/(^|[/])crops$/.test(p))return modules.crops; if(/calendar/.test(p))return modules.cal; if(/zone-config/.test(p))return modules.zcfg; if(/weights$/.test(p))return modules.wts; if(/hut-stages/.test(p))return modules.hut; if(/stone-uses/.test(p))return modules.stoneu; if(/granary-stages/.test(p))return modules.granst; if(/smelt-uses/.test(p))return modules.smeltu; if(/village-layout/.test(p))return modules.vlayout; if(/era/.test(p))return modules.era; if(/specialty/.test(p))return modules.specialty; if(/economy-sim-v2/.test(p))return modules.v2; if(/economy-sim/.test(p))return modules.v1; return {}; }
+  function req(p){ if(/equilibrium/.test(p))return modules.equil; if(/(^|[/])carry$/.test(p))return modules.carry; if(/(^|[/])weather$/.test(p))return modules.weather; if(/(^|[/])salt$/.test(p))return modules.salt; if(/(^|[/])tidal$/.test(p))return modules.tidal; if(/(^|[/])animals$/.test(p))return modules.animals; if(/(^|[/])game-meat$/.test(p))return modules.gmeat; if(/(^|[/])spoil$/.test(p))return modules.spoil; if(/(^|[/])lots$/.test(p))return modules.lots; if(/crops[.]json$/.test(p))return modules.cropsData; if(/crop-cal/.test(p))return modules.cropcal; if(/(^|[/])events$/.test(p))return modules.events; if(/(^|[/])crops$/.test(p))return modules.crops; if(/calendar/.test(p))return modules.cal; if(/zone-config/.test(p))return modules.zcfg; if(/weights$/.test(p))return modules.wts; if(/hut-stages/.test(p))return modules.hut; if(/stone-uses/.test(p))return modules.stoneu; if(/granary-stages/.test(p))return modules.granst; if(/smelt-uses/.test(p))return modules.smeltu; if(/village-layout/.test(p))return modules.vlayout; if(/era/.test(p))return modules.era; if(/specialty/.test(p))return modules.specialty; if(/economy-sim-v2/.test(p))return modules.v2; if(/economy-sim/.test(p))return modules.v1; return {}; }
   modules["cal"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
 // === server/calendar.js — 달력 정본 하나: 그레고리력 (T570 · 재민 10-02) ================================
 //
@@ -9225,6 +9225,38 @@ module.exports = { CFG, MOVE_CURVE, STAGE_AT, R1,
   CARRIER_SLOT, carrierOf, carrierBonus, carrierWorking };
 
 ;return module.exports;})();
+  modules["equil"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+// === sim/equilibrium.js — 평형 회귀 한 곳(★재민 11-02 "현재가 높으면 기본 변화량이 마이너스, 낮으면 플러스") ===
+//   T1076(원정 사기)이 처음 쓰고, T1075(마을 행복 평형)가 같은 함수를 쓴다 — 사본 0.
+//   값 x(0~1)는 그날 조건이 정한 평형 x* 쪽으로 하루마다 반감기 h(날)의 비율로 다가간다:
+//     x ← x + (x* − x) · (1 − ½^(dt/h))      — 반감기 h 날이면 차이가 h 날 뒤 절반(평형이 그대로일 때)
+//   사건(죽음 등)은 계단이다: x ← max(바닥, x − 깎을 양). 깎을 양은 부르는 쪽이 물리 칸으로 정한다(죽은 몫 × 그 층의 계수).
+//
+//   인터페이스(T1075 가 읽을 것):
+//     Equilibrium.step(x, target, halfLife, dt = 1) → 새 x(0~1 로 자름) · halfLife ≤ 0 이면 그날 바로 평형(x = target).
+//     Equilibrium.drop(x, amount, floor = 0)      → 새 x(바닥 밑으로 안 간다 · amount ≤ 0 이면 무변).
+//     Equilibrium.keep(halfLife, dt = 1)           → 그날 남는 차이 몫 ½^(dt/h)(표 · 하네스용).
+//   새 수 0 — 반감기 · 평형 · 깎을 양은 다 부르는 쪽이 준다(T1076: 반감기 = T1074 빚 시계 14날 · 평형 = 짐 · 빚 · 계단 = battle-core 제 사상 계수).
+//   Node(module.exports) / 브라우저(window.Equilibrium) 둘 다(battle-core 패턴 — 번들 · 랩에 실을 때도 이 파일 그대로).
+(function (root) {
+  'use strict';
+  const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+  function keep(halfLife, dt) { const d = dt == null ? 1 : +dt; return halfLife > 0 ? Math.pow(0.5, d / halfLife) : 0; }
+  function step(x, target, halfLife, dt) {
+    const t = clamp01(+target), c = clamp01(+x);
+    return clamp01(t + (c - t) * keep(halfLife, dt));
+  }
+  function drop(x, amount, floor) {
+    const f = floor == null ? 0 : +floor, a = +amount;
+    if (!(a > 0)) return clamp01(+x);
+    return Math.max(f, clamp01(+x) - a);
+  }
+  const Equilibrium = { step, drop, keep };
+  if (typeof module !== 'undefined' && module.exports) module.exports = Equilibrium;
+  if (root) root.Equilibrium = Equilibrium;
+})(typeof window !== 'undefined' ? window : null);
+
+;return module.exports;})();
   modules["v1"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;
 /**
  * NPC 마을 자율 경제 시뮬레이션
@@ -10471,9 +10503,11 @@ function _t1075Starved(v, n) {
 //     같은 조건이면 출발값과 무관하게 같은 값으로 간다(test-happy-converge).
 //   효과: 출생 항 그대로(h 를 읽는다) · 불행은 죽이지 않는다(T1075 ④ — 출생을 먼저 깎는다) · **h < 0.25 일 때만** 남는 몫이 이탈 압력(더 행복한 이웃이 받을 때만 걷는다).
 //   T1075 와 같이 켜면 T1134 가 이긴다(목표 · 계단 · 이탈 문턱).
-const T1134_HAPPY_TARGET = (typeof process !== 'undefined' && process.env && process.env.T1134_HAPPY_TARGET === '1');
+//   ★★[T1147 · ★재민 11-04 ㄱ] **켬 기본**(`!== '0'` · 되돌림 `T1134_HAPPY_TARGET=0` = 종전 바이트) · c 기본 0.00741(T1134 §5 권고 — 끈 판 마을별 '좋은 것 ÷ 인구' 25%) · env `T1134_C` 로 바꾼다.
+const T1134_HAPPY_TARGET = !(typeof process !== 'undefined' && process.env && process.env.T1134_HAPPY_TARGET === '0');
+const T1134_C_DEFAULT = 0.00741;   // ★재민 11-04 판정(T1134 보고 §5)
 const T1134_EMIG_H = 0.25;   // ★재민 11-03 카드(이주 문턱)
-function t1134C() { const x = (typeof process !== 'undefined' && process.env) ? parseFloat(process.env.T1134_C) : NaN; return Number.isFinite(x) && x > 0 ? x : 0; }
+function t1134C() { const x = (typeof process !== 'undefined' && process.env) ? parseFloat(process.env.T1134_C) : NaN; return Number.isFinite(x) && x >= 0 ? x : T1134_C_DEFAULT; }   // ★[T1147] 미설정 = 0.00741 · `T1134_C=0` = 인구 항 없음
 function t1134Half() { const x = (typeof process !== 'undefined' && process.env) ? parseFloat(process.env.T1134_HALF) : NaN; return Number.isFinite(x) && x > 0 ? x : HAPPY_EQ_HALF_DAYS; }
 //   하루 한 걸음 — 좋은 것 G · 인구 N · 오늘 굶주림 몫 hungerShare(0~1) → { target, h }. 마을 칸 둘(`_t1134E` · `_H`)만 쓴다(하네스가 이 함수를 그대로 부른다).
 function t1134Step(v, G, N, hungerShare) {
@@ -15538,7 +15572,7 @@ module.exports = {
   t1113On, t1113Unhappy, t1113Happy, t1113LowMul, t1113IsFood, T1113_HAPPY_MID,   // ★[T1113] 행복 낮을 때 효과 셋 — war-core · 서버 · 하네스가 같은 술어를 읽는다(사본 0)   // ★[T1085] 촌장 지정 — 서버 동사 `assign_job` 이 부른다(규칙 사본 0)
   _autoSwitchJobForTest: autoSwitchJob, _switchNPCJobForTest: switchNPCJob,   // ★[T1085] 하네스가 자율 전환 그 함수를 부른다(시험 이름 · 사본 0)
   T1075_HAPPY_EQ, HAPPY_EQ_HALF_DAYS,
-  T1134_HAPPY_TARGET, T1134_EMIG_H, t1134C, t1134Half, t1134Step,   // ★[T1134] 목표 행복 — 하네스 · 호스트가 같은 함수를 읽는다   // ★[T1075] 행복 평형 손잡이 · 반감기(평형 함수는 `sim/equilibrium.js` 하나 — T1076 과 같이 쓴다)
+  T1134_HAPPY_TARGET, T1134_EMIG_H, T1134_C_DEFAULT, t1134C, t1134Half, t1134Step,   // ★[T1134] 목표 행복 — 하네스 · 호스트가 같은 함수를 읽는다   // ★[T1075] 행복 평형 손잡이 · 반감기(평형 함수는 `sim/equilibrium.js` 하나 — T1076 과 같이 쓴다)
   foodDebtOf, T1074_FOOD_DEBT,   // ★[T1074] 식량 빚 읽는 함수 하나(T1075 가 읽는다)
   __t1074: { _fdEaters, _fdNeed, _fdSettle, _fdDeathIdx, FD_ADAPT_MAX, FD_ADAPT_DOWN_DAYS, FD_ADAPT_UP_DAYS, FD_DEATH_DAYS, FD_REPAY_MAX, T1117_FD_EVID },   // 하네스 훅(test-t1074-food-debt)
   T860_ON, CATCH_FROM, PRESERVE_FROM, _preserveSurplus, _t860Begin, _t860Dry, T877_ON, _t860Unit, PRESERVED_FOODS, PRESERVE_YIELD, PRESERVE_FOOD_FACTOR, FORAGE_FOOD_FACTOR,   // ★[T860] 잡은 날 말리기 — 손잡이 · 잡은 칸 표(하네스가 spoil 정본과 대조한다 · 사본 0) · 갈무리 한 걸음

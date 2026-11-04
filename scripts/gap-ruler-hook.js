@@ -53,4 +53,6 @@ Ev.createLedger = function () {
   };
   return L;
 };
-process.on('exit', () => { try { if (OUT && D.names) fs.writeFileSync(OUT, JSON.stringify(D)); } catch (e) {} });
+process.on('exit', () => { try {
+  try { const SV = require(path.join(ROOT, 'server', 'villages.js')); if (SV.t1147Stat) D.t1147 = SV.t1147Stat(); } catch (e) {}   // ★[T1147] 이주 받는 곳(가장 가까운 곳 ↔ 다른 곳 몫)
+  if (OUT && D.names) fs.writeFileSync(OUT, JSON.stringify(D)); } catch (e) {} });

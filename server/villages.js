@@ -1871,6 +1871,37 @@ function _t1080Pick(ends, skip) {
   if (best) { _t1080Stat.pick++; if (useM) { _t1080Stat.pickMatrix++; via = 'matrix'; } else _t1080Stat.pickLine++; }
   return best ? { vil: best, px: bd, via } : null;
 }
+// ═══ ★[T1147 · ★재민 11-04 · T1134 회부 2] 불행 이탈의 받는 곳 — 둘레 여럿 중 더 행복한 곳 ═══
+//   후보 = 교역로 4일 안(`econV2.travelDaysForDistance(교역 거리행렬)` ≤ 4 · 행렬이 없으면 곧은 econ 거리) 산 마을(사람 있음 · 해체 표 없음) 중
+//     ⓐ 떠나는 마을보다 행복이 높고 ⓑ 받을 자리 — 침상(`min(housing, _mapBeds)` > 인구) · 곳간(식량 등가 ≥ (인구 + 1) × 3일치 — 해체 문 3일치 그 문턱).
+//   그중 행복이 가장 높은 곳 · 같으면 가까운 곳. 없으면 null(아무도 안 떠난다 · 소멸 0). 4 = 카드(T1143 구호 · T1147 이주 "교역로 4일") — 새 수 0.
+const _t1147Stat = { pick: 0, nearest: 0, other: 0, none: 0, rows: [] };
+function _t1147Pick(vil) {
+  const W = state.world, M = W && W._distMatrix, ev = W && W.villages, V2 = state.econV2, E1 = state.econ;
+  const e0 = vil && vil.econ; if (!e0 || !V2 || !E1) return null;
+  const h0 = e0.lastStats && typeof e0.lastStats.happiness === 'number' ? e0.lastStats.happiness : null;
+  const useM = !!(M && ev && M.length === ev.length), i = useM ? ev.indexOf(e0) : -1;
+  let best = null, bh = -Infinity, bd = Infinity, near = null, nd = Infinity;
+  for (const v of state.villages) {
+    const e = v.econ; if (v === vil || !e || !(e.npcs.length > 0) || e._banditized) continue;
+    let dist = Infinity;
+    if (useM && i >= 0) { const j = ev.indexOf(e); if (j >= 0 && M[i] && isFinite(M[i][j])) dist = M[i][j]; }
+    else dist = Math.hypot(v.ccx - vil.ccx, v.ccy - vil.ccy) * 2.5;   // econ 좌표 = 셀 × 2.5
+    if (!isFinite(dist)) continue;
+    if (dist < nd) { nd = dist; near = v; }
+    if (V2.travelDaysForDistance(dist) > 4) continue;
+    const h = e.lastStats && typeof e.lastStats.happiness === 'number' ? e.lastStats.happiness : null;
+    if (h0 == null || h == null || !(h > h0)) continue;
+    const beds = Math.min(e.housing !== undefined ? e.housing : Infinity, e._mapBeds !== undefined ? e._mapBeds : Infinity);
+    if (!(beds > e.npcs.length)) continue;
+    if (!(E1.totalFoodEquivalent(e) >= (e.npcs.length + 1) * 3)) continue;
+    if (h > bh || (h === bh && dist < bd)) { bh = h; bd = dist; best = v; }
+  }
+  if (!best) { _t1147Stat.none++; return null; }
+  _t1147Stat.pick++; if (best === near) _t1147Stat.nearest++; else _t1147Stat.other++;
+  if (_t1147Stat.rows.length < 200) _t1147Stat.rows.push([W ? W.day | 0 : 0, vil.name, best.name, best === near ? 1 : 0, +(h0 || 0).toFixed(3), +bh.toFixed(3)]);
+  return best;
+}
 // ⓑ 제 짐 — n 사람 몫(배열 · 사람마다 같은 짐)
 function _t1080Pack(vil, n) {
   const WC = state.war, e = vil && vil.econ;
@@ -9138,6 +9169,7 @@ function banditHost() {
     t1079Pitch: _t1079Pitch, t1079Find: _t1079Find, t1079Flush: _t1079Flush, t1079Walk: _t1079Walk, t1079Home: _t1079Home, t1079Len: _t1079Len, t1079Gone: _t1079Gone,   // ★[T1079] 은거지 시설 · 짐 더미 문(도적 층 — `T1079_BANDIT_CAMP` 켬에서만 불린다)
     t1078Walkers: _t1078Walkers, t1078Die: _t1078Die, t1078Out: _t1078Out,   // ★[T1078] 단원 = 몸 문 셋(도적 `_t1078Gather` · `_t1078Trim` · `t1078Died` · `_t1078Out` — `T1078_BANDIT_ALL` 켬에서만 불린다)
     t1104Ppd: _t1079Ppd, t1104Walk: _t1104Walk, t1104Join: _t1104Join, t1104Release: _t1104Release, t1104Draft: _t1104Draft, t1104Fall: _t1104Fall, t1104Load: _t1104Load, t1104Store: _t1104Store,   // ★[T1104] 약탈 · 토벌 걸음 문(도적 층 — `T1104_BANDIT_WALK` 켬에서만 불린다)
+    t1147Pick: _t1147Pick, t1147Stat: () => _t1147Stat,   // ★[T1147] 불행 이탈 받는 곳(둘레 여럿 · 더 행복 · 자리)
     t1080On: () => T1080_ROAD_LIFE, t1080Pick: _t1080Pick, t1080Pack: _t1080Pack, t1080RoadDay: _t1080RoadDay, t1080Reroute: _t1080Reroute, t1080Arrive: _t1080Arrive, t1080Stat: () => _t1080Stat,   // ★[T1080] 길 위 먹고 늙기 · 길 거리 받는 마을(도적 `walkToVillage` 가 부른다)    // ★[T765] 후보 걷기 몸 문 둘(도적 `_t577Walk` — `T577_CAND_WALK=1` 에서만 불린다)
     seed: state.villageSeed || 1020,
     cellsW: ZONE ? Math.ceil(ZONE.zoneWidth / SZ) : 0,
@@ -15444,7 +15476,7 @@ function __rumorProbe() {
     rumor: Object.assign({}, L.rumorStats) };
 }
 
-module.exports = { t750CastPre, t750Stat: () => _t750Stat, t719ReachPre, t719Stat: () => _t719Stat, t731Stat: () => _t731Stat, t1013Stat: () => Object.assign({ on: T1013_BAND_DAY }, _t1013Stat), t1133Stat: () => Object.assign({ on: T1133_BAG }, _t1133Stat), t1133Sizes: _t1133Sizes,   // ★[T1133] 몸 짐 줄 영속 셈 · 크기 자(계측 전용)   // ★[T1013] 사냥터 짓기 몫 셈(계측 전용)   // ★[T731] 현지 자정 창 증인(켬에서만 찬다)
+module.exports = { t1147Stat: () => _t1147Stat, _t1147Pick, t750CastPre, t750Stat: () => _t750Stat, t719ReachPre, t719Stat: () => _t719Stat, t731Stat: () => _t731Stat, t1013Stat: () => Object.assign({ on: T1013_BAND_DAY }, _t1013Stat), t1133Stat: () => Object.assign({ on: T1133_BAG }, _t1133Stat), t1133Sizes: _t1133Sizes,   // ★[T1133] 몸 짐 줄 영속 셈 · 크기 자(계측 전용)   // ★[T1013] 사냥터 짓기 몫 셈(계측 전용)   // ★[T731] 현지 자정 창 증인(켬에서만 찬다)
   streamStat, fishPerf, woodPerf, foragePerf, farmPerf,   // ★[T316] `/perf` 가 내주는 어부 관측(손잡이 끔이면 null) · ★[T325] 나무꾼 · ★[T347] 채집도 같은 꼴 · ★[T368] 농부
   T856_LAND_ELEV, _t856LandElev,   // ★[T856] 마을 고도 — 하네스(`test-land-elev`)가 같은 함수를 부른다(사본 0)
   _t400BuildDay, _t400PerLoad, _t400Crew, _t400From,   // ★[T400] 집 행위 1층 — 하네스가 같은 함수를 부른다(사본 0)
