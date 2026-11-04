@@ -207,6 +207,100 @@ function _t1088Day(d) {
   }
   _T1088.d = d + 1;
 }
+// ★[T1136 · 계측 전용 · **env 가 없으면 한 글자도 안 바뀐다**] 바구니 교역 표 — `T17_BASKET=<파일>` 이면 관측 훅 둘(읽기만)을 꽂아
+//   다리마다 ⓐ 품목 수 · 짐 kg · 적재율(kg ÷ 몸 짐 정본 25) · 값 ⓑ 도착 · 집 도착 시각(econ 날 몫 → 시 · 낮/밤 = zone-config 해 뜸 · `dayPhaseRatio`)
+//   ⓒ 품목별 실은 양(숯 ↔ 통나무 — T1135) ⓓ 받아 온 짐 · 남은 값 ⓔ 약탈(짐 값 ↔ 약탈 — 규칙 무변)을 세고 · 날마다 ⓕ 값 진동(|Δln p|) ·
+//   열흘마다 ⓖ 차익 남는 폭(이웃 20 · 정보 반경 · 한 kg 당 · 값 = 그날 교역 값표)을 잰다. 바구니 판은 `world.onBasket` · 종전 판은 `world.onTradeLeg`(첫째 화물 출발)와 장부 줄.
+//   판정 0 — 수만 낸다(보고/T1136). 세계에는 아무것도 안 넣는다(훅은 관측자 — 엔진이 try 로 감싸 부른다).
+const _T1136 = process.env.T17_BASKET ? (() => {
+  const W = R('server/weights'), CY = R('server/carry'), ZC = R('server/zone-config');
+  const cap = CY.CFG.CAP_KG, kgOf = (r) => +W.kgOfOrDefault(r) || 0;
+  const night = (t) => { const p = (((t % 1) + 1) % 1 - ZC.SUNRISE_FRAC + 1) % 1; return p > ZC.WORLD.dayPhaseRatio; };   // 해 몫 > 낮 몫 = 밤(econ 날 몫 0 = 앵커 자정)
+  const S = { legs: 0, items: {}, kg: [], load: [], val: 0, unitsBy: {}, kgBy: {}, retLegs: 0, retItems: {}, retKg: [], retBy: {}, left: [], bail: 0, dead: 0,
+    raided: 0, raidVal: [], cleanVal: [], arrH: new Array(24).fill(0), homeH: new Array(24).fill(0), arrNight: 0, arrN: 0, homeNight: 0, homeN: 0,
+    tOut: [], gain: [], seen: new WeakSet(), px: new Map(), vol: {}, volN: {}, arb: [], arbKg: [], arbPos: 0, arbN: 0, bind: { budget: 0, cap: 0, avail: 0, none: 0 }, outWhy: {}, how: {}, trimLeft: 0 };
+  const hist = (o, n) => { o[n] = (o[n] || 0) + 1; };
+  const tod = (t, H, k) => { const h = Math.floor((((t % 1) + 1) % 1) * 24) % 24; H[h]++; if (night(t)) S[k + 'Night']++; S[k + 'N']++; };
+  world.onBasket = (kind, x) => {
+    const c = x.c;
+    if (kind === 'launch') {
+      S.legs++; hist(S.items, c.basket.length); S.kg.push(c.kg); S.load.push(c.kg / c.capKg); S.val += c._t1136.val; S.tOut.push(c.travelDays); S.gain.push(x.plan.gain);
+      for (const it of c.basket) { S.unitsBy[it.res] = (S.unitsBy[it.res] || 0) + it.amt; S.kgBy[it.res] = (S.kgBy[it.res] || 0) + it.kg; }
+      if (x.plan.outWhy) for (const k in x.plan.outWhy) S.outWhy[k] = (S.outWhy[k] || 0) + x.plan.outWhy[k];   // 가는 길 품목이 멈춘 까닭(낱개 상한 = 내 잉여 · 짐 자리 · 한계 이득 ≤ 0)
+      if (x.plan.how) S.how[x.plan.how] = (S.how[x.plan.how] || 0) + 1;
+      if (x.plan.leftover > 0) S.trimLeft++;
+    } else if (kind === 'arrive') {
+      tod(x.t, S.arrH, 'arr'); S.retLegs++; hist(S.retItems, x.ret.length); S.retKg.push(x.kgRet); S.left.push(x.credit > 0 ? (x.credit - x.spent) / x.credit : 0);
+      for (const it of x.ret) S.retBy[it.res] = (S.retBy[it.res] || 0) + it.amt;
+      (x.lossOut > 0 ? S.raidVal : S.cleanVal).push(c._t1136.val); if (x.lossOut > 0) S.raided++;
+      //   받아 온 짐이 무엇에 걸렸나 — 다 팔았다(받을 값이 모자람 = 가는 짐 몫) · 짐 자리(남은 자리 < 1kg) · B 잉여(그 밖 — B 가 내놓을 몫 · 이득이 바닥) · 받아 온 것 0
+      if (!x.ret.length) S.bind.none++; else if (!(x.back && x.back.length)) S.bind.budget++; else if ((c.capKg || cap) - x.kgRet < 1) S.bind.cap++; else S.bind.avail++;
+    } else if (kind === 'bail') { tod(x.t, S.arrH, 'arr'); S.bail++; }
+    else if (kind === 'home') tod(x.t, S.homeH, 'home');
+    else if (kind === 'dead') S.dead++;
+  };
+  world.onTradeLeg = (L) => {   // 종전 판 — 첫째 화물(+ 둘째) 출발
+    S.legs++; hist(S.items, L.second ? 2 : 1);
+    const kg = L.units * kgOf(L.res) + (L.second ? L.secondUnits * kgOf(L.second) : 0);
+    S.kg.push(kg); S.load.push(kg / cap); S.val += L.units * L.pFrom; S.tOut.push(L.tripDays / 2); S.gain.push(L.profit);
+    S.unitsBy[L.res] = (S.unitsBy[L.res] || 0) + L.units; S.kgBy[L.res] = (S.kgBy[L.res] || 0) + L.units * kgOf(L.res);
+    if (L.second) { S.unitsBy[L.second] = (S.unitsBy[L.second] || 0) + L.secondUnits; S.kgBy[L.second] = (S.kgBy[L.second] || 0) + L.secondUnits * kgOf(L.second); }
+  };
+  const day = (d) => {
+    const TL = world.tradeLog || [];
+    for (let i = TL.length - 1; i >= 0 && !S.seen.has(TL[i]); i--) {   // 종전 판 장부 줄(도착 · 받아 온 짐 · 날 경계 도착) — 바구니 판은 훅이 센다
+      const t = TL[i]; S.seen.add(t);
+      if (t.basket || t.rerouted) continue;
+      if (t.abandoned) { S.bail++; continue; }
+      tod(t.day, S.arrH, 'arr'); S.retLegs++; hist(S.retItems, t.bought ? 1 : 0);
+      if (t.bought) { S.retBy[t.bought.res] = (S.retBy[t.bought.res] || 0) + t.bought.amt; S.retKg.push(t.bought.amt * kgOf(t.bought.res)); } else S.retKg.push(0);
+      if (t.raided) S.raided++;
+    }
+    if (d < 100) { for (const v of world.villages) if (v._priceCache) S.px.set(v, v._priceCache); return; }
+    for (const v of world.villages) {   // ⓕ 값 진동 — 그날 교역 값표(`_priceCache` · 교역이 그날 새로 뜬 값)의 품목별 |Δ ln p|
+      const P = v._priceCache, Q = S.px.get(v);
+      if (P && Q && P !== Q && (v.npcs || []).length) for (const r in P) { const a = +P[r], b = +Q[r]; if (a > 0 && b > 0) { S.vol[r] = (S.vol[r] || 0) + Math.abs(Math.log(a / b)); S.volN[r] = (S.volN[r] || 0) + 1; } }
+      if (P) S.px.set(v, Object.assign({}, P));
+    }
+    if (d % 10) return;
+    const TAU = econV2.TAU, infoR = world.infoRange || 400;
+    for (const a of world.villages) {   // ⓖ 차익 남는 폭 — 이웃(교역 후보 20 · 정보 반경) 사이 두 곳 다 곳간에 있는 품목(≥ 1)마다: 사서(×(1+세금) + 운반비) 팔 때(×(1−세금)) 남는 몫
+      const PA = a._priceCache; if (!PA || !(a.npcs || []).length || !a._near20) continue;   //   = ln(팔 값 ÷ 산 값) — 엔진 식(세금 · 운반비). 남는 쌍의 몫(> 0) · 그 쌍의 한 kg 당 남는 값을 모은다
+      for (const b of a._near20) {
+        const PB = b._priceCache; if (!PB || !(b.npcs || []).length) continue;
+        const dist = econ.villageDist(a, b); if (!(dist <= infoR)) continue;
+        const tc = (econV2.TRANSPORT_COST_PER_1000 * dist / 1000) * econV2.haulMul();
+        for (const r in PA) {
+          if (!((a.storage[r] || 0) >= 1) || !((b.storage[r] || 0) >= 1)) continue;
+          const pa = +PA[r] || 0, pb = +PB[r] || 0, k = kgOf(r); if (!(pa > 0) || !(pb > 0) || !(k > 0)) continue;
+          const buy = pa * (1 + TAU) + tc, sell = pb * (1 - TAU);
+          S.arbN++;
+          if (sell > buy) { S.arbPos++; S.arb.push(Math.log(sell / buy)); S.arbKg.push((sell - buy) / k); }
+        }
+      }
+    }
+  };
+  const q = (a, p) => { if (!a.length) return null; const s = a.slice().sort((x, y) => x - y); return +s[Math.min(s.length - 1, Math.floor(p * s.length))].toFixed(4); };
+  const sum = (a) => a.reduce((x, y) => x + y, 0);
+  const out = () => {
+    const topUnits = Object.entries(S.unitsBy).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([r, u]) => ({ res: r, units: +u.toFixed(1), kg: +(S.kgBy[r] || 0).toFixed(1) }));
+    const traded = Object.entries(S.unitsBy).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([r]) => r);
+    const vol = (rs) => { let s = 0, n = 0; for (const r of rs) { s += S.vol[r] || 0; n += S.volN[r] || 0; } return n ? +(s / n).toFixed(5) : null; };
+    let deadTot = 0; for (const v of world.villages) deadTot += v._deadTot || 0;
+    return { cap, legs: S.legs, items: S.items, kg: { p10: q(S.kg, 0.1), p50: q(S.kg, 0.5), p90: q(S.kg, 0.9), mean: S.kg.length ? +(sum(S.kg) / S.kg.length).toFixed(3) : null },
+      load: { p10: q(S.load, 0.1), p50: q(S.load, 0.5), p90: q(S.load, 0.9), mean: S.load.length ? +(sum(S.load) / S.load.length).toFixed(4) : null, full: S.load.filter((x) => x >= 0.95).length },
+      val: +S.val.toFixed(1), tOut: { p10: q(S.tOut, 0.1), p50: q(S.tOut, 0.5), p90: q(S.tOut, 0.9) }, gain: { p50: q(S.gain, 0.5), p90: q(S.gain, 0.9) },
+      ret: { legs: S.retLegs, items: S.retItems, kg: { p50: q(S.retKg, 0.5), mean: S.retKg.length ? +(sum(S.retKg) / S.retKg.length).toFixed(3) : null },
+        leftFrac: { p50: q(S.left, 0.5), p90: q(S.left, 0.9) }, top: Object.entries(S.retBy).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([r, u]) => ({ res: r, units: +u.toFixed(1) })) },
+      bind: S.bind, outWhy: S.outWhy, how: S.how, trimLeft: S.trimLeft, bail: S.bail, dead: S.dead, raided: S.raided, raidVal: { n: S.raidVal.length, p50: q(S.raidVal, 0.5) }, cleanVal: { n: S.cleanVal.length, p50: q(S.cleanVal, 0.5) },
+      arrive: { hours: S.arrH, night: S.arrNight, n: S.arrN }, home: { hours: S.homeH, night: S.homeNight, n: S.homeN },
+      top: topUnits, fuel: { charcoal: { units: +(S.unitsBy.charcoal || 0).toFixed(1), kg: +(S.kgBy.charcoal || 0).toFixed(1), ret: +(S.retBy.charcoal || 0).toFixed(1) },
+        wood: { units: +(S.unitsBy.wood || 0).toFixed(1), kg: +(S.kgBy.wood || 0).toFixed(1), ret: +(S.retBy.wood || 0).toFixed(1) } },
+      vol: { traded: vol(traded), food: vol(['food']), tradedItems: traded }, arb: { lnP50: q(S.arb, 0.5), lnP90: q(S.arb, 0.9), kgP50: q(S.arbKg, 0.5), kgP90: q(S.arbKg, 0.9), pos: S.arbPos, n: S.arbN, posFrac: S.arbN ? +(S.arbPos / S.arbN).toFixed(4) : null },
+      famineDead: deadTot };
+  };
+  return { day, out };
+})() : null;
 const depositMap = Villages.playerVillageDepositMap();
 const shortByItem = new Map(), glutByItem = new Map(), reqByItem = new Map();
 const L = Events.createLedger({
@@ -241,6 +335,7 @@ const _log = console.log; console.log = () => {};
 for (let d = 0; d < DAYS; d++) {
   econV2.tickWorldV2(world); L.scanDay(world, world.day, {});
   if (_T1088) _t1088Day(d);                                      // ★[T1088] 품목 빈도(env 있을 때만)
+  if (_T1136) _T1136.day(d);                                     // ★[T1136] 바구니 표(env 있을 때만)
   if (_CLEAR) P._clearProbe.tickDay(_clearVils);                 // [T100 4판] 개간 관측
   for (let k = 0; k < floorIdx.length; k++) {                    // ★[T152] 석재 바닥 마을 표본
     const v = floorIdx[k][0], t = floorTrace[k];
@@ -257,6 +352,11 @@ for (let d = 0; d < DAYS; d++) {
 }
 if (_CLEAR) console.log(`  [T100] 개간 관측 — 끝 밭 ${_clearVils.reduce((a, v) => a + v._farmSet.size, 0)}칸 · 마을당 중앙 ${_clearVils.map((v) => v._farmSet.size).sort((a, b) => a - b)[Math.floor(_clearVils.length / 2)]}칸`);
 console.log = _log;
+if (_T1136) {   // ★[T1136] 바구니 표 JSON(env 있을 때만)
+  fs.writeFileSync(process.env.T17_BASKET, JSON.stringify({ card: 'T1136', zone: Z, seed: SEED, days: DAYS, basket: !!econV2.T1136_BASKET, escortCarry: !!econV2.T1136_ESCORT_CARRY, t474: econV2.CARAVAN_DAY_SPEED !== econV2.NPC_SPEED,
+    caravanDaySpeed: econV2.CARAVAN_DAY_SPEED, ..._T1136.out() }, null, 1));
+  console.log(`  [T1136] 바구니 표: ${process.env.T17_BASKET}`);
+}
 if (_T1088) {   // ★[T1088] 품목 빈도 JSON(env 있을 때만 · 단위: 곳간 = 마을·날 · 거래 = 장부 줄 칸 · 게시판 = 연 의뢰)
   fs.writeFileSync(process.env.T17_ITEMFREQ, JSON.stringify({ card: 'T1088', zone: Z, seed: SEED, days: DAYS, villages: world.villages.length, firstHourDays: 3,
     store: _T1088.store, trade: _T1088.trade, req: _T1088.req, rew: _T1088.rew }, null, 1));
@@ -304,6 +404,7 @@ console.log(`\nⓓ 도구     재고 ${toolStock.toFixed(1)} · 도구Q ${toolQ.
 const presStock = PRESERVED.reduce((a, r) => a + stockOf(r), 0);
 let presTrades = 0, presAmt = 0;
 for (const t of world.tradeLog) {
+  if (t.basket) { for (const x of [...t.basket, ...(t.retBasket || [])]) if (PRESERVED.includes(x.res)) { presTrades++; presAmt += x.amt || 0; } continue; }   // ★[T1136] 바구니 줄 — 품목마다(끔 = 바구니 줄 없음 = 아래 종전 두 줄)
   if (t.sent && PRESERVED.includes(t.sent.res)) { presTrades++; presAmt += t.sent.amt || 0; }
   if (t.bought && PRESERVED.includes(t.bought.res)) { presTrades++; presAmt += t.bought.amt || 0; }
 }
@@ -319,6 +420,7 @@ world.villages.forEach((v, i) => {
   else { iN++; iP += p; iS += v.storage.salt || 0; }
 });
 for (const t of world.tradeLog) {
+  if (t.basket) { for (const x of [...t.basket, ...(t.retBasket || [])]) if (x.res === 'salt') { saltTrades++; saltAmt += x.amt || 0; } continue; }   // ★[T1136] 바구니 줄
   if (t.sent && t.sent.res === 'salt') { saltTrades++; saltAmt += t.sent.amt || 0; }
   if (t.bought && t.bought.res === 'salt') { saltTrades++; saltAmt += t.bought.amt || 0; }
 }

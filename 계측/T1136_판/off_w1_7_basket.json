@@ -1,0 +1,275 @@
+{
+ "card": "T1136",
+ "zone": "hanbando",
+ "seed": 7,
+ "days": 800,
+ "basket": false,
+ "escortCarry": false,
+ "t474": true,
+ "caravanDaySpeed": 7200,
+ "cap": 25,
+ "legs": 23441,
+ "items": {
+  "1": 23441
+ },
+ "kg": {
+  "p10": 18.4476,
+  "p50": 75,
+  "p90": 343.9778,
+  "mean": 148.864
+ },
+ "load": {
+  "p10": 0.7379,
+  "p50": 3,
+  "p90": 13.7591,
+  "mean": 5.9546,
+  "full": 20158
+ },
+ "val": 1441264.9,
+ "tOut": {
+  "p10": 1,
+  "p50": 1,
+  "p90": 1
+ },
+ "gain": {
+  "p50": 33851.0481,
+  "p90": 93466.2544
+ },
+ "ret": {
+  "legs": 23220,
+  "items": {
+   "0": 340,
+   "1": 22880
+  },
+  "kg": {
+   "p50": 12.502,
+   "mean": 96.831
+  },
+  "leftFrac": {
+   "p50": null,
+   "p90": null
+  },
+  "top": [
+   {
+    "res": "food",
+    "units": 695765.4
+   },
+   {
+    "res": "stone",
+    "units": 146844.2
+   },
+   {
+    "res": "rice",
+    "units": 125513
+   },
+   {
+    "res": "wood",
+    "units": 107864.9
+   },
+   {
+    "res": "wheat",
+    "units": 95522
+   },
+   {
+    "res": "meat",
+    "units": 59279.9
+   },
+   {
+    "res": "leather",
+    "units": 57054.7
+   },
+   {
+    "res": "barley",
+    "units": 51518.1
+   },
+   {
+    "res": "hide",
+    "units": 50191.4
+   },
+   {
+    "res": "fur",
+    "units": 20479.8
+   }
+  ]
+ },
+ "bind": {
+  "budget": 0,
+  "cap": 0,
+  "avail": 0,
+  "none": 0
+ },
+ "outWhy": {},
+ "how": {},
+ "trimLeft": 0,
+ "bail": 142,
+ "dead": 0,
+ "raided": 0,
+ "raidVal": {
+  "n": 0,
+  "p50": null
+ },
+ "cleanVal": {
+  "n": 0,
+  "p50": null
+ },
+ "arrive": {
+  "hours": [
+   23220,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "night": 23220,
+  "n": 23220
+ },
+ "home": {
+  "hours": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "night": 0,
+  "n": 0
+ },
+ "top": [
+  {
+   "res": "wood",
+   "units": 380250.1,
+   "kg": 1140750.3
+  },
+  {
+   "res": "rice",
+   "units": 349883.5,
+   "kg": 262412.7
+  },
+  {
+   "res": "wheat",
+   "units": 303297.4,
+   "kg": 212308.2
+  },
+  {
+   "res": "stone",
+   "units": 217399,
+   "kg": 869595.8
+  },
+  {
+   "res": "barley",
+   "units": 122747,
+   "kg": 79785.6
+  },
+  {
+   "res": "leather",
+   "units": 116035.9,
+   "kg": 348107.6
+  },
+  {
+   "res": "hide",
+   "units": 66786.9,
+   "kg": 400721.5
+  },
+  {
+   "res": "fur",
+   "units": 51517.6,
+   "kg": 61821.2
+  },
+  {
+   "res": "meat",
+   "units": 39685.7,
+   "kg": 39685.7
+  },
+  {
+   "res": "food",
+   "units": 19000,
+   "kg": 13300
+  },
+  {
+   "res": "herb",
+   "units": 16036,
+   "kg": 1282.9
+  },
+  {
+   "res": "hemp",
+   "units": 15119.6,
+   "kg": 6047.9
+  }
+ ],
+ "fuel": {
+  "charcoal": {
+   "units": 13203.8,
+   "kg": 10563.1,
+   "ret": 4578.2
+  },
+  "wood": {
+   "units": 380250.1,
+   "kg": 1140750.3,
+   "ret": 107864.9
+  }
+ },
+ "vol": {
+  "traded": 0.37438,
+  "food": 0.07602,
+  "tradedItems": [
+   "wood",
+   "rice",
+   "wheat",
+   "stone",
+   "barley",
+   "leather",
+   "hide",
+   "fur",
+   "meat",
+   "food"
+  ]
+ },
+ "arb": {
+  "lnP50": 0.5843,
+  "lnP90": 1.9454,
+  "kgP50": 6.1085,
+  "kgP90": 62.3319,
+  "pos": 103598,
+  "n": 1129668,
+  "posFrac": 0.0917
+ },
+ "famineDead": 2172
+}

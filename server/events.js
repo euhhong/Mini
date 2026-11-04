@@ -735,6 +735,11 @@ function createLedger(opts) {
         const e = TL[i];
         if ((e.day | 0) !== (day | 0)) { if ((e.day | 0) < (day | 0)) break; else continue; }
         if (e.rerouted || e.abandoned) continue;   // 재routing·빈손 귀환은 **도착이 아니다**
+        if (e.basket) {   // ★[T1136] 바구니 줄 — 판 품목마다 받는 마을 · 받아 온 품목마다 보낸 마을(끔 = 바구니 줄 없음 = 아래 종전 두 줄)
+          for (const x of e.basket) firstGoods(_nameVid.get(e.to), x.res, x.amt, day, out);
+          for (const x of (e.retBasket || [])) firstGoods(_nameVid.get(e.from), x.res, x.amt, day, out);
+          continue;
+        }
         if (e.sent) firstGoods(_nameVid.get(e.to), e.sent.res, e.sent.amt, day, out);
         if (e.bought) firstGoods(_nameVid.get(e.from), e.bought.res, e.bought.amt, day, out);   // 되사 온 물건도 도착이다
       }

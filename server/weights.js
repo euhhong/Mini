@@ -17,6 +17,7 @@
 // ⚠**econ 은 이 파일을 부르지 않는다.** 무게는 **플레이어 층 전용**이다 —
 //   NPC 캐러밴 무게 예산(`CARGO_PER_TRIP=100` flat 을 무게 예산으로 바꾸는 일)은 **이번이 아니다**
 //   (랩 A/B 선행 · `회부_무게_다음층.md` M항). econ 교역 경로는 한 줄도 안 건드렸다.
+//   ★[T1136] 그 M항의 판 — 바구니 교역(손잡이 `T1136_BASKET` · 끔 기본)을 켜면 econ 캐러밴이 낱개 무게(`kgOfOrDefault`)로 짐을 채운다(끔 = econ 은 이 파일을 안 부른다 · T517 · T1050 갈래는 종전 그대로).
 'use strict';
 const Specialty = require('./specialty');
 // ★★[작물 층 2026-08-31] 작물 34종 + 씨앗의 kg — **`server/crops.js` 가 파생 정본**이다.
