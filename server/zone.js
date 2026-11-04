@@ -2961,6 +2961,9 @@ const PRESERVED_EFFECTS = {
 //   앵커는 위 표 안에 이미 있었다: **말린 과실 16 ÷ 딸기 6** 이 말리기의 허기 배수이고,
 //   갈증은 부호만 뒤집는다(마른 것은 원물이 주던 물기를 도로 가져간다). 유도는 `tidal.js` 가 한다.
 for (const [k, v] of Object.entries(require('./tidal').driedEffects())) PRESERVED_EFFECTS[k] = v;
+// ★★[T1128 · 손잡이 `T1128_KCAL_TIDY` 켬 기본 · `=0` = 이 줄 무동작] 어종별 건어물 · 생선 절임 — 효과는 **그 가공의 줄 그대로**(말린 것 = 건어물 · 절인 것 = 절임 · 새 수 0).
+//   포만은 아래 열량 유도 한 줄이 채운다(넣은 그 종 한 마리의 열량 — `kcal.js` §3 · `fish-preserve.js`).
+{ const _FP = require('./fish-preserve'); if (_FP.ON) for (const [k, it] of Object.entries(_FP.items())) if (!PRESERVED_EFFECTS[k]) PRESERVED_EFFECTS[k] = Object.assign({}, PRESERVED_EFFECTS[it.kind === 'dry' ? 'dried_fish' : 'pickled_veg']); }
 for (const k of Object.keys(Spoil.PRESERVED_ITEMS)) {
   if (PRESERVED_EFFECTS[k]) FOOD_EFFECTS[k] = PRESERVED_EFFECTS[k];
 }
@@ -12917,9 +12920,10 @@ function _t732GotLine(player, got) {
 const _t732Got = new WeakMap();   // 사람 → 방금 문이 실은 것(뒷정리 `_afterWithdraw` 의 화면 한 줄 · 몸 필드 아님)
 function _t732Wrap(player, fn) {
   const ctx = _t732DoorBegin(player, []);
+  const _bc = !!(ctx && SimVillages.T1128_KCAL_TIDY && GL.byCount);   // ★[T1128 문 10] 이 감싸개는 꺼내기 문만 감싼다 — 받는 쪽도 레코드마다 넣은 개수 그대로(끔 = 안 선다)
   let r = null, ok = false;
   try { r = fn(); ok = !!(r && r.ok); }
-  finally { const g = _t732DoorEnd(ctx, player, ok, null, null); if (g) _t732Got.set(player, g); }
+  finally { if (_bc) GL.byCount(true); let g = null; try { g = _t732DoorEnd(ctx, player, ok, null, null); } finally { if (_bc) GL.byCount(false); } if (g) _t732Got.set(player, g); }
   return r;
 }
 // ★★[T11 2026-09-02 재민 확정] **곳간에서 꺼내기 — 마을 사람의 몫.**
@@ -13067,7 +13071,7 @@ function _unitsOfFor(player) {
     const base = byKcal > 0 ? byKcal : ((std > 0) ? +(kg / std).toFixed(4) : n);
     if (!Lots.isLot(item)) return base;
     const off = Spoil.peekOffer(item, Lots.of(player, item), n, today);
-    return +(base * Spoil.nutritionMult(off.fresh)).toFixed(4);
+    return +(base * Spoil.nutritionMult(off.fresh)).toFixed(SimVillages.T1128_KCAL_TIDY ? 6 : 4);   // ★[T1128 문 10] 켬 = 여섯 자리(곳간 레코드 개수가 반올림에 안 깎인다 · `kcal.econUnitsOf` 자릿수와 같다 · 끔 = 종전 넷)
   };
 }
 // ★상함은 **배율이 아니라 거절**이다 — 0 단위로 조용히 넘기면 화면엔 "그 양으론 한 개도 못

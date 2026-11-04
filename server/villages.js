@@ -104,6 +104,18 @@ function _t748BagsOf(G, body, w, keys) {
   return _t748Nz(o);
 }
 //   어부의 손 — 종마다 그 낱개의 econ 단위(`kcal.econUnitsOf` · 종 kg — 낚을 때 그 수로 장부값을 쌓았다 · 배율은 같은 몸이라 비율에서 지워진다)
+// ★★[T1128 2026-11-04 · ★재민 11-03 문 9-b ㄱ · 손잡이 `T1128_KCAL_TIDY` 켬 기본 · `=0` = 종전 글자] **어부 손 값 = 종별 열량 표.**
+//   종전: 한 마리 = 그 종 kg(민물 표 몸 크기 · 잉어 2.5kg) × 잡어 밀도(`fish` 495) = 1,237.5kcal ↔ 열량 표(낱개 · 잉어 1kg × 640 = 640kcal) —
+//   그 레코드를 꺼내면 잉어 1.93마리(T768 회부 2). 켬 = 손 값을 **표 쪽으로** — 한 마리 = 그 종 낱개의 열량(`kcal.econUnitsOf(종, 1)` · 꺼내기 · 넣기와 같은 짝).
+//   `T312_FISH_ACT` 끔 동안에도 이 한 함수가 정본이다(켤 때 다시 어긋나지 않게 · 낚는 순간 장부값과 곳간 문 레코드가 같은 수를 쓴다).
+//   ⚠짐 무게(`_t312Kg` · 짐이 차면 귀환)는 그대로 몸 크기(민물 표 kg)다 — 무게 표 kg 와의 어긋남은 회부.
+function _t1128HandUnits(K, id, kg) {   // 켬 전용 — 표에 그 종의 열량이 없으면(어종 밖 · 열량 0) 종전 식으로 떨어진다
+  if (!K) return 0;
+  const u = +K.econUnitsOf(id, 1) || 0;
+  return u > 0 ? u : (kg > 0 ? (+K.econUnitsOf('fish', 1, kg) || 0) : 0);
+}
+let _t1128Fp = null;
+function _t1128On() { if (_t1128Fp === null) { try { _t1128Fp = require('./fish-preserve'); } catch (e) { _t1128Fp = false; } } return !!(_t1128Fp && _t1128Fp.ON); }
 function _t748FishRecs(G, npc) {
   const inv = npc && npc.inventory; if (!G || !inv) return [];
   const K = _kcal(), ids = _fresh().ids().slice();
@@ -112,7 +124,7 @@ function _t748FishRecs(G, npc) {
   for (const id of ids) {
     const n = inv[id] || 0; if (!(n > 0)) continue;
     const kg = _fresh().kgOf(id) || _seaTbl().kgOf(id) || 0;
-    const per = (K && kg > 0) ? (+K.econUnitsOf('fish', 1, kg) || 0) : 0;
+    const per = _t1128On() ? _t1128HandUnits(K, id, kg) : ((K && kg > 0) ? (+K.econUnitsOf('fish', 1, kg) || 0) : 0);   // ★[T1128 9-b] 켬 = 그 종 한 마리의 표 열량(끔 = 종전 글자)
     out.push(...G.handRecs(npc, id, n, per > 0 ? per : 1));
   }
   return out;
@@ -11667,6 +11679,11 @@ if (_spec() && _spec().T877_ON) Object.assign(PV_DEPOSIT_MAP, { dried_oyster: 'd
 if (process.env.T694_GAME_MEAT !== '0' && require('./game-meat').on()) Object.assign(PV_DEPOSIT_MAP, {
   meat_game: 'meat_game', meat_bear: 'meat_game', meat_game_cooked: 'cooked_food', meat_bear_cooked: 'cooked_food',
 });
+// ★★[T1128 2026-11-04 · ★재민 11-03 문 9-a ㄱ · 손잡이 `T1128_KCAL_TIDY` 켬 기본 · `=0` = 이 줄 무동작] **어종별 건어물 · 생선 절임** — econ 에 종별 칸이 없다(새 재화는 재민 칸) ⇒
+//   말린 것은 `dried_fish`(건어물) · 절인 것은 `pickled_veg`(절임) 칸으로 **열량으로** 접는다(곰고기 → 사슴·들짐승고기 꼴 · 단위 = `kcal.econUnitsOf`).
+//   ★순서가 계약이다: 두 칸의 대표 품목(`toEcon`)은 위 종전 줄(`dried_fish` · `pickled_veg`)이 그대로 맡는다(이 줄은 그 뒤에 선다).
+//   곳간 레코드는 넣은 그 품목을 든다(T768 `it`) — 꺼내면 넣은 그 품목 그대로 · 개수 그대로(T1128 문 10 · `playerVillageWithdraw`).
+{ const _FP = require('./fish-preserve'); if (_FP.ON) for (const [k, it] of Object.entries(_FP.items())) if (!PV_DEPOSIT_MAP[k]) PV_DEPOSIT_MAP[k] = it.kind === 'dry' ? 'dried_fish' : 'pickled_veg'; }
 const PV_DEPOSIT_RATE = (() => { const x = parseFloat(process.env.VILLAGE_DEPOSIT_RATE || '1'); return (isFinite(x) && x > 0) ? x : 1; })();
 // ★[T59] 열량 정본 — 늦게 부른다(맞물림 금지 · `forage`·`spoil` 과 같은 규약).
 let _Kc = null;
@@ -11693,11 +11710,11 @@ function playerVillageDeposit(vil, inventory, want, unitsOf) {
     taken[item] = put;
     const units = (typeof unitsOf === 'function') ? Number(unitsOf(item, put)) : put;
     const u = Number.isFinite(units) && units > 0 ? units : put;
-    moved[res] = +((moved[res] || 0) + u * PV_DEPOSIT_RATE).toFixed(3);
+    moved[res] = +((moved[res] || 0) + u * PV_DEPOSIT_RATE).toFixed(_t1128On() ? 6 : 3);   // ★[T1128 문 10] 켬 = 여섯 자리(레코드 개수가 반올림에 안 깎인다 · 끔 = 종전 셋)
   }
   if (!Object.keys(taken).length) return { ok: false, err: '넣을 수 있는 물건이 없습니다. 곳간은 먹을 것과 나무, 돌, 광물만 받습니다.' };
   for (const [item, q] of Object.entries(taken)) inventory[item] -= q;
-  for (const [res, q] of Object.entries(moved)) v.storage[res] = +((v.storage[res] || 0) + q).toFixed(3);
+  for (const [res, q] of Object.entries(moved)) v.storage[res] = +((v.storage[res] || 0) + q).toFixed(_t1128On() ? 6 : 3);   // ★[T1128 문 10]
   return { ok: true, moved, taken };
 }
 
@@ -11731,10 +11748,35 @@ function playerVillageWithdraw(vil, inventory, res, qty) {
   const conv = (_K && _K.kcalOf(item) > 0) ? _K.itemsOf(item, q) : { items: q, leftUnits: 0 };
   const give = Math.floor(conv.items);
   if (give < 1) return { ok: false, err: `그 양으로는 ${item}이(가) 한 개도 나오지 않습니다. 더 청하십시오.` };
-  const spend = +(q - (conv.leftUnits || 0)).toFixed(4);
-  v.storage[r] = +(((v.storage[r] || 0) - spend * PV_DEPOSIT_RATE)).toFixed(3);
+  let spend = +(q - (conv.leftUnits || 0)).toFixed(4);
+  if (_t1128On() && _K) { const c = _t1128WithdrawUnits(v, r, item, give, _K); if (c != null) spend = c; }   // ★[T1128 문 10] 켬 = 꺼낸 개수 = 넣은 품목 개수(아래 주석)
+  v.storage[r] = +(((v.storage[r] || 0) - spend * PV_DEPOSIT_RATE)).toFixed(_t1128On() ? 6 : 3);   // ★[T1128 문 10] 켬 = 여섯 자리(끔 = 종전 셋)
   inventory[item] = (inventory[item] || 0) + give;
   return { ok: true, res: r, item, qty: give, units: spend, stockAfter: +(+v.storage[r]).toFixed(3) };
+}
+// ★★[T1128 2026-11-04 · ★재민 11-03 문 10 ㄴ · 손잡이 `T1128_KCAL_TIDY` 켬 기본 · `=0` = 종전 글자] **꺼낸 개수 = 넣은 품목 개수**(재민 10-15 "꺼내면 넣은 물건 그대로" · 족보 645).
+//   종전: 문이 대표 품목 개수(`give`)의 열량만큼 단위를 빼고, 곳간 레코드가 다른 품목이면 그 열량으로 낱개를 바꿨다 —
+//     사슴 4개 몫을 곰고기 레코드로 꺼내면 곰고기 4.97(T768 회부 1). 켬 = **레코드를 오래된 것부터 품목 개수로 센다**:
+//     레코드 하나의 개수 = 단위 ÷ 넣을 때 적은 한 개의 단위(`pu` — 사람의 문 · 손이 넣은 그 순간 · 실제 무게 · 신선도째) · 없으면(econ 이 만든 것) 단위 ÷ 그 품목 한 개의 열량 단위 ·
+//     `give` 개가 찰 때까지 센 레코드의 단위가 이 문이 뺄 단위다(끝 레코드는 남은 개수만큼). 받는 쪽도 레코드마다 그 개수 그대로(`granary-lots.recsToItems` byCount).
+//   ⚠먹는 장부는 그대로 열량이다(식량 빚 · 굶주림 · T1074 — 먹는 문과 꺼내는 문은 다른 문).
+//   ⚠장부가 없거나 모자라면(로트 끔 · 감싸지 않은 칸 · 빚) · 상한 것 숨기기 판(`T789_DISCARD` — 문이 상한 레코드를 건너뛴다)이면 종전 셈(null).
+function _t1128WithdrawUnits(v, res, item, give, K) {
+  let GL = null; try { GL = require('./granary-lots'); } catch (e) { GL = null; }
+  if (!GL || !GL.ON || GL.T789 || typeof GL.ledger !== 'function' || !GL.attached(v)) return null;
+  const arr = GL.ledger(v, res); if (!arr || !arr.length) return null;
+  let left = give, U = 0;
+  for (const rec of arr) {
+    const u = +rec.u || 0, n = GL.countOf(rec, rec.it != null ? rec.it : item, K.kcalOf, K.DAY_KCAL);   // 이 레코드의 개수(넣을 때 적은 한 개 단위 · 없으면 열량으로 — granary-lots 한 함수)
+    if (!(n >= 0)) return null;
+    if (!(n > 1e-12)) continue;
+    const per = u / n;   // 이 레코드 한 개의 단위
+    if (n >= left - 1e-9) { U += left * per; left = 0; break; }
+    U += u; left -= n;
+  }
+  if (left > 1e-6) return null;
+  if (U > ((v.storage && v.storage[res]) || 0) + 1e-6) return null;
+  return +U.toFixed(6);
 }
 // 곳간 재고를 **꺼낼 수 있는 개수**로 본다(넣기와 같은 환산율의 역수). 표시·한도가 같은 값을 본다.
 // ★★[T20-ⓑ · 재민 확정 2026-09-03] **한도의 밑변은 "곡식 재고"가 아니라 econ 의 식량 등가다.**
@@ -14139,7 +14181,7 @@ function npcLifeTick(npc, now) {   // zone.js decideNpcBehavior 훅(늑대 도�
           const _K = _kcal();
           const _ec = _lifeEconNpc(vil, npc);
           const _mul = (_ec && typeof _ec._t172mul === 'number' && _ec._t172mul > 0) ? _ec._t172mul : 1;
-          const _units = _K ? (+_K.econUnitsOf('fish', 1, _sp.kg) || 0) * _mul : 0;
+          const _units = _K ? (_t1128On() ? _t1128HandUnits(_K, _sp.id, _sp.kg) : (+_K.econUnitsOf('fish', 1, _sp.kg) || 0)) * _mul : 0;   // ★[T1128 9-b] 켬 = 그 종 한 마리의 표 열량(끔 = 종전 글자)
           //   ⓓ 셀 예산에서 **통째로** 꺼낸다 — 안 되면 그 셀은 오늘 비었다(이월 0).
           const _got = _t312Take(vil, day, _key, _units);
           if (_got > 0) {
@@ -15455,9 +15497,9 @@ module.exports = { t750CastPre, t750Stat: () => _t750Stat, t719ReachPre, t719Sta
   playerVillages, villageByDbId,   // ★[T19] 사람이 세운 마을 — 이방인 받기 자격 판정이 읽는다
   shelterOf, hasShelter, addShelter, ensureShelter, pickShelterSpot, villageOfCell,   // ★[T62] 공용 쉼터 — 좌표 정본 하나
   cropAtCell,   // ★[T91 · T79c 회부 1] 그 칸의 작물 — claim 페이로드가 이걸 싣는다(사본 0)
-  playerVillageWithdraw, playerVillageWithdrawStock, villageWithdrawGate,
+  T1128_KCAL_TIDY: _t1128On(), _t1128WithdrawUnits, _t1128HandUnits,   // ★[T1128] 손잡이 · 꺼낸 개수 셈 · 어부 손 값(존 · 하네스가 읽는다)
+  playerVillageWithdraw, playerVillageWithdrawStock, villageWithdrawGate,   // ★[T11] 곳간 인출 — 납품의 역연산(같은 표·같은 환산율)
   villageNear: _villageNear,   // ★[T1132] 회관 패널 보기 · 기부 = 마을 화면 · 게시판 · 거래소와 같은 술어 하나(260px · 함수 그대로 — 사본 0)
-    // ★[T11] 곳간 인출 — 납품의 역연산(같은 표·같은 환산율)
   bodyExitStats, noteBodyExit, tickBodyExits,   // ★[T590] 줄어드는 몸 — 판 자(`t577-server-hook`)가 까닭별 수를 읽는다 · 하네스가 같은 문을 부른다
   t1039Stat: () => JSON.parse(JSON.stringify(_t1039Stat)),   // ★[T1039] 도적 전환 몸 증인(관찰기 `t1039-observe` · 하네스)
   t1078Life: (npc, now) => _t1078Life(npc, now),   // ★[T1078] 도적 단원 몸의 은거지 곁 일과(존 `decideNpcBehavior` 가 `_bdtGid` 가 선 몸에만 부른다 · 관찰기가 감싼다)

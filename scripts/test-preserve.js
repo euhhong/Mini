@@ -454,8 +454,10 @@ function giveAged(p, item, n, ageDays) {
       if (!H.ITEM_LABEL_SERVER[k]) missing.push(k + '(이름)');
     }
     ok(missing.length === 0, '★★⑥ⓑ 보존식 4종이 **무게·효과·로트·이름 전부** 갖췄다(빠진 품목 0)', missing.join(', ') || '0건');
-    ok(Object.keys(Spoil.PRESERVED_ITEMS).every((k) => Weights.kgOf(k) < Weights.kgOfOrDefault({ dried_fish: 'fish', dried_fruit: 'berry', smoked_meat: 'meat_raw', pickled_veg: 'vegetable' }[k])
-        || k === 'pickled_veg'),
+    //   ★[T1128] 어종별 건어물 · 절임(켬 기본)은 제 원물(`fish-preserve.items()[k].from`)과 견준다 — 절인 것은 위 `pickled_veg` 와 같은 갈래(물을 머금는다)
+    const _fpI = require(path.join(ROOT, 'server', 'fish-preserve.js')).items();
+    ok(Object.keys(Spoil.PRESERVED_ITEMS).every((k) => Weights.kgOf(k) < Weights.kgOfOrDefault({ dried_fish: 'fish', dried_fruit: 'berry', smoked_meat: 'meat_raw', pickled_veg: 'vegetable' }[k] || (_fpI[k] && _fpI[k].from))
+        || k === 'pickled_veg' || (_fpI[k] && _fpI[k].kind === 'pickle')),
       '★⑥ⓑ 말린 것은 원물보다 가볍다(절임만 무겁다 — 물을 머금는다)',
       Object.keys(Spoil.PRESERVED_ITEMS).map((k) => `${k} ${Weights.kgOf(k)}`).join(' · '));
   }

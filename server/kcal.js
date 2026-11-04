@@ -128,8 +128,12 @@ function installCookRecipes(map) { _cook = map || null; return true; }
 //   ★입력 품목의 정본은 `spoil.PRESERVE[key].from` 이다(여기 옮겨 적지 않는다).
 
 // ── 조회 ────────────────────────────────────────────────────────────────────
+// ★[T1128] 어종별 건어물 · 절임 정본(`fish-preserve.js`) — 늦게 부른다(맞물림 금지 · 끔 `T1128_KCAL_TIDY=0` = 아래 두 갈래 무동작)
+let _FPm = null;
+const FP = () => { if (_FPm === null) { try { _FPm = require('./fish-preserve'); } catch (e) { _FPm = false; } } return (_FPm && _FPm.ON) ? _FPm : null; };
 function kcalPerKg(item) {
   if (KCAL_PER_KG[item] > 0) return KCAL_PER_KG[item];
+  { const fp = FP(); if (fp && fp.kcalPerKgOf) { const k = fp.kcalPerKgOf(item, KCAL_PER_KG); if (k > 0) return k; } }   // ★[T1128] 표에 줄 없는 낚시 어종(민물 아홉) = 잡어 통마리 밀도(freshfish 머리)
   const c = C();
   if (c && c.isCrop && c.isCrop(item)) { const k = c.kcalOf ? c.kcalOf(item) : 0; return k > 0 ? k : 0; }
   return 0;
@@ -152,6 +156,7 @@ function _cookedKcal(item) {
 function _preservedKcal(item) {
   const P = S().PRESERVE || {};
   for (const r of Object.values(P)) {
+    if (r.outBy) for (const [fr, out] of Object.entries(r.outBy)) if (out === item) { const k = kcalOf(fr); if (k > 0) return k; }   // ★[T1128] 어종마다 산출 — 넣은 그 종의 열량
     if (r.out !== item) continue;
     const from = Array.isArray(r.from) ? r.from[0] : r.from;
     const k = kcalOf(from);
@@ -210,7 +215,10 @@ function itemsOf(item, units) {
   const per = kcalOf(item);
   if (!(u > 0) || !(per > 0)) return { items: 0, leftUnits: +(u.toFixed(4)) };
   const exact = (u * DAY_KCAL) / per;
-  const items = Math.floor(exact + 1e-6);   // ★반올림 여유 — `econUnitsOf` 의 여섯 자리와 짝이다
+  //   ★[T1128] 켬 = 여유를 단위 자릿수에서 유도한다 — `econUnitsOf` 는 여섯 자리(반 칸 5e-7 단위)에서 자르니 낱개로는 5e-7 × 하루치 ÷ 그 품목 열량만큼 어긋날 수 있다
+  //     (잉어 1마리 = 0.261224 단위 → 0.99999875마리 → 종전 여유 1e-6 으론 0마리 · 작은 품목일수록 크다). 끔 = 종전 1e-6.
+  const tol = FP() ? Math.max(1e-6, 5e-7 * DAY_KCAL / per) : 1e-6;
+  const items = Math.floor(exact + tol);   // ★반올림 여유 — `econUnitsOf` 의 여섯 자리와 짝이다
   const left = +(((exact - items) * per) / DAY_KCAL).toFixed(4);
   return { items, leftUnits: left };
 }
@@ -227,7 +235,7 @@ function table(dayMs) {
   for (const k of Object.keys(KCAL_PER_KG)) push(k, 'raw');
   const c = C(); if (c && c.list) for (const cr of c.list()) if (hungerOf(cr.id, dayMs) > 0) push(cr.id, 'crop');
   if (_cook) for (const k of Object.keys(_cook)) push(k, 'cooked');
-  const P = S().PRESERVE || {}; for (const r of Object.values(P)) push(r.out, 'preserved');
+  const P = S().PRESERVE || {}; for (const r of Object.values(P)) { push(r.out, 'preserved'); if (r.outBy) for (const o of Object.values(r.outBy)) push(o, 'preserved'); }   // ★[T1128] 어종마다 산출
   const t = T(); if (t) for (const k of Object.keys(t.foodMap())) push(k, 'tidal');
   return out;
 }

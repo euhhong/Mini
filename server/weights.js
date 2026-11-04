@@ -140,7 +140,12 @@ const DERIVED_KG = {
 
 // ── 정본 접근자 ─────────────────────────────────────────────────────────────
 //   순서: 별칭 → specialty(정본) → 코어 표 → 플레이어 전용 유도값.
-function kgOf(id) {
+// ★★[T1128 · 손잡이 `T1128_KCAL_TIDY` 켬 기본 · `=0` = 이 갈래가 안 선다(종전 바이트)] 어종별 건어물 · 생선 절임 · 표에 무게 없는 민물 어종 —
+//   **표의 주인이 채운다**(`fish-preserve.js` — 원물 kg × 이 표의 말림 · 절임 비 · 민물 표 몸 크기 · 수를 여기 안 적는다 · 갯벌 · 사냥 고기 줄과 같은 문법).
+//   ⚠늦게 부른다(맞물림 금지) · 둘째 인자 `noFp` = 그 파일이 원물 · 비를 물으러 다시 부를 때(되부름 금지).
+let _FP = null;
+function _fp() { if (_FP === null) { try { _FP = require('./fish-preserve'); } catch (e) { _FP = false; } } return _FP || null; }
+function kgOf(id, noFp) {
   if (!id) return null;
   const key = ITEM_ALIAS[id] || id;
   const sp = Specialty.RESOURCES && Specialty.RESOURCES[key];
@@ -149,6 +154,7 @@ function kgOf(id) {
   if (DERIVED_KG[id] > 0) return DERIVED_KG[id];
   // ★[작물 층] specialty·코어·유도표에 없는 작물/씨앗 — crops 정본에게 묻는다(마지막 갈래).
   if (Crops) { if (Crops.isCrop(id)) return Crops.kgOf(id); if (Crops.isSeed(id)) return Crops.SEED_KG; }
+  if (!noFp) { const FP = _fp(); if (FP && FP.ON && typeof FP.kgOf === 'function') { const k = FP.kgOf(id, kgOf); if (k > 0) return k; } }   // ★[T1128]
   return null;
 }
 // 못 찾으면 0 이 아니라 **기본값**을 준다 — 0 이면 "무게 없는 물건"이 조용히 생긴다.
@@ -164,6 +170,7 @@ function catalog() {
   for (const k of Object.keys(DERIVED_KG)) if (out[k] == null) out[k] = DERIVED_KG[k];
   for (const [item, key] of Object.entries(ITEM_ALIAS)) if (out[item] == null && out[key] != null) out[item] = out[key];
   if (Crops) for (const [k, w] of Object.entries(Crops.weightMap())) if (out[k] == null) out[k] = w;
+  { const FP = _fp(); if (FP && FP.ON && typeof FP.items === 'function') for (const k of [...Object.keys(FP.items()), ...FP.species()]) if (out[k] == null) { const w = kgOf(k); if (w > 0) out[k] = w; } }   // ★[T1128]
   return out;
 }
 // 알려진 아이디 전부(하네스 전수 스윕용)
