@@ -108,6 +108,9 @@ const INFO_R = 5000;          // econ `infoRange`(서버 `createWorldV2` 인자 
 //     supply — 세계 공급 두 존 합침: 이 존의 `_worldStockOf` 하루 캐시(`world._effDemCache`)가 새로 설 때 이웃 존의 **그 존 몫**(어제 캐시 · 정본이 센 것)을 먼저 얹는다
 //     stack  — 후보 얹기: 제 존 top-20 + 걸음이 닿는 스텁 전부(T525 첫 판 · "20 + 스텁") — 워커 적재 순간 v2 글자 한 줄을 바꾼다(그 줄이 정확히 한 번 있어야 돈다)
 const KNOBS = new Set(String(process.env.T534_KNOB || '').split(',').map((x) => x.trim()).filter(Boolean));
+// ★[T1139] `two` 의 합친 걸음표는 **물은 쌍만** 판다(존 서버 하네스 손잡이 `T1139_XZ_LAZY` 와 같은 길 — `server/xzone-geo.js lazySplit`) ·
+//   한 벌 = 걸음 ≤ INFO_R(econ 이 떠날 때 묻는 쌍 전부) · 그 밖은 워커의 econ · 핵심이 물을 때. `T1139_XZ_LAZY=0` = 종전(전 쌍 한 벌).
+const T1139_LAZY = process.env.T1139_XZ_LAZY !== '0';
 const STACK_FROM = '_nbList = _m.slice(0, 20).map((x) => x[1]);';
 const STACK_TO = '_nbList = a.v._near20.concat(_m.filter((x) => x[1] && x[1]._xz).map((x) => x[1]));   /* [T534 stack — 자 적재 순간 바꿈] */';
 function _stackPatch() {
@@ -193,7 +196,7 @@ function _peerBoot() {
     return _mk.call(this, o);
   };
   const orig = econV2.tickWorldV2;
-  let world = null, core = null, X = null, border = new Set(), peerZone = null, mine = null, g = 0;
+  let world = null, core = null, X = null, border = new Set(), peerZone = null, mine = null, g = 0, lazy = null;
   const st = { arriveOut: 0, returnOut: 0, arriveIn: 0, returnIn: 0, rows: [], cross: [], home: [] };
   const track = new Map();   // ★[T533] 넘어간 이 존 캐러밴 — 돌아와 곳간에 든 날·짐(존 서버 호스트 `track` 과 같은 뜻)
   //   ★[T534] 길 셋의 세기(읽기만) — ⓐ 제 마을이 스텁으로 낸 캐러밴(집 마을별) ⓑ 이웃 존 캐러밴이 이 존 마을에서 판 것(도착 마을별 · 우회 포함)
@@ -264,7 +267,8 @@ function _peerBoot() {
       mine = new Map(w.villages.map((v) => [v.name, v]));
       if (init.matrix) R('sim/economy-sim').setDistMatrix(w, init.matrix);   // T525_DIST=path — 존 안도 걸음(서버와 같다)
       core = XZ.createCore({ zone: W.zone, world: w, econV2, infoR: w.infoRange || INFO_R });
-      core.setGeo(peerZone, init.geo);          // `w.xzone` 을 꽂는다(존 서버는 걸음표 워커가 끝난 뒤 같은 줄)
+      if (init.lazyQ) lazy = R('server/xzone-geo').lazySplit(init.lazyQ, init.geo, { env: Object.assign({}, process.env, { ENABLE_VILLAGES: '0', DB_PATH: `${process.env.DB_PATH}-lazy` }) });   // ★[T1139]
+      core.setGeo(peerZone, init.geo, lazy ? lazy.get : undefined);          // `w.xzone` 을 꽂는다(존 서버는 걸음표 워커가 끝난 뒤 같은 줄)
       X = core.X; border = core.G.get(peerZone).mine;
       armSupply(w);
     }
@@ -302,9 +306,10 @@ function _peerBoot() {
     port.postMessage({ type: 'day', day: w.day, g, out, snaps: [], supply: ownSupply(w) });
   };
   try { require(path.join(__dirname, 't17-metrics.js')); } catch (e) { port.postMessage({ type: 'error', msg: String(e && e.stack || e) }); return; }
+  if (lazy) lazy.close();   // ★[T1139] 늦게 파는 일꾼을 닫는다(판이 끝났다 — 셈은 아래 'done' 에 싣는다)
   port.postMessage({ type: 'done', zone: W.zone, stats: st, core: core ? core.st : null, events: evLog,
     tradeRows: (world && world.tradeLog || []).filter((t) => t.xzone).length,
-    vil: world ? vilRows(world, border) : null, chan: ch, knobs: [...KNOBS] });
+    vil: world ? vilRows(world, border) : null, chan: ch, knobs: [...KNOBS], ...(lazy ? { lazy: lazy.st } : {}) });
 }
 
 // ── 오케스트라 — 워커 둘(존 둘) · 하루마다 기록·스냅을 건넨다(존 서버라면 안 문 · 여기선 같은 호스트의 워커 사이) ──
@@ -340,13 +345,14 @@ async function twoMode(A, B, days, seed, out, opts) {
   const ros = (Z) => { const { seeds } = seedsOf(Z); return seeds.map((s2) => ({ name: s2.name, cx: s2.ccx, cy: s2.ccy })); };
   const [GA, GB] = A < B ? [A, B] : [B, A];   // 두 존 이름 순서 — 존 서버 호스트와 같은 한 벌
   const tg = Date.now();
-  const geo = XG().crossGeo({ A: GA, rosterA: ros(GA), B: GB, rosterB: ros(GB) });
+  const gq = { A: GA, rosterA: ros(GA), B: GB, rosterB: ros(GB), ...(T1139_LAZY ? { splitR: INFO_R } : {}) };   // ★[T1139] 켬 = 한 벌은 걸음 ≤ INFO_R 만
+  const geo = XG().crossGeo(gq);
   const geoMs = Date.now() - tg;
   const border = { [A]: new Set(), [B]: new Set() };
   for (const a in geo.dist) for (const b in geo.dist[a]) { const d = geo.dist[a][b]; if (d != null && d <= INFO_R) { border[GA].add(a); border[GB].add(b); } }
   let mats = {};
   if (DISTMODE === 'path') for (const Z of zs) { const { ZONE, ta } = zoneAdapter(Z); const { vil } = frameOf([Z]); mats[Z] = bfsMatrix(ta, ZONE, vil.map((v) => ({ x: v.ccx * 2.5, y: v.ccy * 2.5 }))); }
-  for (const Z of zs) send(Z, { peerZone: Z === A ? B : A, geo, matrix: mats[Z] || null });
+  for (const Z of zs) send(Z, { peerZone: Z === A ? B : A, geo, matrix: mats[Z] || null, ...(T1139_LAZY ? { lazyQ: gq } : {}) });
   // ② 하루마다 — 어제 나간 기록·스냅을 오늘 건넨다(한 날 늦음 · 양쪽 같다 · 경계 `g` = 워커 날 수) · ★[T534 lag0] 이면 조각 문 셋(스냅 즉시 · A → B 캐러밴)
   let pend = { [A]: { snap: null, recs: [] }, [B]: { snap: null, recs: [] } };
   const X = { arrive: { [A]: 0, [B]: 0 }, ret: { [A]: 0, [B]: 0 }, done: {}, events: {}, daily: [], lagLeft: 0, lagFixed: 0 };
@@ -389,7 +395,8 @@ async function twoMode(A, B, days, seed, out, opts) {
     stats: { [A]: X.done[A].stats, [B]: X.done[B].stats }, core: { [A]: X.done[A].core, [B]: X.done[B].core },
     events: { [A]: X.done[A].events, [B]: X.done[B].events }, eight,
     knobs: [...KNOBS], lag: { fixed: X.lagFixed, left: X.lagLeft },
-    vil: { [A]: X.done[A].vil, [B]: X.done[B].vil }, chan: { [A]: X.done[A].chan, [B]: X.done[B].chan } };
+    vil: { [A]: X.done[A].vil, [B]: X.done[B].vil }, chan: { [A]: X.done[A].chan, [B]: X.done[B].chan },
+    ...(T1139_LAZY ? { lazy: { splitR: INFO_R, [A]: X.done[A].lazy || null, [B]: X.done[B].lazy || null } } : {}) };   // ★[T1139] 물은 쌍(켬만 칸이 선다)
   if (out) fs.writeFileSync(out, JSON.stringify(res));
   return res;
 }

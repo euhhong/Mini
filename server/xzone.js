@@ -40,10 +40,12 @@ function createCore(o) {
     return (d == null) ? null : d;
   }
   // 경계 칸·길 — 합친 길이 제 존을 **마지막으로** 나가는 자리. `ptsLocal` = 제 마을 → 경계 칸(제 존 로컬 px).
+  //   ★[T1139] 한 벌에 없는 쌍은 늦게 파는 문(`g.lazy` — 손잡이 `T1139_XZ_LAZY` 켬일 때만 선다 · 끔 = 종전 글자)에 묻는다.
+  const _sp = (g, a, b) => (g.split[a] && g.split[a][b]) || (g.lazy ? g.lazy(a, b) : null);
   function splitNames(local, peer, pn) {
     const g = G.get(peer); if (!g) return null;
-    if (!g.flip) { const s = g.split[local] && g.split[local][pn]; return s ? { fLocal: s.fA, ptLocal: s.ptA, ptPeer: s.ptB, ptsLocal: s.ptsA } : null; }
-    const s = g.split[pn] && g.split[pn][local];
+    if (!g.flip) { const s = _sp(g, local, pn); return s ? { fLocal: s.fA, ptLocal: s.ptA, ptPeer: s.ptB, ptsLocal: s.ptsA } : null; }
+    const s = _sp(g, pn, local);
     return s ? { fLocal: 1 - s.fA, ptLocal: s.ptB, ptPeer: s.ptA, ptsLocal: s.ptsB.slice().reverse() } : null;
   }
   const X = {
@@ -53,7 +55,7 @@ function createCore(o) {
   };
 
   // 합친 걸음표가 왔다(`xzone-geo.crossGeo` 의 답 · 두 존 이름 순서 A<B 로 잰 한 벌 — 두 존이 같은 표를 갖는다)
-  function setGeo(peer, r) {
+  function setGeo(peer, r, lazy) {
     const flip = (r.A !== zone);
     const mine = new Set(), theirs = new Set();
     let n = 0, noSplit = 0;
@@ -64,7 +66,7 @@ function createCore(o) {
         if (!(r.split && r.split[a] && r.split[a][b])) noSplit++;   // 2km 안인데 합친 길(A*)이 예산 안에 못 찾은 쌍 — 몸 없이 econ 만 간다
       }
     }
-    G.set(peer, { flip, dist: r.dist, split: r.split, mine, theirs, n, noSplit, ms: r.ms, routed: r.routed, failed: r.failed });
+    G.set(peer, { flip, dist: r.dist, split: r.split, mine, theirs, n, noSplit, ms: r.ms, routed: r.routed, failed: r.failed, ...(lazy ? { lazy } : {}) });
     world.xzone = X;   // ★표가 선 뒤에만 꽂는다(그 전엔 econ 이 `world.xzone` 을 못 본다 = 끔과 같다)
     return { pairs: n, mine: mine.size, theirs: theirs.size, noSplit };
   }
@@ -123,7 +125,7 @@ function createCore(o) {
     for (const r of X.out) if (r.kind === 'arrive') o.outArrive++; else if (r.kind === 'return') o.outReturn++;
     return o;
   }
-  return { X, G, SN, pend, st, live, setGeo, onSnap, onRecord, dayIn, dayOut, distNames, splitNames,
+  return { X, G, SN, pend, st, live, setGeo, infoR, onSnap, onRecord, dayIn, dayOut, distNames, splitNames,
     ready: () => G.size > 0, peersReady: () => [...G.keys()] };
 }
 
@@ -137,6 +139,9 @@ function neighborsOf(zone) {
   for (const id of [me.north, me.south, me.east, me.west]) if (id && id !== zone && m[id] && !m[id].isOcean && !out.includes(id)) out.push(id);
   return out;
 }
+// ★[T1139] 손잡이 `T1139_XZ_LAZY`('1' 만 켬 · ★기본 끔 = 종전 한 벌 전 쌍) — 하네스(`scripts/e2e-xzone-caravan.js`)가 켠다.
+//   켬: 한 벌은 `splitR = infoRange` 로 · 그 밖의 쌍은 econ · 몸 길이 물을 때 `xzone-geo.lazySplit` 일꾼이 판다(답은 전 쌍 한 벌과 글자 같다).
+const T1139_XZ_LAZY = process.env.T1139_XZ_LAZY === '1';
 function createHost(o) {
   const zone = o.zone, core = o.core, log = o.log || (() => {});
   const peers = neighborsOf(zone);
@@ -161,14 +166,16 @@ function createHost(o) {
     w.running = true; w.cur = job.sig;
     const A = zone < peer ? zone : peer, B = zone < peer ? peer : zone;   // 두 존이 같은 순서로 잰다 ⇒ 같은 표
     const q = { A, B, rosterA: A === zone ? job.mine : job.roster, rosterB: A === zone ? job.roster : job.mine, coast: true };
+    if (T1139_XZ_LAZY && core.infoR != null) q.splitR = core.infoR;   // ★[T1139] 하네스 — 한 벌은 econ 이 떠날 때 묻는 쌍(걸음 ≤ infoRange)만 · 그 밖은 물을 때
     const t0 = Date.now();
     let Worker; try { ({ Worker } = require('worker_threads')); } catch (e) { w.running = false; log(`걸음표 워커 없음: ${e.message}`); return; }
     const os = require('os');
     const tmpDb = path.join(os.tmpdir(), `xzone-geo-${process.pid}-${peer}-${Date.now()}.db`);
     let wk;
+    const wenv = Object.assign({}, process.env, { ENABLE_VILLAGES: '0', DB_PATH: tmpDb });
     try {
       wk = new Worker(path.join(__dirname, 'xzone-geo.js'), { workerData: { xzoneGeo: q },
-        env: Object.assign({}, process.env, { ENABLE_VILLAGES: '0', DB_PATH: tmpDb }), stdout: true, stderr: true });
+        env: wenv, stdout: true, stderr: true });
     } catch (e) { w.running = false; log(`걸음표 워커 실패(${peer}): ${e.message}`); return; }
     wk.stdout.resume(); wk.stderr.resume();   // 워커 안 소음은 버린다(모듈 적재 로그 — 정본이 말하는 것)
     let got = false;
@@ -176,12 +183,18 @@ function createHost(o) {
     wk.on('message', (m) => {
       got = true;
       if (m && m.ok) {
-        const r = core.setGeo(peer, m.r);
+        let lz = null;
+        if (q.splitR != null) {   // ★[T1139] 늦게 파는 일꾼 — 지난 명부의 일꾼은 닫는다 · 물은 쌍은 로그 한 줄(쌍 · 길 지문 · ms)
+          if (w.lazy) w.lazy.close();
+          w.lazy = lz = require('./xzone-geo').lazySplit(q, m.r, { env: wenv,
+            onAsk: (a, b, e, ms) => log(`[T1139] 걸음표 늦게 판 쌍 ${a}+${b} — ${e ? `길 ${require('crypto').createHash('sha1').update(JSON.stringify(e)).digest('hex').slice(0, 12)}` : '못 판'} · ${ms}ms`) });
+        }
+        const r = core.setGeo(peer, m.r, lz ? lz.get : undefined);
         w.sig = job.sig;
         hs.geo[peer] = { pairs: Object.keys(m.r.dist || {}).reduce((a, k) => a + Object.keys(m.r.dist[k]).length, 0), within: r.pairs, withinNoRoute: r.noSplit, mine: r.mine, theirs: r.theirs,
           routed: m.r.routed, failed: m.r.failed, bfsMs: m.r.ms && m.r.ms.bfs, routeMs: m.r.ms && m.r.ms.route, wallMs: Date.now() - t0,
-          cache: m.r.cache || null };   // ★[T662] 'made'(잰 판) · 'wait'(이웃 워커가 재는 것을 기다려 읽음) · 'hit'(있던 것을 읽음) · null(손잡이 끔)
-        log(`경계 걸음표 ${A}+${B} — 쌍 ${hs.geo[peer].pairs} · 걸어 2km 안 ${r.pairs}(그중 합친 길 못 판 ${r.noSplit}) · 경계 마을 이쪽 ${r.mine} · 저쪽 ${r.theirs} · 길 ${m.r.routed}(못 판 ${m.r.failed}) · BFS ${(m.r.ms.bfs / 1000).toFixed(1)}s · 길 ${(m.r.ms.route / 1000).toFixed(1)}s${m.r.cache ? ` · 한 벌 ${m.r.cache}` : ''} · 벽시계 ${((Date.now() - t0) / 1000).toFixed(0)}s(워커 · 틱 안 막음)`);
+          cache: m.r.cache || null, ...(lz ? { lazy: lz.st } : {}) };   // ★[T662] 'made'(잰 판) · 'wait'(이웃 워커가 재는 것을 기다려 읽음) · 'hit'(있던 것을 읽음) · null(손잡이 끔)
+        log(`경계 걸음표 ${A}+${B} — 쌍 ${hs.geo[peer].pairs} · 걸어 2km 안 ${r.pairs}(그중 합친 길 못 판 ${r.noSplit}) · 경계 마을 이쪽 ${r.mine} · 저쪽 ${r.theirs} · 길 ${m.r.routed}(못 판 ${m.r.failed}) · BFS ${(m.r.ms.bfs / 1000).toFixed(1)}s · 길 ${(m.r.ms.route / 1000).toFixed(1)}s${m.r.cache ? ` · 한 벌 ${m.r.cache}` : ''}${lz ? ` · [T1139] 늦게 파기(한 벌 = 걸음 ≤ ${q.splitR} · 그 밖은 물을 때)` : ''} · 벽시계 ${((Date.now() - t0) / 1000).toFixed(0)}s(워커 · 틱 안 막음)`);
       } else log(`걸음표 실패(${peer}): ${m && m.err}`);
       try { wk.terminate(); } catch (e) {}   // 답을 받았으면 워커를 닫는다(지형·길 격자 메모리를 존에 남기지 않는다)
     });

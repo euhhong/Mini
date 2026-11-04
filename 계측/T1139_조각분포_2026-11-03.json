@@ -1,0 +1,509 @@
+{
+ "card": "T1139",
+ "made": "2026-11-03",
+ "base": "2ddf789",
+ "harness": "scripts/t1139-slice-hist.js",
+ "allVillages": {
+  "zone": "hanbando",
+  "winS": 600,
+  "bootS": 17.2,
+  "calls": 17597,
+  "busyCalls": 6506,
+  "sliceMs": {
+   "sum": 5408.49,
+   "mean": 0.8313,
+   "p50": 0.7274,
+   "p90": 1.2608,
+   "p99": 2.3416,
+   "p999": 5.4565,
+   "max": 16.3832
+  },
+  "observers": {
+   "n": 51,
+   "one": false,
+   "villages": 51,
+   "pop": 408
+  },
+  "zoneSelf": {
+   "maxSliceMs": 10.861,
+   "buildMs": 5381.7,
+   "built": 1911,
+   "recs": 1275,
+   "warm": {
+    "ticks": 17596,
+    "bTicks": 6505,
+    "lastBusyTick": 17596,
+    "bMax": 76.88,
+    "bP50": 19.85,
+    "bP99": 37.26,
+    "nMax": 168.82,
+    "nP50": 11.52,
+    "nP99": 30.3,
+    "nN": 11091
+   }
+  },
+  "gcShare": {
+   "overlapMs": 0,
+   "ofSliceMs": 0,
+   "slicesWithGc": 0
+  },
+  "over465": {
+   "n": 15,
+   "gcN": 0,
+   "ms": 98.1,
+   "gcMs": 0
+  },
+  "over545": {
+   "n": 7,
+   "gcN": 0,
+   "ms": 58.668,
+   "gcMs": 0
+  },
+  "bins": [
+   {
+    "lo": 0,
+    "hi": 0.015625,
+    "n": 0,
+    "ms": 0,
+    "gcN": 0,
+    "gcMs": 0,
+    "gcShare": null
+   },
+   {
+    "lo": 0.015625,
+    "hi": 0.03125,
+    "n": 0,
+    "ms": 0,
+    "gcN": 0,
+    "gcMs": 0,
+    "gcShare": null
+   },
+   {
+    "lo": 0.03125,
+    "hi": 0.0625,
+    "n": 0,
+    "ms": 0,
+    "gcN": 0,
+    "gcMs": 0,
+    "gcShare": null
+   },
+   {
+    "lo": 0.0625,
+    "hi": 0.125,
+    "n": 0,
+    "ms": 0,
+    "gcN": 0,
+    "gcMs": 0,
+    "gcShare": null
+   },
+   {
+    "lo": 0.125,
+    "hi": 0.25,
+    "n": 10,
+    "ms": 2.229,
+    "gcN": 0,
+    "gcMs": 0,
+    "gcShare": 0
+   },
+   {
+    "lo": 0.25,
+    "hi": 0.5,
+    "n": 969,
+    "ms": 413.146,
+    "gcN": 0,
+    "gcMs": 0,
+    "gcShare": 0
+   },
+   {
+    "lo": 0.5,
+    "hi": 1,
+    "n": 3974,
+    "ms": 2844.764,
+    "gcN": 0,
+    "gcMs": 0,
+    "gcShare": 0
+   },
+   {
+    "lo": 1,
+    "hi": 2,
+    "n": 1444,
+    "ms": 1812.864,
+    "gcN": 0,
+    "gcMs": 0,
+    "gcShare": 0
+   },
+   {
+    "lo": 2,
+    "hi": 4,
+    "n": 91,
+    "ms": 224.362,
+    "gcN": 0,
+    "gcMs": 0,
+    "gcShare": 0
+   },
+   {
+    "lo": 4,
+    "hi": 8,
+    "n": 16,
+    "ms": 83.875,
+    "gcN": 0,
+    "gcMs": 0,
+    "gcShare": 0
+   },
+   {
+    "lo": 8,
+    "hi": null,
+    "n": 2,
+    "ms": 27.248,
+    "gcN": 0,
+    "gcMs": 0,
+    "gcShare": 0
+   }
+  ],
+  "top": [
+   {
+    "ms": 16.383,
+    "gc": 0,
+    "kinds": [],
+    "done": 0,
+    "atS": 191.1
+   },
+   {
+    "ms": 10.865,
+    "gc": 0,
+    "kinds": [],
+    "done": 0,
+    "atS": 585.2
+   },
+   {
+    "ms": 7,
+    "gc": 0,
+    "kinds": [],
+    "done": 0,
+    "atS": 615.7
+   },
+   {
+    "ms": 6.616,
+    "gc": 0,
+    "kinds": [],
+    "done": 1,
+    "atS": 37.3
+   },
+   {
+    "ms": 6.353,
+    "gc": 0,
+    "kinds": [],
+    "done": 0,
+    "atS": 33.6
+   },
+   {
+    "ms": 5.994,
+    "gc": 0,
+    "kinds": [],
+    "done": 1,
+    "atS": 80
+   },
+   {
+    "ms": 5.457,
+    "gc": 0,
+    "kinds": [],
+    "done": 1,
+    "atS": 31.7
+   },
+   {
+    "ms": 5.37,
+    "gc": 0,
+    "kinds": [],
+    "done": 1,
+    "atS": 34.7
+   },
+   {
+    "ms": 5.077,
+    "gc": 0,
+    "kinds": [],
+    "done": 1,
+    "atS": 99.9
+   },
+   {
+    "ms": 5.011,
+    "gc": 0,
+    "kinds": [],
+    "done": 0,
+    "atS": 36.2
+   }
+  ],
+  "gc": {
+   "n": 8157,
+   "ms": 16052.1,
+   "byKind": {
+    "1": {
+     "n": 8085,
+     "ms": 15649.4,
+     "max": 70.95
+    },
+    "4": {
+     "n": 36,
+     "ms": 348.93,
+     "max": 26.213
+    },
+    "8": {
+     "n": 36,
+     "ms": 53.81,
+     "max": 2.588
+    }
+   }
+  }
+ },
+ "one": {
+  "note": "--one 꼴의 앞선 판(관측자 하나 · welcome 뒤 viewport_update 로 그 마을에 둠)",
+  "zone": "hanbando",
+  "winS": 600,
+  "bootS": 16.4,
+  "calls": 18077,
+  "busyCalls": 98,
+  "sliceMs": {
+   "sum": 83.8,
+   "mean": 0.8551,
+   "p50": 0.6982,
+   "p90": 1.3086,
+   "p99": 4.6614,
+   "p999": 4.6614,
+   "max": 4.6614
+  },
+  "observer": {
+   "name": "광산1",
+   "pop": 8,
+   "x": 67856,
+   "y": 67760
+  },
+  "zoneSelf": {
+   "maxSliceMs": 4.658,
+   "buildMs": 91.9,
+   "built": 36,
+   "recs": 36,
+   "warm": {
+    "ticks": 18077,
+    "bTicks": 98,
+    "lastBusyTick": 17660,
+    "bMax": 24.69,
+    "bP50": 16.83,
+    "bP99": 24.69,
+    "nMax": 60.26,
+    "nP50": 1.65,
+    "nP99": 17.42,
+    "nN": 17902
+   }
+  },
+  "gcShare": {
+   "overlapMs": 0,
+   "ofSliceMs": 0,
+   "slicesWithGc": 0
+  },
+  "over465": {
+   "n": 1,
+   "gcN": 0,
+   "ms": 4.661,
+   "gcMs": 0
+  },
+  "over545": {
+   "n": 0,
+   "gcN": 0,
+   "ms": 0,
+   "gcMs": 0
+  },
+  "bins": [
+   {
+    "lo": 0,
+    "hi": 0.015625,
+    "n": 0,
+    "ms": 0,
+    "gcN": 0,
+    "gcMs": 0,
+    "gcShare": null
+   },
+   {
+    "lo": 0.015625,
+    "hi": 0.03125,
+    "n": 0,
+    "ms": 0,
+    "gcN": 0,
+    "gcMs": 0,
+    "gcShare": null
+   },
+   {
+    "lo": 0.03125,
+    "hi": 0.0625,
+    "n": 0,
+    "ms": 0,
+    "gcN": 0,
+    "gcMs": 0,
+    "gcShare": null
+   },
+   {
+    "lo": 0.0625,
+    "hi": 0.125,
+    "n": 0,
+    "ms": 0,
+    "gcN": 0,
+    "gcMs": 0,
+    "gcShare": null
+   },
+   {
+    "lo": 0.125,
+    "hi": 0.25,
+    "n": 0,
+    "ms": 0,
+    "gcN": 0,
+    "gcMs": 0,
+    "gcShare": null
+   },
+   {
+    "lo": 0.25,
+    "hi": 0.5,
+    "n": 18,
+    "ms": 7.29,
+    "gcN": 0,
+    "gcMs": 0,
+    "gcShare": 0
+   },
+   {
+    "lo": 0.5,
+    "hi": 1,
+    "n": 58,
+    "ms": 41.39,
+    "gcN": 0,
+    "gcMs": 0,
+    "gcShare": 0
+   },
+   {
+    "lo": 1,
+    "hi": 2,
+    "n": 18,
+    "ms": 21.852,
+    "gcN": 0,
+    "gcMs": 0,
+    "gcShare": 0
+   },
+   {
+    "lo": 2,
+    "hi": 4,
+    "n": 3,
+    "ms": 8.605,
+    "gcN": 0,
+    "gcMs": 0,
+    "gcShare": 0
+   },
+   {
+    "lo": 4,
+    "hi": 8,
+    "n": 1,
+    "ms": 4.661,
+    "gcN": 0,
+    "gcMs": 0,
+    "gcShare": 0
+   },
+   {
+    "lo": 8,
+    "hi": null,
+    "n": 0,
+    "ms": 0,
+    "gcN": 0,
+    "gcMs": 0,
+    "gcShare": null
+   }
+  ],
+  "top": [
+   {
+    "ms": 4.661,
+    "gc": 0,
+    "kinds": [],
+    "done": 1,
+    "atS": 16.9
+   },
+   {
+    "ms": 3.729,
+    "gc": 0,
+    "kinds": [],
+    "done": 0,
+    "atS": 16.9
+   },
+   {
+    "ms": 2.525,
+    "gc": 0,
+    "kinds": [],
+    "done": 0,
+    "atS": 16.9
+   },
+   {
+    "ms": 2.351,
+    "gc": 0,
+    "kinds": [],
+    "done": 0,
+    "atS": 16.8
+   },
+   {
+    "ms": 1.612,
+    "gc": 0,
+    "kinds": [],
+    "done": 0,
+    "atS": 18
+   },
+   {
+    "ms": 1.524,
+    "gc": 0,
+    "kinds": [],
+    "done": 0,
+    "atS": 18
+   },
+   {
+    "ms": 1.503,
+    "gc": 0,
+    "kinds": [],
+    "done": 1,
+    "atS": 17.1
+   },
+   {
+    "ms": 1.362,
+    "gc": 0,
+    "kinds": [],
+    "done": 0,
+    "atS": 18.4
+   },
+   {
+    "ms": 1.331,
+    "gc": 0,
+    "kinds": [],
+    "done": 0,
+    "atS": 17.9
+   },
+   {
+    "ms": 1.309,
+    "gc": 0,
+    "kinds": [],
+    "done": 0,
+    "atS": 18.8
+   }
+  ],
+  "gc": {
+   "n": 4238,
+   "ms": 4045.6,
+   "byKind": {
+    "1": {
+     "n": 4172,
+     "ms": 3836.87,
+     "max": 12.716
+    },
+    "4": {
+     "n": 33,
+     "ms": 171.27,
+     "max": 25.777
+    },
+    "8": {
+     "n": 33,
+     "ms": 37.48,
+     "max": 1.966
+    }
+   }
+  }
+ }
+}
