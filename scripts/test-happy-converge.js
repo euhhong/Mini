@@ -7,7 +7,7 @@
 //   ② 겪은 일 — 굶어 죽음 한 번을 넣은 판도 같은 끝값으로 돌아온다(목표가 내려갔다가 반감기 30날로 돌아온다) · 넣은 직후엔 내려간다(자명 통과 금지).
 //   ③ 목표 식 — h* = 0.5 + G − c · N − E · 0 ~ 1 로 자름 · 인구가 크면 목표가 낮다(c > 0) · c = 0 이면 인구 무관.
 //   ④ econ 하루(tickVillage) — 켬 판에서 마을 h 가 0 ~ 1 안 · 목표 칸 · 좋은 것 칸이 선다 · 이탈은 h < 0.25 일 때만 압력.
-//   ⑤ 끔 = 종전 비트 — 손잡이 없는 판의 마을 이틀이 `=0` 판과 바이트 같다(아이 프로세스 · 손잡이는 모듈 머리에서 읽힌다).
+//   ⑤ 켬 기본(★[T1147]) — 손잡이 없는 판 = `=1` 판(바이트 같음) · `=0` 판은 다르다(되돌림 문이 산다) · c 기본 0.00741.
 'use strict';
 const path = require('path');
 const { spawnSync } = require('child_process');
@@ -74,7 +74,7 @@ console.log('③ 목표 식');
   ok(tg(0.3, 200, 0) === tg(0.3, 20, 0), '③-3 c = 0 이면 인구 무관');
   ok(tg(2.0, 10, 0) === 1 && tg(0, 1000, 0.01) === 0, '③-4 0 ~ 1 로 자른다(위 상한을 닫는다)');
   delete process.env.T1134_C;
-  ok(E.t1134C() === 0, '③-5 c 미설정 = 0(손으로 박지 않는다 — 판이 준다)');
+  ok(E.t1134C() === E.T1134_C_DEFAULT, '③-5 c 미설정 = 기본(★[T1147] 0.00741 — 판이 잰 값)');
 }
 
 console.log('④ econ 하루(tickVillage)');
@@ -96,8 +96,11 @@ console.log('⑤ 끔 = 종전 비트');
   const kid = (val) => { const env = Object.assign({}, process.env, { HC_CHILD: '1' }); delete env.T1134_HAPPY_TARGET; delete env.T1134_C; if (val !== undefined) env.T1134_HAPPY_TARGET = val;
     const r = spawnSync(process.execPath, [__filename], { env, encoding: 'utf8', maxBuffer: 1 << 26 }); return r.stdout; };
   const a = kid(undefined), b = kid('0'), c = kid('1');
-  ok(a.length > 100 && a === b, '⑤-1 손잡이 없음 = `=0`(마을 이틀 바이트 같음)');
-  ok(c !== a, '⑤-2 [대조] 켬 판은 달라진다(자명 통과 금지)');
+  ok(a.length > 100 && a === c, '⑤-1 [T1147] 손잡이 없음 = `=1`(켬 기본 · 마을 이틀 바이트 같음)');
+  ok(b !== a, '⑤-2 `=0` 은 다르다(되돌림 문이 산다 · 자명 통과 금지)');
+  delete process.env.T1134_C;
+  ok(E.t1134C() === 0.00741 && E.T1134_C_DEFAULT === 0.00741, '⑤-3 c 기본 0.00741(T1134 §5 · ★재민 11-04)');
+  process.env.T1134_C = '0'; ok(E.t1134C() === 0, '⑤-4 `T1134_C=0` = 인구 항 없음'); delete process.env.T1134_C;
 }
 
 console.log(`\n=== T1134 수렴: 통과 ${pass} · 실패 ${fail} ===`);
