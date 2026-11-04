@@ -24,7 +24,9 @@ const SRC = fs.readFileSync(path.join(ROOT, 'server', 'bandits.js'), 'utf8');
 console.log('\n=== T766 해체 문 손잡이 — 끔 = 종전 · 켬 = 오는 식량 · 미끼 ===');
 
 // ── ① 글자 ─────────────────────────────────────────────────────────────────
-const OLD = 'if (day >= _open && !e._banditized && (e._bdtFall || 0) >= BDT_DIS_FALL && fe < n * BDT_DIS_FOOD\n'
+// ★[T1143 2026-11-04] 해체 문 첫 줄에 `!(T1143_NO_DISSOLVE && !e.founder)` 한 칸이 섰다(NPC 마을 해체 없음 · 켬 기본) — 종전 글자는 그 칸을 뺀 그대로다.
+//   떠서 돌리는 ② 판정은 그 칸을 끔(`T1143_NO_DISSOLVE` = false = 종전)으로 준다 · 그 칸 자체는 `test-t1143-no-dissolve.js` 가 잰다.
+const OLD = 'if (day >= _open && !e._banditized && !(T1143_NO_DISSOLVE && !e.founder) && (e._bdtFall || 0) >= BDT_DIS_FALL && fe < n * BDT_DIS_FOOD\n'
   + '        && n >= BDT_GMIN && n <= Math.max(4, Math.min(20, (e._bdtPeak || n) * 0.55))';
 const i0 = SRC.indexOf(OLD);
 ok(i0 > 0, '① 해체 조건 종전 글자가 그대로 있다(곳간 식량 · 순감 · 잔존 · 피크 문턱)');
@@ -46,12 +48,12 @@ function decide(on, sc) {
   const mkHeld = new Function('S', 'log', 'incomingFood', 'BDT_DIS_FOOD', heldSrc + '\nreturn _t766Held;');
   const real = mkHeld(S, (d, m) => logs.push(m), B.incomingFood, 3);
   const held = (...a) => { calls++; return real(...a); };
-  const f = new Function('day', '_open', 'e', 'fe', 'n', 'BDT_DIS_FALL', 'BDT_DIS_FOOD', 'BDT_GMIN', 'T766_INCOMING', '_t766Held', 'host', 'vil', `return (${cond});`);
+  const f = new Function('day', '_open', 'e', 'fe', 'n', 'BDT_DIS_FALL', 'BDT_DIS_FOOD', 'BDT_GMIN', 'T766_INCOMING', '_t766Held', 'host', 'vil', 'T1143_NO_DISSOLVE', `return (${cond});`);
   const e = { _banditized: 0, _bdtFall: 5, _bdtPeak: 20, storage: { food: 6, fish: 4 } };
   const other = { name: '이웃' };
   const world = { caravans: sc.car(e, other) };
   const fe = 10, n = 6;   // 문턱 = 6명 × 3일 = 18 · 곳간 10
-  const dis = f(800, 400, e, fe, n, 5, 3, 3, on, held, { world }, { name: '농촌9', econ: e });
+  const dis = f(800, 400, e, fe, n, 5, 3, 3, on, held, { world }, { name: '농촌9', econ: e }, false);
   return { dis, calls, held: S.stats.t766Held || 0, logs };
 }
 const SC = [
