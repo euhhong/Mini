@@ -1469,6 +1469,7 @@ function serializeBody(p) {
   };
   if (T927_BODY_VER) o.sv = +p._saveVer || 0;   // ★[T927] 몸 버전(위) — 맨 끝 칸(끔 = 칸 없음 · 종전 바이트)
   if (Number(p.memberCool) > 0) o.memberCool = +p.memberCool;   // ★[T1137] 다시 들 수 있는 때(epoch ms · 탈퇴 · 추방 뒤에만 선다 — 없으면 종전 바이트)
+  if (p.feeOwe && typeof p.feeOwe === 'object' && Object.keys(p.feeOwe).length) o.feeOwe = Object.assign({}, p.feeOwe);   // ★[T1151] 수수료 끝수 장부(마을 id → 끝수 · 있을 때만)
   return o;
 }
 // 복원 — 옛 형식(`{axe: 3}`)까지 여기서 흡수한다. 반환값의 키는 `serializeBody` 와 같다.
@@ -1497,6 +1498,7 @@ function parseBody(raw, opts) {
   if (opts && opts.vitals && o.vital && typeof o.vital === 'object') out.vital = o.vital;
   if (Number.isFinite(o.sv)) out.sv = o.sv;   // ★[T927] 몸 버전 — 없으면(옛 행 · 끔 존) 칸도 없다
   if (Number.isFinite(o.memberCool) && o.memberCool > 0) out.memberCool = o.memberCool;   // ★[T1137] 다시 들기 시각
+  if (o.feeOwe && typeof o.feeOwe === 'object') { const f = {}; for (const [k, v] of Object.entries(o.feeOwe)) { const x = Number(v); if (Number.isFinite(x) && x > 0 && x < 1) f[k] = x; } if (Object.keys(f).length) out.feeOwe = f; }   // ★[T1151] 끝수 장부
   // 14.53: 옛 tools (object 또는 number 형식) → 새 toolItems list 변환
   if (Array.isArray(o.toolItems)) {
     out.toolItems = o.toolItems;
@@ -1507,7 +1509,7 @@ function parseBody(raw, opts) {
     for (const [tn, val] of Object.entries(o)) {
       if (['hotkey1', 'toolItems', 'equipped', 'equipment', 'equipSlots', 'craftSkill', 'craftLog',
            'oreLedger', 'oreCarry', 'fishStats', 'body', 'kgLedger', 'lots', 'vital',
-           'lastSeenDay', 'member', 'sv', 'memberCool'].includes(tn)) continue;   // ★[T11] 'member' 추가 — 옛 도구 형식으로 오독되면 안 된다
+           'lastSeenDay', 'member', 'sv', 'memberCool', 'feeOwe'].includes(tn)) continue;   // ★[T11] 'member' 추가 — 옛 도구 형식으로 오독되면 안 된다
       const mx = TOOL_MAX_DURABILITY[tn] || 100;
       let d = mx;
       if (typeof val === 'number' && val > 0) d = mx;
@@ -1570,6 +1572,7 @@ function _bodyInto(p, B, equipped) {
   p.downedAt = (V && V.downedAt) || 0;
   if (T927_BODY_VER) p._saveVer = +B.sv || 0;   // ★[T927] 몸 버전 — 이 몸의 다음 저장은 이 차례 위에서 센다(끔 = 칸 없음)
   if (B.memberCool) p.memberCool = B.memberCool;   // ★[T1137] 다시 들기 시각 — 몸에 실려 왔을 때만(없으면 칸도 없다)
+  if (B.feeOwe) p.feeOwe = B.feeOwe;               // ★[T1151] 수수료 끝수 장부 — 몸에 실려 왔을 때만
   return p;
 }
 
@@ -7657,7 +7660,7 @@ function handlePlayerInput(player, raw) {
   else if (msg.type === 'village_trade_exec') tryVillageTradeExec(player, msg.vid, msg.give, msg.take, msg.qty, msg.want, msg.numeraire);  // ★[거래소] 교환(T69 받을 양)
   else if (msg.type === 'village_trade_quote') {                                                            // ★[거래소] 견적(확정 전 표시)
     if (SimVillages.villageTradeQuote) {
-      const q = SimVillages.villageTradeQuote(msg.vid | 0, player.x, player.y, msg.give, msg.take, msg.qty, _unitsOfFor(player), { want: msg.want, inventory: player.inventory, feeRate: Membership.feeRateOf(player, msg.vid | 0) });   // ★[T1137] 수수료율(인정 구성원 할인 · 끔 · 율 0 = 칸 없음)   // ★[T835] 낼 사람 인벤(견적이 실행과 같은 개체를 고르게 — 손잡이 끔이면 안 읽힌다)
+      const q = SimVillages.villageTradeQuote(msg.vid | 0, player.x, player.y, msg.give, msg.take, msg.qty, _unitsOfFor(player), { want: msg.want, inventory: player.inventory, feeRate: Membership.feeRateOf(player, msg.vid | 0), feeOwe: Membership.feeOweOf(player, msg.vid | 0) });   // ★[T1151] 끝수 장부   // ★[T1137] 수수료율(인정 구성원 할인 · 끔 · 율 0 = 칸 없음)   // ★[T835] 낼 사람 인벤(견적이 실행과 같은 개체를 고르게 — 손잡이 끔이면 안 읽힌다)
       send(player.ws, { type: 'village_trade_quote', quote: q, vid: msg.vid | 0 });
     }
   }
@@ -13120,9 +13123,10 @@ function tryVillageTradeExec(player, vid, giveRes, takeRes, qty, want, numeraire
   const _uo = _unitsOfFor(player);
   const _d732 = _t732DoorBegin(player, null);   // ★[T732] 곳간 문(끄면 null)
   let r = null, _g732 = null;
-  try { r = SimVillages.villageTradeExec(vid | 0, player.x, player.y, player.inventory, giveRes, takeRes, qty, _uo, want, Membership.feeRateOf(player, vid | 0)); }   // ★[T1137] 수수료율
+  try { r = SimVillages.villageTradeExec(vid | 0, player.x, player.y, player.inventory, giveRes, takeRes, qty, _uo, want, Membership.feeRateOf(player, vid | 0), Membership.feeOweOf(player, vid | 0)); }   // ★[T1151] 끝수 장부   // ★[T1137] 수수료율
   finally { _g732 = _t732DoorEnd(_d732, player, !!(r && !r.err), _d732 && SimVillages.villageByDbId ? SimVillages.villageByDbId(vid | 0) : null, _uo); }   // ★[T732] 낸 것 · 받은 것의 로트(실패 · 던짐이면 장부도 되돌림)
   if (r.err) { send(player.ws, { type: 'notice', text: `🏪 ${r.err}` }); return; }
+  if (r.feeRate > 0) Membership.feeOweSet(player, vid | 0, r.feeOwe);   // ★[T1151] 끝수 장부 — 이 거래 뒤 값을 몸에(아래 저장이 싣는다)
   // ★내준 개체를 장부에서 **실제로 뺀다** — 위 환산은 `peekKg`(보기)였다. 안 빼면 무게가 안 준다.
   for (const [it, n] of Object.entries(r.gaveItems || {})) Carry.takeKg(player, it, n);
   Carry.reconcile(player, player.inventory);
@@ -13133,6 +13137,7 @@ function tryVillageTradeExec(player, vid, giveRes, takeRes, qty, want, numeraire
   send(player.ws, { type: 'notice', text: `🏪 ${r.name} 거래소에서 ${gave}을(를) 내고 ${ITEM_LABEL_SERVER[r.tookItem] || r.tookItem} ${r.take}을(를) 받았습니다.`
     + (r.capped ? ` 마을 재고가 모자라 ${r.wanted}개 가운데 ${r.give}개만 받았습니다.` : '')
     + (r.fee > 0 ? ` 그 가운데 ${r.fee}개는 수수료로 ${r.name} 곳간에 들어갔습니다.` : '')   // ★[T1137] 수수료(물건 · 마을 곳간)
+    + (r.feeRate > 0 && r.feeOwe > 0 ? ` 쌓인 수수료 ${r.feeOwe} — 1이 되면 받습니다.` : '')   // ★[T1151] 끝수 장부(이 거래 뒤)
     + (_g732 ? _t732GotLine(player, _g732) : '') });
   // ★시세표를 **다시 보내 준다** — 방금 내 거래가 시세를 움직였을 수 있고, 그걸 보는 게 이 배치의 요점이다.
   try {

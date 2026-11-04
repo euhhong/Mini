@@ -14987,12 +14987,12 @@ function villageTradeQuote(vid, px, py, giveRes, takeRes, qty, unitsOf, opts) { 
   const q = _t789View(() => Trade.quote(state.ledger, state.econV2, g.vil, vid | 0, String(giveRes || ''), String(takeRes || ''), u,
     Object.assign(_T732_ON ? { want: (opts && opts.want) || 0, perItem: per, takeKcal: _kcal() } : { want: (opts && opts.want) || 0, perItem: per },
       (opts && opts.inventory) ? { inventory: opts.inventory, unitsOf: (typeof unitsOf === 'function') ? unitsOf : undefined, giveCount: _n } : null,
-      (opts && Number(opts.feeRate) > 0) ? { feeRate: Number(opts.feeRate) } : null)));   // ★[T1137] 수수료율(전달만 — 0 이면 칸 없음 = 종전)   // ★[T748] 켬 = 받는 쪽 열량 짝 · ★[T789] 사람의 눈(견적 = 실행 · 끄면 그대로) · ★[T835] 낼 사람 인벤(전달만 — `trade.js` 손잡이가 켜졌을 때만 읽는다)
+      (opts && Number(opts.feeRate) > 0) ? { feeRate: Number(opts.feeRate), feeOwe: Number(opts.feeOwe) || 0 } : null)));   // ★[T1151] 끝수 장부(전달만)   // ★[T1137] 수수료율(전달만 — 0 이면 칸 없음 = 종전)   // ★[T748] 켬 = 받는 쪽 열량 짝 · ★[T789] 사람의 눈(견적 = 실행 · 끄면 그대로) · ★[T835] 낼 사람 인벤(전달만 — `trade.js` 손잡이가 켜졌을 때만 읽는다)
   if (q && !q.err) { q.giveItems = Math.max(0, Math.floor(Number(qty) || 0)); q.giveUnits = (q.giveUnitsPicked != null) ? q.giveUnitsPicked : +u.toFixed(3); }   // ★[T835] 켬 = 고른 그 개체들의 단위
   return q;
 }
 
-function villageTradeExec(vid, px, py, inventory, giveRes, takeRes, qty, unitsOf, want, feeRate) {   // ★[T69] want(전달만) · ★[T1137] feeRate(전달만)
+function villageTradeExec(vid, px, py, inventory, giveRes, takeRes, qty, unitsOf, want, feeRate, feeOwe) {   // ★[T1151] feeOwe(끝수 장부 · 전달만)   // ★[T69] want(전달만) · ★[T1137] feeRate(전달만)
   if (!state.ledger) return { err: '아직 장부가 없습니다.' };
   const g = _villageNear(vid, px, py);
   if (g.err) return g;
@@ -15002,7 +15002,7 @@ function villageTradeExec(vid, px, py, inventory, giveRes, takeRes, qty, unitsOf
     unitsOf,                          // ★[무게] 개체 무게 → 재화 단위(게시판 납품과 같은 환산)
     deposit: playerVillageDeposit,   // ★실물 이동은 정본 하나(게시판 납품과 같은 함수)
     ...(_T732_ON ? { takeKcal: _kcal() } : {}),   // ★[T748] 켬 = 받는 쪽 열량 짝(꺼내기 · 게시판 보상과 같은 `itemsOf` · 끔 = 칸이 안 선다)
-    ...(Number(feeRate) > 0 ? { feeRate: Number(feeRate) } : {}),   // ★[T1137] 수수료율(0 = 칸 없음 = 종전)
+    ...(Number(feeRate) > 0 ? { feeRate: Number(feeRate), feeOwe: Number(feeOwe) || 0 } : {}),   // ★[T1151] 끝수 장부   // ★[T1137] 수수료율(0 = 칸 없음 = 종전)
   });
   if (!r.ok) return { err: r.err };
   // ★어장(낚시 v2)처럼 **가격 갱신 코드가 없다** — 재고가 움직였으니 다음 조회에서 시세가 저절로 달라진다.

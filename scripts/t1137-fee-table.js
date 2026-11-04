@@ -26,9 +26,11 @@ const PLATES = [
   { k: '낮음', fee: 0.02, member: 0.01 },
   { k: '중간', fee: 0.05, member: 0.025 },
   { k: '높음', fee: 0.10, member: 0.05 },
+  { k: '5·3', fee: 0.05, member: 0.03 },   // ★[T1151] 재민 11-04 기본
 ];
 const HAVE = [1, 3, 5, 10, 20, 40];
-const feeOf = (n, r) => (n > 0 && r > 0) ? Math.ceil(n * r - 1e-9) : 0;   // trade.js `_feeOf` 와 같은 식(견적이 같은 수를 낸다 — 아래 대조)
+// ★[T1151] 수수료 식은 다시 적지 않는다 — 견적(`giveTotal` · trade.js `_feeOf` 정본)이 낸 수로 낼 낱개를 고른다(끝수 장부: 사람마다 · 이 판의 사람은 한 번씩이라 0 에서 시작).
+//   T1137 판(올림)의 표는 그 보고 §2 에 있다 — 이 자는 지금 정본(끝수 장부)을 잰다.
 
 function world() {
   const w = econV2.createWorldV2({ seed: 7, villageCount: 5, picker: 'rational', infoRange: 5000, raidPer100: 0.005 });
@@ -56,23 +58,25 @@ for (const PL of PLATES) {
       for (const have of HAVE) for (const who of ['비구성원', '인정']) {
         const rate = who === '인정' ? PL.member : PL.fee;
         row.tries++;
-        //   가진 것 안에서 수수료까지 낼 수 있는 가장 큰 q
-        let q = have; while (q > 0 && q + feeOf(q, rate) > have) q--;
-        if (q < 1) continue;
+        //   가진 것 안에서 수수료까지 낼 수 있는 가장 큰 q(견적의 "모두 n개" — 정본이 낸 수)
         const inv = { [item]: have };
-        const qt = Villages.villageTradeQuote(vid, AT[vid].x, AT[vid].y, res, take, q, null, Object.assign({ inventory: inv }, rate > 0 ? { feeRate: rate } : {}));
+        const Q = (n) => Villages.villageTradeQuote(vid, AT[vid].x, AT[vid].y, res, take, n, null, Object.assign({ inventory: inv }, rate > 0 ? { feeRate: rate, feeOwe: 0 } : {}));
+        let q = have, qt = Q(q);
+        while (q > 0 && qt && !qt.err && (qt.giveTotal || q) > have) { q--; qt = q > 0 ? Q(q) : null; }
+        if (q < 1) continue;
         if (!qt || qt.err || !(qt.take > 0)) continue;
         const s0 = +(vils[vid].econ.storage[res] || 0);
-        const r = Villages.villageTradeExec(vid, AT[vid].x, AT[vid].y, inv, res, take, q, null, 0, rate);
+        const r = Villages.villageTradeExec(vid, AT[vid].x, AT[vid].y, inv, res, take, q, null, 0, rate, 0);
         if (!r || r.err || !r.ok) continue;
         row.ok++; row.okBy[who]++;
         row.quoteN++; if ((qt.fee || 0) === (r.fee || 0) && qt.take === r.take) row.quoteEqExec++;
-        const fu = r.feeUnits || 0;
+        const fu = r.fee > 0 ? (r.feeUnits || 0) : 0;
+        row.owe = +((row.owe || 0) + (r.feeOwe || 0)).toFixed(2);   // 사람들 장부에 남은 끝수 합(다음 거래에서 받을 몫)
         row.feeUnits += fu; row.feeByVil[vid] = +((row.feeByVil[vid] || 0) + fu).toFixed(3);
         if (take === 'food') row.gotFood += r.take;
         if (!row.sample && (r.fee || 0) > 0 && have === 20) {
           const ko = Events.koRes(res);
-          row.sample = `${ko} ${q} 곡식 ${qt.take} · 수수료 ${ko} ${qt.fee} — 마을 곳간에 들어갑니다 (${Math.round(qt.feeRate * 1000) / 10}% · 올림 · 모두 ${qt.giveTotal}개를 냅니다)`;
+          row.sample = `${ko} ${q} 곡식 ${qt.take} · 수수료 ${ko} ${qt.fee} — 마을 곳간에 들어갑니다 (${Math.round(qt.feeRate * 1000) / 10}% · 모두 ${qt.giveTotal}개를 냅니다)${qt.feeOwe > 0 ? ` · 쌓인 수수료 ${qt.feeOwe} — 1이 되면 받습니다` : ''}`;
         }
         void s0;
       }
@@ -80,7 +84,7 @@ for (const PL of PLATES) {
   }
   row.feeUnits = +row.feeUnits.toFixed(3);
   out.plates.push(row);
-  console.log(`${PL.k.padEnd(3)} 율 ${PL.fee} · 인정 ${PL.member} | 시도 ${row.tries} · 선 거래 ${row.ok}(비구성원 ${row.okBy.비구성원} · 인정 ${row.okBy.인정}) · 수수료 곳간 수입 ${row.feeUnits} 단위 ${JSON.stringify(row.feeByVil)} · 받은 곡식 ${row.gotFood} · 견적 = 실행 ${row.quoteEqExec}/${row.quoteN}`);
+  console.log(`${PL.k.padEnd(3)} 율 ${PL.fee} · 인정 ${PL.member} | 시도 ${row.tries} · 선 거래 ${row.ok}(비구성원 ${row.okBy.비구성원} · 인정 ${row.okBy.인정}) · 수수료 곳간 수입 ${row.feeUnits} 단위 ${JSON.stringify(row.feeByVil)} · 장부에 남은 끝수 ${row.owe || 0} · 받은 곡식 ${row.gotFood} · 견적 = 실행 ${row.quoteEqExec}/${row.quoteN}`);
   if (row.sample) console.log(`    견적 글자: ${row.sample}`);
 }
 const oi = process.argv.indexOf('--out');

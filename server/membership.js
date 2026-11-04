@@ -45,11 +45,12 @@ const CFG = {
   GRAN_TTL_MS: _num('MEMBER_GRAN_TTL_MS', 60000),
   // ★[T1137] 탈퇴 · 추방 뒤 다시 드는 데 기다리는 실시간(ms) — 카드가 준 1시간(★재민 11-03 · 손잡이 아님). 하네스는 시계(`Date.now`)를 당겨 잰다.
   REJOIN_MS: 3600000,
-  // ★[T1137] 거래소 수수료율(물건으로 · 낼 개수에 곱해 올림 · 그 마을 곳간 몫) — 손잡이 둘. **기본 0**(수수료 없음 = 종전 바이트):
-  //   카드 "수는 손으로 박지 말고 판 셋을 재서 보고" — 판 셋 표는 보고(`scripts/t1137-fee-table.js`) · 고르는 것은 PM.
-  //   `T1137_FEE_MEMBER` = 인정 구성원의 율(없으면 `T1137_FEE` 와 같다 = 할인 0).
-  FEE: Math.max(0, _num('T1137_FEE', 0)),
-  FEE_MEMBER: Math.max(0, _num('T1137_FEE_MEMBER', _num('T1137_FEE', 0))),
+  // ★[T1137] 거래소 수수료율(물건 · 그 마을 곳간 몫) — 손잡이 둘. 판 셋 표는 T1137 보고(`scripts/t1137-fee-table.js`).
+  //   ★★[T1151 · ★재민 11-04 "각각 5%, 3%"] 기본 **0.05** · 인정 구성원 **0.03** · 되돌림 `T1137_FEE=0`(수수료 없음 = T1137 앞 바이트).
+  //   `T1137_FEE_MEMBER` 를 안 주고 `T1137_FEE` 만 주면 인정 율도 그 값이다(할인 0 — T1137 그대로의 뜻).
+  //   끝수(낱개 미만)는 몸 `feeOwe`(사람 × 마을 장부)에 쌓는다 — `trade.js _feeOf` · 아래 `feeOweOf` / `feeOweSet`.
+  FEE: Math.max(0, _num('T1137_FEE', 0.05)),
+  FEE_MEMBER: Math.max(0, _num('T1137_FEE_MEMBER', (process.env.T1137_FEE != null && process.env.T1137_FEE !== '') ? _num('T1137_FEE', 0.05) : 0.03)),
 };
 
 // ★★[T769 2026-10-15 · 재민 판정] *"기부는 가능해. 마음대로 빼는 건 안 돼. 그러니까 거래와 기부를 따로 둬야 하고, 관리자만 뺄 수 있어."*
@@ -275,6 +276,19 @@ function isRecognized(player, vid) {
 function feeRateOf(player, vid) {
   if (!T1137) return 0;
   return isRecognized(player, vid) ? CFG.FEE_MEMBER : CFG.FEE;
+}
+// ★★[T1151] 수수료 끝수 장부 — 몸 칸 `feeOwe` = { 마을 id: 끝수(소수 둘째 자리 · 0 ≤ x < 1) } · 재접속 · 넘기에 따라간다(`serializeBody` 끝 칸 · 있을 때만).
+function feeOweOf(player, vid) {
+  const m = player && player.feeOwe;
+  const x = (m && typeof m === 'object') ? Number(m[vid | 0]) : 0;
+  return Number.isFinite(x) && x > 0 ? x : 0;
+}
+function feeOweSet(player, vid, owe) {
+  if (!player) return;
+  const x = Math.round((Number(owe) || 0) * 100) / 100;
+  const m = (player.feeOwe && typeof player.feeOwe === 'object') ? Object.assign({}, player.feeOwe) : {};
+  if (x > 0) m[vid | 0] = x; else delete m[vid | 0];
+  if (Object.keys(m).length) player.feeOwe = m; else delete player.feeOwe;
 }
 
 // ── 인출 — 곳간에서 꺼낸다 ───────────────────────────────────────────────────
@@ -572,7 +586,7 @@ function publicState(player, vil) {
     out.open = true;
     out.recognized = m ? isRecognized(player, m.vid) : false;
     out.coolMs = coolLeft(player);
-    if (vil) { out.fee = feeRateOf(player, vil.dbId | 0); out.feeBase = CFG.FEE; out.feeMember = CFG.FEE_MEMBER; }
+    if (vil) { out.fee = feeRateOf(player, vil.dbId | 0); out.feeBase = CFG.FEE; out.feeMember = CFG.FEE_MEMBER; out.feeOwe = feeOweOf(player, vil.dbId | 0); }   // ★[T1151] 이 마을에 쌓인 끝수
   }
   if (T769) {
     const V = H && H.SimVillages;
@@ -639,5 +653,5 @@ module.exports = {
   resolveRes, resKo,   // ★[T159] 품목 해석 · ★[T779] 길드 곳간 잠금 둘(`granaryOpen` · `granaryBust`)은 걷었다
   T769, withdrawChief, chiefCheck, chiefCached, resolveItem,   // ★[T769] 기부 · 촌장 꺼내기
   T1086, offerFirst, firstJoinChat, joinOf,   // ★[T1086] 첫 의뢰 = 마을 사람 권함 — 권함 자리 · 받아들이는 문 · 칸이 읽는 형편
-  T1137, join, isRecognized, feeRateOf, coolLeft, coolText,   // ★[T1137] 가입 · 인정 구성원 · 수수료율 · 다시 들기 1시간
+  T1137, join, isRecognized, feeRateOf, coolLeft, coolText, feeOweOf, feeOweSet,   // ★[T1151] 끝수 장부   // ★[T1137] 가입 · 인정 구성원 · 수수료율 · 다시 들기 1시간
 };

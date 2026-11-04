@@ -1152,8 +1152,9 @@ function itemKo(k) {
       }
       h += `<div class="tr-line">한 개당 ${trQuote.ratio}${trQuote.avgRatio && Math.abs(trQuote.avgRatio - trQuote.ratio) > 1e-4
         ? ` · 이 물량 평균 <b>${trQuote.avgRatio}</b>(많이 낼수록 값이 나빠집니다)` : ''}</div>`;
-      // ★[T1137] 수수료 — 서버가 낸 낱개 그대로(물건 · 그 마을 곳간 몫 · 올림). 칸이 없으면(율 0 · 끔) 줄도 없다.
-      if (trQuote.fee > 0) h += `<div class="tr-line">수수료 ${gk} <b>${trQuote.fee}</b> — 마을 곳간에 들어갑니다<span class="bd-dim"> (${Math.round(trQuote.feeRate * 1000) / 10}% · 올림 · 모두 ${trQuote.giveTotal}개를 냅니다)</span></div>`;
+      // ★[T1137] 수수료 — 서버가 낸 낱개 그대로(물건 · 그 마을 곳간 몫). 칸이 없으면(율 0 · 끔) 줄도 없다. ★[T1151] 올림이 아니라 끝수를 쌓는다(아래 줄).
+      if (trQuote.fee > 0) h += `<div class="tr-line">수수료 ${gk} <b>${trQuote.fee}</b> — 마을 곳간에 들어갑니다<span class="bd-dim"> (${Math.round(trQuote.feeRate * 1000) / 10}% · 모두 ${trQuote.giveTotal}개를 냅니다)</span></div>`;
+      if (trQuote.feeRate > 0 && trQuote.feeOwe > 0) h += `<div class="tr-line bd-dim">쌓인 수수료 ${trQuote.feeOwe} — 1이 되면 받습니다</div>`;   // ★[T1151] 끝수 장부(이 거래 뒤 · 서버 값 그대로)
       if (trQuote.feeShort) h += `<div class="tr-warn">${trQuote.feeShort}</div>`;
       // ★상한 경고는 **낼 양 축의 말**이다 — 받을 양 축에선 위 `wantCapped` 가 그 자리를 맡는다.
       if (!wantAxis && trQuote.why) h += `<div class="tr-warn">${trQuote.why}</div>`;   // ★[T988] 실행이 거절할 판 — 실행과 같은 말(칸이 없으면 아래 종전 줄)

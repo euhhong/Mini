@@ -502,15 +502,28 @@ function quote(ledger, econV2, vil, vid, giveRes, takeRes, giveQty, opts) {
   const _fr = Number(o.feeRate) || 0;
   if (_fr > 0) {
     const n = (want > 0) ? (out.giveNeeded | 0) : (out.giveUsed != null ? (out.giveUsed | 0) : (_gN || Math.floor(q / ((Number(o.perItem) > 0) ? Number(o.perItem) : 1) + 1e-9)));
-    const fee = _feeOf(n, _fr);
-    out.feeRate = _fr; out.fee = fee; out.giveTotal = n + fee;
+    const F = _feeOf(n, _fr, o.feeOwe);
+    const fee = F.fee;
+    out.feeRate = _fr; out.fee = fee; out.giveTotal = n + fee; out.feeOweBefore = F.before; out.feeOwe = F.owe;   // ★[T1151] 끝수 장부(쌓인 것 · 이 거래 뒤)
     if (fee > 0 && _G && _G.have < n + fee) out.feeShort = `수수료 ${Events.koRes(giveRes)} ${fee}개까지 내려면 ${n + fee}개가 있어야 하는데 ${_G.have}개뿐입니다.`;
   }
   return out;
 }
-// ★★[T1137 2026-11-04 · ★재민 11-03] **거래소 수수료 = 물건** — 낼 낱개 n 에 율을 곱해 **올림**(낼 양 올림 · 캐논 ②) · 그 낱개는 값을 매기지 않고
-//   그 마을 곳간에 그대로 들어간다(넣는 길은 거래 몫과 같은 `deposit` 한 번 · 화폐 0). 견적(`quote`) · 실행(`exchange`)이 이 함수 하나를 부른다.
-function _feeOf(n, rate) { return (n > 0 && rate > 0) ? Math.ceil(n * rate - 1e-9) : 0; }
+// ★★[T1137 2026-11-04 · ★재민 11-03] **거래소 수수료 = 물건** — 그 낱개는 값을 매기지 않고 그 마을 곳간에 그대로 들어간다
+//   (넣는 길은 거래 몫과 같은 `deposit` 한 번 · 화폐 0). 견적(`quote`) · 실행(`exchange`)이 이 함수 하나를 부른다.
+// ★★[T1151 2026-11-04 · ★재민 11-04 "각각 5%, 3%" · PM 판정 ㄱ 둘째 줄] **끝수는 그 사람 × 그 마을 장부에 쌓는다.**
+//   T1137 은 n × 율을 낱개로 **올림**했다 — 율이 0 보다 크면 거래마다 적어도 1개라 1개 가진 사람의 거래가 막히고(710 → 632)
+//   낮은 율이 사실상 "거래마다 1개"였다. 이제: 쌓인 끝수 + n × 율 → 정수 몫은 지금 낱개로 받고 · 낱개 미만은 장부에 남긴다(소수 둘째 자리).
+//   긴 눈으로 정확히 그 율이다(낸 낱개 + 남은 끝수 = Σ n × 율). 장부의 정본은 몸(`feeOwe` · 존이 넘긴다 — trade.js 는 받아 계산만 한다).
+//   반환 { fee: 지금 받을 낱개, before: 쌓여 있던 끝수, owe: 이 거래 뒤 끝수 }.
+const _r2 = (x) => Math.round(x * 100) / 100;
+function _feeOf(n, rate, owe0) {
+  const before = _r2(Math.max(0, Number(owe0) || 0));
+  if (!(n > 0) || !(rate > 0)) return { fee: 0, before, owe: before };
+  const tot = _r2(before + n * rate);
+  const fee = Math.floor(tot + 1e-9);
+  return { fee, before, owe: _r2(tot - fee) };
+}
 
 // ── 실행 — 원자적 ────────────────────────────────────────────────────────────
 //   ★순서가 곧 안전이다(B-1 과 동형): ① 견적 ② **재고를 먼저 잡는다** ③ 내 물건을 뺀다
@@ -611,7 +624,8 @@ function exchange(a) {
 
   //   ★[T1137] 수수료(물건) — 낼 낱개 give 에 율을 곱해 올림 · 모자라면 거래 전에 막는다(견적이 같은 말을 미리 보인다 · 율 0 = 이 줄 무동작)
   const feeRate = Number(a.feeRate) || 0;
-  const fee = _feeOf(give, feeRate);
+  const _F = _feeOf(give, feeRate, a.feeOwe);   // ★[T1151] 끝수 장부(사람 × 마을 · 존이 넘긴 그 값)
+  const fee = _F.fee;
   if (fee > 0 && have < give + fee) return { ok: false, err: `수수료 ${Events.koRes(giveRes)} ${fee}개까지 내려면 ${give + fee}개가 있어야 하는데 ${have}개뿐입니다.` };
 
   // ② 재고를 **먼저** 잡는다(동시 경쟁의 관문)
@@ -635,7 +649,7 @@ function exchange(a) {
            giveUnits: +giveUnits.toFixed(3), perItem: +perItem.toFixed(3),
            capped: q0 !== give, wanted: q0, wantTake: wantTake > 0 ? wantTake : null,
            stockAfter: +v.storage[takeRes].toFixed(3), ...(conv ? { takeUnits: spend } : {}),   // ★[T748] 켬이면 나간 단위도
-           ...(fee > 0 ? { fee, feeRate, feeUnits: +(_units(want) - giveUnits).toFixed(3) } : {}) };   // ★[T1137] 수수료(낱개 · 율 · 곳간에 든 단위)
+           ...(feeRate > 0 ? { fee, feeRate, feeOwe: _F.owe, feeOweBefore: _F.before, feeUnits: +(_units(want) - giveUnits).toFixed(3) } : {}) };   // ★[T1151] 율이 서면 끝수 장부(이 거래 뒤)도 — 존이 몸에 적는다   // ★[T1137] 수수료(낱개 · 율 · 곳간에 든 단위)
 }
 
 module.exports = { CFG, KO_NUM, board, quote, exchange, tradableIn, tradableOut, lockedRewards, T807_ON, T835_ON, T965_ON, T976_ON, T988_ON, T999_ON };
