@@ -75,6 +75,9 @@ BODIES = {
 COMMON = {"eyes": "eyes/low-poly/low-poly.mhclo", "eyetex": "eyes/materials/brown_eye.png", "brows": "eyebrows/eyebrow001/eyebrow001.mhclo"}
 CLOTH_KINDS = ("hemp", "ramie", "leather", "fur")     # 카드 ③: 옷 넷(삼베·모시·가죽·갖옷) — 다섯째부터는 회부
 FABRIC = {"hemp": "Fabric061", "ramie": "Fabric036", "leather": "Leather028", "fur": "Carpet016"}   # ambientCG(CC0) — 결만 쓴다(색은 CLOTH_MATS)
+# ★[T1129 · ★재민 11-03 문 14-a ㄴ "몸통 판은 얇은 가죽 면 · 털 두께는 깃 · 소매 끝 · 단에만"] 갖옷 무늬 = 판은 가죽 결(`FABRIC[FUR_PANEL]`) · 털 결(`FABRIC['fur']`)은
+#   털 테 네모(생성기 `char_clothes_mhclo` 의 `furUV` — 깃 · 단 · 소매 끝 둘)에만 — 색은 둘 다 갖옷 색(`CLOTH_MATS['fur']` · 시트 갖옷이 한 재질이듯)
+FUR_PANEL = "leather"
 FABRIC_REPEAT = 4        # 옷 UV 한 장에 결이 되풀이되는 수(가로·세로)
 ATLAS = 1024             # 카드 ③: 1024² 이하
 PAD = 4                  # 칸 가장자리 번짐 막이(가장자리 화소를 바깥으로 늘린다)
@@ -521,7 +524,7 @@ def fabric_detail(kind, size):
     return full.resize(size, Image.LANCZOS)
 
 
-def build_atlases(sex, trim_v):
+def build_atlases(sex, trim_v, fur_uv):
     spec = BODIES[sex]
     rgb = Image.new("RGB", (ATLAS, ATLAS), (0, 0, 0))
     alpha = Image.new("L", (ATLAS, ATLAS), 255)
@@ -543,23 +546,34 @@ def build_atlases(sex, trim_v):
     #   ★옷의 AO 그림은 안 쓴다: 안감·허리띠 안쪽이 검게 구워져 있어(가려진 면) 자세를 잡거나 축약하면 검은 조각으로 드러났다(T545 첫 굽기 실측).
     #     그늘은 엔진의 빛이 준다 — 옷 칸 = ambientCG 결(평균 1) × 본천 색(`CLOTH_MATS`) 뿐.
     #   ★[T604] 허리띠 섬(옷 칸 안 가로 띠 · `char_clothes_mhclo` 가 준 v 범위)만 본천 × `CLOTH_TRIM_K`(시트 허리끈 `hemp2` 의 비) — 한 PAD 넓혀 칠한다
+    #   ★[T1129] 갖옷 = 판 · 허리띠는 가죽 결(`FUR_PANEL`) · 털 테 네모(`fur_uv`)만 털 결 — 같은 갖옷 색 · 한 PAD 넓혀 칠한다(띠와 같은 문법)
     c = CELLS["cloth"]
-    ih = c[3] - 2 * PAD
+    iw, ih = c[2] - 2 * PAD, c[3] - 2 * PAD
     y0 = c[1] + PAD + max(0, int(math.floor((1.0 - trim_v[1]) * ih)) - PAD)
     y1 = c[1] + PAD + min(ih, int(math.ceil((1.0 - trim_v[0]) * ih)) + PAD)
+    det = {}
+
+    def grain(k, cc):
+        if k not in det:
+            d = np.asarray(fabric_detail(k, (1024, 1024)), dtype=np.float64) / 255.0
+            det[k] = d / max(1e-6, d.mean())
+        srgb = np.array([_lin2srgb(x) for x in cc]) * 255.0
+        return _fit(Image.fromarray(np.clip(det[k][..., None] * srgb[None, None, :], 0, 255).astype(np.uint8), "RGB"), c)
     out = {}
     for kind in CLOTH_KINDS:
         col, _rough, _spec = rc.CLOTH_MATS[kind]
-        det = np.asarray(fabric_detail(kind, (1024, 1024)), dtype=np.float64) / 255.0
-        det = det / max(1e-6, det.mean())
+        panel = FUR_PANEL if kind == "fur" else kind
         a = rgb.copy()
-        for cc, rows in ((col, None), (tuple(x * rc.CLOTH_TRIM_K for x in col), (y0, y1))):
-            srgb = np.array([_lin2srgb(x) for x in cc]) * 255.0
-            im = _fit(Image.fromarray(np.clip(det[..., None] * srgb[None, None, :], 0, 255).astype(np.uint8), "RGB"), c)
-            if rows is None:
-                a.paste(im, (c[0], c[1]))
-            else:
-                a.paste(im.crop((0, rows[0] - c[1], c[2], rows[1] - c[1])), (c[0], rows[0]))
+        a.paste(grain(panel, col), (c[0], c[1]))
+        a.paste(grain(panel, tuple(x * rc.CLOTH_TRIM_K for x in col)).crop((0, y0 - c[1], c[2], y1 - c[1])), (c[0], y0))
+        if kind == "fur":
+            g = grain(kind, col)
+            for (u0, u1, v0, v1) in fur_uv:
+                bx0 = PAD + max(0, int(math.floor(u0 * iw)) - PAD)
+                bx1 = PAD + min(iw, int(math.ceil(u1 * iw)) + PAD)
+                by0 = PAD + max(0, int(math.floor((1.0 - v1) * ih)) - PAD)
+                by1 = PAD + min(ih, int(math.ceil((1.0 - v0) * ih)) + PAD)
+                a.paste(g.crop((bx0, by0, bx1, by1)), (c[0] + bx0, c[1] + by0))
         out[kind] = a
     return out, alpha
 
@@ -734,11 +748,17 @@ def retarget_clip(rig, prefix, clip_name, spec, sheet, align, gait=None, body=No
         if gait.get("duty") is None:
             raise SystemExit(f"[char3d] ★{clip_name} 자료 디딤 비율(`duty`)이 없다 — `scripts/gait_norms.py` 를 다시 돌려라(T741)")
 
+        # ★★[T1129 · ★재민 11-03 문 15 ⓑ "보폭을 맞춘다"] 보폭 배율 — 다리 마디 셋(넓적다리 · 정강이 · 발)의 땅 기준 시상각 × s(몸 · 클립마다 ·
+        #   `assets-src/gait/stride_fit.json` — `scripts/t1129-stride-fit.py` 가 디딘 발 미끄러짐(`t723-foot-slide.py` (나)) = 0 으로 맞춘 값 · 시트와 같은 함수).
+        #   이동 속도(게임 수치)·주기(판 수 · fps)는 그대로 — 흔드는 발 들림(T741)은 배율을 건 뒤의 각에 더한다.
+        stride = MR.stride_scale(prefix[:-1], clip_name)
+        gi["stride"] = stride
+
         def legs_at(kk, lift=None):
             out = {}
             for side, off in (("Left", 0.0), ("Right", 0.5)):
                 ph = ph0 + kk / float(K) + off
-                a_t, a_s, a_f = (MR.gait_cyc(gait[c], ph) for c in ("thigh", "shank", "foot"))
+                a_t, a_s, a_f = (stride * MR.gait_cyc(gait[c], ph) for c in ("thigh", "shank", "foot"))
                 d = (lift or {}).get(side, 0.0)
                 a_t = a_t + (d if a_t >= 0.0 else -d)          # ★[T741] 흔드는 발 들림 — 넓적다리를 수직에서 더 멀리(무릎이 오른다 · 정강이·발은 자료 각 그대로)
                 out[prefix + side + "UpLeg"] = Ry(a_t) @ vert[side + "UpLeg"]
@@ -873,7 +893,7 @@ def retarget_clip(rig, prefix, clip_name, spec, sheet, align, gait=None, body=No
     return {"frames": nf, "fps": fps, "loop": bool(loop), "keys": K, "span": K if loop else K - 1,
             "duration": round((nf if loop else max(1, nf - 1)) / fps, 6), "src": fn, "label": label,
             "window": [int(start), int(period)], "rule": rule, "sheet": sheet, "center": "feet" if feet_ctr else "hips",
-            **({"gait": {"legs": gait["src"], "phase0": gi["phase0"], "corr": gi["corr"], "thighMocapDeg": gi["thighMocap"],
+            **({"gait": {"legs": gait["src"], "phase0": gi["phase0"], "corr": gi["corr"], "thighMocapDeg": gi["thighMocap"], "stride": gi["stride"],
                          "groundShiftMm": [round(-1000 * max(gi["lowSkinBefore"]), 2), round(-1000 * min(gi["lowSkinBefore"]), 2)],
                          "contact": contact_info(gi, plan)}} if gait else {})}
 
@@ -913,6 +933,8 @@ for c in MOCAP_CLIPS:                                  # ★시트 표와 판·�
 CLIP_ALIAS = {"idle": "idle2", "aim": "aim2", "swing": "swing2"}   # 3D 는 모캡판 하나 — 손 포즈판 셋은 같은 뜻의 모캡판으로 선다
 # ★[T708 ②] 걷기·달리기 다리 = 열린 보행 자료의 평균 주기(`scripts/gait_norms.py` 산물 · 커밋 표 — 읽기만) · 그 밖 클립은 모캡 그대로
 INPUTS["assets-src/gait/gait_norms.json"] = sha16(MR.GAIT_PATH)
+if os.path.exists(MR.STRIDE_PATH):                     # ★[T1129] 보폭 배율 표(몸 · 클립마다) — 없으면 배율 1(종전 그대로)
+    INPUTS["assets-src/gait/stride_fit.json"] = sha16(MR.STRIDE_PATH)
 GAIT = MR.gait_tables()                                # ★[T723] 표 읽기·출처 한 줄도 정본 한 자리(시트 포즈표와 같은 줄)
 scene = bpy.context.scene
 scene.render.fps = 1                                   # ★열쇠 시각 = 판 번호(T539 클립 파일과 같은 문법 — 내보내기가 장면 fps 로 다시 뜬다)
@@ -936,7 +958,7 @@ def _join(objs, name):
 
 for sex in ("M", "F"):
     rig, parts, cl, info = build(sex)
-    atl, alpha = build_atlases(sex, cl["info"]["trimV"])
+    atl, alpha = build_atlases(sex, cl["info"]["trimV"], cl["info"]["furUV"])
     for kind, o in parts.items():
         remap_uv(o, CELLS[kind])
     # ★[T654] 몸 하나 = 살·눈·눈썹·머리·옷(옷 넷이 같이 — [T708] 갖옷 겉옷 자리는 정점 속성 `_furoffset` · 셰이더) — 사본 0
@@ -1078,7 +1100,7 @@ for k in ("render_common.py", "mocap_retarget.py", "char_clothes_mhclo.py", "cha
     INPUTS["scripts/" + k] = sha16(os.path.join(HERE, k))
 INPUTS["add-on-mpfb-v2.0.17.zip"] = _zip_sha
 meta = {
-    "_": "[T545 · T604 · T654 · T664 · T685 · T708] char_export_gltf.py 산물 — 엔진이 읽는 규약. 클라는 이 수를 하드코딩하지 않는다(갖옷 = `coatKind` 재질이 `furOffsetAttr` 를 더한다).",
+    "_": "[T545 · T604 · T654 · T664 · T685 · T708 · T1129] char_export_gltf.py 산물 — 엔진이 읽는 규약. 클라는 이 수를 하드코딩하지 않는다(갖옷 = `coatKind` 재질이 `furOffsetAttr` 를 더한다).",
     "glb": "char_body.glb",
     "units": "1 = 1m = 1셀(32 게임px)",
     "facing": "방향 0 = 모델 +x(Blender) — 시트 행 0 과 같다 · 방향 d = d×45°(연속 회전은 atan2(fy,fx))",
@@ -1089,6 +1111,7 @@ meta = {
     "body": "MPFB " + MPFB_VER + " · MakeHuman 시스템 자산(CC0)",
     "bodies": {sex: {"node": sex, "mesh": f"{sex}_body", "tris": v["info"]["trisTotal"], "trisParts": v["info"]["tris"],
                      "coat": v["info"]["coat"],
+                     "gait": {c: {k: g["gait"][k] for k in ("stride", "phase0", "contact")} for c, g in v["clips"].items() if "gait" in g},   # [T1129] 몸마다 보폭 배율 · 위상 · 접지
                      "furSkin": {"verts": v["info"]["furWeights"]["verts"], "over4": v["info"]["furWeights"]["multi"]},
                      "stand": v["info"]["stand"],
                      "bones": v["info"]["bones"], "scale": v["info"]["scale"],
@@ -1112,7 +1135,8 @@ meta = {
     "furNormalAttr": "_furnormal",
     "furJointsAttr": "_furjoints",
     "furWeightsAttr": "_furweights",
-    "coatNote": "[T708 ③] 옷 → 메시는 하나(옷 넷 = 재질) · 갖옷(`coatKind`) = 따로 지은 겉옷(생성기 — 본 옷과 같은 위상 · 단 무릎 · 긴팔 · 가슴 아래로 떨어지는 천 · 털 두께) — "
+    "coatNote": "[T708 ③ → T1129] 옷 → 메시는 하나(옷 넷 = 재질) · 갖옷(`coatKind`) = 따로 지은 겉옷(생성기 — 본 옷과 같은 위상 · [T1129] 몸에 붙는 얇은 가죽 판(본 옷 링) · "
+                 "단 = 시트 단(무릎 위) · 긴팔(팔을 따라 가늘게) · 허리띠 겉 · 털 두께는 깃 · 소매 끝 · 단의 테에만 · 무늬 = 가죽 결 판 + 털 결 테) — "
                  "정점 속성 `_furoffset`(옷 점 = 겉옷 자리 − 본 옷 자리 · m · glTF 축 · 그 밖 0)을 묶기 자세에서 더한 뒤 스키닝(엔진 셰이더 한 줄 — T654~T685 의 몸 부풀림 `_inflate` 를 걷었다) · "
                  "[T664] 갖옷 면 법선 = 면 속성 `_furnormal`(겉옷의 면 법선 · 그 밖 0 — 갖옷 재질만 바꾼다) · "
                  "[T685] 갖옷 몫 뼈 넷·무게 넷 = `_furjoints`(glTF 뼈 번호 u8)·`_furweights`(합 1) — 겉옷 기하를 MPFB 로 따로 묶은 무게(내보내기와 같은 규칙) · "
@@ -1121,6 +1145,7 @@ meta = {
     "roughness": {k: rc.CLOTH_MATS[k][1] for k in CLOTH_KINDS},
     "alphaTest": 0.5,
     "fabric": {k: FABRIC[k] for k in CLOTH_KINDS},
+    "furPanel": FABRIC[FUR_PANEL],                    # [T1129] 갖옷 판 결(털 결 `fabric.fur` 는 테에만)
     "sunDir": [round(c, 6) for c in sun_dir],
     "sunEnergy": rc.SUN_ENERGY,
     "sky": list(rc.WORLD_BG),
@@ -1137,7 +1162,7 @@ outs = {"char_body.glb": sha16(GLB), "char3d_meta.json": sha16(META)}
 for fn in sorted(os.listdir(TEXD)):
     outs["tex/" + fn] = sha16(os.path.join(TEXD, fn))
 lock = {
-    "_": "[T545 · T604 · T654 · T664 · T685 · T708] char3d 잠금 — 값 = 파일 sha1 앞 16자(바이트가 자산). 입력 지문이 바뀌면 다시 굽는다. 원본은 저장소 밖(`~/Mini/_3d_in/`).",
+    "_": "[T545 · T604 · T654 · T664 · T685 · T708 · T1129] char3d 잠금 — 값 = 파일 sha1 앞 16자(바이트가 자산). 입력 지문이 바뀌면 다시 굽는다. 원본은 저장소 밖(`~/Mini/_3d_in/`).",
     "_기계": f"pip bpy {bpy.app.version_string} · {meta['exporter']} · MPFB {MPFB_VER}",
     "_입력": dict(sorted(INPUTS.items())),
     "char3d": outs,

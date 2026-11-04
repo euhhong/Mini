@@ -118,7 +118,7 @@ const imgDim = (p) => {   // PNG IHDR · JPEG SOF — 무늬 크기(1024² 이�
   //   [T664] 갖옷 면 법선 `_furnormal` = 옷 칸 점만 단위(겉옷 삼각형과 같은 쪽) · 그 밖 0 · 넷 다 **성긴 접근자**(버퍼 뷰 없이 바탕 0 · 줄 = 0 아닌 점 수)
   //   [T685] 갖옷 몫 뼈 넷 `_furjoints`(정수 · 그 몸 스킨 뼈 수 안) · 무게 넷 `_furweights`(옷 칸 점마다 합 1 · 음수 0) · 그 밖 0 · 둘 다 성긴 접근자
   const wantMesh = sexes.map((s) => META.bodies[s].mesh).sort();
-  const NCMP = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 };
+  const NCMP = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4, MAT4: 16 };   // [T1129] MAT4 = 스킨 역행렬(무릎 자리)
   const rdv = (vi, off0, count, cn, ct) => { const bv = J.bufferViews[vi], sz = ct === 5121 ? 1 : ct === 5123 ? 2 : 4, st = bv.byteStride || sz * cn, o = binOff + (bv.byteOffset || 0) + off0, out = [];
     for (let k = 0; k < count; k++) { const r = []; for (let c = 0; c < cn; c++) { const q = o + k * st + sz * c; r.push(ct === 5126 ? b.readFloatLE(q) : ct === 5125 ? b.readUInt32LE(q) : ct === 5123 ? b.readUInt16LE(q) : b.readUInt8(q)); } out.push(r); }
     return out; };
@@ -132,6 +132,20 @@ const imgDim = (p) => {   // PNG IHDR · JPEG SOF — 무늬 크기(1024² 이�
   const cc = META.atlas.cells.cloth, AS = META.atlas.size;
   const inCloth = (uv) => uv[0] >= cc[0] / AS && uv[0] <= (cc[0] + cc[2]) / AS && uv[1] >= cc[1] / AS && uv[1] <= (cc[1] + cc[3]) / AS;
   const coat = {};
+  // ★★[T1129 · ★재민 11-03 문 14-a ㄴ "갈색 옷 버전은 너무 심하다"] 갖옷 = **몸에 붙는 얇은 겉옷 + 털 테**(T708 의 가슴 아래 볼록 껍질 · 둘레마다 털 두께 · 무릎 단을 걷었다):
+  //   ⓘ 허리띠 높이(띠 섬 점 — 메타 `clothes.trimV` 줄 — 의 본 옷 높이 범위)의 옷 점은 **옮김 0**(겉옷 = 본 옷 자리 · 띠가 겉에 서서 허리가 잘록) ·
+  //   ⓘⓘ 깃(가장 높은 옷 점)은 옮긴다 — 바깥(수평)으로(털 테) · 옮김 최대 ≥ 두께(`pad`) ·
+  //   ⓘⓘⓘ 겉옷 단(겉옷 자리 가장 낮은 옷 점) = 무릎 위(뼈 `<몸>_LeftLeg`·`RightLeg` 머리 중 높은 쪽 — 묶기 자세 · 스킨 역행렬에서) — 카드 "단 높이 무릎 위".
+  //   ⚠남은 겉옷 단 = 본 옷 단(같은 높이) — 두 옷을 MPFB 가 따로 묶어 다시 세운 자리라 0.1 mm 안팎 갈린다(실측 0.6630 → 0.6629 m) ⇒ "본 옷 단보다 낮지 않다"는 안 단다.
+  const PADA = META.atlas.pad, ihA = cc[3] - 2 * PADA, iy0A = cc[1] + PADA;
+  const inv4 = (m) => {     // glTF 열 우선 4×4 → 역행렬의 옮김(아핀 · 3×3 역 · 여인수)
+    const a = [[m[0], m[4], m[8]], [m[1], m[5], m[9]], [m[2], m[6], m[10]]], t = [m[12], m[13], m[14]];
+    const det = a[0][0] * (a[1][1] * a[2][2] - a[1][2] * a[2][1]) - a[0][1] * (a[1][0] * a[2][2] - a[1][2] * a[2][0]) + a[0][2] * (a[1][0] * a[2][1] - a[1][1] * a[2][0]);
+    const c = [[a[1][1] * a[2][2] - a[1][2] * a[2][1], a[0][2] * a[2][1] - a[0][1] * a[2][2], a[0][1] * a[1][2] - a[0][2] * a[1][1]],
+               [a[1][2] * a[2][0] - a[1][0] * a[2][2], a[0][0] * a[2][2] - a[0][2] * a[2][0], a[0][2] * a[1][0] - a[0][0] * a[1][2]],
+               [a[1][0] * a[2][1] - a[1][1] * a[2][0], a[0][1] * a[2][0] - a[0][0] * a[2][1], a[0][0] * a[1][1] - a[0][1] * a[1][0]]];
+    return [0, 1, 2].map((r) => -(c[r][0] * t[0] + c[r][1] * t[1] + c[r][2] * t[2]) / det);
+  };
   for (const m of J.meshes || []) {
     const p = m.primitives[0], oa = p.attributes[(META.furOffsetAttr || '').toUpperCase()], na = p.attributes[(META.furNormalAttr || '').toUpperCase()];
     const O = oa != null && J.accessors[oa].type === 'VEC3' ? accF(oa) : null, FN = na != null && J.accessors[na].type === 'VEC3' ? accF(na) : null;
@@ -142,6 +156,18 @@ const imgDim = (p) => {   // PNG IHDR · JPEG SOF — 무늬 크기(1024² 이�
       if (c) { cloth++; if (L > 0) moved++; maxOff = Math.max(maxOff, L); if (Math.abs(LF - 1) < 1e-6) fnUnit++;
         lowBase = Math.min(lowBase, P[i][1]); lowCoat = Math.min(lowCoat, P[i][1] + v[1]); }
       else { if (L !== 0) badOut++; if (LF !== 0) fnOut++; } });
+    // [T1129] ⓘ 띠 높이 옮김 0 · ⓘⓘ 깃 · ⓘⓘⓘ 무릎
+    const sx = sexes.find((s) => META.bodies[s].mesh === m.name), tv = ((META.bodies[sx] || {}).clothes || {}).trimV || [0, 0];
+    const bv = [(iy0A + (1 - tv[1]) * ihA) / AS, (iy0A + (1 - tv[0]) * ihA) / AS];
+    let bLo = Infinity, bHi = -Infinity, atBelt = 0, atBeltMoved = 0, top = -1;
+    P.forEach((q, i) => { if (inCloth(UV[i]) && UV[i][1] >= bv[0] && UV[i][1] <= bv[1]) { bLo = Math.min(bLo, q[1]); bHi = Math.max(bHi, q[1]); } });
+    P.forEach((q, i) => { if (!inCloth(UV[i])) return; if (q[1] >= bLo && q[1] <= bHi) { atBelt++; if (O[i].some((x) => x !== 0)) atBeltMoved++; }
+      if (top < 0 || q[1] > P[top][1]) top = i; });
+    const oT = top >= 0 ? O[top] : [0, 0, 0], collarOut = Math.hypot(oT[0], oT[2]) > Math.abs(oT[1]);
+    const nd0 = (J.nodes || []).find((x) => x.mesh === J.meshes.indexOf(m) && x.skin != null), sk = nd0 ? J.skins[nd0.skin] : null;
+    const IBM = sk ? accF(sk.inverseBindMatrices) : [];
+    const kneeY = sk ? ['LeftLeg', 'RightLeg'].map((b) => { const ji = sk.joints.findIndex((j) => J.nodes[j].name === `${sx}_${b}`); return ji < 0 ? Infinity : inv4(IBM[ji])[1]; }).reduce((a, b2) => Math.max(a, b2), -Infinity) : Infinity;
+    const fitOk = atBelt > 0 && atBeltMoved === 0 && collarOut && maxOff >= (META.bodies[sx].coat || {}).pad && lowCoat > kneeY;
     // 갖옷 면 법선 = 겉옷 삼각형과 같은 쪽(옷 삼각형 전부 · 내적 > 0) — 겉옷 자리 = 점 + `_furoffset`
     const ix = rdv(J.accessors[p.indices].bufferView, J.accessors[p.indices].byteOffset || 0, J.accessors[p.indices].count, 1, J.accessors[p.indices].componentType).map((r) => r[0]);
     const Q = P.map((x, i) => [0, 1, 2].map((c) => x[c] + O[i][c]));
@@ -160,9 +186,10 @@ const imgDim = (p) => {   // PNG IHDR · JPEG SOF — 무늬 크기(1024² 이�
       if (c) { if (Math.abs(w[0] + w[1] + w[2] + w[3] - 1) < 1e-6 && w.every((x) => x >= 0)) fwCloth++; if (FJ[i].some((j) => !Number.isInteger(j) || j < 0 || j >= nJ)) fjBad++; }
       else if (w.some((x) => x !== 0) || FJ[i].some((x) => x !== 0)) fwOut++; });
     const keys4 = [oa, na, ja, wa], sp = keys4.map((k) => { const a = k != null ? J.accessors[k] : null; return !!a && a.bufferView == null && !!a.sparse && a.sparse.count === (accF(k) || []).filter((v) => v.some((x) => x !== 0)).length; });
-    coat[m.name] = { ok: badOut === 0 && moved > 0.8 * cloth && moved < cloth && lowCoat <= lowBase + 1e-6 && fnUnit === cloth && fnOut === 0 && triCloth > 0 && triSame === triCloth && sp.every(Boolean) &&
+    coat[m.name] = { ok: badOut === 0 && moved > 0 && moved < cloth && fitOk && fnUnit === cloth && fnOut === 0 && triCloth > 0 && triSame === triCloth && sp.every(Boolean) &&
                          !!FJ && !!FW && nJ > 0 && fwCloth === cloth && fwOut === 0 && fjBad === 0,
-                     cloth, moved, badOut, maxOff: +maxOff.toFixed(4), lowBase: +lowBase.toFixed(4), lowCoat: +lowCoat.toFixed(4), fnUnit, fnOut, triCloth, triSame, fwCloth, fwOut, fjBad, nJ,
+                     cloth, moved, badOut, maxOff: +maxOff.toFixed(4), lowBase: +lowBase.toFixed(4), lowCoat: +lowCoat.toFixed(4), kneeY: +kneeY.toFixed(4), atBelt, atBeltMoved, collarOut,
+                     fnUnit, fnOut, triCloth, triSame, fwCloth, fwOut, fjBad, nJ,
                      sparse: keys4.map((k) => (k != null && J.accessors[k].sparse || {}).count) };
   }
   const padOk = sexes.every((s) => { const B = META.bodies[s], f = (B.coat || {}).pad;
@@ -170,8 +197,8 @@ const imgDim = (p) => {   // PNG IHDR · JPEG SOF — 무늬 크기(1024² 이�
   REC.a.coat = { attr: META.furOffsetAttr, nattr: META.furNormalAttr, mesh: coat, pad: Object.fromEntries(sexes.map((s) => [s, (META.bodies[s].coat || {}).pad])), FUR_PAD };
   ok(JSON.stringify(sexes) === '["F","M"]' && JSON.stringify(meshN) === JSON.stringify(wantMesh) && meshN.length === sexes.length && prims.every((n) => n === 1) && !(J.materials && J.materials.length) &&
      meshN.every((n) => coat[n] && coat[n].ok) && padOk,
-     'ⓐ ★몸 둘(M·F) — 몸마다 메시 하나(옷 넷 = 재질 · [T708] 갖옷 = 따로 지은 겉옷 `_furoffset` 옷 점만(허리띠·뚜껑 가운데 0 · 단 = 본 옷 단보다 낮거나 같다) · 두께 = 등배 × 키 비 × `FUR_PAD` · `_furnormal` 옷 점만 겉옷 면 법선 · `_furjoints`·`_furweights` 옷 점만 갖옷 몫 뼈·무게(합 1) · 넷 다 성긴 접근자) · 프리미티브 하나 · 재질 0(엔진이 건다 · 족보 487)',
-     `${meshN.join(' ')} · 프리미티브 ${prims.join('/')} · 재질 ${(J.materials || []).length} · ${meshN.map((n) => { const q = coat[n] || {}; return `${n} 옷 점 ${q.cloth}(옮김 ${q.moved} · 최대 ${q.maxOff}m · 단 ${q.lowBase}→${q.lowCoat}m · 면 법선 ${q.fnUnit} · 같은 쪽 삼각형 ${q.triSame}/${q.triCloth} · 갖옷 무게 합 1 ${q.fwCloth} · 뼈 칸 밖 ${q.fjBad}/${q.nJ}뼈) · 밖 ≠0 ${q.badOut}/${q.fnOut}/${q.fwOut} · 성긴 줄 ${(q.sparse || []).join('/')}`; }).join(' · ')} · 두께 ${sexes.map((s) => (META.bodies[s].coat || {}).pad).join('/')}m`);
+     'ⓐ ★몸 둘(M·F) — 몸마다 메시 하나(옷 넷 = 재질 · [T708] 갖옷 = 따로 지은 겉옷 `_furoffset` 옷 점만 · ★[T1129] 몸에 붙는 겉옷(허리띠 높이 옮김 0) + 털 테(깃 바깥 · 옮김 최대 ≥ 두께) · 단 = 무릎 위 · 두께 = 등배 × 키 비 × `FUR_PAD` · `_furnormal` 옷 점만 겉옷 면 법선 · `_furjoints`·`_furweights` 옷 점만 갖옷 몫 뼈·무게(합 1) · 넷 다 성긴 접근자) · 프리미티브 하나 · 재질 0(엔진이 건다 · 족보 487)',
+     `${meshN.join(' ')} · 프리미티브 ${prims.join('/')} · 재질 ${(J.materials || []).length} · ${meshN.map((n) => { const q = coat[n] || {}; return `${n} 옷 점 ${q.cloth}(옮김 ${q.moved} · 최대 ${q.maxOff}m · 띠 높이 ${q.atBelt}점 중 옮김 ${q.atBeltMoved} · 깃 바깥 ${q.collarOut} · 단 ${q.lowBase}→${q.lowCoat}m(무릎 ${q.kneeY}) · 면 법선 ${q.fnUnit} · 같은 쪽 삼각형 ${q.triSame}/${q.triCloth} · 갖옷 무게 합 1 ${q.fwCloth} · 뼈 칸 밖 ${q.fjBad}/${q.nJ}뼈) · 밖 ≠0 ${q.badOut}/${q.fnOut}/${q.fwOut} · 성긴 줄 ${(q.sparse || []).join('/')}`; }).join(' · ')} · 두께 ${sexes.map((s) => (META.bodies[s].coat || {}).pad).join('/')}m`);
   const tris = {}, topY = {};
   for (const m of J.meshes) {
     const p = m.primitives[0], ia = J.accessors[p.indices], pa = J.accessors[p.attributes.POSITION];
@@ -196,10 +223,15 @@ const imgDim = (p) => {   // PNG IHDR · JPEG SOF — 무늬 크기(1024² 이�
   const GN = JSON.parse(fs.readFileSync(path.join(ROOT, 'assets-src', 'gait', 'gait_norms.json'), 'utf8'));
   const gaitOk = ['walk', 'run'].every((n) => { const g = META.clips[n].gait; return g && g.legs.includes(GN.sources[n].doi) && g.corr > 0 && g.phase0 >= 0 && g.phase0 < 1; }) &&
     cn.filter((n) => !['walk', 'run'].includes(n)).every((n) => !META.clips[n].gait) && /^[0-9a-f]{16}$/.test((LOCK['_입력'] || {})['assets-src/gait/gait_norms.json'] || '');
+  // ★[T1129 · ★재민 11-03 문 15 ⓑ "보폭을 맞춘다"] 보폭 배율 — 몸마다 · 클립마다 = 표(`assets-src/gait/stride_fit.json` · 잠금 입력 지문)의 값(메타 `clips` = 남 · `bodies.<몸>.gait`)
+  const SFP = path.join(ROOT, 'assets-src', 'gait', 'stride_fit.json'), SF = fs.existsSync(SFP) ? JSON.parse(fs.readFileSync(SFP, 'utf8')).scale || {} : {};
+  const strideOk = ['walk', 'run'].every((n) => sexes.every((s) => { const want = (SF[s] || {})[n], g = ((META.bodies[s] || {}).gait || {})[n] || {};
+    return typeof want === 'number' && g.stride === want && (s !== 'M' || META.clips[n].gait.stride === want); })) && (LOCK['_입력'] || {})['assets-src/gait/stride_fit.json'] === sha16(SFP);
   REC.a.clips = { names: cn, anims: Object.keys(an).length, span: an, gait: { walk: META.clips.walk.gait, run: META.clips.run.gait } };
-  ok(JSON.stringify(cn) === JSON.stringify(want) && Object.keys(an).length === cn.length * sexes.length && specOk && spanOk && gaitOk,
-     `ⓐ ★클립 = CMU 모캡 ${cn.length}개 × 몸 둘(코드 흔들기 0) · [T708] 걷기·달리기 다리 = 열린 보행 자료(doi · 위상 상관) · 판·루프·fps = 시트 표 · 길이 = 메타(열쇠 ${META.keysPerFrame}/판)`,
-     cn.map((n) => `${n} ${META.clips[n].keys}${META.clips[n].gait ? `(다리 ${META.clips[n].gait.legs.split(' · ')[0]} · r ${META.clips[n].gait.corr})` : ''}`).join(' · '));
+  ok(JSON.stringify(cn) === JSON.stringify(want) && Object.keys(an).length === cn.length * sexes.length && specOk && spanOk && gaitOk && strideOk,
+     `ⓐ ★클립 = CMU 모캡 ${cn.length}개 × 몸 둘(코드 흔들기 0) · [T708] 걷기·달리기 다리 = 열린 보행 자료(doi · 위상 상관) · ★[T1129] 보폭 배율 = 표(몸·클립마다 · 잠금 지문) · 판·루프·fps = 시트 표 · 길이 = 메타(열쇠 ${META.keysPerFrame}/판)`,
+     cn.map((n) => `${n} ${META.clips[n].keys}${META.clips[n].gait ? `(다리 ${META.clips[n].gait.legs.split(' · ')[0]} · r ${META.clips[n].gait.corr})` : ''}`).join(' · ') +
+     ` · 보폭 ${['walk', 'run'].map((n) => `${n} ${sexes.map((s) => `${s}×${(((META.bodies[s] || {}).gait || {})[n] || {}).stride}`).join('/')}`).join(' · ')}`);
   // [T708 ①] 쉼(묶기) 자세 = 팔 내린 선 자세 — 다리 = BVH 0번 판(무릎 곧게) · 팔 = 서기 클립 창의 평균 방향(메타 창 = `idle2` 창)
   const standOk = sexes.every((s) => { const st = META.bodies[s].stand || {}; return st.legsFrame === 0 && st.left && Math.abs(st.left.knee) < 1e-6 &&
     JSON.stringify(st.armWindow) === JSON.stringify(META.clips.idle2.window) && st.src === META.clips.idle2.src; });
@@ -591,15 +623,19 @@ const imgDim = (p) => {   // PNG IHDR · JPEG SOF — 무늬 크기(1024² 이�
       }
       const same = (x, y) => { const A = out.snap[x], B = out.snap[y]; for (let i = 3; i < A.length; i += 4) if ((A[i] > 127) !== (B[i] > 127)) return false; return true; };
       out.sameBase = ['M', 'F'].every((sx) => dirs.every((d) => same(`${sx}_hemp_${d}`, `${sx}_ramie_${d}`) && same(`${sx}_hemp_${d}`, `${sx}_leather_${d}`)));
+      const xor = (x, y) => { const A = out.snap[x], B = out.snap[y]; let n = 0; for (let i = 3; i < A.length; i += 4) if ((A[i] > 127) !== (B[i] > 127)) n++; return n; };
+      out.furXor = {}; for (const sx of ['M', 'F']) for (const d of dirs) out.furXor[`${sx}_${d}`] = xor(`${sx}_fur_${d}`, `${sx}_leather_${d}`);   // [T1129] 갖옷 ↔ 가죽 실루엣이 갈린 화소
       return out;
     }, [META.clothKinds, DIRS]);
-    const furBig = ['M', 'F'].every((sx) => DIRS.every((d) => g.area[`${sx}_fur_${d}`] > g.area[`${sx}_leather_${d}`]));
-    REC.t604 = { iou: g.iou, area: g.area, sameBase: g.sameBase, furBig, snap: g.snap, sheet: g.sheet };
+    // ★[T1129 · ★재민 11-03 문 14-a ㄴ] 갖옷이 몸에 붙고 단이 무릎 위로 — 여(본 옷 단 = 무릎)는 갖옷 실루엣이 본 옷보다 **작다**(실측 앞 743 → 698 · 옆 607 → 552) ·
+    //   남(본 옷 단 = 시트 단)은 털 테 · 긴팔만큼 크다 ⇒ "크다"(T604 · T708)를 "갈린다"(갖옷 ↔ 가죽 실루엣 다른 화소 > 0 — 셰이더가 겉옷 자리로 옮긴다)로 · 넓이는 적기만.
+    const furDiff = ['M', 'F'].every((sx) => DIRS.every((d) => g.furXor[`${sx}_${d}`] > 0));
+    REC.t604 = { iou: g.iou, area: g.area, sameBase: g.sameBase, furDiff, furXor: g.furXor, snap: g.snap, sheet: g.sheet };
     console.log('    [표] (적기만) 남 몸 3D ↔ 시트 같은 판(서기 0판) — 옷 · 방향 · 실루엣 겹침(IoU) · 화소 3D / 시트');
     for (const k of META.clothKinds) for (const d of DIRS) console.log(`      ${k} · ${d} · ${g.iou[`${k}_${d}`]} · ${g.area[`M_${k}_${d}`]} / ${g.area[`sheet_${k}_${d}`]}`);
-    ok(g.sameBase && furBig,
-       'ⓓ ★[T604 · T708] 옷 → 그림 — 삼베·모시·가죽은 한 기하(실루엣 화소가 같다 · 무늬만 다르다) · 갖옷은 따로 지은 겉옷(셰이더가 겉옷 자리로 — 같은 몸·판·방향에서 실루엣이 크다) · 몸 둘 × 앞·옆',
-       DIRS.map((d) => `방향 ${d}: 남 가죽 ${g.area[`M_leather_${d}`]} → 갖옷 ${g.area[`M_fur_${d}`]} · 여 ${g.area[`F_leather_${d}`]} → ${g.area[`F_fur_${d}`]}`).join(' · '));
+    ok(g.sameBase && furDiff,
+       'ⓓ ★[T604 · T708 · T1129] 옷 → 그림 — 삼베·모시·가죽은 한 기하(실루엣 화소가 같다 · 무늬만 다르다) · 갖옷은 따로 지은 겉옷(셰이더가 겉옷 자리로 — 같은 몸·판·방향에서 실루엣이 갈린다 · [T1129] 몸에 붙는 겉옷이라 크기는 적기만) · 몸 둘 × 앞·옆',
+       DIRS.map((d) => `방향 ${d}: 남 가죽 ${g.area[`M_leather_${d}`]} → 갖옷 ${g.area[`M_fur_${d}`]}(갈림 ${g.furXor[`M_${d}`]}) · 여 ${g.area[`F_leather_${d}`]} → ${g.area[`F_fur_${d}`]}(갈림 ${g.furXor[`F_${d}`]})`).join(' · '));
     if (OUTPNG) {                                              // 큰 그림(같은 엔진 · 같은 투영 · 4배 · 서기 0판) — 메타·glb·무늬를 같은 문법으로 따로 싣는다(클라 무접촉)
       REC.t604.studio = await P.evaluate(async (o) => {
         const T = window.THREE, meta = await (await fetch('/assets/char3d/char3d_meta.json')).json();

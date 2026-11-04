@@ -480,72 +480,150 @@ def make(sex, base, rig, outdir, cell_px, pad_px, ClothesService, log=print):
         e = [K * (ellipse_r(brx, bry, 2 * math.pi * k / N) - ellipse_r(trx, try_, 2 * math.pi * k / N)) for k in range(N)]
         belt.append({"z": z3, "zs": zs, "c": c, "u": F_AX, "w": L_AX, "rad": [r + x for r, x in zip(rad, e)], "ease": e})
 
-    # ── ③′ [T708 ③] 갖옷 = 따로 지은 겉옷 — 본 옷과 같은 위상(링 수 · 차례 · 뚜껑)에 제 꼴(몸 굴곡을 안 따라간다) ─────────────────
-    #   재단 = 긴 웃옷 재단(`CUTS` 여 — 단 무릎 · 긴팔)을 남녀 다(갖옷 = 가장 따뜻한 옷 · 겉에 덧입는다 — `설계/고증_청동기옷.md` 부여 "裘" 를 덧입음) ·
-    #   꼴 = 천이 아래로 떨어진다(새 수 0 — 기존 "늘어짐" 규칙을 가슴까지 올린 것):
-    #     관 — 어깨관절보다 낮은 가장 높은 관 링(가슴)부터 아래는 **그 링 높이 ~ 가슴 사이 본 옷 링을 다 덮는 볼록 껍질**(허리·배·엉덩이 굴곡 0) ·
-    #          가슴 위(어깨·목)는 본 옷 링 그대로 · 단 = 무릎(본 옷 단이 무릎보다 위면 엉덩관절 아래 링을 엉덩관절 ↔ 무릎으로 고르게 다시 편다) ·
-    #     소매 — 곧은 통: 링마다 같은 반지름(소매가 덮는 팔 점(소매 위 끝 ~ 손목)의 팔 축 거리 최대 + 시트 소매 끝 링 여유) · 긴팔(짧은 소매 링 셋 = 위 끝 · 팔꿈치 · 손목) ·
-    #     허리띠 — 본 옷 자리 그대로(갖옷 안에 숨는다 — 자리 차 0) · 두께 = `FUR_PAD` × 키 비(관·소매 둘레에).
+    # ── ③′ ★★[T1129 · ★재민 11-03 문 14-a ㄴ "갈색 옷 버전은 너무 심하다 · 둘 다 돼지 같다"] 갖옷 = 몸에 붙는 얇은 겉옷 + 털 테 ─────────────────
+    #   T708 판(가슴 아래 볼록 껍질로 떨어지는 천 · 둘레마다 털 두께 · 단 무릎 · 곧은 통 긴팔 · 허리띠는 겉옷 안)이 어깨~무릎 한 덩어리 네모 통으로 읽혔다.
+    #   ⇒ 시트 갖옷(`char_render.build_cloth(coat=True)`)과 같은 문법 · 새 수 0 · 본 옷과 같은 위상(링 수 · 차례 · 뚜껑)은 그대로:
+    #     관 — 본 옷 링 그대로(가슴 · 허리 · 엉덩이 굴곡을 따른다 — 몸통 판은 얇은 가죽 면) · 단 = 시트 단(`SKIRT_R` 맨 아래 링 — 무릎 위):
+    #          남은 본 옷 단이 곧 시트 단 · 여(본 옷 단 = 무릎)는 엉덩관절 아래 링을 엉덩관절 ↔ 시트 단으로 고르게 다시 편다(둘레 = 그 높이의 본 옷 겉면 ·
+    #          몸 점이 겉옷 안에 들 때까지 그 두 방향을 민다 — 위 ⓓ 의 "민다"와 같은 규칙) ·
+    #     소매 — 긴팔(여 긴팔 규칙 그대로: 시트 `SLV_R` + 손목까지 `ARM_R` 링 · 여유 = 소매 끝 링의 여유 · 둘레 = 본 옷과 같은 식 `sleeve_rings`) — 팔을 따라 가늘어진다
+    #          (T708 의 "팔꿈치 아래는 안 좁아진다" · 털 두께를 걷었다) · 남(본 옷 반팔 링 셋)은 본 옷 소매 맨 아래 칸에 링을 더 넣어(본 옷 겉면 위 — 모양 무변)
+    #          같은 링 수로 맞춘다(자리 = 겉옷 긴팔 링의 길이 몫) ·
+    #     허리띠 — 본 옷 자리(겉옷이 얇아 띠가 겉에 선다 — 허리가 잘록) ·
+    #     털 테 — 털 두께(`FUR_PAD` × 키 비)는 **깃(관 맨 위) · 단(관 맨 아래) · 소매 끝(손목)에만**: 끝 링에서 겉면을 따라 두께만큼 든 자리까지 둘레 + 두께 ·
+    #          그 자리에 링 하나 더(두께 0 — 테의 윗면 단) · 본 옷은 같은 자리에 링 둘(그 자리 · 그 자리와 다음 링 사이 가운데 — 본 옷 겉면 위 · 모양 무변).
     padF = K * S["FUR_PAD"]
-    knee3 = Bd.bz("LeftLeg", "RightLeg")
-    shld3 = Bd.bz("LeftArm", "RightArm")
+    hemS_c = min(r[0] for r in S["SKIRT_R"])                           # 시트 단(남 본 옷 단과 같다)
+    hemC3 = to3(hemS_c)
     hem3 = rings[0]["z"]
-    jt = max(j for j, r in enumerate(rings) if r["z"] < shld3)              # 가슴 = 어깨관절보다 낮은 가장 높은 관 링
-    dirs2 = [(math.sin(2 * math.pi * k / N), -math.cos(2 * math.pi * k / N)) for k in range(N)]   # 방향 k(앞 F_AX · 왼 L_AX) → MPFB (x, y)
 
-    def zmap(z):
-        if hem3 > knee3 + 1e-9 and z < hip3:
-            return hip3 - (hip3 - z) * (hip3 - knee3) / (hip3 - hem3)
+    def _seg(a, b):
+        """두 링 사이 겉면 길이(가운데 사이 거리 · 평균 반지름 차의 빗변) — 시트 `_edge_band` 와 같은 자."""
+        return math.hypot(float(np.linalg.norm(np.asarray(b["c"], dtype=float) - np.asarray(a["c"], dtype=float))), (sum(b["rad"]) - sum(a["rad"])) / N)
+
+    def _lerp(a, b, t):
+        """두 링 사이 겉면 위 곧은 보간 링(가운데 · 둘레 · 여유 · 높이 · 틀 u·w 를 다시 곧추 · 소매 몫은 가까운 쪽)."""
+        r = {k: v for k, v in a.items() if k != "_v"}
+        ca, cb = np.asarray(a["c"], dtype=float), np.asarray(b["c"], dtype=float)
+        r["c"] = ca + t * (cb - ca)
+        r["rad"] = [x + t * (y - x) for x, y in zip(a["rad"], b["rad"])]
+        if "ease" in a and "ease" in b:
+            r["ease"] = [x + t * (y - x) for x, y in zip(a["ease"], b["ease"])]
+        for key in ("z", "zs"):
+            if key in a and key in b:
+                r[key] = a[key] + t * (b[key] - a[key])
+        u = a["u"] + t * (b["u"] - a["u"])
+        u = u / np.linalg.norm(u)
+        w = a["w"] + t * (b["w"] - a["w"])
+        w = w - (w @ u) * u
+        r["u"], r["w"] = u, w / np.linalg.norm(w)
+        if "part" in a and "part" in b:
+            r["part"] = a["part"] if 2 * t < 1 else b["part"]
+        return r
+
+    def _band(rb, rc, at_end):
+        """털 테 하나 — rc = 겉옷 링 · rb = 본 옷 링(같은 수 · 같은 차례) · at_end = 끝 링(목록 맨 뒤) 쪽이면 참.
+           겉옷: 끝 링에서 겉면을 따라 `padF` 안의 링 = 둘레 + padF · `padF` 자리에 링 둘(+ padF · 0) · 본 옷: 같은 칸에 링 둘(그 자리 · 다음 링과의 가운데)."""
+        if at_end:
+            nb, nc, info = _band(rb[::-1], rc[::-1], False)
+            return nb[::-1], nc[::-1], info
+        acc, j = 0.0, 0
+        while True:
+            if j + 1 >= len(rc):
+                raise SystemExit(f"[clothes] ★{sex} 털 테({padF:.4f}m)가 옷 길이보다 길다")
+            L = _seg(rc[j], rc[j + 1])
+            if acc + L > padF + _EPS:
+                break
+            acc += L
+            j += 1
+        t = (padF - acc) / L
+        if t <= _EPS:
+            raise SystemExit(f"[clothes] ★{sex} 털 테 끝이 링 자리와 겹친다(면 넓이 0)")
+        bc = _lerp(rc[j], rc[j + 1], t)
+        nc = [dict(r, rad=[x + padF for x in r["rad"]]) for r in rc[:j + 1]] + [dict(bc, rad=[x + padF for x in bc["rad"]]), bc] + list(rc[j + 1:])
+        nb = list(rb[:j + 1]) + [_lerp(rb[j], rb[j + 1], t), _lerp(rb[j], rb[j + 1], (1 + t) / 2)] + list(rb[j + 1:])
+        return nb, nc, {"rings": j + 1, "t": round(t, 6)}
+
+    def _contain(rs, label):
+        """겉옷 관 링 rs(아래→위) 안에 몸 점(관 무리 · 그 높이 안)이 다 드는지 — 모자라면 그 칸 두 링의 그 두 방향을 민다(위 ⓓ 와 같은 현 자 · 위상 그대로)."""
+        vi_ = np.where(tube & (co[:, 2] > rs[0]["z"]) & (co[:, 2] < rs[-1]["z"]))[0]
+        nb_ = 0
+        for _ in range(400):
+            worst, wj = 0.0, None
+            zr = [r["z"] for r in rs]
+            for i in vi_:
+                pv = co[i]
+                z = pv[2]
+                j = int(np.searchsorted(zr, z)) - 1
+                a, b = rs[j], rs[j + 1]
+                t = (z - a["z"]) / (b["z"] - a["z"])
+                c = a["c"] + t * (b["c"] - a["c"])
+                d = pv - c
+                x, y = float(d @ F_AX), float(d @ L_AX)
+                rv, th = math.hypot(x, y), math.atan2(y, x) % (2 * math.pi)
+                k = int(th // (2 * math.pi / N)) % N
+                k2 = (k + 1) % N
+                ra = (1 - t) * a["rad"][k] + t * b["rad"][k]
+                rb_ = (1 - t) * a["rad"][k2] + t * b["rad"][k2]
+                p1 = (ra * math.cos(k * 2 * math.pi / N), ra * math.sin(k * 2 * math.pi / N))
+                p2 = (rb_ * math.cos(k2 * 2 * math.pi / N), rb_ * math.sin(k2 * 2 * math.pi / N))
+                rg = _ray([p1, p2], (0.0, 0.0), th)
+                if rv - rg > max(worst, _EPS):
+                    worst, wj = rv - rg, (j, k, k2)
+            if wj is None:
+                return nb_
+            j, k, k2 = wj
+            for jj in (j, j + 1):
+                for kk in (k, k2):
+                    rs[jj]["rad"][kk] += worst / math.cos(math.pi / N)    # 현은 끝점 반지름의 cos(반 칸)배까지 덜 나간다 — 한 번에 닿게
+            nb_ += 1
+        raise SystemExit(f"[clothes] ★{sex} {label} 뚫림 잡기가 안 끝난다")
+
+    # 관 — 본 옷 링 그대로 · 여는 엉덩관절 아래를 시트 단까지로 다시 편다
+    def zmapC(z):
+        if hem3 < hemC3 - 1e-9 and z < hip3:
+            return hip3 - (hip3 - z) * (hip3 - hemC3) / (hip3 - hem3)
         return z
-
-    def pts2(r):
-        return [(float(r["c"][0] + r["rad"][k] * dirs2[k][0]), float(r["c"][1] + r["rad"][k] * dirs2[k][1])) for k in range(N)]
     coat_tube = []
-    for j, r in enumerate(rings):
-        z2 = zmap(r["z"])
-        if j <= jt:
-            P = []
-            for i in range(jt + 1):
-                if rings[i]["z"] >= z2 - 1e-9 or z2 < hem3:
-                    P += pts2(rings[i])
-            h = _hull(P)
-            xs, ys = [q[0] for q in h], [q[1] for q in h]
-            c2 = ((min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2)
-            rad = [_ray(h, c2, math.atan2(dirs2[k][1], dirs2[k][0])) + padF for k in range(N)]
-            c3 = np.array([c2[0], c2[1], z2])
+    for r in rings:
+        z2 = zmapC(r["z"])
+        if z2 == r["z"]:
+            coat_tube.append(dict(r, rad=list(r["rad"])))
         else:
-            rad = [x + padF for x in r["rad"]]
-            c3 = np.array(r["c"], dtype=float)
-        coat_tube.append({"z": z2, "c": c3, "u": F_AX, "w": L_AX, "rad": rad})
-    # 소매 — 긴 웃옷 재단의 시트 소매 표(짧은 소매면 여 재단과 같은 식으로 손목까지 늘린다) · 링 자리 = 본 옷 링 수 그대로
-    #   (긴팔 = 본 옷 자리 · 짧은 소매 링 셋 = 위 끝 · 팔꿈치 · 손목) · 반지름 = 본 옷과 같은 식(팔 점 + 시트 여유) · 팔꿈치 아래는 아래로 안 좁아진다(늘어짐) · + 두께
+            c, rad = tube_at(z2)
+            coat_tube.append(dict(r, z=z2, c=np.asarray(c, dtype=float), rad=list(rad)))
+    pushed = _contain(coat_tube, "겉옷 관") if hem3 < hemC3 - 1e-9 else 0
+    # 소매 — 긴팔(여 긴팔 규칙 그대로) · 남은 본 옷 반팔 맨 아래 칸에 링을 더 넣어 링 수를 맞춘다
     slv_long = list(slv)
     if cut["sleeve"] != "long":
         e_last = (slv[-1][1] - arm_at(slv[-1][0])[0], slv[-1][2] - arm_at(slv[-1][0])[1])
         for r in S["ARM_R"]:
             if zL1 - 1e-9 <= r[0] < slv[-1][0]:
                 slv_long.append((r[0], r[1] * S["LIMB_K"] + e_last[0], r[2] * S["LIMB_K"] + e_last[1]))
-    asc = sorted(slv_long)
-    nr = len(slv)                                                    # ★`n`(몸 점 수)과 다른 이름 — 덮어쓰면 아래 몸 무리가 앞 몇 점만 된다(실측: 웃옷 무리 3점 · 묶기가 머리로)
-    if cut["sleeve"] == "long":
-        zs_list = [r[0] for r in slv]
-    elif nr == 3:
-        zs_list = [slv[0][0], zU1, slv_long[-1][0]]                   # 위 끝 · 팔꿈치 · 손목(긴 재단 소매 끝 링 — 여 긴팔과 같은 끝)
-    else:
-        raise SystemExit(f"[clothes] ★{sex} 짧은 소매 링이 {nr} — 갖옷 긴팔(위 끝 · 팔꿈치 · 손목)로 못 편다")
-    tab_c = [(zs,) + _interp_rings(asc, zs, (1, 2)) for zs in zs_list]
-    coat_slv = {}
+    coat_slv, base_slv = {}, {}
     for side in ("L", "R"):
-        rs = sleeve_rings(side, tab_c)
-        for j in range(1, len(rs)):
-            if rs[j]["zs"] < zU1 - 1e-12:                               # 팔꿈치 아래 — 위 링보다 안 좁아진다(방향마다 큰 쪽)
-                rs[j]["rad"] = [max(a, b) for a, b in zip(rs[j]["rad"], rs[j - 1]["rad"])]
-        for r in rs:
-            r["rad"] = [x + padF for x in r["rad"]]
-        coat_slv[side] = rs
-    coat_info = {"cut": {"hem": "knee", "sleeve": "long"}, "drapeTop": jt, "drapeTopZ": round(rings[jt]["z"], 5), "hem3": round(coat_tube[0]["z"], 5),
-                 "sleeveRings": [round(r["zs"], 4) for r in coat_slv["L"]], "pad": round(padF, 6)}
+        rc = sleeve_rings(side, slv_long)
+        rb = sleeves[side]
+        nb0 = len(rb)
+        if nb0 > len(rc) or nb0 < 2:
+            raise SystemExit(f"[clothes] ★{sex}{side} 본 옷 소매 링 {nb0} — 겉옷 긴팔 링 {len(rc)} 로 못 맞춘다")
+        if nb0 < len(rc):
+            s_acc = [0.0]
+            for q in range(1, len(rc)):
+                s_acc.append(s_acc[-1] + float(np.linalg.norm(rc[q]["c"] - rc[q - 1]["c"])))
+            j0 = nb0 - 2
+            span = s_acc[-1] - s_acc[j0]
+            rb = list(rb[:j0 + 1]) + [_lerp(rb[j0], rb[j0 + 1], (s_acc[q] - s_acc[j0]) / span) for q in range(j0 + 1, len(rc) - 1)] + [rb[-1]]
+        coat_slv[side], base_slv[side] = rc, rb
+    # 털 테 — 단 · 깃 · 소매 끝
+    tube_b, tube_c, band_hem = _band(rings, coat_tube, False)
+    tube_b, tube_c, band_col = _band(tube_b, tube_c, True)
+    band_cuff = {}
+    for side in ("L", "R"):
+        base_slv[side], coat_slv[side], band_cuff[side] = _band(base_slv[side], coat_slv[side], True)
+    coat_info = {"cut": {"hem": "sheet", "sleeve": "long"}, "fit": "body", "hemS": hemS_c, "hem3": round(tube_c[0]["z"], 5), "pushed": pushed,
+                 "sleeveRings": [round(r[0], 4) for r in slv_long], "pad": round(padF, 6),
+                 "bands": {"hem": band_hem, "collar": band_col, "cuff": band_cuff["L"]}, "belt": "visible"}
 
     # ── ④ 메시 — 관 · 소매 둘 · 띠 (네모 면만 · 열린 관) · UV(칸 안 고른 결 밀도) · 점 무리 ───────────────────────
     def perim(r):
@@ -554,8 +632,11 @@ def make(sex, base, rig, outdir, cell_px, pad_px, ClothesService, log=print):
 
     def length(rs):
         return float(sum(np.linalg.norm(b["c"] - a["c"]) for a, b in zip(rs, rs[1:])))
-    isl = [("tube", rings), ("slvL", sleeves["L"]), ("slvR", sleeves["R"]), ("belt", belt)]
-    isl_coat = [("tube", coat_tube), ("slvL", coat_slv["L"]), ("slvR", coat_slv["R"]), ("belt", [dict(r) for r in belt])]   # [T708 ③] 같은 차례 · 같은 링 수
+    isl = [("tube", tube_b), ("slvL", base_slv["L"]), ("slvR", base_slv["R"]), ("belt", belt)]                 # [T1129] 털 테 링 · 남 소매 링을 더 넣은 본 옷(모양 무변)
+    isl_coat = [("tube", tube_c), ("slvL", coat_slv["L"]), ("slvR", coat_slv["R"]), ("belt", [dict(r) for r in belt])]   # [T708 ③] 같은 차례 · 같은 링 수
+    for (nm, rb_), (_nm, rc_) in zip(isl, isl_coat):
+        if len(rb_) != len(rc_):
+            raise SystemExit(f"[clothes] ★{sex} {nm} 본 옷 링 {len(rb_)} ≠ 겉옷 링 {len(rc_)} — 같은 위상이 아니다")
     dims = {nm: (max(perim(r) for r in rs), length(rs)) for nm, rs in isl}
     Wpx, Hpx = cell_px[0] - 2 * pad_px, cell_px[1] - 2 * pad_px            # 칸 안쪽(번짐 막이 뺀) — export `remap_uv` 와 같은 자
     rows = [["tube"], ["slvL", "slvR"], ["belt"]]
@@ -572,6 +653,18 @@ def make(sex, base, rig, outdir, cell_px, pad_px, ClothesService, log=print):
             x += dims[nm][0] * dpx + gap
         vtop -= h * dpx + gap
     trim = (place["belt"][1] / Hpx, (place["belt"][1] + dims["belt"][1] * dpx) / Hpx)
+
+    def _vrange(nm, rs, j0, j1):
+        """[T1129] 섬 nm 의 링 j0 ~ j1 사이 면들의 UV 네모(u0 · u1 · v0 · v1 — 칸 안쪽 비) — 털 테 칸(갖옷 무늬가 털 결을 칠한다)."""
+        acc = [0.0]
+        for q in range(1, len(rs)):
+            acc.append(acc[-1] + float(np.linalg.norm(np.asarray(rs[q]["c"]) - np.asarray(rs[q - 1]["c"]))))
+        x0, y0 = place[nm]
+        va, vb = (y0 + (dims[nm][1] - acc[j0]) * dpx) / Hpx, (y0 + (dims[nm][1] - acc[j1]) * dpx) / Hpx
+        return [round(x0 / Wpx, 6), round((x0 + dims[nm][0] * dpx) / Wpx, 6), round(min(va, vb), 6), round(max(va, vb), 6)]
+    nt = len(tube_b)
+    fur_uv = [_vrange("tube", tube_b, 0, band_hem["rings"] + 1), _vrange("tube", tube_b, nt - 1 - (band_col["rings"] + 1), nt - 1)] + \
+             [_vrange(nm, base_slv[nm[-1]], len(base_slv[nm[-1]]) - 1 - (band_cuff[nm[-1]]["rings"] + 1), len(base_slv[nm[-1]]) - 1) for nm in ("slvL", "slvR")]
 
     def build(variant):
         V, Fc, UV, grp = [], [], [], []
@@ -649,7 +742,8 @@ def make(sex, base, rig, outdir, cell_px, pad_px, ClothesService, log=print):
     os.makedirs(outdir, exist_ok=True)
     out = {"info": {"rings": len(rings), "inserted": inserted, "bumped": bumped, "sheetRings": len(srings), "belt": len(belt),
                     "sleeve": len(sleeves["L"]), "K": round(K, 6), "hem3": round(rings[0]["z"], 5),
-                    "hemS": srings[0][0], "trimV": [round(trim[0], 6), round(trim[1], 6)], "cut": dict(cut), "coat": coat_info},
+                    "hemS": srings[0][0], "trimV": [round(trim[0], 6), round(trim[1], 6)], "cut": dict(cut), "coat": coat_info,
+                    "meshRings": {nm: len(rs) for nm, rs in isl}, "furUV": fur_uv},
            "pad": float(padF)}
     # ★묶기 = MPFB `ClothesService.create_mhclo_from_clothes_matching` 의 고리 그대로(같은 클래스 · 같은 인자) —
     #   다른 것은 하나: 몸 단면표(`MeshCrossRef` · 몸 19,158점 · 무리 백여 개 — 한 번에 30초)를 미리 한 번 짓는다(MPFB 는 부를 때마다 새로 짓는다 ·
