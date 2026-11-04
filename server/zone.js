@@ -5065,13 +5065,15 @@ function npcStep(npc, dt, now) {
       if (r && Math.hypot(r.x - npc.x, r.y - npc.y) < GATHER_RANGE) {
         // 직접 채집 (tryGather 로직 간소화)
         const _hp0 = r.hp;   // ★[T1126] 친 앞 hp
-        r.hp -= 1;
+        let _dmg = 1;   // ★[T1146] NPC 한 타 배수(종전 1 · 도구 무관) — 바위면 사람 `gatherResource` 와 같은 함수가 그 타에 떨어지는 hp 점으로 바꾼다
+        if (T1146_ROCK && r.type === 'rock') _dmg = _t1146Cut(r, _dmg, true);
+        r.hp -= _dmg;
         { const _y = _t1126HitYield(r, _hp0); if (_y > 0) _t1126Give(npc, _y); _t1126Note(npc, r, _y); }   // ★[T1126] 바위 hp 한 점 = 돌 하나 — 플레이어 `gatherResource` 와 같은 문(정본 하나) · 계측 한 줄(켬 · 끔 둘 다 — 세계 0)
         if (r.hp <= 0) {
           const loot = _t495Rest(r, lootOfResource(r));   // ★정본 하나 — 플레이어와 같은 표를 쓴다(사본 금지) · ★[T495] 남은 단위만(장부 없으면 그 객체 그대로)
           for (const [k, v] of Object.entries(loot)) { npc.inventory[k] = (npc.inventory[k] || 0) + v; if (T732_MOMENT) Lots.note(npc, k, v, zoneGameDay()); }   // ★[T732] NPC 손도 얻은 순간(곁 장부 — 몸 필드 0)
           _takeResourceEntity(r, true);     // ★[T325] 빼는 여섯 줄을 **문 하나**로 모았다(아래 정의 · 행동 무변)
-        } else {
+        } else if (r.hp !== _hp0) {   // ★[T1146] 깎기만 한 타(hp 그대로)는 저장 · 방송 0 — 끔이면 늘 참(한 타 = 1 점 · 종전 차례 그대로)
           if (r.dbId) db.updateResourceHp(r.dbId, r.hp);
           else _t978Note(r);   // ★[T978] 시드 개체(행 없음)는 남은 hp 장부로
           broadcast({ type: 'resource_update', id: r.id, hp: r.hp });
@@ -10348,9 +10350,11 @@ function trySortOre(player) {
   const led = player.oreLedger || {};
   const got = {};
   const carry = (player.oreCarry && typeof player.oreCarry === 'object') ? player.oreCarry : (player.oreCarry = {});
+  let _t1146Kg = 0;   // ★[T1146 ②] 맥석 kg — 켬이면 버리지 않는다(아래 `_t1146Gangue` — 돌 · 자갈 · 부스러기)
   for (const k of Object.keys(led)) {
     const kg = led[k]; if (!(kg > 0)) { delete led[k]; continue; }
     delete led[k];
+    if (k === 'stone' && T1146_STONE_RULE) { _t1146Kg += kg; continue; }   // ★[T1146 ②] 맥석 = 돌(끔이면 다음 줄 — 종전 폐석)
     if (k === 'stone') { got.stone_waste = +((got.stone_waste || 0) + kg).toFixed(1); continue; }   // ★맥석은 폐석 — 인벤에 안 넣는다
     // ★★[재민 확정 2026-08-02 노 건설] 철은 선광해도 금속이 아니라 **정광(iron_ore)**이다.
     //   구리·주석 등 청동기 금속은 도가니에 녹으므로 선광→금속을 "간이 제련 포함"으로 추상하지만,
@@ -10369,6 +10373,7 @@ function trySortOre(player) {
     carry[k] = +rem.toFixed(3);
     if (whole > 0) { player.inventory[k] = (player.inventory[k] || 0) + whole; got[k] = whole; }
   }
+  const _t1146Txt = T1146_STONE_RULE ? _t1146Gangue(player, _t1146Kg) : '';   // ★[T1146 ②] 맥석 → 짐(돌 · 자갈) · 알림 꼬리(끔 = 빈 글자)
   player.inventory.ore_chunk = 0; delete player.inventory.ore_chunk;
   player.oreLedger = led;
   // ★[2026-08-02d 라벨 정합] RESOURCES 만 보면 **영문 키가 그대로 샌다**: 철 광맥을 선광하면 산출 키가
@@ -10387,9 +10392,23 @@ function trySortOre(player) {
   }
   send(player.ws, {
     type: 'notice',
-    text: `⚒ 선광 ${n.toFixed(0)}kg → ` + (parts.length ? parts.join(', ') : '광석 없음') + (got.stone_waste ? ` · 맥석 ${got.stone_waste}kg 버림` : '') + score
+    text: `⚒ 선광 ${n.toFixed(0)}kg → ` + (parts.length ? parts.join(', ') : '광석 없음') + (got.stone_waste ? ` · 맥석 ${got.stone_waste}kg 버림` : '') + _t1146Txt + score
   });
   savePlayer(player);
+}
+// ★[T1146 ②] 선광 맥석 → 돌 · 자갈 · 부스러기 — 무게 보존(`StoneRule.split` · 돌 · 자갈 kg 은 `weights` 정본). 짐에 넣고 알림 꼬리 한 마디를 돌려준다.
+//   근거: 자갈 한 알(정본 0.6 kg)에 못 미치는 조각은 짐의 단위가 아니다 — 선광한 자리의 부스러기 더미로 남는다(위 머리글 "맥석은 갱구 옆 폐석더미로" 의 그 더미 · 가져가지 않는다).
+function _t1146Gangue(player, kg) {
+  if (!(kg > 0)) return '';
+  const sp = StoneRule.split(kg, Weights.kgOf('stone'), Weights.kgOf('pebble'));
+  for (const [it, n] of [['stone', sp.stone], ['pebble', sp.pebble]]) {
+    if (!(n > 0)) continue;
+    player.inventory[it] = (player.inventory[it] || 0) + n;
+    if (T732_MOMENT) Lots.note(player, it, n, zoneGameDay());   // ★[T732] 얻은 순간
+  }
+  const S = _t1146Stat; S.sortKg += kg; S.sortStone += sp.stone; S.sortPebble += sp.pebble; S.crumbKg += sp.crumbKg;
+  const got = [sp.stone > 0 ? `${ITEM_LABEL_SERVER.stone} ${sp.stone}` : '', sp.pebble > 0 ? `${ITEM_LABEL_SERVER.pebble} ${sp.pebble}` : ''].filter(Boolean);
+  return ` · 맥석 ${kg.toFixed(1)}kg → ` + got.join(', ') + (sp.crumbKg > 0 ? `${got.length ? ' · ' : ''}부스러기 ${+sp.crumbKg.toFixed(2)}kg 그 자리에` : '');
 }
 
 // 주기적 정리 (15분) — 만땅 회복된 셀 레코드 제거. minedCells만 순회(파인 셀, 한정적)라 가벼움.
@@ -11125,6 +11144,7 @@ function gatherResource(player, best) {
     wearEquipment(player, 'tool', 1);
   }
   const _hp0 = best.hp;   // ★[T1126] 친 앞 hp — 깎인 점 수만큼 그 자리에서 돌(바위만 · 끔 = 0)
+  if (T1146_ROCK && best.type === 'rock') dmg = _t1146Cut(best, dmg);   // ★[T1146] 바위 — 한 타 kg(배수 × 금 간 돌 한 타 kg)을 바위에 쌓아 돌 한 개 kg 이 찬 만큼만 hp 점(0 이면 이 타는 깎기만)
   best.hp -= dmg;
   // 장착 도구 내구도 -1
   if (eqInst) consumeEquippedDurability(player, 1);
@@ -11149,10 +11169,13 @@ function gatherResource(player, best) {
     broadcast({ type: 'resource_removed', id: best.id });
     savePlayer(player);
   } else {
-    if (best.dbId) db.updateResourceHp(best.dbId, best.hp);
-    else _t978Note(best);   // ★[T978] 시드 개체(행 없음)는 남은 hp 장부로
-    broadcast({ type: 'resource_update', id: best.id, hp: best.hp });
+    if (best.hp !== _hp0) {   // ★[T1146] hp 가 그대로인 타(바위를 깎기만 한 타)는 저장 · 방송 0 — 끔이면 늘 참(한 타는 늘 1 점 이상 깎는다 · 종전 차례 그대로)
+      if (best.dbId) db.updateResourceHp(best.dbId, best.hp);
+      else _t978Note(best);   // ★[T978] 시드 개체(행 없음)는 남은 hp 장부로
+      broadcast({ type: 'resource_update', id: best.id, hp: best.hp });
+    }
     if (_t1126Y > 0) { sendInventory(player); savePlayer(player); }   // ★[T1126] 친 그 자리에서 손에 든 돌(부서진 타는 위 갈래가 이미 보낸다)
+    if (T1146_ROCK && best.type === 'rock') send(player.ws, { type: 'notice', text: _t1146Say(best, _t1126Y), kind: 'gather' });   // ★[T1146] 깎인 kg 한 줄(돌 한 개가 안 된 타도 보인다)
   }
 }
 
@@ -13320,6 +13343,7 @@ function __testBind() {
     T1065_TOOL_GATE, _t1065Gate, t1065Stat: _t1065Stat, PLAYER_ATTACK_DAMAGE, arrows,   // ★[T1065] 도구 문 하네스(`test-t1065-tool-gate` · 내보내기만)
     T1120_NEXT_TOOL, _t1120Cfg, tryHutStart,   // ★[T1120] 다음 막힘 하네스(`test-t1120-next-tool` — 거절 알림 `need` · welcome 표 · 움집 터파기 문 · 내보내기만)
     T1126_ROCK_YIELD, T1126_ROCK_HP0, _t1126Rho, _t1126RockStones, _t1126HitYield, _t1126Give, t1126Stat: () => Object.assign({}, _t1126Stat),   // ★[T1126] 바위 하나에서 돌 여러 개 하네스(`test-t1126-rock-yield` — 내보내기만)
+    T1146_STONE_RULE, T1146_ROCK, T1146_K_BED, _t1146Cut, _t1146Gangue, t1146Chip: (id) => _t1146Chip.get(id) || 0, t1146Stat: () => Object.assign({}, _t1146Stat),   // ★[T1146] 돌 규칙 하나 하네스(`test-t1146-stone-rule` — 내보내기만)
     // ── ★[T636] 사체 드롭 kg E2E(test-drop-kg.js) ── 실서버 spawnCorpse/butcherCorpse 를 그대로 쓴다(읽기·부르기만)
     spawnCorpse, butcherCorpse, corpses, t1025Corpse: _t1025Corpse,   // ★[T1025] 사체 장부 미룸 셈(탐침이 읽는다)
     // ── 조업 진척 계약 E2E(2026-08-02e ⑤) ── 시간은 벽시계라 하네스가 job.until 을 당겨 검증한다
@@ -15045,6 +15069,38 @@ function _t1126Give(body, n) {
   if (!body || !body.inventory || !(n > 0)) return;
   body.inventory.stone = (body.inventory.stone || 0) + n;
   if (T732_MOMENT) Lots.note(body, 'stone', n, zoneGameDay());
+}
+// ★★[T1146 2026-11-04 · ★재민 11-04 "돌 규칙은 네 말 따를게" · 족보 744] 돌 규칙 하나 — 정본 `server/stone-rule.js`(출처 · 유도 · 무게 보존)
+//   손잡이 `T1146_STONE_RULE`(켬 기본 후보 · `=0` = 종전 바이트):
+//   ① 바위 한 타 = 도구 배수(`dmg` — `TOOL_EFFECTS.gatherStoneMult` 그대로 · NPC 1) × 금 간 돌 한 타 kg — 깎인 kg 을 바위마다 쌓아(`_t1146Chip` ·
+//      광맥 셀 타수 `rec.w` 처럼 몸 아니라 바위의 몫 · 둘이 같이 쳐도 한 장부) 돌 한 개 kg(`weights` 석괴)이 찰 때마다 hp 한 점(= 돌 하나 · T1126 그대로).
+//      ⇒ 바위 hp(남은 돌 수) · 그림 단계(hp 비율)는 남은 kg 비율 그대로다(종전 꼴 · 차이는 돌 한 개 안쪽). T1126 이 켜져야 선다(hp = 돌 수 정본 — 끄면 hp 4 는 돌 수가 아니다).
+//      암반(땅 · 광맥 칸)은 같은 식의 다른 돌 종류 — 채굴 정본(곡괭이 배수 · 60타 · 3.5 kg)이 그 식 그 자체라 `mineOreCell` 글자는 안 바뀐다.
+//   ② 선광 — 맥석 kg 을 버리지 않는다: 돌 · 자갈 · 부스러기(`StoneRule.split` · 아래 `trySortOre`)
+//   ③ NPC 손의 돌 · 자갈 — 곳간에 닿는 순간 곳간으로(`villages.js` `_t1146HandIn` · T733 부산물 문과 같은 몸통)
+//   ⚠깎였지만 돌 한 개가 안 된 kg 은 저장하지 않는다(재시작이면 돌 한 개 안쪽을 잃는다 · 보고 회부).
+const StoneRule = require('./stone-rule');
+const T1146_STONE_RULE = process.env.T1146_STONE_RULE !== '0';
+const T1146_ROCK = T1146_STONE_RULE && T1126_ROCK_YIELD;
+// 암반 한 타 kg(배수 1) — 채굴 정본 셋(덩이 kg · 덩이당 타수 · 곡괭이 배수)에서 · 바위는 그 × 금 간 돌 배수(`StoneRule.CRACK_X`)
+const T1146_K_BED = StoneRule.kIntact(Specialty.CHUNK_KG, Specialty.MINE_SWINGS_PER, TOOL_EFFECTS.pickaxe.gatherStoneMult);
+const _t1146Chip = new Map();   // 바위 id → 깎였지만 아직 돌 한 개가 안 된 kg
+const _t1146Stat = { pKg: 0, nKg: 0, sortKg: 0, sortStone: 0, sortPebble: 0, crumbKg: 0 };   // 계측 전용(세계 0) — 바위에서 깎인 kg(사람 · NPC) · 선광 맥석 kg → 돌 · 자갈 · 부스러기
+// 이번 타에 바위에서 떨어지는 hp 점 수(= 돌 수) — `mult` = 그 몸이 친 배수 · 장부(`_t1146Chip`)를 고친다 · hp 는 부르는 쪽이 종전 줄로 깎는다
+function _t1146Cut(r, mult, isNpc) {
+  const kgS = Weights.kgOf('stone');
+  if (!r || !(kgS > 0) || !(r.hp > 0)) return 0;
+  const kg = StoneRule.kgPerSwing(mult, 'cracked', T1146_K_BED);
+  if (isNpc) _t1146Stat.nKg += kg; else _t1146Stat.pKg += kg;
+  const sp = StoneRule.split((_t1146Chip.get(r.id) || 0) + kg, kgS, 0);
+  const cut = Math.min(r.hp, sp.stone);
+  if (cut >= r.hp) _t1146Chip.delete(r.id); else _t1146Chip.set(r.id, +(sp.crumbKg + (sp.stone - cut) * kgS).toFixed(6));
+  return cut;
+}
+// 사람에게 한 줄 — 돌 한 개가 안 된 타도 깎인 것이 보이게(땅 채굴 "캐는 중 n/60 · 남은 광맥" 과 같은 꼴 · 이모지 0 — 종류는 `kind: 'gather'` 칸이 나른다)
+function _t1146Say(r, y) {
+  const kgS = Weights.kgOf('stone'), c = (_t1146Chip.get(r.id) || 0).toFixed(1);
+  return y > 0 ? `바위 — 돌 ${y}개 떼어 냄 · 다음 돌 ${c}/${kgS}kg · 남은 돌 ${r.hp}` : `바위 깎는 중 ${c}/${kgS}kg · 남은 돌 ${r.hp}`;
 }
 // ★[T194] **막은 원을 돌려준다.** 판정은 한 글자도 안 바뀐다 — `isBlockedByTree` 가 이 함수의
 //   불리언 껍데기가 됐을 뿐이다(사본 0). 접선을 그리려면 중심과 반지름이 필요하고, 그 둘은

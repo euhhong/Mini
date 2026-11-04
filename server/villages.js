@@ -9621,6 +9621,26 @@ function _t733HandIn(vil, npc) {
   }
   return got;
 }
+// ★★[T1146 ③ 2026-11-04 · T1126 회부 4] **NPC 손의 돌 · 자갈 — 곳간에 닿는 순간 곳간 그 칸에.**
+//   종전: 곳간 입구는 통나무(T325) · 채집(T347) · 원석(T724) · 벤 그루 부산물(T733)뿐 — 바위를 친 NPC 손의 돌(T1126 한 타마다) · 자갈(부서질 때 전리품)은 손에 남았다.
+//   ⇒ T733 부산물 문과 **같은 몸통**(`actToGranary` — 세금 · 곳간 · 오늘치 · 건수 칸 없음 `null`)으로 넣는다 — 돌은 바위 몸에서 나온 부산물이라 수식 몫(수요 문)이 없다
+//     (econ 돌 수식은 채집꾼 몫이다 — 바위를 치는 몸은 광맥 없는 마을의 광부 현장 갈래 `JOB_RES.miner` 뿐 · 그 수식은 원석을 낸다).
+//   부르는 자리 둘 = 곳간에 닿는 두 순간(T720 해 질 녘 정산 `_t720Settle` · 곳간② 저장 `_lifeGranStep`) — 돌만 든 손은 그것 때문에 곳간에 가지 않는다(`_t720Held` 무변).
+//   손잡이 `T1146_STONE_RULE`(켬 기본 후보 · `=0` = 종전 — 손에 남는다). 곳간이 안 받은 몫은 손에(받은 만큼만 뺀다).
+const T1146_STONE_RULE = process.env.T1146_STONE_RULE !== '0';
+const _T1146_KEYS = ['stone', 'pebble'];
+function _t1146HandIn(vil, npc) {
+  if (!T1146_STONE_RULE || !vil || !vil.econ) return 0;
+  const inv = npc && npc.inventory; if (!inv) return 0;
+  let got = 0;
+  for (const k of _T1146_KEYS) {
+    const u = inv[k] || 0; if (!(u > 0)) continue;
+    const g = _lifeEcon().actToGranary(vil.econ, k, u, null, null) || 0; got += g;
+    const r = +(u - g).toFixed(6); inv[k] = r > 1e-9 ? r : 0;
+    if (g > 0) { const G = vil._t1146Gr || (vil._t1146Gr = {}); G[k] = +((G[k] || 0) + g).toFixed(6); }   // 계측 전용 누계(곳간에 든 몫 · 켠 팔에만 선다)
+  }
+  return got;
+}
 //   ⓑ 헤드리스 — 벤 그루의 두 칸을 곳간에 · 안 받은 몫은 마을 짐에
 function _t733LootIn(vil, loot) {
   if (!loot) return 0;
@@ -12495,6 +12515,7 @@ function _t720Settle(vil, npc, now, S) {
     //   ★[T733 ②] 켬 = 그날 새로 딴 손만 걸은 몸 도장(남긴 몫만 든 손은 넣기만 한다) · 끔 = 옛 줄(손에 걷는 품목이 있으면 도장)
     if (u > 0) { const nf = _t733NewForage(npc, u); _t347Deliver(vil, npc); const d = _bodyDay(npc, now); if (S.fw !== d) { if (T733_FELL_LOOT) vil._t733PreO = (vil._t733PreO | 0) + 1; if (nf) { S.fw = d; vil._t347PreWalked = (vil._t347PreWalked | 0) + 1; } } }
   }
+  if (npc.inventory && (npc.inventory.stone > 0 || npc.inventory.pebble > 0) && T1146_STONE_RULE) _t1146HandIn(vil, npc);   // ★[T1146 ③] 손의 돌 · 자갈도 곳간에(손에 있을 때만 · 끔 = 손에 남는다 · 종전)
 }
 function _t720Step(vil, npc, now, fv, dayR, day) {
   let S = npc._t720;
@@ -12539,7 +12560,7 @@ function _lifeGranStep(vil, npc, now) {
   //   서버는 상태가 없고 스케줄 게이트를 매 틱 재평가하므로, 도장이 없으면
   //   퇴근 훅이 저장(짐>0)↔인출(빈손)을 무한 왕복시킨다 — 집에 못 간다.
   if (t.draw) { const q = Math.min(G_DRAW, _granStockOf(vil, g)); _granStockAdd(vil, g, -q); _handAdd(npc, q); npc._granD = state.dayMs ? _bodyDay(npc, now) : 0; }
-  else { _granStockAdd(vil, g, _handOf(npc)); _handSet(npc, 0); if (npc._t368H) _t368Deliver(vil, npc, 'gran'); if (npc.inventory && (npc.inventory.wood || 0) > 0) _t561Ladder(vil, npc, now); if (npc.inventory && npc.inventory.ore_chunk > 0) _t724Deliver(vil, npc, 'gran', now); }   // ★[T724 ②] 켠 팔은 원석도(끄면 몸 손에 원석이 없다 · `_t724Deliver` 첫 줄도 손잡이) · ③ 정산(물리 장부만 — econ 무접촉 · ★[T316] 손은 `inventory`) · ★[T368] 켠 팔은 **이 귀환이 곳간 입고**다(손의 작물 → `_farmGranary`) · ★[T561 ②ⓑ] 켠 팔은 통나무도(끄면 `_t561Ladder` 첫 줄에서 돌아간다)
+  else { _granStockAdd(vil, g, _handOf(npc)); _handSet(npc, 0); if (npc._t368H) _t368Deliver(vil, npc, 'gran'); if (npc.inventory && (npc.inventory.wood || 0) > 0) _t561Ladder(vil, npc, now); if (npc.inventory && npc.inventory.ore_chunk > 0) _t724Deliver(vil, npc, 'gran', now); if (npc.inventory && (npc.inventory.stone > 0 || npc.inventory.pebble > 0) && T1146_STONE_RULE) _t1146HandIn(vil, npc); }   // ★[T1146 ③] 손의 돌 · 자갈도(손에 있을 때만 묻는다 — 옆 갈래들과 같은 꼴 · 끔 = 손에) · ★[T724 ②] 켠 팔은 원석도(끄면 몸 손에 원석이 없다 · `_t724Deliver` 첫 줄도 손잡이) · ③ 정산(물리 장부만 — econ 무접촉 · ★[T316] 손은 `inventory`) · ★[T368] 켠 팔은 **이 귀환이 곳간 입고**다(손의 작물 → `_farmGranary`) · ★[T561 ②ⓑ] 켠 팔은 통나무도(끄면 `_t561Ladder` 첫 줄에서 돌아간다)
   npc._granTask = null;
   return false;                                                      // 소유권 반납 → 이번 틱부터 평소 일과
 }
@@ -15603,6 +15624,9 @@ module.exports = { t750CastPre, t750Stat: () => _t750Stat, t719ReachPre, t719Sta
       put: (vil, k, u) => _t733PackPut(vil, k, u), packIn: (vil) => _t733PackIn(vil), newForage: (p, u) => _t733NewForage(p, u),
       deliver: (vil, npc) => _t325Deliver(vil, npc), fdeliver: (vil, npc) => _t347Deliver(vil, npc), settle: (vil, npc, now, S) => _t720Settle(vil, npc, now, S),
       handsIn: (vil) => _lifeHandsIn(vil), daily: (vil) => _lifeDaily(vil), get ON() { return T733_FELL_LOOT; }, get T720() { return T720_LON_DAY; } },
+    // ★[T1146 ③] NPC 손의 돌 · 자갈 → 곳간 — 같은 규약(최소 주입구 하나 · 정본 함수를 그대로 부른다 · 하네스가 넣는 규칙을 다시 적으면 그게 사본이다)
+    _t1146Probe: { keys: () => _T1146_KEYS.slice(), handIn: (vil, npc) => _t1146HandIn(vil, npc), settle: (vil, npc, now, S) => _t720Settle(vil, npc, now, S),
+      get ON() { return T1146_STONE_RULE; }, get T720() { return T720_LON_DAY; } },
     // ★[T743] 해 질 녘 통나무 도장 — 같은 규약(최소 주입구 하나 · 정본 함수를 그대로 부른다 · 하네스가 도장 규칙을 다시 적으면 그게 사본이다)
     _t743Probe: { settle: (vil, npc, now, S) => _t720Settle(vil, npc, now, S), daily: (vil) => _lifeDaily(vil), handsIn: (vil) => _lifeHandsIn(vil), newWood: (p) => _t717NewWood(p),
       get ON() { return T743_DUSK_STAMP; }, get T717() { return T717_WOOD_HAND; }, get T720() { return T720_LON_DAY; } },

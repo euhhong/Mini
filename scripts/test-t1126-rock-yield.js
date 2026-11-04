@@ -137,8 +137,10 @@ if (process.env.T1126_CHILD === '1') {
 let pass = 0, fail = 0;
 const ok = (c, m, x) => { c ? pass++ : fail++; console.log((c ? '  ✓ ' : '  ✗ ') + m + (x !== undefined && x !== '' ? `  ${x}` : '')); };
 const sec = (t) => console.log('\n' + t);
+//   ★[T1146] 아이 판은 돌 규칙 하나(`T1146_STONE_RULE`)를 끈 세계에서 잰다 — 이 하네스가 무는 것은 T1126 층(hp 한 점 = 돌 하나 · 한 타 = 도구 배수만큼 점)이고,
+//     T1146 은 그 위에서 한 타에 깎이는 점을 kg 규칙으로 바꾼다(그 판정은 `test-t1146-stone-rule` 이 문다 · 두 층을 한 판에 섞지 않는다).
 const run = (env) => {
-  const r = spawnSync(process.execPath, [__filename], { cwd: ROOT, env: Object.assign({}, process.env, { T1126_CHILD: '1' }, env), encoding: 'utf8', timeout: 600000, maxBuffer: 64 << 20 });
+  const r = spawnSync(process.execPath, [__filename], { cwd: ROOT, env: Object.assign({}, process.env, { T1126_CHILD: '1', T1146_STONE_RULE: '0' }, env), encoding: 'utf8', timeout: 600000, maxBuffer: 64 << 20 });
   const line = (r.stdout || '').split('\n').find((l) => l.startsWith('@@T1126 '));
   if (!line) { console.log(`  (아이 ${JSON.stringify(env)} 끝 코드 ${r.status} · ${(r.stderr || '').slice(-400)})`); return null; }
   return JSON.parse(line.slice(8));
