@@ -10373,6 +10373,7 @@ function _t368Deliver(vil, npc, why) {
   return got;
 }
 function _lifeDoTask0(vil, npc, k, day) {
+  if (T1144_LIFE_EVENT) _t1144Dirty(vil, k);   // ★[T1144 ⓑ] 이 칸을 한다 — 다음 물음 때 다시 잰다(아래가 칸을 바꾸든 안 바꾸든)
   const e = vil._crop.get(k), nong = !vil._drySet.has(k);
   const ci = k.indexOf(','), par = (+k.slice(0, ci) + +k.slice(ci + 1)) & 1;
   if (!e) { const cr = _villageCropFor(vil, nong ? '논' : '밭', _Crops().monthOf(day), par); if (!cr) return false; vil._crop.set(k, { c: cr, p: day, td: day, w: day, wd: 0, ps: 0, q: 1 }); if (npc) _lifeAct(npc, nong ? '모내기' : '파종'); return true; }
@@ -10486,7 +10487,58 @@ function lifeFarmDay(vil, day, farmerN, onDid) {
   }
   return total;
 }
+// ★★[T1144 ① 2026-11-04 · ★재민 11-04 문 18 ㄱ · 족보 741 · 손잡이 `T1144_LIFE_EVENT`(기본 끔 · `'1'` 켬 · `'verify'` = 두 길 대조 · 끔 = 아래 종전 줄 그대로)]
+//   **농부 밭 칸 훑기는 사건 때만 다시 묻는다.** T1140: 낮 생활 층 0.71 µs/사람 중 `_lifeNextFarmCell` 0.17(`_cellTask` 0.16 · `cropTaskOf` 0.13) —
+//   농부 결정마다 밭 칸 전부(수백)의 그날 일을 다시 묻는다. 그 답(칸 하나의 일 0 ~ 5)이 바뀌는 사건 전수(보고 T1144 §1 표):
+//     ⓐ 날이 바뀐다(`day` — 익음 · 휴면 · 물때 · 김매기 차례 · 빈 칸 특산 달) ⓑ 그 칸을 한다(`_lifeDoTask0` — 파종 · 수확 · 방제 · 물대기 · 김매기 · 그루터기)
+//     ⓒ 하루 틱(`cropDayTick` — 병충해 · 품질 — 마을 칸 전부) ⓓ 밭 칸이 는다(개간 `_farmSet.add` · `_drySet.add` — 늘기만 한다)
+//     ⓔ 다시 뜬다(`_crop` · `_farmSet` · `_drySet` 객체가 바뀐다 · T740) ⓕ 마을 시드(`dbId` — 빈 칸 특산 · T818 열쇠와 같다).
+//   그 밖의 입력은 없다: `cropTaskOf` 는 칸 항목(c · p · ps · w · wd)과 날만 읽고, 작물 표 · 달력 · 하늘(`rainedOn(day)`)은 날 하나의 순수 함수다.
+//   `_cropSky` 가 칸에 쓰는 `e.w = day` 는 멱등이다 — 한 번 부른 칸은 같은 날 다시 불러도 아무것도 안 바뀐다(그래서 안 부른 것과 같다).
+//   ⇒ 켬: 마을마다(모듈 WeakMap — 마을 칸 0) 그날의 칸 차례 · 칸 가운데 좌표 · 칸 일(Int8 · −1 = 아직 안 물음)을 들고,
+//     ⓑ 는 그 칸만 −1 로(다음 물음 때 잰다 — 종전과 같은 때 · 같은 칸에서 `_cropSky` 가 선다), ⓐ ⓒ ⓓ ⓔ ⓕ 는 통째로 다시 짓는다.
+//     클레임(`_cropClaim`)은 기억하지 않는다 — 물을 때마다 그대로 읽는다(종전처럼 클레임 칸은 안 잰다).
+//   ★같은 답: 같은 칸 차례(`_farmSet` 삽입 차례) · 같은 거리 식(`x * SZ + SZ / 2 - npc.x` — 가운데 좌표를 같은 식으로 미리 셈) · 같은 동률 규칙(먼저 온 칸).
+const T1144_LIFE_EVENT = process.env.T1144_LIFE_EVENT === '1' || process.env.T1144_LIFE_EVENT === 'verify';
+const T1144_VERIFY = process.env.T1144_LIFE_EVENT === 'verify';
+const _t1144Stat = { q: 0, build: 0, ask: 0, skip: 0, dirty: 0, reset: 0, vq: 0, vbad: 0 };   // 계측 전용(회계 아님)
+const _t1144M = new WeakMap();   // vil → { day, seed, crop, farm, dry, n, K, X, Y, P, ix }
+function _t1144Reset(vil) { if (T1144_LIFE_EVENT && _t1144M.delete(vil)) _t1144Stat.reset++; }   // ⓒ — 칸 전부
+function _t1144Dirty(vil, k) {   // ⓑ — 그 칸만(다음 물음 때 잰다)
+  if (!T1144_LIFE_EVENT) return;
+  const M = _t1144M.get(vil); if (!M) return;
+  const i = M.ix.get(k);
+  if (i === undefined) { _t1144M.delete(vil); _t1144Stat.reset++; return; }   // 모르는 칸 — 통째로(안전 쪽)
+  M.P[i] = -1; _t1144Stat.dirty++;
+}
+function _t1144Memo(vil, day) {
+  const fs = vil._farmSet, seed = vil.dbId | 0;
+  let M = _t1144M.get(vil);
+  if (M && M.day === day && M.seed === seed && M.crop === vil._crop && M.farm === fs && M.dry === vil._drySet && M.n === fs.size) return M;
+  const n = fs.size, K = new Array(n), X = new Float64Array(n), Y = new Float64Array(n), P = new Int8Array(n).fill(-1), ix = new Map();
+  let i = 0;
+  for (const k of fs) { const ci = k.indexOf(','), x = +k.slice(0, ci), y = +k.slice(ci + 1); K[i] = k; X[i] = x * SZ + SZ / 2; Y[i] = y * SZ + SZ / 2; ix.set(k, i); i++; }
+  M = { day, seed, crop: vil._crop, farm: fs, dry: vil._drySet, n, K, X, Y, P, ix };
+  _t1144M.set(vil, M); _t1144Stat.build++;
+  return M;
+}
+function _t1144NextFarmCell(vil, npc, day) {
+  const M = _t1144Memo(vil, day), K = M.K, X = M.X, Y = M.Y, P = M.P, cl = vil._cropClaim, n = M.n;
+  let best = null, bp = 0, bd = 1e9;
+  for (let i = 0; i < n; i++) {
+    let p = P[i];
+    if (p === 0) { _t1144Stat.skip++; continue; }   // 오늘 일 없는 칸(사건 없음 — 종전도 0 을 냈다 · 클레임이어도 같다)
+    const k = K[i];
+    if (cl.has(k)) continue;
+    if (p < 0) { p = P[i] = _cellTask(vil, k, day); _t1144Stat.ask++; if (p === 0) continue; }
+    const dx = X[i] - npc.x, dy = Y[i] - npc.y, d = dx * dx + dy * dy;
+    if (p > bp || (p === bp && d < bd)) { bp = p; bd = d; best = k; }
+  }
+  return best;
+}
 function _lifeNextFarmCell(vil, npc, day) {   // 랩 nextTask 동형(구역 대신 전 농지 — 서버 농지 수백 셀 스케일): 우선순위 높고 가까운 할 일
+  let _t1144A;
+  if (T1144_LIFE_EVENT) { _t1144Stat.q++; _t1144A = _t1144NextFarmCell(vil, npc, day); if (!T1144_VERIFY) return _t1144A; }   // ★[T1144 ①] 켬 = 사건 때만 · verify = 아래 종전 줄과 견준다(답은 종전)
   let best = null, bp = 0, bd = 1e9;
   for (const k of vil._farmSet) {
     if (vil._cropClaim.has(k)) continue;   // 다른 농부 진행 중(랩은 plot 담당제로 분산 — 서버는 셀 클레임)
@@ -10495,6 +10547,7 @@ function _lifeNextFarmCell(vil, npc, day) {   // 랩 nextTask 동형(구역 대�
     const dx = x * SZ + SZ / 2 - npc.x, dy = y * SZ + SZ / 2 - npc.y, d = dx * dx + dy * dy;
     if (p > bp || (p === bp && d < bd)) { bp = p; bd = d; best = k; }
   }
+  if (T1144_VERIFY) { _t1144Stat.vq++; if (_t1144A !== best) _t1144Stat.vbad++; if ((_t1144Stat.vq & 0x1fff) === 0) console.log('[T1144] ' + JSON.stringify(_t1144Stat)); }   // verify 판만 — 존 로그에 셈(계측 전용)
   return best;
 }
 // ── 직업 현장(랩 place/resourceTick 동형 원리 — 서버는 실물 자원·실물 사냥감이 정본): 일 캐시 ──
@@ -13884,6 +13937,7 @@ function* _lifeDailySteps(vil) {   // 게임일 경계: 크루·클레임 재대
   // 작물 하루 틱(랩 7920 동형): 김매기·물대기 놓치면 품질↓ · 병충해 발생(내일 방제 일감) — 상태·연출만(식량은 econ 소유)
   if (vil._crop && vil._crop.size) {
     const day = state.dayMs ? (T731_ON ? _ledgerDay(vil, _dayNow()) : gameDayOf(_dayNow())) : 0;
+    if (T1144_LIFE_EVENT) _t1144Reset(vil);   // ★[T1144 ⓒ] 하루 틱 — 칸 전부
     for (const [k, e] of vil._crop) cropDayTick(e, !vil._drySet.has(k), day, k);   // ★[T58b] 정본 하나(플레이어 농지도 이걸 재생한다)
   }
   _sub('cropDay');   // ★[T523] 계측 전용 — 둘째 토막(아래 `gran` 은 이제 사냥 하루만)
@@ -15549,7 +15603,7 @@ function __rumorProbe() {
     rumor: Object.assign({}, L.rumorStats) };
 }
 
-module.exports = { t1147Stat: () => _t1147Stat, _t1147Pick, t750CastPre, t750Stat: () => _t750Stat, t719ReachPre, t719Stat: () => _t719Stat, t731Stat: () => _t731Stat, t1013Stat: () => Object.assign({ on: T1013_BAND_DAY }, _t1013Stat), t1133Stat: () => Object.assign({ on: T1133_BAG }, _t1133Stat), t1133Sizes: _t1133Sizes,   // ★[T1133] 몸 짐 줄 영속 셈 · 크기 자(계측 전용)   // ★[T1013] 사냥터 짓기 몫 셈(계측 전용)   // ★[T731] 현지 자정 창 증인(켬에서만 찬다)
+module.exports = { t1144Stat: () => Object.assign({ on: T1144_LIFE_EVENT, verify: T1144_VERIFY }, _t1144Stat), t1147Stat: () => _t1147Stat, _t1147Pick, t750CastPre, t750Stat: () => _t750Stat, t719ReachPre, t719Stat: () => _t719Stat, t731Stat: () => _t731Stat, t1013Stat: () => Object.assign({ on: T1013_BAND_DAY }, _t1013Stat), t1133Stat: () => Object.assign({ on: T1133_BAG }, _t1133Stat), t1133Sizes: _t1133Sizes,   // ★[T1133] 몸 짐 줄 영속 셈 · 크기 자(계측 전용)   // ★[T1013] 사냥터 짓기 몫 셈(계측 전용)   // ★[T731] 현지 자정 창 증인(켬에서만 찬다)
   streamStat, fishPerf, woodPerf, foragePerf, farmPerf,   // ★[T316] `/perf` 가 내주는 어부 관측(손잡이 끔이면 null) · ★[T325] 나무꾼 · ★[T347] 채집도 같은 꼴 · ★[T368] 농부
   T856_LAND_ELEV, _t856LandElev,   // ★[T856] 마을 고도 — 하네스(`test-land-elev`)가 같은 함수를 부른다(사본 0)
   _t400BuildDay, _t400PerLoad, _t400Crew, _t400From,   // ★[T400] 집 행위 1층 — 하네스가 같은 함수를 부른다(사본 0)
@@ -15785,11 +15839,14 @@ module.exports = { t1147Stat: () => _t1147Stat, _t1147Pick, t750CastPre, t750Sta
         for (const vil of vils) {
           const ev = vil.econ; if (!ev || !ev.npcs || !ev.npcs.length) continue;
           n += lifeFarmDay(vil, day, (ev.counts && ev.counts.farmer) || 0, onDid ? (k, t, c0, p0, e1) => onDid(vil, k, t, c0, p0, e1) : null);
+          if (T1144_LIFE_EVENT) _t1144Reset(vil);   // ★[T1144 ⓒ] 라이브 하루 경계와 같은 문
           for (const [k, e] of vil._crop) cropDayTick(e, !vil._drySet.has(k), day, k);   // 라이브 하루 경계와 같은 줄
         }
         return n;
       },
       cellTask: (vil, k, day) => _cellTask(vil, k, day),
+      nextFarmCell: (vil, npc, day) => _lifeNextFarmCell(vil, npc, day),   // ★[T1144] 하네스 전용 — 정본 그대로(사본 0)
+      doTask: (vil, k, day) => _lifeDoTask(vil, null, k, day),            // ★[T1144] 하네스 전용 — 헤드리스 갈래(몸 0)
       get L_WATERGAP() { return L_WATERGAP; },
       get TASKS_PER_FARMER() { return _lifeTasksPerFarmerDay(); },
     },
