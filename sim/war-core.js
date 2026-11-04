@@ -104,7 +104,7 @@ const WAR_CAP_EU = WAR_CAP_ON ? 8 : 0;
 //   랩은 프레임 틱(블록B tickWarGroups) 소유 — 서버 추상층은 daily(일 단위) 어댑터(결정론 rng 시드 랩 동형).
 const WAR_SIEGE_PACK = 12;         // 동원 시 공성 군량 적재(일분) — 행군분(marchDays×2)과 별도. camp/siege 1일=병력×WAR_RATION 소모
 const WAR_PACK_CRIT = 3;           // 군량 잔량 임계(일) — 미만이면 도박 돌격 or 철수 강제
-const _T1074_FD = (typeof process !== 'undefined' && process.env && process.env.T1074_FOOD_DEBT === '1');   // ★[T1074] 식량 빚 손잡이(econ 과 같은 글자 · 끔 기본)
+const _T1074_FD = !(typeof process !== 'undefined' && process.env && process.env.T1074_FOOD_DEBT === '0');   // ★[T1074 · ★T1127] 식량 빚 손잡이(econ 과 같은 글자 · 켬 기본 · `=0` 끔)
 const WAR_ASSAULT_ODDS = 0.58;     // 결단: 이 승산 이상이면 즉시 돌격(포위 소모전보다 낫다)
 const WAR_GAMBLE_ODDS = 0.38;      // 군량 임계 시 도박 돌격 하한(미만=철수)
 const WAR_HOLD_GAMBLE = 0.45;      // 소모전 열세(팩≤곳간추정)일 때 돌격 전환 하한(미만=철수)
