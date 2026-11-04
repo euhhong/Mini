@@ -8,7 +8,8 @@
 'use strict';
 const fs = require('fs'), path = require('path');
 const ROOT = process.argv[2];
-const CFG = ['off', 'c25', 'c50', 'c75'], SEEDS = ['1020', '7', '42'];
+const _ci = process.argv.indexOf('--cfg');
+const CFG = _ci >= 0 ? process.argv[_ci + 1].split(',') : ['off', 'c25', 'c50', 'c75'], SEEDS = ['1020', '7', '42'];   // ★[T1147] `--cfg off,on` — 판 이름을 준다
 const load = (c, s) => { const f = path.join(ROOT, 'c', c, 'base', `gap-base-${s}.gap.json`); return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : null; };
 const rank = (a) => { const ix = a.map((v, i) => [v, i]).sort((x, y) => x[0] - y[0]); const r = new Array(a.length); ix.forEach(([, i], k) => { r[i] = k; }); return r; };
 const spear = (a, b) => { const ra = rank(a), rb = rank(b), n = a.length, ma = (n - 1) / 2; let sab = 0, saa = 0, sbb = 0; for (let i = 0; i < n; i++) { sab += (ra[i] - ma) * (rb[i] - ma); saa += (ra[i] - ma) ** 2; sbb += (rb[i] - ma) ** 2; } return sab / Math.sqrt(saa * sbb); };
@@ -30,17 +31,27 @@ function row(D) {
     low: hs.filter((x) => x < 0.5).length, emig: D.end ? D.end.emig.reduce((x, y) => x + y, 0) : null, refuse: D.end ? D.end.refuseMuster : null,
     size: [q(live, 0.25), q(live, 0.5), q(live, 0.75), Math.max(...live)], rho: +rho.toFixed(3) };
 }
+const CTL = CFG[0];   // ★[T1147] 대조 = 첫 판 이름(종전 기본 'off')
 const R = {};
 for (const c of CFG) for (const s of SEEDS) { const D = load(c, s); if (D) (R[c] = R[c] || {})[s] = row(D); }
+// ★[T1147] 이주 받는 곳 — 가장 가까운 곳 ↔ 다른 곳(더 행복한 곳) 몫 · 받을 곳이 없어 못 떠난 번(훅이 `t1147` 칸을 실은 판만)
+const _mv = {};
+for (const c of CFG) for (const s of SEEDS) { const D = load(c, s); if (D && D.t1147) (_mv[c] = _mv[c] || {})[s] = D.t1147; }
 console.log('| 판 | 시드 | 끝 총인구 | 빈 마을 | 해체 | 죽음 누계 | h 중앙 | h < 0.5 마을 | 이탈 | 출정 거부 | 마을 크기 25 · 50 · 75% · 최대 | 부 ↔ 크기 순위 상관 |');
 console.log('|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---:|');
 for (const c of CFG) for (const s of SEEDS) { const r = R[c] && R[c][s]; if (!r) continue;
   console.log(`| ${c} | ${s} | ${r.pop} | ${r.empty} | ${r.diss} | ${r.dead} | ${r.hMed} | ${r.low} | ${r.emig} | ${r.refuse} | ${r.size.join(' · ')} | ${r.rho} |`); }
-console.log('\n| 판 | 합 총인구 | 합 빈 마을 | 합 해체 | 합 죽음 | 합 이탈 | 합 거부 | 켬 조건(빈 마을 · 해체가 끈 판보다 같거나 적다 · 시드마다) | 인구(끈 판 대비 · 시드마다) |');
+console.log(`\n| 판 | 합 총인구 | 합 빈 마을 | 합 해체 | 합 죽음 | 합 이탈 | 합 거부 | 켬 조건(빈 마을 · 해체가 ${CTL} 판보다 같거나 적다 · 시드마다) | 인구(${CTL} 판 대비 · 시드마다) |`);
 console.log('|---|---:|---:|---:|---:|---:|---:|---|---|');
 const sum = (c, k) => SEEDS.reduce((a, s) => a + ((R[c] && R[c][s] && R[c][s][k]) || 0), 0);
 for (const c of CFG) { if (!R[c]) continue;
-  const cond = c === 'off' ? '—' : SEEDS.map((s) => (R[c][s] && R.off[s] ? ((R[c][s].empty <= R.off[s].empty && R[c][s].diss <= R.off[s].diss) ? '예' : '아니오') : '—')).join(' · ');
-  const pp = c === 'off' ? '—' : SEEDS.map((s) => (R[c][s] && R.off[s] ? `${R[c][s].pop - R.off[s].pop >= 0 ? '+' : ''}${R[c][s].pop - R.off[s].pop}` : '—')).join(' · ');
+  const cond = c === CTL ? '—' : SEEDS.map((s) => (R[c][s] && R[CTL][s] ? ((R[c][s].empty <= R[CTL][s].empty && R[c][s].diss <= R[CTL][s].diss) ? '예' : '아니오') : '—')).join(' · ');
+  const pp = c === CTL ? '—' : SEEDS.map((s) => (R[c][s] && R[CTL][s] ? `${R[c][s].pop - R[CTL][s].pop >= 0 ? '+' : ''}${R[c][s].pop - R[CTL][s].pop}` : '—')).join(' · ');
   console.log(`| ${c} | ${sum(c, 'pop')} | ${sum(c, 'empty')} | ${sum(c, 'diss')} | ${sum(c, 'dead')} | ${sum(c, 'emig')} | ${sum(c, 'refuse')} | ${cond} | ${pp} |`); }
+if (Object.keys(_mv).length) {
+  console.log('\n| 판 | 시드 | 이주(받는 곳을 고른 번) | 가장 가까운 곳 | 다른 곳(더 행복) | 다른 곳 몫 | 받을 곳 없음(안 떠남) |');
+  console.log('|---|---|---:|---:|---:|---:|---:|');
+  for (const c of CFG) for (const s of SEEDS) { const m = _mv[c] && _mv[c][s]; if (!m) continue;
+    console.log(`| ${c} | ${s} | ${m.pick} | ${m.nearest} | ${m.other} | ${m.pick ? (100 * m.other / m.pick).toFixed(0) + '%' : '—'} | ${m.none} |`); }
+}
 if (process.argv.includes('--json')) fs.writeFileSync(process.argv[process.argv.indexOf('--json') + 1], JSON.stringify(R, null, 1));

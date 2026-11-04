@@ -76,7 +76,7 @@ const FIXTURE = process.env.BANDIT_FIXTURE || '';
 //        한 주에 해체됐다(3시드 해체 51 중 39 가 day 375~394). 끔 판 빈 13 → 켬 판 1(시드 1020 · 800일).
 const T577_WALK = process.env.T577_CAND_WALK === '1';
 const T1075_HAPPY_EQ = process.env.T1075_HAPPY_EQ === '1';
-const T1134_HAPPY_TARGET = process.env.T1134_HAPPY_TARGET === '1';   // ★[T1134] 켬 = 불행 이탈(h < 0.25)은 **더 행복한** 이웃만 받는다(받을 곳이 덜 행복하면 아무도 안 떠난다 · 소멸 0)   // ★[T1075 ④ · T1109] 켬 = 불행 이탈이 몸으로 걷는다(econ `world.t1075Emigrate` 문을 이 층이 단다 · 걷기 문 `walkToVillage` 하나 · 끔 = 문 없음 · 종전 바이트)
+const T1134_HAPPY_TARGET = process.env.T1134_HAPPY_TARGET !== '0';   // ★[T1147] 켬 기본   // ★[T1134] 켬 = 불행 이탈(h < 0.25)은 **더 행복한** 이웃만 받는다(받을 곳이 덜 행복하면 아무도 안 떠난다 · 소멸 0)   // ★[T1075 ④ · T1109] 켬 = 불행 이탈이 몸으로 걷는다(econ `world.t1075Emigrate` 문을 이 층이 단다 · 걷기 문 `walkToVillage` 하나 · 끔 = 문 없음 · 종전 바이트)
 // ★★[T1039 2026-11-02 · T1022 회부 1 · 캐논 F7 "같은 몸" · ★재민 11-01 판정 "걸어간 몸이 단"(`walk` 정본 · `spawn` 대조 판)] **도적 전환 — 한 사람 몸 하나**.
 //   손잡이 `T1039_BANDIT_BODY` — 값 `walk` | `spawn` · 없음(그 밖) = 종전 글자(아래 갈래 줄이 하나도 안 닿는다).
 //   종전: 해체 그날 단이 서고(`GANGS` · 습격 길목 `pairSync`) · 그날 끝 `syncBodies` 가 은거지 곁에 단 몸 min(3, n) 을 **새로** 세운다 · 그 사람들의 마을 몸은
@@ -223,17 +223,21 @@ function _t1075Leave(econV, npc, day) {   // econ 이 그날(`day`)을 준다
   const vil = S.host.villages.find((x) => x.econ === econV); if (!vil) return false;
   const _hOf = (x) => (x && x.econ && x.econ.lastStats && typeof x.econ.lastStats.happiness === 'number') ? x.econ.lastStats.happiness : null;
   const accept = T1134_HAPPY_TARGET ? (to) => { const a = _hOf(vil), b = _hOf(to); return a != null && b != null && b > a; } : null;   // ★[T1134] 더 행복한 마을만
-  return walkToVillage(vil, [npc], day != null ? day | 0 : (S.host.world ? S.host.world.day | 0 : 0), 'unhappy', accept) > 0;
+  //   ★[T1147] 받는 곳 = 둘레 여럿(교역로 4일 안) 중 더 행복하고 받을 자리가 있는 곳(호스트 `t1147Pick` · 없으면 아무도 안 떠난다)
+  const dest = (T1134_HAPPY_TARGET && S.host.t1147Pick) ? S.host.t1147Pick(vil) : undefined;
+  if (dest === null) return false;
+  return walkToVillage(vil, [npc], day != null ? day | 0 : (S.host.world ? S.host.world.day | 0 : 0), 'unhappy', accept, dest) > 0;
 }
 //   people = 그 마을 econ 명부에 지금 있는 사람 객체들(받는 마을을 고른 뒤에만 명부에서 뺀다 — 갈 곳이 없으면 아무것도 안 바꾸고 0).
 //   켬 = 받는 마을은 길 거리(거리행렬 · 호스트 `t1080Pick`) 최근접 · 제 짐(호스트 `t1080Pack`)을 지고 떠난다 · 끔 = T765 그대로(곧은 거리 `_nearLive`).
-function walkToVillage(vil, people, day, why, accept) {   // accept(받는 마을) → bool — 있으면 고른 마을이 그 술어를 지나야 떠난다(★[T1134] · 없으면 종전)
+function walkToVillage(vil, people, day, why, accept, dest) {   // dest = 호스트가 이미 고른 받는 마을(★[T1147] · 없으면 아래 종전 고르기)   // accept(받는 마을) → bool — 있으면 고른 마을이 그 술어를 지나야 떠난다(★[T1134] · 없으면 종전)
   const e = vil && vil.econ; if (!e || !people || !people.length) return 0;
   const unhappy = why === 'unhappy';   // ★[T1075] 불행 이탈 — 몸 문이 있을 때만(아래 몸 없는 옮김 갈래로 안 간다)
   if (unhappy && !S.host.t765Depart) return 0;
   const life = _t1080On();
   let best = null, bd = 1e18;
-  if (life) { const P = S.host.t1080Pick([{ vil, off: 0 }], new Set([vil])); if (P) { best = P.vil; bd = Math.hypot(best.ccx - vil.ccx, best.ccy - vil.ccy); } }
+  if (dest) { best = dest; bd = Math.hypot(best.ccx - vil.ccx, best.ccy - vil.ccy); }
+  else if (life) { const P = S.host.t1080Pick([{ vil, off: 0 }], new Set([vil])); if (P) { best = P.vil; bd = Math.hypot(best.ccx - vil.ccx, best.ccy - vil.ccy); } }
   else ({ best, bd } = _nearLive(vil, vil.ccx, vil.ccy));
   if (!best) return 0;
   if (typeof accept === 'function' && !accept(best)) return 0;   // ★[T1134] 받을 곳이 받지 않으면 아무것도 안 바꾼다
@@ -275,6 +279,11 @@ function walkToVillage(vil, people, day, why, accept) {   // accept(받는 마�
 //     ⓑ 장마당 대기 짐 — `_t707` 이 찍힌(정산 전) 캐러밴 · 도착(`to`)이 이 마을 · `giveRes` 가 식량류 → `_t707.give`(정산 때 이 마을 곳간에 든다)
 //   끔이면 `_t766Held` 는 한 번도 안 불린다(조건 맨 끝 단락 평가) · 셈(`stats.t766Held`)도 안 선다 = main 바이트.
 const T766_INCOMING = typeof process !== 'undefined' && !!process.env && process.env.T766_DISSOLVE_INCOMING === '1';
+// ★★[T1143 2026-11-04 · ★재민 11-04 "해체 없도록 하자" · 족보 740] **NPC 마을은 해체 없음** — 손잡이 `T1143_NO_DISSOLVE`(켬 기본 · `=0` 만 끔 = 종전 바이트).
+//   켬: 해체 문(아래 `daily` ① — 순감 5 · 곳간 3일치 미만 · 잔존 ≤ 13)을 **NPC 마을(`econ.founder` 없음 — 정본 `village-kin.js` `_isPlayer` 의 거울)** 은 안 탄다.
+//     사람 마을(길드 · 창설자)은 종전 그대로 탄다(이 카드 밖). 근거: T1141 반사실 판 — 해체 문을 닫으면 해체된 9마을이 다 800날까지 산다(1 ~ 24명 골짜기 뒤).
+//   절망 이탈 문(② · 같은 `daily`)은 손대지 않는다 — 그 문은 `n > BDT_GMIN`(3) 일 때만 1명씩 떠나 마을을 0 으로 못 만든다(문턱 글자가 이미 "마지막 사람들은 안 떠난다").
+const T1143_NO_DISSOLVE = !(typeof process !== 'undefined' && !!process.env && process.env.T1143_NO_DISSOLVE === '0');
 const T766_FOOD = { food: 1, fish: 1, meat: 1, cooked_food: 1 };   // 곳간 잣대(`daily` 의 fe)와 같은 넷
 function incomingFood(world, e) {   // 이 econ 마을로 오는 식량(위 두 칸 · 읽기만)
   let a = 0;
@@ -730,7 +739,7 @@ function daily(day) { // 하루 1회(villages econ 틱 직후): 위기 추적→
       else if (n > e._bdtLastN) e._bdtFall = Math.max(0, (e._bdtFall || 0) - 2); // 회복 시 두 배 차감
     }
     e._bdtLastN = n;
-    if (day >= _open && !e._banditized && (e._bdtFall || 0) >= BDT_DIS_FALL && fe < n * BDT_DIS_FOOD
+    if (day >= _open && !e._banditized && !(T1143_NO_DISSOLVE && !e.founder) && (e._bdtFall || 0) >= BDT_DIS_FALL && fe < n * BDT_DIS_FOOD
         && n >= BDT_GMIN && n <= Math.max(4, Math.min(20, (e._bdtPeak || n) * 0.55)) // 죽어가는 미끄럼+곳간 바닥+잔존 소수 = 해체
         && !(T766_INCOMING && _t766Held(host.world, vil, fe, n, day))) {   // ★[T766] 켬만 — 오는 식량이 문턱을 채우면 보류(끔 = 이 칸 무평가)
       const size = Math.min(n, Math.max(BDT_GMIN, Math.min(BDT_GMAX, Math.round(n * BDT_CONV))));
@@ -1598,7 +1607,7 @@ function _dayRun(day) {
   }
 }
 
-module.exports = { init, onGameTick, dayTick, t986: () => ({ on: T986_BANDIT_DAY, lastDay: S.lastDay }), clientCamps, stats: () => S.stats, incomingFood, t766On: () => T766_INCOMING, armsHeld, ARMS_RES, lotsBoot, gangs: () => S.GANGS,
+module.exports = { init, onGameTick, dayTick, t986: () => ({ on: T986_BANDIT_DAY, lastDay: S.lastDay }), clientCamps, stats: () => S.stats, incomingFood, t766On: () => T766_INCOMING, t1143On: () => T1143_NO_DISSOLVE, armsHeld, ARMS_RES, lotsBoot, gangs: () => S.GANGS,
   t765: () => ({ on: T577_WALK, road: S.WALK.length, rows: (S.t765Rows || []).map((r) => Object.assign({}, r)) }),   // ★[T765] 길 위 장부 증인(관측 자 `t765-obs` · 하네스)
   walkToVillage,   // ★[T1080 · T1108] 걷기 문 하나(해체 남은 사람 · T1079 해산 몸 · T1075 불행 이탈)
   t1080: () => ({ on: _t1080On(), road: S.WALK.length, dead: S.stats.t1080Dead || 0, reroute: S.stats.t1080Reroute || 0, roadDays: S.stats.t1080RoadDays || 0,

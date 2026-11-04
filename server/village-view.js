@@ -154,7 +154,8 @@ function _projects(src, vil, chron) {
     const o = { kind: 'caravan', state: c.state, to, toDays: Math.max(0, ((back ? c.returnArriveDay : c.arriveDay) | 0) - src.day) };
     const cargo = [];
     const add = (res, n) => { if (!res || !(+n > 0)) return; if (isLumped(res)) { withheld++; return; } cargo.push({ res, ko: ko(res), n: _r(n, 2) }); };
-    if (back) { add(c._returningRes, c._returningAmt); add(c._returningRes2, c._returningAmt2); }
+    if (c.basket) { for (const x of (back ? (c._retBasket || []) : c.basket)) add(x.res, x.amt); }   // ★[T1136] 바구니 — 품목마다(끔 = 바구니 없음 = 아래 종전 두 줄)
+    else if (back) { add(c._returningRes, c._returningAmt); add(c._returningRes2, c._returningAmt2); }
     else { add(c.giveRes, c.giveAmt); add(c.giveRes2, c.giveAmt2); }
     o.cargo = cargo;
     now.push(o);

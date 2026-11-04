@@ -7,6 +7,8 @@
 //         ⑤ 불행은 죽이지 않는다 — 불행 마을의 기근 고리 죽음 0 · 압력은 출생을 깎고 남는 몫은 이탈(길 문이 있을 때만 · 없으면 아무도 안 떠난다)
 //         ⑥ 끔 = H 칸이 안 선다(손잡이 기본 끔)
 'use strict';
+// ★[T1147] 판 꾸밈 — 이 하네스는 T1075 평형 모델을 잰다. T1134 목표 행복이 켬 기본이 되어 T1134 가 이기므로 이 판은 그것을 끈다(단언 무변 · T1134 는 test-happy-converge).
+process.env.T1134_HAPPY_TARGET = process.env.T1134_HAPPY_TARGET || '0';
 const path = require('path');
 const { execFileSync } = require('child_process');
 let pass = 0, fail = 0;
