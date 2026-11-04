@@ -13577,6 +13577,19 @@ function* _lifeDailySteps(vil) {   // 게임일 경계: 크루·클레임 재대
       vil._t325Dbg.trips = _trips; vil._t325Dbg.perLoad = _perLoad; vil._t325Dbg.cap = _cap;
       if (_t491C) vil._t325Dbg.t491 = { crew: _ln, body: _body, made: 0 };   // ★[T491 계측 전용] 켠 판에만 서는 칸(명부 · 한 몸의 하루 단 · 벤 단)
       let ci = 0, made = 0;
+      //   ★★[T1148] 나무꾼(삭정이 줍기 포함) — 켬 ∧ 땔감 평형 판이면 산 나무를 베기 전에 숲 바닥(어제 남은 삭정이)부터 줍는다.
+      //     같은 걸음 한도(`_cap` — 끔 판 한도는 그루라 단으로 바꾼다) · 같은 수요 문 · 같은 곳간 입구 · 숲 바닥 칸은 T1135 삭정이 절의 그 칸(`vil._t1135Dead`).
+      if (_lifeEcon().T1148_FUEL_JOB && _t1135On() && (vil._t1135Dead || 0) > 0) {
+        const _left = _lifeEcon().woodDemandLeft(vil.econ);
+        const _take = Math.min(vil._t1135Dead, _left === Infinity ? vil._t1135Dead : _left, _t491C ? _cap : _cap * _w);
+        if (_take > 0) {
+          const _g = _lifeEcon().woodToGranary(vil.econ, _take) || 0;
+          vil._t1135Dead = +Math.max(0, vil._t1135Dead - _g).toFixed(6);
+          vil.econ._t1135Got = +((vil.econ._t1135Got || 0) + _g).toFixed(6);   // 누계(계측 칸 · 회계 아님)
+          made += _t491C ? _g : _g / _w;
+          vil._t325Dbg.t1148 = +_g.toFixed(4);
+        }
+      }
       for (let k = 0; k < _tr.length * 8 && ci < _tr.length && made < _cap; k++) {
         //   ★★[T374] 나무꾼도 **같은 규칙**이다(사본 0 — econ 정본 `woodDemandLeft`).
         //     ⚠카드는 "값이 안 변할 것" 이라 했지만 실측은 **절반**이다(보고 §4 — 두 시계 어긋남의 반대 방향).

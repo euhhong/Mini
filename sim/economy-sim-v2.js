@@ -620,6 +620,16 @@ const T812_CARGO_TEMP = !(typeof process !== 'undefined' && process.env && proce
 //   고도 값 = econ 기온이 이미 쓰는 그 값(`_elevKmOf` — 호스트 지형층 주입 훅 · 미설치 0). ⚠지금 어떤 호스트도 넣지 않는다(산 높이 35m 캐논 ·
 //   존 `elevKmAt` 도 0) ⇒ 오늘의 세계에선 켜도 값이 같다(보고/T840 §0).
 const T840_LEG_ELEV = (typeof process !== 'undefined' && process.env && process.env.T840_LEG_ELEV === '1');
+// ★[T1148] 다가오는 겨울 끝까지 H 날 · 그 날들의 추위 합 — 위 기온 정본(`temperatureAt` · 밤 = 낮 − 일교차 · 추위 = (기준 − 밤) ÷ 15 — 마을 틱의 그 식)을 내일부터 센다.
+//   추위가 > 0 인 첫 철을 만나 그 철이 끝나는 날에서 멈춘다 · 두 해(730날) 안에 추운 날이 없으면 H = 0(추위 빚 없음). 새 수 0(730 = 두 해 — 철 하나를 반드시 지나는 창).
+function _t1148Ahead(day, elevKm) {
+  let H = 0, cs = 0, seen = false;
+  for (let t = 1; t <= 730; t++) {
+    const c = Math.max(0, Math.min(1, (CLIMATE.coldRef - (temperatureAt(day + t, null, elevKm) - CLIMATE.diurnalAmp)) / 15));
+    if (c > 0) { seen = true; cs += c; H = t; } else if (seen) break;
+  }
+  return seen ? { H, cs } : { H: 0, cs: 0 };
+}
 function _elevKmOf(v) { return (v && v.land && v.land.elev) || 0; }   // 호스트(지형층) 고도 주입 훅 — 미설치=0(해수면) 무해
 const _t812Pre = new Map();   // 떠난 날 · 고도 → [0, 첫날 노출, 둘째 날까지 …] (그 날부터의 누적 · 날마다 한 번만 센다)
 function _t812Exp(day0, days, elevKm) {   // 떠난 날 · 날 수(· 고도 km — T840) → 길 위 노출(소수 날이면 그 몫만큼 다음 날 하루치)
@@ -2161,6 +2171,7 @@ function tickWorldV2Parts(world) {
         v._tempDay = temperatureAt(world.day, null, _elev);
         v._tempNight = v._tempDay - CLIMATE.diurnalAmp;
         v._coldStress = Math.max(0, Math.min(1, (CLIMATE.coldRef - v._tempNight) / 15));
+        if (v1.T1148_FUEL_JOB) v._t1148Ahead = _t1148Ahead(world.day, _elev);   // ★[T1148] 다가오는 겨울 끝까지 — 같은 기온 식으로 미리 센다(끔 = 무동작)
       }
       if (useSeason) applyLandModifiers(v, season, world);
       v1.tickVillage(v, world.day);
@@ -2569,7 +2580,8 @@ module.exports = {
   // ★[T726] 목표 한 함수(결정층 식 정본) — 하네스 · 관찰기가 같은 문을 부른다
   T726_ONE_TARGET, _targetCtxV2, _targetV2, _priceFromV2, _oreCapV2, _priceOfV2, _priceNowV2, _settleParamsV2, tickDecay,
   // 기온 모델(2026-07-12) — 생활층(밤낮 시간 곡선)·프로브용 노출
-  temperatureAt, CLIMATE, seasonOf,   // ★[T570] seasonOf = 달력 정본 위임(events·test-calendar ④ 가 이걸 견준다)
+  temperatureAt, CLIMATE, seasonOf, _t1148Ahead,   // ★[T1148] 다가오는 겨울 끝까지(하네스가 부른다)
+    // ★[T570] seasonOf = 달력 정본 위임(events·test-calendar ④ 가 이걸 견준다)
   // ★[2026-08-03e 배치 12 ②] 인구 유입 문턱 — 하네스·길드 재고 UI 가 **같은 함수**를 부른다(사본 금지)
   tickRecovery, recoveryFoodThreshold, recoveryFoodHave,
   // ★[T299] 둘째 화물·관문의 문 — 하네스와 `lab-wiring-check [H]` 가 엔진 **기본이 끔인지** 실측한다(사본 0)

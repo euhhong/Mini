@@ -10552,6 +10552,36 @@ const T1135_FUEL_EQ = (typeof process !== 'undefined' && process.env && process.
 //      (Pyo et al. 2020 JESAM "Estimation of basic wood density … Quercus species in South Korea" https://ovcre.uplb.edu.ph/journals-uplb/index.php/JESAM/article/view/331)
 //      ÷ 365 ÷ 1단 3 kg(`weights.js kgOf('wood')` — 하네스가 대조한다) = 0.2813단 ≈ 0.84 kg/인/일(지금 0.085단의 3.3배 · 출처 셋 · 새 수 0)
 const FIREWOOD_PC_SRC = 10000000 / 21526374 * 663 / 365 / 3;
+// ★★★[T1148 2026-11-04 · ★재민 11-04 T1135 ㄱ · 족보 746] 손잡이 `T1148_FUEL_JOB`(끔 기본 · `'1'` 만 켬 · 끔 = 종전 바이트) — **땔감도 생존 필요다.**
+//   T1135: 켬 판 땔감 위끝은 나무가 아니라 나무꾼이었다 — 직업 판단이 거의 늘 기근 블록(식량 30일치 밑) 안이라 나무꾼 0 인 마을-날 43 ~ 62%.
+//   ⇒ 직업 판단이 **추위 빚**을 식량 빚과 같은 꼴(며칠치)로 본다:
+//     추위 빚 = 다가오는 겨울 끝까지의 땔감 수요 − 곳간 통나무 − 수입 기대
+//       · 다가오는 겨울 끝까지 = 내일부터 다음 추위 철(`_coldStress` > 0 인 날들)이 끝나는 날까지 H 날(econ v2 기후 정본 `temperatureAt` 이 그 마을 고도로 미리 센다 · `v._t1148Ahead`)
+//       · 땔감 수요 = 인구 × 1인 땔감 `_firewoodPC()` × (H + `FUEL_COLD_W` × Σ 추위) — 그날 연료 단계 `fuelNeed` 와 같은 식을 H 날 더한 것(취사 · 난방 · 제련 제외)
+//       · 수입 기대 = 목재 수입 EMA(`_woodImportEMA` — 연료 K 가 읽는 그 칸) × H
+//     땔감 며칠치 = 곳간 통나무 ÷ (하루 평균 수요 − 하루 수입 기대) · 식량 며칠치 = 식량 환산 ÷ 인구(하루 1)
+//   ★같은 급 — 무엇이 먼저 사람을 다치게 하나로 고른다(새 수 0 · 기존 상수의 뜻 그대로):
+//     · 땔감이 떨어진 날부터 바로 건강 항이 깎인다(`FUEL_HEALTH_W` × (1 − 충당률) · 추위면 수요가 ×(1 + `FUEL_COLD_W` × 추위) — 연료 단계)
+//     · 식량이 떨어진 날부터는 빚이 쌓이고 죽음은 빚 `FD_DEATH_DAYS`(14일) 뒤에 온다(T1074)
+//     ⇒ 추위 빚 > 0 ∧ 땔감 며칠치 < 식량 며칠치 + `FD_DEATH_DAYS` 면 나무꾼 — 식량 일보다 앞(기근 블록 앞 · 블록 안팎 같은 잣대).
+//     · 하드 플로어 — 식량이 인구 × 6일치 밑이면 안 연다(기근 블록의 그 수 — 부얼타운 광부 · T717 한 명 문이 쓰는 그 수).
+//     · 벨 나무 — 자리(`hasSlot`)가 없거나 행위 층에서 나무 칸 0 이면 안 연다(없으면 못 벤다).
+//   ★갚는 길 — `T1135_FUEL_EQ` 판에서 나무꾼 몫(T374 문의 분자 `_t1135Need`)에 추위 빚 ÷ H 를 더한다(겨울 끝까지 고르게 쌓는다 · 새 수 0).
+//     생활층 헤드리스 나무꾼은 베기 전에 삭정이부터 줍는다(`server/villages.js` T1148 줄 — "나무꾼(삭정이 줍기 포함)").
+//   T717 한 명 문(`T717_FUEL_GATE`)은 이 문으로 갈음한다(그 손잡이는 끔 그대로 — 표에서 비교만).
+const T1148_FUEL_JOB = (typeof process !== 'undefined' && process.env && process.env.T1148_FUEL_JOB === '1');
+function t1148Cold(v) {
+  const A = v && v._t1148Ahead;
+  if (!A || !v.storage) return null;
+  const N = (v.npcs && v.npcs.length) || 0, H = A.H | 0;
+  const need = N * _firewoodPC() * (H + FUEL_COLD_W * (A.cs || 0));
+  const imp = (v._woodImportEMA || 0);
+  const stock = v.storage.wood || 0;
+  const debt = need - stock - imp * H;
+  const perDay = H > 0 ? need / H - imp : 0;
+  const fuelDays = perDay > 0 ? stock / perDay : Infinity;
+  return { H, need, debt, fuelDays };
+}
 // ★★[T1054 2026-11-01 · T1047 ② · PM "짓는 것은 목재가 든다 · 같은 규칙"] **집 행위 마을의 노후 메움도 곳간 목재를 쓴다** — 손잡이 `T1054_DECAY_WOOD`(★끔 기본 · 켜는 값 `'1'` · 끔 = 종전 바이트 — 켬 기본 후보였으나 판 자 띠에서 첫해 기근이 커져 회부).
 //   T958 마을(집 행위 · 지은 침상을 아는 판 — 서버 · 랩 T1050)은 econ 주거가 지은 침상까지만 오르고 목재 상한이 `Infinity` 다(차감은 크루가 진다).
 //   그래서 노후(`HOUSE_DECAY`)로 줄어든 주거가 침상 밑에서 **목재 없이** 다시 찼다(보고 T1047 ② — 서버 첫해 노후 메움 3,095 · 목재 0).
@@ -13592,6 +13622,7 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
   // ★[T240] 종전(끔)은 `Math.min(상한, 원량)` 그대로 — 넘친 짚은 그날로 사라진다(비트 동일).
   //   켜면 넘친 몫이 `_strawPend` 로 이월되고 다음 날부터 **상한만큼** 탄다(상한은 안 건드린다).
   if (T1135_FUEL_EQ) v._t1135Need = fuelNeed;   // ★[T1135 ①] 나무꾼 몫 = 그날 땔감 수요(내일 생활층 벌목이 T374 문의 분자로 읽는다)
+  if (T1148_FUEL_JOB) { const _c = t1148Cold(v); v._t1148 = _c; if (T1135_FUEL_EQ && _c && _c.debt > 0) v._t1135Need += _c.debt / Math.max(1, _c.H); }   // ★[T1148] 추위 빚을 겨울 끝까지 고르게(갚는 길 · 위 머리말)
   const _strawCap = N * _firewoodPC();
   const _strawRaw = (v._grainToday || 0) * STRAW_FUEL_PER_FOOD;
   const strawFuel = T240_STRAW_CARRY ? strawCarryBurn(v, _strawRaw, _strawCap)
@@ -14560,6 +14591,11 @@ function pickDeficitJob_rational(v, world) {
         && hasSlot(v, 'forager', cap, counts)) return 'forager';
   }
 
+  // ★★[T1148] 추위 빚 — 땔감도 생존 필요(위 `T1148_FUEL_JOB` 머리말 · 끔 = 이 줄 무동작). 기근 블록 **앞**이다(블록 안팎 같은 잣대).
+  if (T1148_FUEL_JOB && foodEquiv > N * 6 && hasSlot(v, 'lumberjack', cap, counts) && !(T325_WOOD_ACT && v._t325Cells === 0)) {
+    const _c = t1148Cold(v);
+    if (_c && _c.debt > 0 && _c.fuelDays < foodEquiv / N + FD_DEATH_DAYS) return 'lumberjack';
+  }
   // 진짜 기근 (food < N*30일치) — 식량 직업 강제. ★경제적 정당성: 자급경제는 맬서스 상한에서 돌고,
   //   강제 30일버퍼가 ①식량안보→특화 노동 해방 ②식량생산 최대화→인구 상한 달성. (게이트 완화 실험 시 인구·특화 둘다 악화 확인)
   if (foodEquiv < N * 30) {
@@ -15546,6 +15582,7 @@ module.exports = {
 
   _LEGACY_CONTRIBUTES: LEGACY_CONTRIBUTES,
   T958_HOUSE_REAL,   // ★[T958] 집 행위 마을 econ 주거 = 지은 침상까지(★[T974] 켬 기본 · `=0` 되돌림 · ★[T966] 끔 기본이던 글자) — 방아쇠(서버 `villages.js`)가 읽는다
+  T1148_FUEL_JOB, t1148Cold,   // ★[T1148] 추위 빚(끔 기본 · `'1'` 켬)
   T1135_FUEL_EQ, FIREWOOD_PC_SRC, woodShareD, woodFormulaOff,   // ★[T1135] 땔감 평형(끔 기본 · `'1'` 켬) · 고증 d · 나무꾼 분자 · 수식 목재 걷어냄
   T1046_WOOD_SHARE,   // ★[T1046] 나무꾼 안전망 = 출생 문과 같은 주거 상한(끔 기본 · `'1'` 켬)
   T932_SMELT_CONT, t932Stat,   // ★[T932] 제련 날 마을 하루 결함 손잡이(켬 기본) + 계측 칸(관찰기 `t932-smelt-probe` 가 읽는다 — 행동 무관)
@@ -16263,6 +16300,16 @@ const T812_CARGO_TEMP = !(typeof process !== 'undefined' && process.env && proce
 //   고도 값 = econ 기온이 이미 쓰는 그 값(`_elevKmOf` — 호스트 지형층 주입 훅 · 미설치 0). ⚠지금 어떤 호스트도 넣지 않는다(산 높이 35m 캐논 ·
 //   존 `elevKmAt` 도 0) ⇒ 오늘의 세계에선 켜도 값이 같다(보고/T840 §0).
 const T840_LEG_ELEV = (typeof process !== 'undefined' && process.env && process.env.T840_LEG_ELEV === '1');
+// ★[T1148] 다가오는 겨울 끝까지 H 날 · 그 날들의 추위 합 — 위 기온 정본(`temperatureAt` · 밤 = 낮 − 일교차 · 추위 = (기준 − 밤) ÷ 15 — 마을 틱의 그 식)을 내일부터 센다.
+//   추위가 > 0 인 첫 철을 만나 그 철이 끝나는 날에서 멈춘다 · 두 해(730날) 안에 추운 날이 없으면 H = 0(추위 빚 없음). 새 수 0(730 = 두 해 — 철 하나를 반드시 지나는 창).
+function _t1148Ahead(day, elevKm) {
+  let H = 0, cs = 0, seen = false;
+  for (let t = 1; t <= 730; t++) {
+    const c = Math.max(0, Math.min(1, (CLIMATE.coldRef - (temperatureAt(day + t, null, elevKm) - CLIMATE.diurnalAmp)) / 15));
+    if (c > 0) { seen = true; cs += c; H = t; } else if (seen) break;
+  }
+  return seen ? { H, cs } : { H: 0, cs: 0 };
+}
 function _elevKmOf(v) { return (v && v.land && v.land.elev) || 0; }   // 호스트(지형층) 고도 주입 훅 — 미설치=0(해수면) 무해
 const _t812Pre = new Map();   // 떠난 날 · 고도 → [0, 첫날 노출, 둘째 날까지 …] (그 날부터의 누적 · 날마다 한 번만 센다)
 function _t812Exp(day0, days, elevKm) {   // 떠난 날 · 날 수(· 고도 km — T840) → 길 위 노출(소수 날이면 그 몫만큼 다음 날 하루치)
@@ -17804,6 +17851,7 @@ function tickWorldV2Parts(world) {
         v._tempDay = temperatureAt(world.day, null, _elev);
         v._tempNight = v._tempDay - CLIMATE.diurnalAmp;
         v._coldStress = Math.max(0, Math.min(1, (CLIMATE.coldRef - v._tempNight) / 15));
+        if (v1.T1148_FUEL_JOB) v._t1148Ahead = _t1148Ahead(world.day, _elev);   // ★[T1148] 다가오는 겨울 끝까지 — 같은 기온 식으로 미리 센다(끔 = 무동작)
       }
       if (useSeason) applyLandModifiers(v, season, world);
       v1.tickVillage(v, world.day);
@@ -18212,7 +18260,8 @@ module.exports = {
   // ★[T726] 목표 한 함수(결정층 식 정본) — 하네스 · 관찰기가 같은 문을 부른다
   T726_ONE_TARGET, _targetCtxV2, _targetV2, _priceFromV2, _oreCapV2, _priceOfV2, _priceNowV2, _settleParamsV2, tickDecay,
   // 기온 모델(2026-07-12) — 생활층(밤낮 시간 곡선)·프로브용 노출
-  temperatureAt, CLIMATE, seasonOf,   // ★[T570] seasonOf = 달력 정본 위임(events·test-calendar ④ 가 이걸 견준다)
+  temperatureAt, CLIMATE, seasonOf, _t1148Ahead,   // ★[T1148] 다가오는 겨울 끝까지(하네스가 부른다)
+    // ★[T570] seasonOf = 달력 정본 위임(events·test-calendar ④ 가 이걸 견준다)
   // ★[2026-08-03e 배치 12 ②] 인구 유입 문턱 — 하네스·길드 재고 UI 가 **같은 함수**를 부른다(사본 금지)
   tickRecovery, recoveryFoodThreshold, recoveryFoodHave,
   // ★[T299] 둘째 화물·관문의 문 — 하네스와 `lab-wiring-check [H]` 가 엔진 **기본이 끔인지** 실측한다(사본 0)
