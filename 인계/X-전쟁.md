@@ -9,7 +9,7 @@
 * **켬 기본 넷**(되돌림 `=0` — 넷 다 `=0` 판 = main 바이트 같음 · 전쟁 팔 800날 3/3): `T1076_ARMY_MORALE`(K2) · `T466_LOOT_ACT` · `T826_LOOT_BODY`(K28 · 곡물 노획 · 무기 노획이 결판 순간 곳간이 아니라 몸 짐 → 귀환 장부) · **새** `T1168_SORTIE_AMMO`(K5).
 * K5 — 호스트 `_t1168WriteAmmo`(`_econDayWar` 의 war-core `daily` 바로 앞)가 교전 몸이 선 전쟁마다 방어 편(B) 산 몸 · 궁수 · 투석병 수 · 편 탄(`ctx.sides.B.arrows` · `stones`)을 `w._defAmmo` 에 적는다(교전 없으면 지움). war-core `_opDefenseDaily` 출격 결단만 `_opDefOdds(…, ammo)` → 방어 유효전력 × `_opAmmoShare` = 1 − Σ 사수 × (1 − mAtk/atk) × (1 − 탄 비) ÷ 산 몸(battle-core 병종 표 · 새 수 0 · 화살 0 궁수 = 10/44). 태세 · 항복 · 위협 T 는 종전(칸 안 넘김).
 * T906 원정 굶음 판(`T906_ARMY_STARVE` 'die' · 'mrl' · war-core `warDraftKillPid`)은 걷었다 — 남은 `_t906Day`(몸 굶주림 하루 · Body 정본)는 T1080 길 위 하루가 쓴다.
-* 판(node v26 — 맥 nvm node 22.15 의 `node:sqlite` 는 같은 번호 인자(`?1` 되씀)에서 "column index out of range" 로 마을 시뮬 init 이 죽는다 · main 도 같음): 전쟁 팔 800날에서 K2 만 = 1020 한 시드 D650 부터(굶은 원정 몸-날 5,916 → 816 · 최저 사기 0.305) · K5 만 = 바이트 같음 3/3 · K28 만 = 세 시드 D367 부터(무기 노획 몸 짐 61 ~ 105) — 전문 `보고/T1168_2026-11-05.md`.
+* 판(node v26 — 맥 nvm node 22.15 의 `node:sqlite` 는 같은 번호 인자(`?1` 되씀)에서 "column index out of range" 로 마을 시뮬 init 이 죽는다 · main 도 같음): 전쟁 팔 800날에서 K2 만 = 1020 한 시드 D650 부터(굶은 원정 몸-날 5,916 → 816 · 최저 사기 0.305) · K5 만 = 바이트 같음 3/3 · K28 만 = 세 시드 D367 부터(무기 노획 몸 짐 61 ~ 105) — 전문 `보고/API_2026-11-05_0245.md`.
 * 함정: 곡물 노획(T466)은 결판이 "격퇴 + 조공" 인 전쟁엔 안 선다 — 몸∞ 800날 세 시드 중 한 전쟁(1020 · 68.1 다 실음)과 수비 전장 더미 줍기뿐. 관찰기 `scripts/t1168-observe.js`(읽기만).
 
 ## X-19. ★2026-11-02 — T1042 교전 없는 철수 · 존 교전 시야 막힘 해부 (최신 · 맨 위)
