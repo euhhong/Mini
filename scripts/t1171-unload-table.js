@@ -20,4 +20,4 @@ for (const seed of [1020,7,42]) {
       for(const row of side.rows||[]) if(row.inventory) row.inventory=Object.fromEntries(Object.entries(row.inventory).filter(([,v])=>v!==0));
     } return e; })});
 }
-process.stdout.write(JSON.stringify({arms:'--war inf + assault*3 repeat, 50 days',rows},null,2)+'\n');
+process.stdout.write(JSON.stringify({arms:'--war inf + assault*3 repeat, 50 days',rows})+'\n');
