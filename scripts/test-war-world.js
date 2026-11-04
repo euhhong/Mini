@@ -270,13 +270,6 @@ function _run(opts) {
     // ⓒ 치고 빠지기 — 첫 접촉 1.5초 뒤 후퇴 명령 · 대치 확인 · 다음 결단(돌격 정책)에서 재교전
     if (tr.hitrun === 'wait' && tr.engagedAt >= 0 && t - tr.engagedAt >= (opts.hitrunAfter || 45)) { H._warOrderFallback(body); tr.hitrun = 'fallback'; tr.resolveAtFallback = counts.resolve; }   // ★[T906] opts.hitrunAfter — 물러나기 전 교전 틱(없으면 종전 45)
     if (tr.hitrun === 'fallback' && w.phase === 'march' && body && body.mode === 'camp') { tr.hitrun = 'standoff'; tr.standoffAt = t; tr.resolveAtStandoff = counts.resolve; tr.nSec = WL.standoffSec(f); }
-    //   ★[T906] (바) 대치로 물러난 교전 뒤 몰사 — 대치 30틱 뒤 산 공격 몸을 다 굶어 죽인다(제품 함수 `_t906Die` 그대로) · 'new' = 몰사 문(`_t906Wipe` — 철수 전이) · 'old' = 옛 문(몸 없는 전쟁 `noArmy`)
-    if (opts.t906WipeAtStandoff && tr.hitrun === 'standoff' && tr.t906Wiped == null && t - tr.standoffAt === 30) {
-      const B = H.state.warBodies.get(w.id); tr.aDeadAtWipe = tr.aDead;
-      for (const pid of [...((B && B.pids) || [])]) { const p = players.get(pid); if (p && (p.hp == null || p.hp > 0)) H._t906Die(w, B, p, world.day); }
-      if (opts.t906WipeAtStandoff === 'old') B.noArmy = true; else if (!H._t906Live(B)) H._t906Wipe(w, B, world.day);
-      tr.t906Wiped = world.day;
-    }
     if (tr.hitrun === 'standoff' && body && body.defGroup && t - tr.standoffAt === 30 * 20) {   // 대치 20초 뒤
       const dg = body.defGroup; tr.defHomeGap = Math.hypot(dg.cmd.cx - dg.holdPt.cx, dg.cmd.cy - dg.holdPt.cy);
       tr.defAllCtl = f.ctx.units.filter(u => u.side === 'B' && u.hp > 0).every(u => u.ctl);
@@ -1084,61 +1077,15 @@ function rationActPart() {
   const hr = (hShort.packDays || []).map(d => d.ration).filter(x => x != null);
   ok(hr.length && hr.some(x => x < 1) && hr.every(x => x >= 0 && x <= 1) && hShort.ended && hShort.ended.why === hOff.ended.why,
     'ⓥ 사기 곡선 — 오늘 몫이 짐에 있나(0~1)를 **매일** 다시 적는다 · 짐이 모자라면 1 아래 · 결단(철수)은 장부와 같다', `ration ${hr.join(',')} · 끝 ${hShort.ended && hShort.ended.why}`);
-  // ★★[T906] 원정이 굶으면 — 손잡이 `T906_ARMY_STARVE`('die' = ㄱ 몸 사다리로 약해지고 죽는다 · 'mrl' = ㄴ 안 죽고 사기 항 · 그 밖 = 끔 = 종전)
+  // ★★[T906 → T1168 걷음] 원정 굶음 판(`T906_ARMY_STARVE` 'die' · 'mrl')은 걷었다 — ★재민 11-02 문 2-b(군량 빚 + 사기 평형 · T1076 켬 기본)가 갈음한다.
   {
-    say('\n[ⓥ·T906] 원정이 굶으면 — ㄱ 몸의 굶주림 사다리(Body 정본)로 약해지고 그 자리에서 죽는다(econ 사망 한 사람 · 이중 0) · ㄴ 안 죽고 허기 무너짐이 사기 항 입력 · 끔 = 종전');
-    const keep906 = ['T906_ARMY_STARVE', 'T295_RATION_MRL'].map(k => [k, process.env[k]]);
-    const set906 = (v, wt) => { if (v == null) delete process.env.T906_ARMY_STARVE; else process.env.T906_ARMY_STARVE = v; if (wt == null) delete process.env.T295_RATION_MRL; else process.env.T295_RATION_MRL = String(wt); };
-    const runS = (v, wt, o) => { set906(v, wt); try { return run(true, o); } finally { set906(null, null); } };
-    const sig9 = (r) => JSON.stringify({ e: r.ended, h: r.posHash, s: Object.assign({}, r.stat, { t906: undefined }), ph: r.phase, c: r.counts });   // 손잡이 제 셈 칸(t906) 밖
-    const rs = (r) => (r.packDays || []).map(d => d.ration).join(',');
-    const B = require(path.join(ROOT, 'server', 'body.js')), xAt = 100 * (1 - B.extremeAt('hunger'));
-    //   (가) 짧은 판 — hShort 그 판(포위만 · 팩 반나절 · 행군 1일): 끔 · 다른 글자 = 종전
-    const HS = Object.assign({}, H, { packFood: 12 * WarCore.WAR_RATION / 2 });
-    const z0 = runS(null, null, HS), zx = runS('1', null, HS), ms = runS('mrl', null, HS);
-    ok(sig(z0) === sig(hShort) && JSON.stringify(z0.book) === JSON.stringify(hShort.book) && sig(zx) === sig(z0) && JSON.stringify(zx.book) === JSON.stringify(z0.book) && !z0.t906 && !zx.t906 && !z0.starve && !zx.starve && rs(zx) === rs(z0),
-      "ⓥ·T906 끔 — 미설정 · 다른 글자('1')는 종전 판 그대로(끝 · 해시 · 짐 장부 · 사기 곡선 한 글자 같다 · 사다리 표 · 셈 칸이 안 선다)", `끝 ${z0.ended && z0.ended.why} · 못 먹음 ${z0.book ? z0.book.unfed : '-'}`);
-    ok(sig9(ms) === sig9(z0) && JSON.stringify(ms.book) === JSON.stringify(z0.book) && ms.t906 && ms.t906.dead === 0,
-      'ⓥ·T906 ㄴ — 사기 항 가중치(`T295_RATION_MRL`) 미설정이면 판 무변(끝 · 해시 · 짐 장부 — 사기 식이 안 돈다 · ㄴ 의 크기는 그 값이 정한다) · 굶어 죽음 0', `끝 ${ms.ended && ms.ended.why} · ration ${rs(ms)}`);
-    //   (나) 긴 행군 판 — 포위만 · 팩 반나절 · 행군 8일(교전 없이 길에서 굶는다)
-    const HL = Object.assign({}, H, { packFood: 12 * WarCore.WAR_RATION / 2, marchDays: 8 });
-    const l0 = runS(null, null, HL), lg = runS('die', null, HL), lm = runS('mrl', null, HL);
-    ok(lg.starve && lg.starve.length === lg.onBodies && lg.t906 && lg.t906.hungryBodyDays === lg.book.hungryDays && lg.t906.hungryBodyDays > 0 && lg.starve.some(e => e.min < xAt) && lg.t906.hpLost > 0 && !l0.starve,
-      'ⓥ·T906 ㄱ 사다리 — 짐꾼 몸마다 게이지 · 굶은 몸-날 = 장부 `hungryDays` · 극단(허기 ≤ ' + xAt.toFixed(1) + ' — Body 정본 문턱)에 닿은 몸이 HP 를 잃는다 · ★대조 끔은 표가 없다', lg.t906 ? `몸 ${lg.starve.length} · 굶은 몸-날 ${lg.t906.hungryBodyDays} · 최저 ${lg.t906.minH.toFixed(1)} · 잃은 HP ${lg.t906.hpLost.toFixed(1)}` : '');
-    ok(lg.t906 && lg.t906.dead >= 1 && lg.t906.econDead === lg.t906.dead && lg.book.starveDead === lg.t906.dead && l0.atkPop0 - l0.atkPop === 0 && lg.atkPop0 - lg.atkPop === lg.t906.dead,
-      'ⓥ·T906 ㄱ 죽음(길) — [자명 통과 금지] 교전 없이 길에서 굶어 죽는 몸이 선다 · 몸 하나 = econ 사망 한 사람(묶인 징발자 — 전쟁 정산 소유) · 공격 마을 인구가 정확히 그만큼 준다(끔 판 0)', lg.t906 ? `굶어 죽음 ${lg.t906.dead}/${lg.onBodies} · econ ${lg.t906.econDead} · 인구 ${lg.atkPop0} → ${lg.atkPop}(끔 ${l0.atkPop0} → ${l0.atkPop})` : '');
-    ok(lg.warDone && near(ident(lg), lg.book.load) && near(ident(l0), l0.book.load),
-      'ⓥ·T906 ㄱ 항등 — 곳간에서 나간 = 몸이 먹음 + 내려놓음 + 드랍(+ 아직 짐) · 굶어 죽은 몸의 짐은 그 자리에 떨어진다(드랍)', `${lg.book.load} = ${lg.book.eaten}+${lg.book.back}+${lg.book.drop}+${(lg.bagLeft || 0)}`);
-    ok(lm.t906 && lm.t906.dead === 0 && lm.atkPop0 - lm.atkPop === 0 && lm.starve && rs(lm) !== rs(l0) && (lm.packDays || []).every(d => d.ration == null || (d.ration >= 0 && d.ration <= 1)) && (lm.packDays || []).some(d => d.ration != null && d.ration < 0.5) && sig9(lm) === sig9(l0),
-      'ⓥ·T906 ㄴ(길) — 안 죽는다(굶어 죽음 0 · 인구 무변) · 사기 항 입력(ration)이 짐 잔량 비 → 허기 무너짐(Body 회복 배율 곡선)으로 바뀐다 · 가중치 미설정이면 판 무변', `ration ${rs(lm)}`);
-    //   (다) 돌격 판 — 팩 반나절 · 하루 10초(교전이 여러 날에 걸친다 — 전쟁 자와 같은 하루): 교전 중 굶어 죽은 단위는 판의 사상 셈 밖
-    const AS = Object.assign({}, A, { packFood: 12 * WarCore.WAR_RATION / 2, dayMs: 10000 });
-    const a0 = runS(null, null, AS), ag = runS('die', null, AS);
-    ok(ag.t906 && ag.t906.dead >= 1 && ag.t906.econDead === ag.t906.dead && ag.aDown === ag.aDead + ag.t906.dead && a0.aDown === a0.aDead && ag.aStart === ag.aUnits - ag.t906.dead && a0.aStart === a0.aUnits,
-      'ⓥ·T906 ㄱ 죽음(교전) — [자명 통과 금지] 교전 중 굶어 죽는 몸이 선다 · 그 단위는 누웠지만 판의 사상 셈(`sides.A.dead` → `warKill`) 밖이다(누운 단위 = 사상 셈 + 굶어 죽음 · ★대조 끔은 누운 단위 = 사상 셈) ⇒ 한 사람은 한 번만 죽는다 · 명부에서도 빠진다(시작 수 = 단위 − 굶어 죽음 — 결판 생존에 안 든다)', ag.t906 ? `굶어 죽음 ${ag.t906.dead} · 누운 ${ag.aDown} = 사상 ${ag.aDead} + ${ag.t906.dead} · 시작 ${ag.aStart} = 단위 ${ag.aUnits} − ${ag.t906.dead} · 끔 누운 ${a0.aDown} = ${a0.aDead} · 끝 ${ag.ended && ag.ended.why}(끔 ${a0.ended && a0.ended.why})` : '');
-    ok(ag.warDone && near(ident(ag), ag.book.load), 'ⓥ·T906 ㄱ 항등(교전) — 먹음 + 내려놓음 + 드랍 + 짐 = 곳간에서 나간', `${ag.book.load} = ${ag.book.eaten}+${ag.book.back}+${ag.book.drop}+${(ag.bagLeft || 0)}`);
-    //   (마) 돌격 정책 긴 행군 판 — 팩 반나절 · 행군 8일: 닿기 전에 몸이 다 굶어 죽는다(돌격 정책은 군량이 바닥나도 철수를 안 고른다 — 빈 원정이 돌 자리)
-    const AL = Object.assign({}, A, { packFood: 12 * WarCore.WAR_RATION / 2, marchDays: 8, maxTicks: 30 * 60 * 40 });
-    const w0 = runS(null, null, AL), wg = runS('die', null, AL);
-    ok(wg.t906 && wg.t906.wiped === 1 && wg.t906.dead === wg.onBodies && wg.book.starveWiped != null && wg.ended && wg.ended.why === 'withdrawQuiet' && wg.warDone && wg.counts.resolve === 0 && near(ident(wg), wg.book.load)
-      && w0.warDone && w0.counts.resolve >= 1 && w0.ended && w0.ended.why !== 'withdrawQuiet' && !w0.t906,
-      'ⓥ·T906 ㄱ 몰사(길) — [자명 통과 금지] 돌격 정책 원정의 몸이 닿기 전에 다 굶어 죽는다 → war-core 철수 전이 → 하루 마감 뒤 `_warAfterDaily` 가 조용히 끝낸다(교전 없음 · 결판 0 · 빈 원정이 돌지 않는다 · 항등 그대로) · ★대조 끔은 닿아서 결판한다(정산 ≥ 1)',
-      wg.t906 ? `굶어 죽음 ${wg.t906.dead}/${wg.onBodies} · 다 죽은 날 D${wg.book.starveWiped} · 끝 ${wg.ended && wg.ended.why} · 정산 ${wg.counts.resolve}(끔 ${w0.counts.resolve} · 끝 ${w0.ended && w0.ended.why})` : '');
-    //   (바) 치고 빠지기 판 — 교전 5초 뒤 물러나 대치(국면 행군 · 정산 0 — 사상은 판에 쌓여 있다) → 대치 30틱 뒤 산 공격 몸이 다 굶어 죽는다(제품 함수 그대로)
-    const HB = { seed: 17, viewer: false, scenario: 'hitrun', maxTicks: 30 * 60 * 40, dayMs: 60000, untilHome: true, hitrunAfter: 150 };
-    const bn = runS('die', null, Object.assign({}, HB, { t906WipeAtStandoff: 'new' })), bo = runS('die', null, Object.assign({}, HB, { t906WipeAtStandoff: 'old' }));
-    ok(bn.t906Wiped != null && bn.aDeadAtWipe > 0 && bn.t906 && bn.t906.wiped === 1 && bn.t906.econDead === bn.t906.dead && bn.ended && bn.ended.why === 'withdraw' && bn.counts.resolve === 1 && bn.warDone
-      && bn.atkPop0 - bn.atkPop === bn.aDeadAtWipe + bn.t906.dead && bo.t906Wiped != null && bo.aDeadAtWipe === bn.aDeadAtWipe && bo.counts.resolve === 0 && bo.atkPop0 - bo.atkPop === bo.t906.dead,
-      'ⓥ·T906 ㄱ 몰사(대치) — [자명 통과 금지] 교전 뒤 대치로 물러난 원정의 몸이 다 굶어 죽는다 → 철수 전이 → `_warAfterDaily` 가 그 교전을 정산한다(정산 1 · 수비 승 · 그때까지의 사상이 econ 에 선다 — 공격 마을 인구 감소 = 사상 + 굶어 죽음) · ★대조 옛 몸 없는 전쟁 문(`noArmy`)은 그 교전을 정산 없이 버린다(정산 0 · 사상이 econ 에 안 선다)',
-      `대치 전 사상 ${bn.aDeadAtWipe} · 굶어 죽음 ${bn.t906 ? bn.t906.dead : '-'} · 끝 ${bn.ended && bn.ended.why} · 정산 ${bn.counts.resolve} · 인구 ${bn.atkPop0} → ${bn.atkPop}(옛 문 정산 ${bo.counts.resolve} · 인구 ${bo.atkPop0} → ${bo.atkPop} · 끝 ${bo.ended && bo.ended.why})`);
-    //   (라) 정적 — 사다리는 Body · kcal 정본 함수(사본 0) · econ 사망은 war-core 한 문(`_warRemoveNpc`) · 손잡이 두 글자만 켠다
+    say('\n[ⓥ·T906 걷음] 원정 굶음 판 손잡이가 없다 · 남은 몸 굶주림 하루(`_t906Day` — T1080 길 위 하루가 쓴다)는 Body 정본 함수 그대로');
     const VS9 = fs.readFileSync(path.join(ROOT, 'server/villages.js'), 'utf8'), WC9 = fs.readFileSync(path.join(ROOT, 'sim/war-core.js'), 'utf8');
-    const blk = VS9.slice(VS9.indexOf('function _t906Mode()'), VS9.indexOf('function _warRationEat(w, day)'));
-    ok(/return \(v === 'die' \|\| v === 'mrl'\) \? v : '';/.test(blk) && /B\.decayStep\(h, T, 1\)/.test(blk) && /B\.extremeHpRate\(sc\)\.rate/.test(blk) && /K\.dayHunger\(\)/.test(blk) && /K\.DAY_MS_DEFAULT/.test(blk) && /B\.recoverMult\(sc\)/.test(blk)
-      && !/\b(2880|1440|4320|0\.45|0\.89)\b/.test(blk.replace(/\/\/.*$/gm, '')) && /function warDraftKillPid\(vil, pid\) \{[^}]*for \(const n of e\.npcs\) if \(n\._warPid === pid\) return _warRemoveNpc\(e, n\);/.test(WC9)
-      && /function _t906Wipe[\s\S]*w\.op = 'withdraw'; w\._sortie = false; w\.phase = 'return'; w\.eta = day \+ \(w\.marchDays \|\| 1\); body\._lastOp = 'withdraw';/.test(blk) && !/noArmy/.test(blk.replace(/\/\/.*$/gm, '')),
-      "ⓥ·T906 정적 — 손잡이 'die' · 'mrl' 만 · 사다리 = Body(`decayStep` · `extremeHpRate` · `recoverMult`) · kcal(`dayHunger` · `DAY_MS_DEFAULT`) 정본 함수(문턱 · 속도 수 사본 0) · econ 사망 = war-core `_warRemoveNpc` 한 문 · 몰사 = war-core 철수 전이(교전 정리는 `_warAfterDaily` — 몸 없는 전쟁 문 `noArmy` 아님 · 대치로 물러난 교전의 사상도 정산된다)");
-    for (const [k, v] of keep906) { if (v == null) delete process.env[k]; else process.env[k] = v; }
+    const code = (t) => t.replace(/\/\/.*$/gm, '');
+    const blk = VS9.slice(VS9.indexOf('function _t906Day(ent)'), VS9.indexOf('let _armyMoraleMod = null;'));
+    ok(!/T906_ARMY_STARVE/.test(code(VS9)) && !/T906_ARMY_STARVE/.test(code(WC9)) && !/function _t906(Mode|Step|Sat|Die|Live|Wipe)\b/.test(VS9) && !/warDraftKillPid/.test(code(WC9))
+      && /B\.decayStep\(h, T, 1\)/.test(blk) && /B\.extremeHpRate\(sc\)\.rate/.test(blk) && typeof H._t906Day === 'function' && !('_t906Die' in H) && !('warDraftKillPid' in (H.state.war || {})),
+      'ⓥ·T906 걷음 — 손잡이 글자 0(코드) · 판 함수(Mode · Step · Sat · Die · Live · Wipe · war-core warDraftKillPid) 0 · 남은 하루(`_t906Day`)는 Body 정본(`decayStep` · `extremeHpRate`)', '');
   }
   // 이중 0 — 원정군은 마을 식사 명부에서 빠진다(econ 한 줄)
   const eatDay = (on) => {
