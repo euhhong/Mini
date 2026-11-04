@@ -18,7 +18,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const HOME = os.homedir();
 const MINI = process.env.MINI_DIR || path.join(HOME, 'Mini');
 const BASE = process.env.MINI_API_DIR || path.join(MINI, '_api');
-const KEYFILE = process.env.MINI_API_KEYFILE || path.join(HOME, '.config', 'mini-api', 'key');
+const KEYDIR = path.join(HOME, '.config', 'mini-api');
 const PATFILE = process.env.MINI_PATFILE || path.join(MINI, 'durango-mini', '.git', 'claude-pat.txt');
 const REPO_URL = 'https://github.com/simjaemin1/Mini.git';
 
@@ -26,11 +26,50 @@ const REPO_URL = 'https://github.com/simjaemin1/Mini.git';
 const argv = process.argv.slice(2);
 const flag = (k, d) => { const a = argv.find((x) => x === `--${k}` || x.startsWith(`--${k}=`)); if (!a) return d; return a.includes('=') ? a.split('=').slice(1).join('=') : true; };
 const words = argv.filter((x) => !x.startsWith('--'));
-const RESUME = !!flag('resume', false);                  // 지난 대화 이어서(같은 대화 · 같은 가지)
-const STATE = path.join(BASE, '지난대화.json');
+const ask = (q) => new Promise((res) => { const rl = readline.createInterface({ input: process.stdin, output: process.stdout }); rl.question(q, (a) => { rl.close(); res(a); }); });
+// 키 — 여러 계정 키를 이름으로 고른다: ~/.config/mini-api/key(기본) · key-<이름>(--key=<이름>). 장부 · 주기 상한은 키(= 계정)마다 따로.
+// 동시 실행 — 창마다 제 가지 · 제 워크트리 · 제 대화. 실행 중 표시는 _api/실행중/<pid>.json, 대화는 _api/대화/<가지>.json
+const CONV = path.join(BASE, '대화');
+const RUNDIR = path.join(BASE, '실행중');
+fs.mkdirSync(CONV, { recursive: true }); fs.mkdirSync(RUNDIR, { recursive: true });
+const alive = (pid) => { try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; } };
+function running() {
+  const out = [];
+  for (const f of fs.readdirSync(RUNDIR)) {
+    const fp = path.join(RUNDIR, f);
+    try { const r = JSON.parse(fs.readFileSync(fp, 'utf8')); if (r.pid !== process.pid && alive(r.pid)) out.push(r); else if (r.pid !== process.pid) fs.rmSync(fp, { force: true }); } catch { /* 반쯤 쓰인 파일 */ }
+  }
+  return out;
+}
+const RUNFILE = path.join(RUNDIR, `${process.pid}.json`);
+const markRunning = (o) => fs.writeFileSync(RUNFILE, JSON.stringify({ pid: process.pid, key: KEYLABEL, t: new Date().toISOString(), ...o }));
+process.on('exit', () => { try { fs.rmSync(RUNFILE, { force: true }); } catch { /* */ } });
+function conversations() {
+  const all = [];
+  for (const f of fs.readdirSync(CONV)) { try { all.push(JSON.parse(fs.readFileSync(path.join(CONV, f), 'utf8'))); } catch { /* */ } }
+  try { const old = JSON.parse(fs.readFileSync(path.join(BASE, '지난대화.json'), 'utf8')); if (!all.some((c) => c.branch === old.branch)) all.push(old); } catch { /* 옛 한 칸 */ }
+  return all.filter((c) => c.session && fs.existsSync(c.wt || '')).sort((a, b) => String(b.t).localeCompare(String(a.t)));
+}
+const RESUME_ARG = flag('resume', false);                // 지난 대화 이어서(같은 대화 · 같은 가지) · --resume=<번호|가지>
+const RESUME = !!RESUME_ARG;
 let last = null;
-try { last = JSON.parse(fs.readFileSync(STATE, 'utf8')); } catch { /* 없음 */ }
-if (RESUME && !(last && last.session && fs.existsSync(last.wt || ''))) { console.log('✗ 이어 갈 지난 대화가 없습니다 — 새로 시작하십시오.'); process.exit(5); }
+if (RESUME) {
+  const busy = new Set(running().map((r) => r.branch));
+  const all = conversations().filter((c) => !busy.has(c.branch));
+  if (!all.length) { console.log('✗ 이어 갈 대화가 없습니다(다른 창에서 돌고 있는 대화는 뺍니다) — 새로 시작하십시오.'); process.exit(5); }
+  const want = typeof RESUME_ARG === 'string' ? RESUME_ARG : '';
+  if (want) last = /^\d+$/.test(want) ? all[Number(want) - 1] : all.find((c) => c.branch === want);
+  else if (all.length === 1) last = all[0];
+  else {
+    console.log('이어 갈 대화:');
+    all.slice(0, 9).forEach((c, i) => console.log(`  ${i + 1}) ${String(c.t).slice(5, 16).replace('T', ' ')} · ${c.title || c.card} · ${c.branch}${c.key && c.key !== '기본' ? ' · 키 ' + c.key : ''}`));
+    last = all[Number((await ask('번호 (엔터 = 1): ')).trim() || 1) - 1];
+  }
+  if (!last) { console.log('✗ 그 대화를 못 찾았습니다.'); process.exit(5); }
+}
+const KEYNAME = String(flag('key', '') || (RESUME && last.key && last.key !== '기본' ? last.key : '')).replace(/[^A-Za-z0-9가-힣_-]/g, '');   // 이어서면 그 대화의 키
+const KEYFILE = process.env.MINI_API_KEYFILE || path.join(KEYDIR, KEYNAME ? `key-${KEYNAME}` : 'key');
+const KEYLABEL = KEYNAME || '기본';
 const cardArg = RESUME ? '' : words.find((x) => /^T\d+$/i.test(x));
 const card = RESUME ? last.card : (cardArg ? cardArg.toUpperCase() : 'API');
 const FREE = cardArg ? '' : words.join(' ').trim();      // 카드 번호가 아니면 = 재민이 말로 시킨 일 (이어서면 = 이어서 할 말)
@@ -45,12 +84,12 @@ const ONCE = !!flag('once', false);                      // 끝나고 이어서 
 const NO_SANDBOX = !!flag('no-sandbox', false);
 const EXTRA = flag('note', '');                           // 카드에 덧붙일 한 줄(선택)
 
-if (!RESUME && !cardArg && !FREE) { console.log('쓰는 법: node run.mjs T1150 [--model=opus|sonnet] [--budget=15] [--dry] [--once] [--no-sandbox] [--note="…"]\n      또는: node run.mjs "말로 시킬 일"\n      또는: node run.mjs --resume ["이어서 할 말"]'); process.exit(1); }
+if (!RESUME && !cardArg && !FREE) { console.log('쓰는 법: node run.mjs T1150 [--model=opus|sonnet] [--budget=15] [--dry] [--once] [--no-sandbox] [--note="…"] [--key=<이름>]\n      또는: node run.mjs "말로 시킬 일"\n      또는: node run.mjs --resume ["이어서 할 말"]'); process.exit(1); }
 
 // ── 비밀 가리기 ────────────────────────────────────────
 let PAT = '';
 try { PAT = fs.readFileSync(PATFILE, 'utf8').replace(/\s+/g, ''); } catch { /* 공개 읽기로 시도 */ }
-let KEY = (process.env.ANTHROPIC_API_KEY || '').trim();
+let KEY = KEYNAME ? '' : (process.env.ANTHROPIC_API_KEY || '').trim();
 if (!KEY) { try { KEY = fs.readFileSync(KEYFILE, 'utf8').trim(); } catch { /* 아래에서 안내 */ } }
 const mask = (s) => {
   let t = String(s ?? '');
@@ -77,6 +116,7 @@ if (!KEY && !DRY) {
     '✗ API 키가 없습니다. 한 번만 하시면 됩니다:',
     '  1) https://platform.claude.com/settings/keys 에서 키 만들기(크레딧이 연결된 "재민\'s Individual Org")',
     `  2) mkdir -p ~/.config/mini-api && pbpaste > ${KEYFILE} && chmod 600 ${KEYFILE}   (키를 복사한 뒤)`,
+    '  다른 계정 키는 이름을 붙여 key-<이름> 으로 두고 --key=<이름> 으로 고릅니다.',
     '  키는 채팅 · 레포 · 메모리에 절대 붙이지 마십시오.',
   ].join('\n'));
   process.exit(2);
@@ -96,23 +136,41 @@ function spentThisCycle() {
   if (!fs.existsSync(LEDGER)) return 0;
   const s0 = cycleStart();
   return fs.readFileSync(LEDGER, 'utf8').split('\n').slice(1).filter(Boolean)
-    .map((l) => l.split('\t')).filter((c) => new Date(c[0]) >= s0).reduce((a, c) => a + (Number(c[4]) || 0), 0);
+    .map((l) => l.split('\t')).filter((c) => new Date(c[0]) >= s0 && (c[7] || '기본') === KEYLABEL).reduce((a, c) => a + (Number(c[4]) || 0), 0);
 }
 const spent = spentThisCycle();
-console.log(`· 이번 주기(${cycleStart().toISOString().slice(0, 10)}~) 쓴 돈 $${spent.toFixed(2)} / 상한 $${CYCLE_CAP} · 이 카드 상한 $${BUDGET}`);
-if (!DRY && spent + BUDGET > CYCLE_CAP) { console.log(`✗ 주기 상한을 넘습니다 — --budget 을 줄이거나 --cap 을 올리십시오.`); process.exit(3); }
+const reserved = running().filter((r) => r.key === KEYLABEL).reduce((a, r) => a + (Number(r.budget) || 0), 0);   // 다른 창에서 돌고 있는 몫(상한 그대로 잡아 둔다)
+console.log(`· 키 ${KEYLABEL} · 이번 주기(${cycleStart().toISOString().slice(0, 10)}~) 쓴 돈 $${spent.toFixed(2)}${reserved ? ` + 다른 창 잡아 둔 $${reserved.toFixed(0)}` : ''} / 상한 $${CYCLE_CAP} · 이번 상한 $${BUDGET}`);
+if (!DRY && spent + reserved + BUDGET > CYCLE_CAP) { console.log(`✗ 주기 상한을 넘습니다 — --budget 을 줄이거나 --cap 을 올리십시오(다른 창이 끝나면 풀립니다).`); process.exit(3); }
+if (!DRY) markRunning({ budget: BUDGET, branch: RESUME ? last.branch : '' });
+
+// 저장소 잠금 — 여러 창이 같은 클론에서 가지 · 워크트리를 만들 때 한 번에 하나만
+async function withLock(fn) {
+  const L = path.join(BASE, '.repo-lock');
+  for (let i = 0; ; i++) {
+    try { fs.mkdirSync(L); break; } catch {
+      try { if (Date.now() - fs.statSync(L).mtimeMs > 600000) { fs.rmSync(L, { recursive: true, force: true }); continue; } } catch { /* */ }
+      if (i === 0) console.log('· 다른 S-API 창이 저장소를 쓰는 중 — 잠깐 기다립니다…');
+      await new Promise((r) => setTimeout(r, 300));
+    }
+  }
+  try { return fn(); } finally { fs.rmSync(L, { recursive: true, force: true }); }
+}
 
 // ── 2. 클론 · 최신 main ────────────────────────────────
 const REPO = path.join(BASE, 'repo');
-if (!fs.existsSync(path.join(REPO, '.git'))) {
-  console.log('· 처음이라 클론합니다(몇 분 걸립니다)…');
-  sh('git', ['clone', '--no-checkout', authUrl(), REPO]);
-  git(['remote', 'set-url', 'origin', REPO_URL]);           // PAT 를 .git/config 에 남기지 않는다
-  git(['config', 'user.name', 'Mini API 세션']);
-  git(['config', 'user.email', 'api-session@mini.local']);
-}
-git(['fetch', '-q', authUrl(), '+refs/heads/main:refs/remotes/origin/main']);
-const baseHash = RESUME ? last.base : git(['rev-parse', 'origin/main']).out;
+const baseHash = await withLock(() => {
+  if (!fs.existsSync(path.join(REPO, '.git'))) {
+    console.log('· 처음이라 클론합니다(몇 분 걸립니다)…');
+    sh('git', ['clone', '--no-checkout', authUrl(), REPO]);
+    git(['remote', 'set-url', 'origin', REPO_URL]);           // PAT 를 .git/config 에 남기지 않는다
+    git(['config', 'user.name', 'Mini API 세션']);
+    git(['config', 'user.email', 'api-session@mini.local']);
+  }
+  git(['config', 'gc.auto', '0']);                            // 여러 창이 동시에 커밋할 때 자동 gc 가 끼어들지 않게
+  git(['fetch', '-q', authUrl(), '+refs/heads/main:refs/remotes/origin/main']);
+  return RESUME ? last.base : git(['rev-parse', 'origin/main']).out;
+});
 console.log(`· main = ${baseHash.slice(0, 8)}`);
 
 // ── 3. 카드 ────────────────────────────────────────────
@@ -131,22 +189,28 @@ const d = new Date();
 const mmdd = String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
 const hhmm = String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0');
 const slug = cardArg ? card.toLowerCase() : `free-${hhmm}`;
-const ask = (q) => new Promise((res) => { const rl = readline.createInterface({ input: process.stdin, output: process.stdout }); rl.question(q, (a) => { rl.close(); res(a); }); });
 let branch, WT;
 if (RESUME) { branch = last.branch; WT = last.wt; }
 else {
-  // 지난 대화가 고친 것 없이 끝났으면 그 워크트리는 여기서 치운다(이어서 할 일이 새로 생겼으니)
-  if (last && last.wt && fs.existsSync(last.wt) && !last.pushed) {
-    const dirty = sh('git', ['status', '--porcelain'], { cwd: last.wt, ok: true }).out;
-    const ah = Number(sh('git', ['rev-list', '--count', `${last.base}..HEAD`], { cwd: last.wt, ok: true }).out || 0);
-    if (!dirty && ah === 0) { git(['worktree', 'remove', '--force', last.wt], { ok: true }); git(['branch', '-D', last.branch], { ok: true }); }
-  }
-  branch = `batch/api-${slug}-${mmdd}`;
-  const remoteHas = (b) => sh('git', ['ls-remote', '--heads', authUrl(), b], { cwd: REPO }).out.length > 0;
-  const localHas = (b) => git(['rev-parse', '--verify', '-q', `refs/heads/${b}`], { ok: true }).code === 0;
-  for (let n = 2; remoteHas(branch) || localHas(branch); n++) branch = `batch/api-${slug}-${mmdd}-${n}`;
-  WT = path.join(BASE, 'wt', branch.replace(/\//g, '_'));
-  git(['worktree', 'add', '-q', '-b', branch, WT, 'origin/main']);
+  await withLock(() => {
+    // 고친 것 없이 끝난 지 사흘 넘은 대화는 워크트리 · 가지 · 기록을 치운다(밀린 가지는 PM 착지 몫이라 그대로)
+    const busy = new Set(running().map((r) => r.branch));
+    for (const c of conversations()) {
+      if (c.pushed || busy.has(c.branch) || Date.now() - new Date(c.t).getTime() < 3 * 864e5) continue;
+      const dirty = sh('git', ['status', '--porcelain'], { cwd: c.wt, ok: true }).out;
+      const ah = Number(sh('git', ['rev-list', '--count', `${c.base}..HEAD`], { cwd: c.wt, ok: true }).out || 0);
+      if (dirty || ah) continue;
+      git(['worktree', 'remove', '--force', c.wt], { ok: true }); git(['branch', '-D', c.branch], { ok: true });
+      fs.rmSync(path.join(CONV, c.branch.replace(/\//g, '_') + '.json'), { force: true });
+    }
+    branch = `batch/api-${slug}-${mmdd}`;
+    const remoteHas = (b) => sh('git', ['ls-remote', '--heads', authUrl(), b], { cwd: REPO }).out.length > 0;
+    const localHas = (b) => git(['rev-parse', '--verify', '-q', `refs/heads/${b}`], { ok: true }).code === 0;
+    for (let n = 2; remoteHas(branch) || localHas(branch); n++) branch = `batch/api-${slug}-${mmdd}-${n}`;
+    WT = path.join(BASE, 'wt', branch.replace(/\//g, '_'));
+    git(['worktree', 'add', '-q', '-b', branch, WT, 'origin/main']);
+  });
+  if (!DRY) markRunning({ budget: BUDGET, branch });
   console.log(`· 가지 ${branch} · 작업 폴더 ${WT}`);
   if (!DRY) {
     console.log('· npm ci …');
@@ -281,19 +345,21 @@ if (ahead > 0) {
   if (r.code !== 0) git(['bundle', 'create', path.join(BASE, '결과', branch.replace(/\//g, '_') + '.bundle'), `origin/main..${branch}`], { ok: true });
 }
 
-fs.writeFileSync(STATE, JSON.stringify({ session, branch, wt: WT, card, free: IS_FREE, base: baseHash, pushed: ahead > 0 || !!(last && RESUME && last.pushed), t: new Date().toISOString() }, null, 1));
+const title = RESUME ? last.title : (IS_FREE ? FREE.slice(0, 40) : `${card} ${cardText.split('\n')[0].replace(/^#\s*/, '').slice(0, 40)}`);
+fs.writeFileSync(path.join(CONV, branch.replace(/\//g, '_') + '.json'), JSON.stringify({ session, branch, wt: WT, card, free: IS_FREE, base: baseHash, key: KEYLABEL, title, pushed: ahead > 0 || !!(RESUME && last.pushed), t: new Date().toISOString() }, null, 1));
+if (RESUME) { try { const o = JSON.parse(fs.readFileSync(path.join(BASE, '지난대화.json'), 'utf8')); if (o.branch === branch) fs.rmSync(path.join(BASE, '지난대화.json'), { force: true }); } catch { /* */ } }
 
 // ── 8. 장부 · 결과 ─────────────────────────────────────
-if (!fs.existsSync(LEDGER)) fs.writeFileSync(LEDGER, '시각\t카드\t가지\t모델\t달러\t결과\t커밋수\n');
-fs.appendFileSync(LEDGER, [new Date().toISOString(), card, branch, MODEL, result.cost.toFixed(4), result.subtype, ahead].join('\t') + '\n');
+if (!fs.existsSync(LEDGER)) fs.writeFileSync(LEDGER, '시각\t카드\t가지\t모델\t달러\t결과\t커밋수\t키\n');
+fs.appendFileSync(LEDGER, [new Date().toISOString(), card, branch, MODEL, result.cost.toFixed(4), result.subtype, ahead, KEYLABEL].join('\t') + '\n');
 const summary = [
   `# ${card} — API 세션 결과 (${today})`, '',
   `- 가지: \`${branch}\` · 머리 \`${head.slice(0, 8)}\` · 베이스 \`${baseHash.slice(0, 8)}\` · 커밋 ${ahead}개 · ${pushed}`,
-  `- 모델 ${MODEL} · 돈 $${result.cost.toFixed(2)}(카드 상한 $${BUDGET}) · 턴 ${result.turns} · 끝남 = ${result.subtype}`,
-  `- 이번 주기 합계 $${(spent + result.cost).toFixed(2)} / $${CYCLE_CAP}`,
+  `- 키 ${KEYLABEL} · 모델 ${MODEL} · 돈 $${result.cost.toFixed(2)}(카드 상한 $${BUDGET}) · 턴 ${result.turns} · 끝남 = ${result.subtype}`,
+  `- 이번 주기 합계(키 ${KEYLABEL}) $${(spent + result.cost).toFixed(2)} / $${CYCLE_CAP}`,
   `- 기록: ${logPath}`, '', '## 에이전트 마지막 말', '', mask(result.text || '(없음)'),
 ].join('\n');
 fs.writeFileSync(path.join(BASE, '결과', branch.replace(/\//g, '_') + '.md'), summary + '\n');
 console.log('\n' + summary.split('\n').slice(0, 5).join('\n'));
-console.log('· 이 대화는 기억됩니다 — 다음에 「이어서」(node run.mjs --resume)로 같은 대화를 이어 갈 수 있습니다.');
+console.log('· 이 대화는 기억됩니다 — 다음에 「이어서」(node run.mjs --resume)로 골라 이어 갈 수 있습니다.');
 console.log(ahead > 0 ? `\n✓ 끝. PM 에게 "${branch}" 만 말하면 됩니다(착지 때 가지를 다 훑습니다).` : '\n✓ 끝. 고친 파일이 없어 가지는 밀지 않았습니다.');
