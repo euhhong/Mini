@@ -15497,6 +15497,10 @@ module.exports = { t750CastPre, t750Stat: () => _t750Stat, t719ReachPre, t719Sta
     //   (하네스가 근접 게이트나 재화 대응을 다시 짜면 그게 사본이다).
     _memberProbe: {
       setup: (ledger, vils) => {
+        //   ★[T1130] 존 부팅(`_initLedger`)은 장부 모듈 칸(`Events`)을 세운 **뒤** 장부(`state.ledger`)를 세운다 — 랩 문도 같은 두 칸을 세운다.
+        //     T1103 이 `_newsRows` 에서 `Events.briefLine` 을 줄 수와 상관없이 먼저 읽게 된 뒤로, 장부만 선 랩에서 게시판(`villageBoard`)이
+        //     `Cannot read properties of null (reading 'briefLine')` 로 죽었다(`test-donate` 빨강 셋 · 라이브 길은 무변 — 부팅이 늘 둘 다 세운다).
+        if (!Events) Events = require('./events');
         state.ledger = ledger;
         state.villages = vils;
         state.byDbId = new Map(vils.map((v, i) => [v.dbId != null ? v.dbId : i, v]));

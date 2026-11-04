@@ -5720,6 +5720,27 @@ function publicZoneMap(fallbackHost = 'localhost') {
   return map;
 }
 
+// ★★[T1130 · ★재민 11-03 실기(사파리) — https 전환 뒤 콘솔 TLS 오류 수십 줄] 실제 호스트가 선 존 — central `/zones` 의 존 칸 `hosted`.
+//   서버가 없는 존(중원 · 베링 …)도 `wsUrl` 을 받는다 — 그 존 주소가 `hostFromEnv` 끝(`PUBLIC_HOST` = 서울 IP)으로 떨어지면 클라가
+//   `streams.bin` · `bigmap.png` 를 `https://<IP>/…` 로 묻고 인증서가 안 맞는다. 클라는 `hosted === false` 인 존에 안 묻는다
+//   (00-const `loadStreams` · 80-bigmap `zoneBase` — 그 존에 소켓이 붙어 있으면 표시와 상관없이 묻는다).
+//   선 존 = ⓐ `ENABLED_ZONES` 에 든 존 ⓑ `ZONE_HOST_<ID>` 가 선 존 ⓒ `ZONE_HOSTS[id]` 가 공용 주소(`PUBLIC_HOST`)와 다른 존
+//   (ⓒ = 그 존만의 주소가 `ZONE_HOSTS` 로 실린 판 — 26존 표가 공용 주소로 채운 칸은 그 존의 호스트가 아니다).
+//   아무 존도 안 서면(한 대 배포 · 로컬 — 모든 존이 공용 주소) 모른다 ⇒ null = 칸 0 = 종전 그대로(다 묻는다).
+//   손잡이 `T1130_HOSTED`(central env · `!== '0'` 켬 기본 · 되돌림 `=0` = 칸 0 = 종전 바이트).
+function hostedZoneIds(env = process.env) {
+  if (env.T1130_HOSTED === '0') return null;
+  const pub = env.PUBLIC_HOST || 'localhost';
+  const en = env.ENABLED_ZONES ? new Set(env.ENABLED_ZONES.split(',').map((s) => s.trim()).filter(Boolean)) : null;
+  let zh = null;
+  if (env.ZONE_HOSTS) { try { zh = JSON.parse(env.ZONE_HOSTS); } catch (e) { zh = null; } }
+  const out = new Set();
+  for (const id of Object.keys(ZONES)) {
+    if ((en && en.has(id)) || env[`ZONE_HOST_${id.toUpperCase()}`] || (zh && zh[id] && zh[id] !== pub)) out.add(id);
+  }
+  return out.size ? out : null;
+}
+
 function _findNeighborSide(zoneId, side) {
   const z = ZONES_BASE[zoneId];
   if (!z) return null;
@@ -5738,6 +5759,7 @@ module.exports = {
   T720_LON_DAY, SUNRISE_FRAC, lonOf, lonPhaseOff, localTod, localPhase, localDay, localMidDay, phaseAdd, _T720_DAY_OK, T761_CLOCKS,   // ★[T720] 시각 한 식(켬일 때만 부른다)
   ZONES, WORLD, ZONE_ORDER, CENTRAL, WS_PROTO, HTTP_PROTO,
   publicZoneMap, worldPhase, isNight, darknessLevel,
+  hostedZoneIds,   // ★[T1130] 실제 호스트가 선 존(central `/zones` 칸 `hosted` · 손잡이 `T1130_HOSTED`)
   findZoneAt, worldDistance, worldDeltaX, WRAP_X,
   HANDOFF_COMMIT,   // ★[T604 추신3] 핸드오프 겹침 띠(px) — zone.js · 해안 지킴(chunk.js · /zones handoffCommit)
 };

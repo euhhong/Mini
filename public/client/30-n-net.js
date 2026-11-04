@@ -902,6 +902,7 @@
         if (msg.recipes) _t1125Tb = msg.sig.tb;
       }
       if (!msg.observer && msg.pid) c._t1125Pid = msg.pid;   // ★[T1125 ⑧] 이 소켓에서 내 몸의 pid(틱에서 내 몸을 찾는 열쇠)
+      if (c.zoneId && zonesMeta[c.zoneId] && zonesMeta[c.zoneId].hosted === false && uiCfg && uiCfg.streams) { try { loadStreams(); } catch (e) {} }   // ★[T1130] 호스트 없다고 적힌 존에 붙었다(표시가 틀렸다) — 붙은 존은 표시와 상관없이 개울을 받는다(00-const `_t1130Skip`)
       if (c._promoteSentAt) {
         console.log('[handoff] promote→welcome gap =', (_wStart - c._promoteSentAt).toFixed(0), 'ms',
           '| entities res=' + (msg.resources?.length||0), 'bld=' + (msg.buildings?.length||0), 'mob=' + (msg.mobs?.length||0));

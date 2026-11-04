@@ -24,7 +24,7 @@ const crypto = require('crypto');
 const T927_BODY_VER = process.env.T927_BODY_VER !== '0';
 function _t927Sv(tj) { if (tj == null) return null; try { const o = JSON.parse(tj); return (o && Number.isFinite(o.sv)) ? o.sv : null; } catch (e) { return null; } }
 const { DatabaseSync } = require('node:sqlite');
-const { ZONES, publicZoneMap, HANDOFF_COMMIT } = require('./zone-config');
+const { ZONES, publicZoneMap, HANDOFF_COMMIT, hostedZoneIds } = require('./zone-config');
 const httpClient = require('http');
 const StaticServe = require('./static-serve');   // ★[T1123] 정적 응답(캐시 · 304 · gzip) 한 자리
 const economy = require('../sim/economy-sim');
@@ -154,6 +154,11 @@ setInterval(() => {
 const PORT = parseInt(process.env.PORT || '3010', 10);
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, '..', 'central.db');
 const PUBLIC_HOST = process.env.PUBLIC_HOST || 'localhost';
+// ★★[T1130 · ★재민 11-03 실기(사파리) — https 전환 뒤 콘솔 TLS 오류 수십 줄] `/zones` 존 칸 `hosted`(실제 호스트가 선 존 = true · 아니면 false).
+//   서버가 없는 존(중원 · 베링 …)의 `wsUrl` 은 `PUBLIC_HOST`(서울 IP)로 떨어져 클라가 `streams.bin` · `bigmap.png` 를 `https://<IP>/…` 로 묻고
+//   인증서가 안 맞았다 — 클라는 `hosted === false` 인 존에 안 묻는다. 선 존을 가르는 술어는 `zone-config` `hostedZoneIds` 하나(env 정본 곁 · 사본 0).
+//   env 는 기동 때 한 번 읽는다(존 주소 표 `ZONES` 와 같은 때). 손잡이 `T1130_HOSTED`(`!== '0'` 켬 기본 · 되돌림 `=0` = 칸 0 = 종전 바이트).
+const T1130_HOSTED_SET = hostedZoneIds();
 
 // === DB 셋업 (central 전용 — players만) ===
 const db = new DatabaseSync(DB_PATH);
@@ -795,6 +800,7 @@ const server = http.createServer(async (req, res) => {
           z.cap = null;
           z.full = false;
         }
+        if (T1130_HOSTED_SET) z.hosted = T1130_HOSTED_SET.has(zid);   // ★[T1130] 실제 호스트가 선 존(아래 `T1130_HOSTED_SET`) — 모르면(null) 칸 0 = 종전 바이트
       }
       return jsonResp(res, 200, {
         zones,
@@ -1572,6 +1578,11 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`[central] 🏛️ central server up on :${PORT}  publicHost=${PUBLIC_HOST}  db=${DB_PATH}`);
+  {   // ★[T1130] 배포 뒤 한 줄로 본다 — 호스트가 선 존(클라가 묻는 존) · 나머지(hosted:false — 클라가 streams.bin · bigmap.png 를 안 묻는다)
+    const all = Object.keys(publicZoneMap(PUBLIC_HOST));
+    if (!T1130_HOSTED_SET) console.log(`[central] T1130 hosted 칸 0(${process.env.T1130_HOSTED === '0' ? '손잡이 끔' : '호스트 표시 env 없음 — 모름'}) — 존 ${all.length}곳 다 묻는다(종전)`);
+    else console.log(`[central] T1130 hosted — 선 존 ${all.filter((z) => T1130_HOSTED_SET.has(z)).join(',') || '없음'} · hosted:false ${all.filter((z) => !T1130_HOSTED_SET.has(z)).length}곳`);
+  }
 });
 
 // === Phase 14.12: Strategic NPC 의사결정 (utility AI) ===
