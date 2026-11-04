@@ -1667,6 +1667,38 @@ function _t368FoodPer(v, crop) {
 //   ⚠**곳간 유입은 여기서 나오지 않는다.** 4판의 산출 자리는 `server/villages.js` `_lifeDoTask0`
 //     수확 갈래 **한 곳**이다(실제 수확 × `T100_K`). 이 함수는 **용량만** 답한다 —
 //     K 가 밭보다 헐거우면 인구가 밭 없이 부푼다(3판 §2-① 실측), 그걸 막는 자리다.
+// ★★[T1149 2026-11-04 · ★재민 11-04 "겨울에 죽고 다른 계절에 되살아나는 반복" · 지시 T1143 할 일 3 ~ 5 ⓐ ⓑ] **겨울 골짜기** — 손잡이 `T1149_WINTER`
+//   (끔 기본 · `=1` = 셋 다 · `=k,birth,buy` 처럼 갈래만 · 끔 = 아래 갈래를 아무도 안 탄다 = 종전 바이트).
+//   ⓐ `k` — K 의 식량 흐름(`prodK`) · 땔감(`fuelK`)을 **일하는 사람이 실제로 내는 흐름**으로(일자리 만충 가정 `jobCapacity` 대신 지금 그 일을 하는 사람 수 `counts`) +
+//      곳간이 다음 봄까지 먹일 사람(재고 ÷ 다음 봄까지 남은 날 — 땔감 줄의 "재고 한 계절 완충 ÷ 90" 자리 · 달력 정본에서 유도).
+//   ⓑ `birth` — 출생에 **곳간 문**: 곳간 식량 환산 ≥ (N + 1) × 하루 소비 × 다가오는 겨울에 남은 날(겨울 앞이면 그 겨울 길이 · 겨울 안이면 남은 날).
+//      근거: 철 배수(`SEASON_MULT`)가 1 아래인 철은 겨울 하나다 — 그 철을 먹일 것을 곳간에 쥐고서야 입을 늘린다(달력 · 하루 소비에서 유도 · 새 수 0).
+//   ⓒ `buy` — 가을 사 모으기(v2 쪽 · 아래 `t1149WinterNeed`).
+const T1149 = (() => { const x = (typeof process !== 'undefined' && process.env) ? process.env.T1149_WINTER : ''; if (!x || x === '0') return {}; if (x === '1' || x === 'all') return { k: 1, birth: 1, buy: 1 }; const o = {}; for (const p of String(x).split(',')) if (p.trim()) o[p.trim()] = 1; return o; })();
+let _t1149Cal = null;
+function _t1149C() { if (_t1149Cal === null) { try { _t1149Cal = require('../server/calendar'); } catch (e) { _t1149Cal = false; } } return _t1149Cal || null; }
+// 다음 봄 첫날까지 남은 날(≥ 1) — 달력 정본(`calendar.dateOf` · `dayOf` · 봄 = 3월) · 옛 달력(끔)이면 `day % 365` 경계(봄 = 0)
+function t1149LeanDays(day) {
+  const C = _t1149C(), d = day | 0;
+  if (!C || !C.ON || typeof C.dateOf !== 'function') { const r = ((d % 365) + 365) % 365; return Math.max(1, 365 - r); }
+  const t = C.dateOf(d);
+  return Math.max(1, C.dayOf(t.month >= 3 ? t.year + 1 : t.year, 3, 1) - d);
+}
+// 다가오는 겨울에 남은 날 — 겨울 앞(봄 · 여름 · 가을)이면 다음 겨울 길이 · 겨울 안이면 다음 봄까지 남은 날(달력 정본 · 옛 달력이면 겨울 = `d % 365` 270 ~ 364)
+function t1149WinterDays(day) {
+  const C = _t1149C(), d = day | 0;
+  if (!C || !C.ON || typeof C.dateOf !== 'function') { const r = ((d % 365) + 365) % 365; return r >= 270 ? 365 - r : 95; }
+  const t = C.dateOf(d);
+  if (t.month === 12 || t.month <= 2) return t1149LeanDays(d);
+  const w0 = C.dayOf(t.year, 12, 1);
+  return Math.max(1, C.dayOf(t.year + 1, 3, 1) - w0);
+}
+// ⓒ 다가오는 겨울에 모자랄 식량(단위) — (N × 하루 소비 × 겨울에 남은 날) − 곳간 식량 환산 · 0 아래면 0(v2 가 가을 · 겨울 식량 목표에 얹는다)
+function t1149WinterNeed(v, day) {
+  if (!T1149.buy || !v || !v.npcs) return 0;
+  const N = v.npcs.length; if (!(N > 0)) return 0;
+  return Math.max(0, N * DAILY_FOOD_CONSUMPTION * t1149WinterDays(day) - totalFoodEquivalent(v));
+}
 function farmFlowPerDay(v, fN) {
   const fert = (v.land && v.land.fertility) || 0;
   if (!T100_FIELD_YIELD) return fN * JOBS.farmer.base * fert;
@@ -4347,7 +4379,7 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
   //     "제대로 된 도구를 갖췄을 때"의 땅 능력이고, 도구 결손은 TOOLBOOT 안전망과 hunger 항이 실시간으로 처리한다).
   let _prodKraw = (dailyFoodProdPotential + dailyImport) / DAILY_FOOD_CONSUMPTION;
   if (PRODK_CAP_ON) {
-    const _cf = jobCapacity(v);
+    const _cf = T1149.k ? (v.counts || {}) : jobCapacity(v);   // ★[T1149 ⓐ] 켬 = 지금 그 일을 하는 사람(끔 = 일자리 만충 가정 — 종전 글자)
     const _fishRawCap = (_cf.fisher || 0) * JOBS.fisher.base * (v.land.water || 0);
     const _fishCap = (v.land.fishSustain != null && _fishRawCap > 0) ? Math.min(_fishRawCap, v.land.fishSustain) : _fishRawCap;
     // 채집은 산출이 믹스라 식량환산 비율을 그 마을 실제 믹스(foragerYieldsFor)로 정확히 계산한다 — 임의 계수 없음.
@@ -4363,6 +4395,7 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
                    + (_cf.hunter || 0) * JOBS.hunter.base * (v.land.game || 0)
                    + _forCap * _foodShare;
     _prodKraw = (_capFlow + dailyImport) / DAILY_FOOD_CONSUMPTION;
+    if (T1149.k) _prodKraw += totalFoodEquivalent(v) / t1149LeanDays(day) / DAILY_FOOD_CONSUMPTION;   // ★[T1149 ⓐ] + 곳간이 다음 봄까지 먹일 사람
   }
   v._prodKema = v._prodKema === undefined ? _prodKraw : 0.97 * v._prodKema + 0.03 * _prodKraw;
   const prodK = v._prodKema;
@@ -4483,11 +4516,11 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
   // 용량 기준(slotK와 동일 가정: 필요 시 자리를 채울 수 있다) — 연료 게이트(picker)가 위기 시 벌목 충원을 보장하므로 정직.
   //   (실현 흐름 기준은 벌목 인력 스냅샷에 K가 요동 → θ-로지스틱 과격 반응 → K붕괴 나선. 시드42 라 소멸로 확인, 폐기)
   //   1인 수요엔 제련 연료 포함(fuelNeed = 취사·난방 + 야금) — 야금촌은 연료 부양력↓(고증: 제련=삼림 압박).
-  const _woodCapRaw = (jobCapacity(v).lumberjack || 0) * 0.9 * (v.land.wood || 0);  // 벌목 자리 만충 시 목재 흐름(채굴 능력)
+  const _woodCapRaw = ((T1149.k ? (v.counts || {}) : jobCapacity(v)).lumberjack || 0) * 0.9 * (v.land.wood || 0);  // 벌목 자리 만충 시 목재 흐름(채굴 능력) · ★[T1149 ⓐ] 켬 = 지금 나무꾼
   const _woodProdCap = v.land.woodSustain != null ? Math.min(_woodCapRaw, v.land.woodSustain) : _woodCapRaw;   // ★MSY: 랩 실측 숲 재생 흐름이 상한 — 스톡 마이닝(감가 자산)을 소득으로 계산하지 않음. 초과 채굴은 가능하되 K는 지속가능선만 믿음
   const woodCapFlow = _woodProdCap
                     + (dailyProductionPotential.food || 0) * STRAW_FUEL_PER_FOOD    // + 볏짚(곡물 잠재생산 부산물 — 농업촌 연료 자급분)
-                    + (v._woodImportEMA || 0) + (v.storage.wood || 0) / 90;         // + 수입EMA + 재고 한 계절 완충
+                    + (v._woodImportEMA || 0) + (v.storage.wood || 0) / (T1149.k ? t1149LeanDays(day) : 90);   // + 수입EMA + 재고 한 계절 완충 · ★[T1149 ⓐ] 켬 = 다음 봄까지 남은 날
   const fuelNeedPC = N > 0 ? Math.max(_firewoodPC(), fuelNeed / N) : _firewoodPC();
   // ★신뢰 관성(EMA ~50일): 숲 고갈로 용량이 줄 때 K가 절벽 낙하(θ=4 로지스틱 −20%/일 학살)하지 않게 —
   //   주민의 부양력 인식은 서서히 갱신(고증: 숲이 줄어드는 걸 몇 계절에 걸쳐 체감). 하락도 상승도 완만.
@@ -4551,6 +4584,8 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
   const _hcap = Math.min(v.housing !== undefined ? v.housing : Infinity, v._mapBeds !== undefined ? v._mapBeds : Infinity);   // ★완공 계약: 맵 완공 침대(_mapBeds)가 상한(3사본 동기화)
   const _gated = (dP > 0 && _hcap !== Infinity && N >= _hcap);
   if (_gated) dP = 0;
+  // ★[T1149 ⓑ] 출생에 곳간 문 — 곳간이 다가오는 겨울을 한 사람 더 먹일 만큼일 때만(위 `T1149` 주석) · 막힌 날 표지 `_t1149Gate`(표 기계가 센다)
+  if (T1149.birth) { v._t1149Gate = 0; if (dP > 0 && totalFoodEquivalent(v) < (N + 1) * DAILY_FOOD_CONSUMPTION * t1149WinterDays(day)) { dP = 0; v._t1149Gate = 1; } }
   v._dpDebug = { K: +K.toFixed(1), logi: +_logiTerm.toFixed(3), hunger: +_hungerTerm.toFixed(3), health: +_healthTerm.toFixed(3), happy: +_happyTerm.toFixed(3), prestige: +_prestigeTerm.toFixed(3), housing: (v.housing !== undefined ? +(+v.housing).toFixed(1) : null), gated: _gated, dP: +dP.toFixed(3) };
   // ΔP 상한
   const maxDelta = N * POP_MAX_DELTA_PCT;
@@ -6345,6 +6380,7 @@ function computeVillagePrices(v) {
 }
 
 module.exports = {
+  T1149, t1149LeanDays, t1149WinterDays, t1149WinterNeed,   // ★[T1149] 겨울 골짜기 — 손잡이 갈래 · 달력 셈 · 다가오는 겨울에 모자랄 식량(v2 가을 사 모으기가 읽는다)
   assignNPCJob, assignableJobs, JOB_SWITCH_COOLDOWN,
   t1113On, t1113Unhappy, t1113Happy, t1113LowMul, t1113IsFood, T1113_HAPPY_MID,   // ★[T1113] 행복 낮을 때 효과 셋 — war-core · 서버 · 하네스가 같은 술어를 읽는다(사본 0)   // ★[T1085] 촌장 지정 — 서버 동사 `assign_job` 이 부른다(규칙 사본 0)
   _autoSwitchJobForTest: autoSwitchJob, _switchNPCJobForTest: switchNPCJob,   // ★[T1085] 하네스가 자율 전환 그 함수를 부른다(시험 이름 · 사본 0)

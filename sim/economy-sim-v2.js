@@ -677,6 +677,13 @@ function _targetCtxV2(v) {
   return { N, CAP_TARGET, CAP_STOCK };
 }
 // 품목 하나 — 목표 · 유효 재고 · 웃돈 상한(결정층 식 그대로 · 네 자리가 부른다). 값은 `_priceFromV2`.
+// ★[T1149 ⓒ] 가을 · 겨울이면 다가오는 겨울에 남은 날(econ 달력 정본 — v1 `t1149WinterDays`) · 그 밖 · 끔 = 0
+function _t1149Wd(v) {
+  if (!(v1.T1149 && v1.T1149.buy)) return 0;
+  const day = v && v._world && Number.isFinite(v._world.day) ? v._world.day : null; if (day == null) return 0;
+  const s = seasonOf(day);
+  return (s === 'autumn' || s === 'winter') ? v1.t1149WinterDays(day) : 0;
+}
 function _targetV2(v, r, ctx) {
   const N = ctx.N, CAP_TARGET = ctx.CAP_TARGET, CAP_STOCK = ctx.CAP_STOCK;
   const base = BASE_VALUE_V2[r] || 1;
@@ -722,6 +729,9 @@ function _targetV2(v, r, ctx) {
         && (v.storage.food || 0) / N > 25) {
       target = Math.max(target, N * VARIETY_TARGET_PC);
     }
+    // ★[T1149 ⓒ 가을 사 모으기 · `T1149_WINTER` 의 `buy` 갈래 · 끔 = 무동작] 가을 · 겨울엔 주식 목표가 **다가오는 겨울**을 안다 —
+    //   목표 = max(종전, 하루 생존량 × 겨울에 남은 날)(종전 `subs × 30` 과 같은 꼴 · 30 대신 달력이 준 날 · 새 수 0). 모자란 마을은 값이 올라 가을에 사 모은다.
+    if (r === 'food') { const _wd = _t1149Wd(v); if (_wd > 0) target = Math.max(target, subs * _wd); }
     stock = Math.max(0.1, T859_FOOD_HUNGER ? _t859Stock(v, r) : (v.storage[r] || 0));   // ★[T859] 켬 — food 는 곳간 식량 환산
     // ★선견적 가격(flow 반영): 구조적 식량적자(생산<소비)를 30일 선반영 → 적자 마을은 *초기재고 무관하게* 수입.
     //   재고(stock)만 보면 근시안 — 큰 buffer에 가려 적자가 안 보여 교역이 stock에 휘둘림(경제적 오류).
@@ -1019,6 +1029,12 @@ function _exportCandidatesV2(a, N) {   // a = 마을 칸({ v }) — 몸통 줄�
         else if (r === 'tigerhide') { keep = Math.max(1, N * TIGERHIDE_KEEP_PC); thresh = Math.max(2, N * TIGERHIDE_KEEP_PC * 1.6); }   // ★호피(§9 3차): 한계 위신 포화점(CAP/W≈0.025/인)×1.2만 쥐고 잉여=순수출재 — 일반칙(0.4N)이면 희소 위신재는 영영 수출 불가. 금·은·보석은 위신 포화(2/인)가 일반칙 위라 기존 규칙 유지
         else if (r === 'tin') { keep = Math.max(3, N * TIN_EXPORT_KEEP_PC); thresh = keep + N * TIN_EXPORT_SURPLUS_PC; }   // ★청동 희소성: 주석=전략재. 산지 마을이 대량 비축(자체 청동 독점 + 위세) 후 얇은 잉여만 수출 → 무산지 마을은 만성 주석 기근(청동 편중 유지, 무산지는 석기)
         else { keep = target * 0.5; thresh = target * 0.8; }                // 그 외: 15일치
+        if (FOODR[r] && _t1149Wd(a.v) > 0) {   // ★[T1149 ⓒ] (위 if/else 사슬 뒤 — 사슬에 끼우면 식량이 `else` 갈래로 떨어져 끔에도 keep · thresh 가 바뀐다) 가을 · 겨울 — 제 겨울 몫(하루 생존량 × 겨울에 남은 날 · 곳간 식량 환산)을 넘는 몫만 판다
+          const _room = v1.totalFoodEquivalent(a.v) - (SUBSISTENCE_PER_NPC.food || 0) * N * _t1149Wd(a.v);
+          if (!(_room > 0)) continue;
+          if (stock > thresh) candidates.push({ res: r, surplus: Math.min(Math.max(1, stock - keep), _room) });
+          continue;
+        }
         // ★★★[T180 2026-09-12 · 한 줄 결함 수리] **굶는 마을은 제 돌을 팔지 않는다.**
         //   T173 §0-ⓑ 실측: 절반 넘는 날을 `돌<0.2`(STONE_NET 1차 문턱) 아래서 사는 바닥 36마을이
         //   800일에 돌 **8,110~11,947 단위**를 수출한다. 위 문턱(`target×0.8`)은 STONE_NET 문턱을
