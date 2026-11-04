@@ -94,7 +94,13 @@ function diffPaths(a, b, p, out, n) {
     ok(iSig > 0 && iSet > iSig && /Object\.assign\(_t1163Hf, _hf\)/.test(mn), 'ⓢ 클라 99-main: 서명은 setHardcoded **앞**(런타임 칸 붙기 전)에 센다');
     ok(/params\.set\('hf', _t1163Hf\[zoneId\]\)/.test(net) && /if \(msg\.hfHit\)/.test(net) && /_terrainAppliedZones\.add\(_hz\)/.test(net), 'ⓢ 클라 30-n-net: 주소 `hf` · hfHit 갈래(적용 존 · 승격 서명)');
     const iM = ih.indexOf('src="terrain-sig.js'), iC = ih.indexOf('src="client/00-const.js');
-    ok(iM > 0 && iC > iM, 'ⓢ index.html 이 terrain-sig.js 를 클라 조각 앞에 싣는다'); }
+    ok(iM > 0 && iC > iM, 'ⓢ index.html 이 terrain-sig.js 를 클라 조각 앞에 싣는다');
+    // 브라우저 꼴로 싣기(module 없음 · window 에 걸림) — 같은 파일이 같은 서명을 낸다(실브라우저 판 = scripts/e2e-t1163-welcome-sig.js)
+    const vm = require('vm'), ctx = { window: {} }; vm.createContext(ctx);
+    vm.runInContext(fs.readFileSync(path.join(ROOT, 'public', 'terrain-sig.js'), 'utf8'), ctx);
+    const bHf = ctx.window.TerrainSig && ctx.window.TerrainSig.terrainSig(JSON.parse(fs.readFileSync(path.join(ROOT, 'server', 'hanbando-terrain.json'), 'utf8')).hanbando);
+    ok(bHf === HF, 'ⓢ 브라우저 꼴 싣기(window.TerrainSig) 서명 = 서버 require 서명', `${bHf}`);
+    ok(TS.sigOfString('a') !== TS.sigOfString('b') && TS.terrainSig(null) === null && TS.sigOfString('가나') === TS.sigOfString('가나'), 'ⓢ 서명: 글자가 다르면 다르다 · null 은 null · 한글(UTF-16) 같은 글자 같은 서명'); }
 
   // ⓐ 끔
   let ref = null;
