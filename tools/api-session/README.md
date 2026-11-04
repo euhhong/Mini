@@ -18,7 +18,7 @@
 - 터미널:
   ```bash
   cd ~/Mini/_api/runner && npm install      # 처음 한 번
-  node run.mjs T1150                       # 기본: opus · 카드당 $15 · 주기 상한 $100
+  node run.mjs T1150                       # 기본: opus · 상한 없음(--budget=N · --cap=N 으로 건다)
   node run.mjs T1150 --model=sonnet --budget=5
   node run.mjs T1150 --dry                 # API 안 부름 — 클론 · 가지 · 프롬프트만 확인
   node run.mjs "족보 마지막 번호 알려줘"     # 말로 시키기
@@ -60,8 +60,8 @@
 ## 안전장치
 
 - **돈**
-  - 카드당 상한(`--budget`, 기본 $15)을 넘으면 SDK 가 그 자리에서 끊는다.
-  - 결제 주기 상한(`--cap`, 기본 $100)은 장부를 보고 넘을 것 같으면 시작하지 않는다.
+  - ★재민 11-04: **기본은 상한 없음**(카드 · 주기 · 턴). 마지막 둑은 Console 의 달 지출 한도(조직 설정)다.
+  - 걸고 싶으면 `--budget=N`(이번 대화 · SDK 가 그 자리에서 끊는다) · `--cap=N`(결제 주기 · 키마다 · 장부와 다른 창 몫을 보고 시작 전에 막는다).
 - **자격**
   - 시작할 때 자격 출처가 `ANTHROPIC_API_KEY` 가 아니면 멈춘다. 구독 로그인으로 새지 않게 하려는 것이다.
 - **가드**(`guard.mjs`, 하네스 `node test-guard.mjs`)는 도구를 쓰기 전마다 본다. 막는 것:

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // API 세션(S-API) 러너 — 카드 하나를 Claude Agent SDK 로 끝까지 돌린다. 재민 맥 터미널에서:
-//   node run.mjs T1150                 (기본 모델 opus · 카드당 상한 $15 · 결제 주기 상한 $100)
+//   node run.mjs T1150                 (기본 모델 opus · 상한 없음 — --budget · --cap 으로 걸 수 있다)
 //   node run.mjs T1150 --model=sonnet --budget=5
 //   node run.mjs T1150 --dry           (API 안 부름 — 클론 · 가지 · 프롬프트만 확인)
 // 요금은 Console API 크레딧에서 나간다(구독 사용량 아님). 키: ~/.config/mini-api/key (한 줄).
@@ -75,10 +75,14 @@ const card = RESUME ? last.card : (cardArg ? cardArg.toUpperCase() : 'API');
 const FREE = cardArg ? '' : words.join(' ').trim();      // 카드 번호가 아니면 = 재민이 말로 시킨 일 (이어서면 = 이어서 할 말)
 const IS_FREE = RESUME ? !!last.free : !cardArg;
 const MODEL = String(flag('model', 'opus'));
-const BUDGET = Number(flag('budget', 15));
-const CYCLE_CAP = Number(flag('cap', 100));
+// ★재민 11-04 "한도 15달러 제한 풀어줘 · 무제한으로" — 기본은 카드 상한 · 주기 상한 둘 다 없음(Console 의 달 한도가 마지막 둑). 걸고 싶으면 --budget=N · --cap=N.
+const _lim = (v) => (v === null || v === true || v === '' || Number(v) <= 0 || !Number.isFinite(Number(v))) ? Infinity : Number(v);
+const BUDGET = _lim(flag('budget', null));
+const CYCLE_CAP = _lim(flag('cap', null));
+const MAX_TURNS = _lim(flag('max-turns', null));   // 턴 상한도 기본 없음
+const usd = (x) => (Number.isFinite(x) ? `$${x}` : '무제한');
 const CYCLE_DAY = Number(flag('cycle-day', 4));          // 크레딧 들어오는 날(다음 크레딧 12월 4일)
-const MAX_TURNS = Number(flag('max-turns', 400));
+
 const DRY = !!flag('dry', false);
 const ONCE = !!flag('once', false);                      // 끝나고 이어서 묻지 않음
 const NO_SANDBOX = !!flag('no-sandbox', false);
@@ -140,9 +144,9 @@ function spentThisCycle() {
 }
 const spent = spentThisCycle();
 const reserved = running().filter((r) => r.key === KEYLABEL).reduce((a, r) => a + (Number(r.budget) || 0), 0);   // 다른 창에서 돌고 있는 몫(상한 그대로 잡아 둔다)
-console.log(`· 키 ${KEYLABEL} · 이번 주기(${cycleStart().toISOString().slice(0, 10)}~) 쓴 돈 $${spent.toFixed(2)}${reserved ? ` + 다른 창 잡아 둔 $${reserved.toFixed(0)}` : ''} / 상한 $${CYCLE_CAP} · 이번 상한 $${BUDGET}`);
-if (!DRY && spent + reserved + BUDGET > CYCLE_CAP) { console.log(`✗ 주기 상한을 넘습니다 — --budget 을 줄이거나 --cap 을 올리십시오(다른 창이 끝나면 풀립니다).`); process.exit(3); }
-if (!DRY) markRunning({ budget: BUDGET, branch: RESUME ? last.branch : '' });
+console.log(`· 키 ${KEYLABEL} · 이번 주기(${cycleStart().toISOString().slice(0, 10)}~) 쓴 돈 $${spent.toFixed(2)}${reserved ? ` + 다른 창 잡아 둔 $${reserved.toFixed(0)}` : ''} / 상한 ${usd(CYCLE_CAP)} · 이번 상한 ${usd(BUDGET)}`);
+if (!DRY && spent + reserved + (Number.isFinite(BUDGET) ? BUDGET : 0) >= CYCLE_CAP) { console.log(`✗ 주기 상한을 넘습니다 — --budget 을 줄이거나 --cap 을 올리십시오(다른 창이 끝나면 풀립니다).`); process.exit(3); }
+if (!DRY) markRunning({ budget: Number.isFinite(BUDGET) ? BUDGET : 0, branch: RESUME ? last.branch : '' });
 
 // 저장소 잠금 — 여러 창이 같은 클론에서 가지 · 워크트리를 만들 때 한 번에 하나만
 async function withLock(fn) {
@@ -210,7 +214,7 @@ else {
     WT = path.join(BASE, 'wt', branch.replace(/\//g, '_'));
     git(['worktree', 'add', '-q', '-b', branch, WT, 'origin/main']);
   });
-  if (!DRY) markRunning({ budget: BUDGET, branch });
+  if (!DRY) markRunning({ budget: Number.isFinite(BUDGET) ? BUDGET : 0, branch });
   console.log(`· 가지 ${branch} · 작업 폴더 ${WT}`);
   if (!DRY) {
     console.log('· npm ci …');
@@ -225,7 +229,7 @@ const RULES = `
 - 작업 폴더 = ${WT} · 가지 \`${branch}\` · 베이스 \`${baseHash.slice(0, 7)}\`(main). 카드에 적힌 가지 이름 대신 **이 가지**를 쓴다.
 - 순서는 레포 \`지시/README.md\` 의 "세션 쪽 순서"와 같다. 단 클론 · pull · push 는 러너가 한다 — **너는 git push 를 하지 않는다**(막혀 있다). 커밋만 한다.
 - 먼저 읽기: \`인계/공통.md\` §0~§2 · 카드가 가리키는 영역 인계 · \`tail -n 12 인계/족보.md\`.
-- 커밋 제목에 카드가 정한 태그(\`[승인 대기 · ${card}]\`)를 넣는다. 일하는 중간중간 커밋해라 — 예산($${BUDGET})이 다 되면 그 자리에서 끊긴다.
+- 커밋 제목에 카드가 정한 태그(\`[승인 대기 · ${card}]\`)를 넣는다. 일하는 중간중간 커밋해라${Number.isFinite(BUDGET) ? ` — 예산($${BUDGET})이 다 되면 그 자리에서 끊긴다` : ''}.
 - 파일을 고쳤으면 끝에 \`보고/${!IS_FREE ? card + '_' + today : 'API_' + today + '_' + hhmm}.md\` 를 쓴다(머리 15줄 = \`지시/_보고머리_템플릿.md\` 네 칸 — 가지 해시는 마지막 커밋 해시). 판정이 필요한 것은 하지 말고 보고에 질문으로 남긴다.
 - 금지: 서버 접속(ssh · scp) · 배포 · force · \`durango-mini\` 폴더 · 비밀 파일(PAT · 키 · 서버 비밀) · "듀랑고" 라는 낱말. 가드가 막으면 다른 길로 가라.
 - 맥 경로: 그림은 \`${path.join(MINI, '산그림', card)}/\` 에 써도 된다 · \`${path.join(MINI, '지시')}\` · \`${path.join(MINI, '_3d_in')}\` 는 읽기만. 임시 파일은 \`${path.join(BASE, 'tmp')}\`.
@@ -255,8 +259,8 @@ const short = (o) => mask(JSON.stringify(o)).slice(0, 160);
 const options = (budgetLeft, resume) => ({
   cwd: WT,
   model: MODEL,
-  maxBudgetUsd: budgetLeft,
-  maxTurns: MAX_TURNS,
+  ...(Number.isFinite(budgetLeft) ? { maxBudgetUsd: budgetLeft } : {}),
+  ...(Number.isFinite(MAX_TURNS) ? { maxTurns: MAX_TURNS } : {}),
   abortController: abort,
   ...(resume ? { resume } : {}),
   permissionMode: 'bypassPermissions',
@@ -320,12 +324,12 @@ async function runTurn(text, resume, budgetLeft) {
 const result = { subtype: 'unknown', cost: 0, turns: 0, text: '' };
 let next = prompt, session = RESUME ? last.session : '';
 while (next) {
-  const left = BUDGET - result.cost;
-  if (left < 0.5) { console.log(`· 이 세션 상한 $${BUDGET} 를 다 썼습니다.`); break; }
+  const left = Math.min(BUDGET - result.cost, CYCLE_CAP - spent - reserved - result.cost);   // 무제한이면 Infinity
+  if (left < 0.5) { console.log(`· 상한(이번 ${usd(BUDGET)} · 주기 ${usd(CYCLE_CAP)})을 다 썼습니다.`); break; }
   const r = await runTurn(next, session, left);
   session = r.session || session;
   Object.assign(result, { subtype: r.subtype, cost: result.cost + r.cost, turns: result.turns + r.turns, text: r.text });
-  console.log(`\n───── S-API 답 ($${r.cost.toFixed(2)} · 합계 $${result.cost.toFixed(2)} / $${BUDGET}) ─────\n${mask(r.text || '(없음)')}\n`);
+  console.log(`\n───── S-API 답 ($${r.cost.toFixed(2)} · 합계 $${result.cost.toFixed(2)} / ${usd(BUDGET)}) ─────\n${mask(r.text || '(없음)')}\n`);
   if (stopped || ONCE || !process.stdin.isTTY || !session || r.subtype === 'error_max_budget_usd') break;
   next = (await ask('이어서 할 말 (엔터 = 끝내고 가지 밀기): ')).trim();
 }
@@ -355,8 +359,8 @@ fs.appendFileSync(LEDGER, [new Date().toISOString(), card, branch, MODEL, result
 const summary = [
   `# ${card} — API 세션 결과 (${today})`, '',
   `- 가지: \`${branch}\` · 머리 \`${head.slice(0, 8)}\` · 베이스 \`${baseHash.slice(0, 8)}\` · 커밋 ${ahead}개 · ${pushed}`,
-  `- 키 ${KEYLABEL} · 모델 ${MODEL} · 돈 $${result.cost.toFixed(2)}(카드 상한 $${BUDGET}) · 턴 ${result.turns} · 끝남 = ${result.subtype}`,
-  `- 이번 주기 합계(키 ${KEYLABEL}) $${(spent + result.cost).toFixed(2)} / $${CYCLE_CAP}`,
+  `- 키 ${KEYLABEL} · 모델 ${MODEL} · 돈 $${result.cost.toFixed(2)}(카드 상한 ${usd(BUDGET)}) · 턴 ${result.turns} · 끝남 = ${result.subtype}`,
+  `- 이번 주기 합계(키 ${KEYLABEL}) $${(spent + result.cost).toFixed(2)} / ${usd(CYCLE_CAP)}`,
   `- 기록: ${logPath}`, '', '## 에이전트 마지막 말', '', mask(result.text || '(없음)'),
 ].join('\n');
 fs.writeFileSync(path.join(BASE, '결과', branch.replace(/\//g, '_') + '.md'), summary + '\n');

@@ -15,6 +15,6 @@ if [ -z "$R" ]; then
   read -r -p "> " C
 fi
 read -r -p "모델 opus / sonnet (엔터 = opus): " M
-read -r -p "이번 상한 달러 (엔터 = 15): " B
-node run.mjs $R $K "$C" --model="${M:-opus}" --budget="${B:-15}"
+read -r -p "이번 상한 달러 (엔터 = 무제한): " B
+node run.mjs $R $K "$C" --model="${M:-opus}" ${B:+--budget="$B"}
 read -r -p "엔터를 누르면 창을 닫습니다 "
