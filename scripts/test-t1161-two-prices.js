@@ -98,11 +98,12 @@ ok(oreSeen > 0 && outside > 0, '①-2 판이 원석 상한 · 값표 밖 이름�
     w.day += 1; delete w._effDemCache;   // 새 날 — 캐시 없음
     if (mode === 'A') econV2.computeShadowPrices(v);
     else if (mode === 'B') econV2.shadowPricesOf(v, ['food', 'wood']);
+    else if (mode === 'B2') econV2.shadowPricesOf(v, ['__없는_품목__']);   // 값표 밖 칸만 — `_targetV2` 를 한 번도 안 지나도 캐시는 선다(데움 줄)
     for (const u of w.villages) for (const k of KEYS) u.storage[k] = (u.storage[k] || 0) * 3 + 2;   // 같은 날 세계 공급이 바뀐다
     return econV2.computeShadowPrices(v);
   };
-  const A = run('A'), B = run('B'), C = run('C');
-  const diffB = KEYS.filter((k) => !Object.is(A[k], B[k])), diffC = KEYS.filter((k) => !Object.is(A[k], C[k]));
+  const A = run('A'), B = run('B'), B2 = run('B2'), C = run('C');
+  const diffB = KEYS.filter((k) => !Object.is(A[k], B[k]) || !Object.is(A[k], B2[k])), diffC = KEYS.filter((k) => !Object.is(A[k], C[k]));
   ok(diffB.length === 0, '②-1 새 날 첫 물음이 두 칸이어도 그날 캐시는 전 표 판과 같은 순간에 선다(뒤 값 전 칸 같음)', { diffB: diffB.slice(0, 5) });
   ok(diffC.length > 0, '②-2 미끼 — 캐시를 안 세우는 판은 뒤 값이 갈린다(②-1 이 자명하지 않다)', { diffC: diffC.length, eg: diffC[0], A: A[diffC[0]], C: C[diffC[0]] });
 }
