@@ -120,7 +120,7 @@ console.log('\n=== T1145 x · y 열 정본 — sim/body-cols.js · T1145_XY_COL 
     `손잡이 ${knob.length} · require ${req.length} · 머리 ${head.length} · 다른 파일 ${others.join(',') || 0}`);
 }
 {
-  const m = child('--mod');
+  const m = child('--mod', {});
   if (m.err) ok(false, '① 열 모듈 자식', m.err);
   else {
     ok(m.fast && m.sameMap, '① 615 몸 — 빠른 속성 · 한 숨은 꼴(나중에 칸이 붙어도)', `빠름 ${m.fast} · 한 꼴 ${m.sameMap}`);
@@ -142,7 +142,7 @@ console.log('\n=== T1145 x · y 열 정본 — sim/body-cols.js · T1145_XY_COL 
   }
 }
 {
-  const z0 = child('--zone', {});
+  const z0 = child('--zone', { T1145_XY_COL: '0' });   // 끔(부모 env 에 켬이 있어도)
   ok(!z0.err && !z0.on && z0.n > 300 && z0.data === z0.n && z0.colS === 0, '③ 존(끔 · 기본) — 열 0 · x 는 데이터 칸 · 번호 칸 0(종전 그대로)', z0.err || `몸 ${z0.n} · 데이터 칸 ${z0.data}`);
   const z2 = child('--zone', { T1145_XY_COL: '1', T1140_HOT_ORDER: '1' });
   ok(!z2.err && !z2.on && z2.data === z2.n, '③ 켬 + `T1140_HOT_ORDER=1` — 켬을 무시한다(열 0 · 차례 리터럴 그대로)', z2.err || `몸 ${z2.n} · 데이터 칸 ${z2.data}`);

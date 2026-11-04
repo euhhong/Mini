@@ -1,0 +1,31 @@
+# T1145 게이트 — 가지 batch/hot-columns-1104(75490f71 제품 글자) · 이 상자(클라우드 2 vCPU) · 2026-11-04
+# 끔 = env 없음(기본) · 켬 = T1145_XY_COL=1
+09:02:23 sbc-off exit=0 561s :: === 같음 3/3 · 판 561초 ===
+09:11:54 sbc-on exit=0 571s :: === 같음 3/3 · 판 572초 ===
+09:13:02 test-t1145-xy-col-off exit=0 68s :: === PASS 13 / FAIL 0 ===
+09:14:14 test-t1145-xy-col-on exit=1 72s :: === PASS 12 / FAIL 1 ===
+09:14:14 test-body-fields-off exit=0 0s :: === 12 통과 / 0 실패 ===
+09:14:15 test-body-fields-on exit=0 1s :: === 12 통과 / 0 실패 ===
+09:15:28 test-move-soa-off exit=0 73s :: === 결과: 286 PASS / 0 FAIL ===
+09:16:48 test-move-soa-on exit=0 80s :: === 결과: 286 PASS / 0 FAIL ===
+09:22:17 test-handoff-body-off exit=0 329s :: === 94 통과 / 0 실패 ===
+09:27:47 test-handoff-body-on exit=0 330s :: === 94 통과 / 0 실패 ===
+09:27:47 test-body-seed-restart-off exit=0 0s :: === 16 통과 / 0 실패 ===
+09:27:48 test-body-seed-restart-on exit=0 1s :: === 16 통과 / 0 실패 ===
+09:28:58 test-save-periodic-off exit=0 70s :: === 20건 중 PASS 20 · FAIL 0 ===
+09:30:09 test-save-periodic-on exit=0 71s :: === 20건 중 PASS 20 · FAIL 0 ===
+09:32:30 test-save-race-off exit=0 141s :: === 8 통과 / 0 실패 ===
+09:34:51 test-save-race-on exit=0 141s :: === 8 통과 / 0 실패 ===
+09:38:24 test-war-world-off exit=1 213s :: 결과: 200 통과 / 1 실패
+09:41:25 test-war-world-on exit=1 181s :: 결과: 200 통과 / 1 실패
+09:42:17 test-harness-lint-off exit=0 52s :: === 69건 중 PASS 69 · FAIL 0 ===
+09:42:48 test-harness-lint-on exit=0 31s :: === 69건 중 PASS 69 · FAIL 0 ===
+09:43:14 lint-words exit=0 26s :: LINT-HARNESS-WORDS PASS · 빨강 0 · 한글 판정 리터럴 1558 · 참고 295(하네스 제 글자 · 런타임 이름)
+09:44:41 e2e-move-on exit=0 87s :: === e2e-move 결과: 통과 40 · 실패 0 ===
+09:47:16 verify-on exit=0 155s :: 
+ALLDONE
+# (위 test-t1145-xy-col-on 12/1 = 하네스 ③ 끔 자식이 부모 env 켬을 물려받은 하네스 몫 — 고친 뒤 T1145_XY_COL=1 부모로 13/0 · 끔 부모 13/0)
+# test-war-world 200/1 = main 7c52e553 도 같은 줄(ⓧ① 등가 표 · 이 카드 밖)
+# t461-verify(켬 · 틀 tpl-t100.db) — 틱 3,609 · 커널 걸음 2,201,490 · 어긋남 0 · 갈래 틀린 틱 0 · 나무 열 어긋남 0 · 서 있는 몸 1,701,256 · 어긋남 0
+# lab-wiring-check — 실패 0 · 경고 1(main 과 같은 경고)
+# 랩 t17-metrics 800날 3시드 끔 ↔ 켬 — JSON cmp 같음 3/3 · 인구 6,436 / 6,008 / 6,299(land1045 랩 정본) · 글 차이는 셈 ms 줄 · JSON 경로 줄뿐

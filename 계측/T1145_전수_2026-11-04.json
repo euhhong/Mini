@@ -1,0 +1,181 @@
+{
+ "at": "2026-11-04",
+ "ref": "7c52e553",
+ "tool": "node scripts/t738-census.js --json",
+ "fields": {
+  "x": {
+   "read": 481,
+   "write": 32,
+   "rw": 1,
+   "del": 0,
+   "files": 15
+  },
+  "y": {
+   "read": 483,
+   "write": 32,
+   "rw": 2,
+   "del": 0,
+   "files": 15
+  },
+  "floor": {
+   "read": 45,
+   "write": 2,
+   "rw": 0,
+   "del": 0,
+   "files": 3
+  },
+  "targetX": {
+   "read": 39,
+   "write": 49,
+   "rw": 0,
+   "del": 0,
+   "files": 2
+  },
+  "targetY": {
+   "read": 34,
+   "write": 49,
+   "rw": 0,
+   "del": 0,
+   "files": 2
+  },
+  "vx": {
+   "read": 17,
+   "write": 48,
+   "rw": 0,
+   "del": 0,
+   "files": 3
+  },
+  "vy": {
+   "read": 17,
+   "write": 48,
+   "rw": 0,
+   "del": 0,
+   "files": 3
+  },
+  "behavior": {
+   "read": 16,
+   "write": 41,
+   "rw": 0,
+   "del": 0,
+   "files": 2
+  },
+  "_pathAt": {
+   "read": 4,
+   "write": 2,
+   "rw": 0,
+   "del": 0,
+   "files": 1
+  },
+  "_pathFor": {
+   "read": 2,
+   "write": 3,
+   "rw": 0,
+   "del": 0,
+   "files": 1
+  },
+  "_stuckN": {
+   "read": 2,
+   "write": 7,
+   "rw": 0,
+   "del": 0,
+   "files": 1
+  },
+  "_stuckPos": {
+   "read": 5,
+   "write": 3,
+   "rw": 0,
+   "del": 0,
+   "files": 1
+  },
+  "path": {
+   "read": 21,
+   "write": 4,
+   "rw": 0,
+   "del": 0,
+   "files": 1
+  },
+  "pathIndex": {
+   "read": 10,
+   "write": 3,
+   "rw": 1,
+   "del": 0,
+   "files": 1
+  },
+  "nextDecisionAt": {
+   "read": 4,
+   "write": 12,
+   "rw": 0,
+   "del": 0,
+   "files": 1
+  }
+ },
+ "xyWrites": [
+  "villages.js:1159 x w _t747Restore",
+  "villages.js:1159 y w _t747Restore",
+  "villages.js:1568 x w tickBodyExits",
+  "villages.js:1568 y w tickBodyExits",
+  "villages.js:4177 x w _t775Put",
+  "villages.js:4177 y w _t775Put",
+  "villages.js:4396 x w spawnCaravanBody",
+  "villages.js:4396 y w spawnCaravanBody",
+  "villages.js:4631 x w _t661Day",
+  "villages.js:4631 y w _t661Day",
+  "villages.js:4704 x w tickCaravanBodies",
+  "villages.js:4704 y w tickCaravanBodies",
+  "villages.js:4728 x w tickCaravanBodies",
+  "villages.js:4728 y w tickCaravanBodies",
+  "villages.js:4788 x w _caravanSyncOne",
+  "villages.js:4788 y w _caravanSyncOne",
+  "villages.js:4820 x w _caravanSyncOne",
+  "villages.js:4820 y w _caravanSyncOne",
+  "villages.js:4892 x w _t1136Turn",
+  "villages.js:4892 y w _t1136Turn",
+  "villages.js:12758 x w _t707Linger",
+  "villages.js:12758 y w _t707Linger",
+  "war-live.js:336 x w set",
+  "war-live.js:337 y w set",
+  "war-live.js:349 x w set",
+  "war-live.js:350 y w set",
+  "zone.js:4868 x w sepNpcs",
+  "zone.js:4869 y w sepNpcs",
+  "zone.js:5556 y rw step",
+  "zone.js:7168 x w _acceptConnection",
+  "zone.js:7168 y w _acceptConnection",
+  "zone.js:7569 x w handlePlayerInput",
+  "zone.js:7570 y w handlePlayerInput",
+  "zone.js:11837 x w tryBuild",
+  "zone.js:11837 y w tryBuild",
+  "zone.js:11839 x w tryBuild",
+  "zone.js:11839 y w tryBuild",
+  "zone.js:11867 x w _tryBuildAt",
+  "zone.js:11867 y w _tryBuildAt",
+  "zone.js:11869 x w _tryBuildAt",
+  "zone.js:11869 y w _tryBuildAt",
+  "zone.js:14107 x w (익명)",
+  "zone.js:14107 y w (익명)",
+  "zone.js:14510 x w _wakeUp",
+  "zone.js:14510 y w _wakeUp",
+  "zone.js:14774 x w tickDowned",
+  "zone.js:14774 y w tickDowned",
+  "zone.js:15196 x w _wwPost",
+  "zone.js:15196 y w _wwPost",
+  "zone.js:15663 x rw movePlayerStep",
+  "zone.js:15664 y rw movePlayerStep",
+  "zone.js:15773 x w movePlayerStep",
+  "zone.js:15773 y w movePlayerStep",
+  "zone.js:15777 x w movePlayerStep",
+  "zone.js:15778 y w movePlayerStep",
+  "zone.js:15790 x w movePlayerStep",
+  "zone.js:15791 y w movePlayerStep",
+  "zone.js:15794 x w movePlayerStep",
+  "zone.js:15794 y w movePlayerStep",
+  "zone.js:15801 x w movePlayerStep",
+  "zone.js:15801 y w movePlayerStep",
+  "zone.js:15805 x w movePlayerStep",
+  "zone.js:15806 y w movePlayerStep",
+  "zone.js:16719 x w fireHandoff",
+  "zone.js:16720 y w fireHandoff",
+  "zone.js:16839 x w _t564Hold",
+  "zone.js:16839 y w _t564Hold"
+ ]
+}

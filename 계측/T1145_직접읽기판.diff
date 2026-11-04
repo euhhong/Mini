@@ -1,0 +1,215 @@
+diff --git a/server/zone.js b/server/zone.js
+index a78b9698..fdbb6264 100644
+--- a/server/zone.js
++++ b/server/zone.js
+@@ -1308,12 +1308,12 @@ let _t774X = T774_ACTIVE_COL ? new Float64Array(1024) : null, _t774Y = T774_ACTI
+ const _t774Stat = { hit: 0, miss: 0 };
+ function _t774Put(i, p) {
+   if (i >= _t774X.length) { const n = Math.max(i + 1, _t774X.length * 2), X = new Float64Array(n), Y = new Float64Array(n); X.set(_t774X); Y.set(_t774Y); _t774X = X; _t774Y = Y; }
+-  _t774X[i] = p.x; _t774Y[i] = p.y;
++  _t774X[i] = _px(p); _t774Y[i] = _py(p);
+ }
+ function _t774Act(p, i) {
+   const S = _spInc;
+-  if (i < _t774N && S.ref[i] === p && _t774X[i] === p.x && _t774Y[i] === p.y && _t774Src === activeChunkKeys) { _t774Stat.hit++; return S.act[i]; }
+-  _t774Stat.miss++; return isPositionActive(p.x, p.y);
++  if (i < _t774N && S.ref[i] === p && _t774X[i] === _px(p) && _t774Y[i] === _py(p) && _t774Src === activeChunkKeys) { _t774Stat.hit++; return S.act[i]; }
++  _t774Stat.miss++; return isPositionActive(_px(p), _py(p));
+ }
+ let _t774I = 0;   // 뒤 문이 도는 슬롯 번호(그 문 머리에서 0)
+ function _rebuildSpatialInc(nowIT, W, H) {
+@@ -1327,14 +1327,14 @@ function _rebuildSpatialInc(nowIT, W, H) {
+   let ok = qtPlayers instanceof QuadtreeInc, j = 0, i = 0;
+   for (const p of players.values()) {
+     if (nowIT !== undefined) _inputTOStep(p, nowIT);   // ★[T385] 앞 묶음 — 입력 타임아웃
+-    const cx = Math.floor(p.x / cs), cy = Math.floor(p.y / cs);
++    const cx = Math.floor(_px(p) / cs), cy = Math.floor(_py(p) / cs);
+     let act;
+     if (keysSame && S.ref[i] === p && S.cx[i] === cx && S.cy[i] === cy) act = S.act[i];
+-    else { act = activeChunkKeys.has(chunkManager.keyOf(cx, cy)); S.ref[i] = p; S.cx[i] = cx; S.cy[i] = cy; S.act[i] = act; }   // = isPositionActive(p.x, p.y)
++    else { act = activeChunkKeys.has(chunkManager.keyOf(cx, cy)); S.ref[i] = p; S.cx[i] = cx; S.cy[i] = cy; S.act[i] = act; }   // = isPositionActive(_px(p), _py(p))
+     if (T774_ACTIVE_COL) _t774Put(i, p);   // ★[T774] 그 몸의 x · y(이 판 값) — 뒤 문이 "그 뒤 안 움직였나"를 본다
+     i++;
+     if (p.isNpc && !p.canadiaVillage && !act) continue;
+-    if (ok && !_spKeep(qtPlayers, S.pl, j, p, p.x, p.y)) ok = false;
++    if (ok && !_spKeep(qtPlayers, S.pl, j, p, _px(p), _py(p))) ok = false;
+     j++;
+   }
+   if (i < S.ref.length) { S.ref.length = i; S.cx.length = i; S.cy.length = i; S.act.length = i; }
+@@ -1345,7 +1345,7 @@ function _rebuildSpatialInc(nowIT, W, H) {
+     for (const p of players.values()) {
+       const act = S.act[ii++];
+       if (p.isNpc && !p.canadiaVillage && !act) continue;
+-      const e = { x: p.x, y: p.y, ref: p }; qtPlayers.insert(e); S.pl.push(e);
++      const e = { x: _px(p), y: _py(p), ref: p }; qtPlayers.insert(e); S.pl.push(e);
+     }
+     S.rebuilt.pl++;
+   } else S.kept.pl++;
+@@ -3746,6 +3746,17 @@ function _t1145Lit(pid, npcId, name, color, cx, cy, opts) {
+     path: undefined, pathIndex: undefined, _pathFor: undefined, _pathAt: undefined, _t670Tk: undefined, _t670TkX: undefined, _t670TkY: undefined, _t791P: undefined, _t791Pn: undefined, _t791Px: undefined, _t791Py: undefined, _stuckPos: undefined, _stuckN: undefined, _t540StepAt: undefined, simEvacUntil: undefined, canadiaVillage: undefined, canadiaTask: undefined, simLonOff: undefined, _t720: undefined, gatherTarget: undefined, harvestTarget: undefined, fightTarget: undefined, npcJob: undefined, npcHomeX: undefined, npcHomeY: undefined, npcBedX: undefined, npcBedY: undefined, _lifeAct: undefined, _lifeActAt: undefined, _huntSpd: undefined, myClaim: undefined, simVillageId: undefined, simJob: undefined,
+   };
+ }
++// ★[T1145] 뜨거운 자리의 열 읽기 · 쓰기 — 켬이면 열 칸을 **바로**(창 부름 0), 끔이면 `p.x` 그대로(`_t1145On` 은 상수 — V8 이 갈래를 접는다).
++//   왜 창만으로 모자라나(판 K1 · K2 표본): 몸 모양이 밤에 늘어 창 자리가 메가모픽이 되면 V8 은 창을 인라인하지 못하고 **읽기마다 부른다**
++//   (`get@body-cols.js` 가 밤 npcStep 표본의 7 % · 막힘 · 길 묻기 · 따라가기 안). 칸 읽기(`p._colS`)는 메가모픽이어도 부름이 아니다.
++//   ★같은 값: 열 몸이면 창이 돌려줄 그 칸 · 되돌린 몸(`_colS` −1) · 사람 몸(`_colS` 없음)은 `p.x` 그대로.
++const _t1145On = !!_t1145C;
++function _t1145Rx(p) { const s = p._colS; return s >= 0 ? _t1145C.X[s] : p.x; }
++function _t1145Ry(p) { const s = p._colS; return s >= 0 ? _t1145C.Y[s] : p.y; }
++function _px(p) { return _t1145On ? _t1145Rx(p) : p.x; }
++function _py(p) { return _t1145On ? _t1145Ry(p) : p.y; }
++function _psx(p, v) { if (_t1145On && p._colS >= 0 && typeof v === 'number') _t1145C.X[p._colS] = v; else p.x = v; }
++function _psy(p, v) { if (_t1145On && p._colS >= 0 && typeof v === 'number') _t1145C.Y[p._colS] = v; else p.y = v; }
+ function spawnNpc(opts = {}) {
+   // 위치: opts.x/y 우선, 없으면 zone 내부 랜덤 (클레임 충돌 안 나는 곳)
+   let cx, cy;
+@@ -4615,7 +4626,7 @@ function _t678Verify(npc, wp) {
+ }
+ function computeNpcPath(npc, now) {
+   if (typeof npc.targetX !== 'number' || typeof npc.targetY !== 'number') return null;
+-  if (_t671Lt(npc.targetX - npc.x, npc.targetY - npc.y, 48)) {   // ★[T671 ②] = `Math.hypot(…) < 48` 와 같은 답(아래 `_t671Lt` · 경계 띠 안은 hypot 그대로)
++  if (_t671Lt(npc.targetX - _px(npc), npc.targetY - _py(npc), 48)) {   // ★[T671 ②] = `Math.hypot(…) < 48` 와 같은 답(아래 `_t671Lt` · 경계 띠 안은 hypot 그대로)
+     // ★[T670 ①] 도착한 사람은 틱마다 여기로 온다(A* 부름의 98 % — T646 §3). 이미 같은 한 점짜리 길을 들고 있으면 그 배열을 돌려준다
+     //   (내용 같음 · 부른 쪽이 `pathIndex = 0` · `_pathAt = now` 를 종전대로 다시 쓴다 — 새 배열 할당만 0).
+     const P = npc.path;
+@@ -4629,7 +4640,7 @@ function computeNpcPath(npc, now) {
+     return [{ x: npc.targetX, y: npc.targetY }];
+   }
+   // 직선이 깨끗하면 A* 스킵 (랩 moveTo의 lineClear 우선 — 동형)
+-  if (straightPathClear(npc.x, npc.y, npc.targetX, npc.targetY, npc.floor || 0)) {
++  if (straightPathClear(_px(npc), _py(npc), npc.targetX, npc.targetY, npc.floor || 0)) {
+     return [{ x: npc.targetX, y: npc.targetY }];
+   }
+   // A* — NPC당 최소 2초 간격
+@@ -4658,7 +4669,7 @@ function computeNpcPath(npc, now) {
+   //   `npc._lastAStarAt` 은 위에서 이미 찍혔다 — 쿨다운 박자는 끔과 같다.
+   if (T381_PATH_DEAD) {
+     const _gcx = Math.floor(npc.targetX / BUILDING_SIZE), _gcy = Math.floor(npc.targetY / BUILDING_SIZE);
+-    if ((_gcx !== Math.floor(npc.x / BUILDING_SIZE) || _gcy !== Math.floor(npc.y / BUILDING_SIZE))
++    if ((_gcx !== Math.floor(_px(npc) / BUILDING_SIZE) || _gcy !== Math.floor(_py(npc) / BUILDING_SIZE))
+         && isTerrainBlockedLocal(_gcx * BUILDING_SIZE + BUILDING_SIZE / 2, _gcy * BUILDING_SIZE + BUILDING_SIZE / 2)) return null;
+   }
+   // ★★★[T399 ③ 2026-09-26 · 상한 하나] `T399_CELL_CAP=1` 일 때만. **반경이 정본이고 칸 예산은 반경에서 난다.**
+@@ -4691,7 +4702,7 @@ function computeNpcPath(npc, now) {
+       } else if (_t1138W.delete(npc)) _t1138.after++;
+     }
+   }
+-  const wp = _t678wp !== undefined ? _t678wp : pfFindPath(npc.x, npc.y, npc.targetX, npc.targetY, {
++  const wp = _t678wp !== undefined ? _t678wp : pfFindPath(_px(npc), _py(npc), npc.targetX, npc.targetY, {
+     floor: npc.floor || 0,
+     isBlockedFn: isBlockedByWall,
+     isWaterFn: isTerrainBlockedLocal,
+@@ -4725,7 +4736,7 @@ function followNpcPath(npc, speedMult) {
+   if (!P || npc.pathIndex >= (M ? npc._t791Pn : P.length)) return true;
+   let wx, wy;
+   if (M && npc.pathIndex === 0) { wx = npc._t791Px; wy = npc._t791Py; } else { const wp = P[npc.pathIndex]; wx = wp.x; wy = wp.y; }
+-  const dx = wx - npc.x, dy = wy - npc.y;
++  const dx = wx - _px(npc), dy = wy - _py(npc);
+   // ★[T671 ②] 도착(< 10)은 hypot 없이 가른다(`_t671Lt` = 같은 답) — 안 닿았을 때만 나눗셈에 쓸 `dd` 를 종전 그대로 hypot 으로 짓는다.
+   if (_t671Lt(dx, dy, 10)) {
+     npc.pathIndex++;
+@@ -4754,7 +4765,7 @@ function followNpcPath(npc, speedMult) {
+ //     영구 정지 위험 없음: 도착지가 벽 안이든 물가든 **다음 결정**이 새 목표를 주고, 그때 거리가 12px 을 넘으면
+ //     stuck 감지는 종전대로 작동한다.
+ // ★[T670 ①] `_stuckPos` 를 **제자리에서 덮어쓴다**(새 객체 0) — 이 객체를 읽는 곳은 `detectStuck` 하나뿐이다(서버 전체 `_stuckPos` 6자리 · 바깥 참조 0) ⇒ 값·순서 같다.
+-function _t670Stuck(npc, now) { const S = npc._stuckPos; if (S) { S.x = npc.x; S.y = npc.y; S.at = now; } else npc._stuckPos = { x: npc.x, y: npc.y, at: now }; }
++function _t670Stuck(npc, now) { const S = npc._stuckPos; if (S) { S.x = _px(npc); S.y = _py(npc); S.at = now; } else npc._stuckPos = { x: _px(npc), y: _py(npc), at: now }; }
+ // ★★[T1140 ③-다 2026-11-04 · 손잡이 `T1140_STUCK_INLINE`(기본 끔 · `'1'` 만 켬 · 끔 = 아래 두 함수가 안 불린다 = 종전 글자)] **막힘 칸을 몸 안에** — T700 회부 2(뜨거운 칸)의 한 손.
+ //   종전 `_stuckPos` 는 몸 밖 객체 하나({x, y, at}) — 서 있는 몸이 틱마다 그 객체를 짚고(쓰기 셋) 걷는 몸이 읽는다. T700 은 그릇을 `Float64Array(3)` 로 바꿨다(역시 몸 밖 객체 · 값 0).
+ //   켬이면 같은 세 수를 몸 칸 셋(`_t1140Sx` · `_t1140Sy` · `_t1140Sa` — 차례 리터럴(`T1140_HOT_ORDER`)에서는 막힘 판정이 짚는 칸 곁)에 둔다.
+@@ -4785,16 +4796,16 @@ function _t1140Detect(npc, now) {
+ function detectStuck(npc, now) {
+   if (npc.targetX != null && npc.targetY != null
+       && (!npc.path || npc.pathIndex >= (npc.path === npc._t791P ? npc._t791Pn : npc.path.length))   // ★[T791 ②] 길 거울(끔 = 배열 길이 그대로)
+-      && _t671Lt(npc.x - npc.targetX, npc.y - npc.targetY, 12)) {   // ★[T671 ②] = `Math.hypot(…) < 12`
++      && _t671Lt(_px(npc) - npc.targetX, _py(npc) - npc.targetY, 12)) {   // ★[T671 ②] = `Math.hypot(…) < 12`
+     _t670Stuck(npc, now);   // 서 있는 동안 타이머를 계속 리셋 — 떠날 때 즉시 오판 금지
+     npc._stuckN = 0;
+     return false;
+   }
+   if (!npc._stuckPos) {
+-    npc._stuckPos = { x: npc.x, y: npc.y, at: now };
++    npc._stuckPos = { x: _px(npc), y: _py(npc), at: now };
+     return false;
+   }
+-  if (_t671Gt(npc.x - npc._stuckPos.x, npc.y - npc._stuckPos.y, 5)) {   // ★[T671 ②] = `Math.hypot(…) > 5`
++  if (_t671Gt(_px(npc) - npc._stuckPos.x, _py(npc) - npc._stuckPos.y, 5)) {   // ★[T671 ②] = `Math.hypot(…) > 5`
+     _t670Stuck(npc, now);
+     npc._stuckN = 0;   // ★[생활 층 100% ①] 정상 이동 재개 → 연속 stuck 카운터 리셋
+     return false;
+@@ -4864,8 +4875,8 @@ function sepNpcs(dt) {
+   for (const pid of npcs) {
+     const p = players.get(pid);
+     if (!p || p.hp <= 0 || p.handingOff) continue;
+-    if (!p.canadiaVillage && !isPositionActive(p.x, p.y)) continue;   // dormant 스킵(비용·기존 정지 규약 동일)
+-    const k = gkey(p.x, p.y);
++    if (!p.canadiaVillage && !isPositionActive(_px(p), _py(p))) continue;   // dormant 스킵(비용·기존 정지 규약 동일)
++    const k = gkey(_px(p), _py(p));
+     if (T676_STAMP) _sepPut(G, k, p);
+     else { const c = G.get(k); c ? c.push(p) : G.set(k, [p]); }
+     if (p.simCaravan || p.simWar) continue;   // 단일 작성자 계약 — 고정체로만 참여
+@@ -4873,7 +4884,7 @@ function sepNpcs(dt) {
+   }
+   for (const p of players.values()) {   // 사람 = 밀리지 않는 고정체 등록(NPC가 비켜감)
+     if (p.isNpc || p.handingOff) continue;
+-    const k = gkey(p.x, p.y);
++    const k = gkey(_px(p), _py(p));
+     if (T676_STAMP) _sepPut(G, k, p);
+     else { const c = G.get(k); c ? c.push(p) : G.set(k, [p]); }
+   }
+@@ -4881,13 +4892,13 @@ function sepNpcs(dt) {
+   const push = Math.min(16, 26 * dt);   // 소프트 밀림 상한(랩 min(0.5, 0.35·dGM)셀 동형 스케일)
+   for (const p of movers) {
+     let sx = 0, sy = 0, n = 0, hx = 0, hy = 0, hn = 0;
+-    const bx = (p.x / SEP_BK) | 0, by = (p.y / SEP_BK) | 0;
++    const bx = (_px(p) / SEP_BK) | 0, by = (_py(p) / SEP_BK) | 0;
+     for (let ix = bx - 1; ix <= bx + 1; ix++) for (let iy = by - 1; iy <= by + 1; iy++) {
+       const c = G.get(ix * 100000 + iy + 5000000);
+       if (!c) continue;
+       for (const o of c) {
+         if (o === p || (o.floor || 0) !== (p.floor || 0)) continue;
+-        const dx = p.x - o.x, dy = p.y - o.y, d2 = dx * dx + dy * dy;
++        const dx = _px(p) - _px(o), dy = _py(p) - _py(o), d2 = dx * dx + dy * dy;
+         if (d2 < R2 && d2 > 1e-6) {
+           const d = Math.sqrt(d2);
+           sx += dx / d * (1 - d / SEP_SOFT_PX); sy += dy / d * (1 - d / SEP_SOFT_PX); n++;
+@@ -4899,9 +4910,9 @@ function sepNpcs(dt) {
+     let mx = n ? sx / n * push : 0, my = n ? sy / n * push : 0;
+     if (hn) { const hl = Math.hypot(hx, hy); if (hl > 1e-9) { const hk = Math.min(1, Math.max(push, 2.5) / hl); mx += hx * hk; my += hy * hk; } }   // 몸 겹침 해소 최소 2.5px/틱(랩 0.08셀 동형) — 1×에서도 수 틱 내 단단히 풀림
+     const pf = p.floor || 0;
+-    const nx = p.x + mx, ny = p.y + my;
+-    if (!isTerrainBlockedLocal(nx, p.y) && !isBlockedByWall(nx, p.y, p.x, p.y, pf)) p.x = nx;   // 물·벽 변으로는 안 밀림(성분별 취소)
+-    if (!isTerrainBlockedLocal(p.x, ny) && !isBlockedByWall(p.x, ny, p.x, p.y, pf)) p.y = ny;
++    const nx = _px(p) + mx, ny = _py(p) + my;
++    if (!isTerrainBlockedLocal(nx, _py(p)) && !isBlockedByWall(nx, _py(p), _px(p), _py(p), pf)) _psx(p, nx);   // 물·벽 변으로는 안 밀림(성분별 취소)
++    if (!isTerrainBlockedLocal(_px(p), ny) && !isBlockedByWall(_px(p), ny, _px(p), _py(p), pf)) _psy(p, ny);
+   }
+ }
+ 
+@@ -15145,7 +15156,7 @@ const _wwStill = [], _wwStill0 = [];    // 서 있는 몸(차례대로) · 견
+ const _wwNoRes = [];                    // 빈 목록의 정체(새 배열을 틱마다 안 만든다 — 나무 열 열쇠가 서게)
+ const _wwTC = { src: null, rx: null, gen: -1, k: 0, hit: 0, miss: 0, treeBad: 0, still: 0, stillBad: 0 };
+ function _wwIsStill(p) {   // 커널 `terr()` 와 같은 칸 셈(정수 · 타일 2비트) — 구웠고(1) 안 막힘(2 아님)
+-  const x = p.x, y = p.y;
++  const x = _px(p), y = _py(p);
+   if (!(x > 0 && y > 0 && x < _WW.zw && y < _WW.zh)) return false;   // ±0 · NaN · 범위 밖은 커널로(±0 은 +0 속도와 더하면 부호가 바뀔 수 있다)
+   const b = (Math.floor(y / 32) * _WW.tw + Math.floor(x / 32)) << 1;
+   return ((_WW.TB[b >> 3] >> (b & 7)) & 3) === 1;
+@@ -15189,7 +15200,7 @@ function _wwPre(moveDt) {
+   const X = _WW.X, Y = _WW.Y, VX = _WW.VX, VY = _WW.VY, RD = _WW.RD;
+   for (let i = 0; i < n; i++) {
+     const p = _wwList[i], m = p._rdMul;
+-    X[i] = p.x; Y[i] = p.y; VX[i] = p.vx; VY[i] = p.vy; RD[i] = ((m && m !== 1) ? m : 1) * _streamWalkMul(p);   // ★[T585] 커널도 같은 배율(길 × 개울)
++    X[i] = _px(p); Y[i] = _py(p); VX[i] = p.vx; VY[i] = p.vy; RD[i] = ((m && m !== 1) ? m : 1) * _streamWalkMul(p);   // ★[T585] 커널도 같은 배율(길 × 개울)
+   }
+   const RX = _WW.RX, RY = _WW.RY, RR = _WW.RR;
+   if (!T672_WALK_CUT || res !== _wwTC.src || RX !== _wwTC.rx || _wwResGen !== _wwTC.gen) {   // ★[T672 ⓐ] 입력이 바뀐 틱만(끔이면 늘)
+@@ -15228,7 +15239,7 @@ function _wwPre(moveDt) {
+ // 이동 문 **안** — 커널 몸의 뒷일(원래 차례 그대로)
+ function _wwPost(p, i) {
+   if (T585_WALK_STAT) _t585WalkCount(p, _WW.X[i] - p.x, _WW.Y[i] - p.y);   // ★[T585] 관측(손잡이 켤 때만) — 개울 칸 위·밖 걸음당 거리
+-  p.x = _WW.X[i]; p.y = _WW.Y[i];
++  _psx(p, _WW.X[i]); _psy(p, _WW.Y[i]);
+   const st = _WW.ST[i];
+   if (st < 2) { p.vx = 0; p.vy = 0; if (st === 1) p.dirty = true; if (p.pid) _walk.ejPids.add(p.pid); }
+   else if (st === 2) Roads.stampEntityPx(p, p.x, p.y);
