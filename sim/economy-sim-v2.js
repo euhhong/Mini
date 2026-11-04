@@ -666,6 +666,13 @@ function _targetCtxV2(v) {
   return { N, CAP_TARGET, CAP_STOCK };
 }
 // 품목 하나 — 목표 · 유효 재고 · 웃돈 상한(결정층 식 그대로 · 네 자리가 부른다). 값은 `_priceFromV2`.
+// ★[T1149 ⓒ] 가을 · 겨울이면 다가오는 겨울에 남은 날(econ 달력 정본 — v1 `t1149WinterDays`) · 그 밖 · 끔 = 0
+function _t1149Wd(v) {
+  if (!(v1.T1149 && v1.T1149.buy)) return 0;
+  const day = v && v._world && Number.isFinite(v._world.day) ? v._world.day : null; if (day == null) return 0;
+  const s = seasonOf(day);
+  return (s === 'autumn' || s === 'winter') ? v1.t1149WinterDays(day) : 0;
+}
 function _targetV2(v, r, ctx) {
   const N = ctx.N, CAP_TARGET = ctx.CAP_TARGET, CAP_STOCK = ctx.CAP_STOCK;
   const base = BASE_VALUE_V2[r] || 1;
@@ -711,6 +718,9 @@ function _targetV2(v, r, ctx) {
         && (v.storage.food || 0) / N > 25) {
       target = Math.max(target, N * VARIETY_TARGET_PC);
     }
+    // ★[T1149 ⓒ 가을 사 모으기 · `T1149_WINTER` 의 `buy` 갈래 · 끔 = 무동작] 가을 · 겨울엔 주식 목표가 **다가오는 겨울**을 안다 —
+    //   목표 = max(종전, 하루 생존량 × 겨울에 남은 날)(종전 `subs × 30` 과 같은 꼴 · 30 대신 달력이 준 날 · 새 수 0). 모자란 마을은 값이 올라 가을에 사 모은다.
+    if (r === 'food') { const _wd = _t1149Wd(v); if (_wd > 0) target = Math.max(target, subs * _wd); }
     stock = Math.max(0.1, T859_FOOD_HUNGER ? _t859Stock(v, r) : (v.storage[r] || 0));   // ★[T859] 켬 — food 는 곳간 식량 환산
     // ★선견적 가격(flow 반영): 구조적 식량적자(생산<소비)를 30일 선반영 → 적자 마을은 *초기재고 무관하게* 수입.
     //   재고(stock)만 보면 근시안 — 큰 buffer에 가려 적자가 안 보여 교역이 stock에 휘둘림(경제적 오류).
@@ -1047,6 +1057,12 @@ function* tickTradeV2Steps(world, day) {
         const target = Math.max(subs * 30, buffer);
         let keep, thresh;
         if (FOODR[r]) { keep = target * 1.2; thresh = target * 1.4; }       // 식량: 36일치 보유(>기근30), 42일치 초과만 수출
+        if (FOODR[r] && _t1149Wd(a.v) > 0) {   // ★[T1149 ⓒ] 가을 · 겨울 — 제 겨울 몫(하루 생존량 × 겨울에 남은 날 · 곳간 식량 환산)을 넘는 몫만 판다
+          const _room = v1.totalFoodEquivalent(a.v) - (SUBSISTENCE_PER_NPC.food || 0) * N * _t1149Wd(a.v);
+          if (!(_room > 0)) continue;
+          if (stock > thresh) candidates.push({ res: r, surplus: Math.min(Math.max(1, stock - keep), _room) });
+          continue;
+        }
         else if (CAPITAL[r]) { keep = N * 1.2; thresh = N * 1.5; }          // 도구: 1.2개/명 보유, 1.5개/명 초과만 수출(덤핑 금지)
         else if (r === 'weapon') { keep = Math.max(2, (warN + huntN3) * 1.3); thresh = keep + N * 0.1; }   // ★무기: 전사+사냥꾼(활 — §9 3차) ×1.3 보유 후 잉여만
         else if (WEAPONR[r]) { keep = Math.max(2, warN * 1.3); thresh = keep + N * 0.1; }   // 갑옷: 전사 수×1.3 보유 후 잉여만
