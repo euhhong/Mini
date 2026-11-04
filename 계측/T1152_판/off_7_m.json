@@ -1,0 +1,182 @@
+{
+ "card": "T1152",
+ "zone": "hanbando",
+ "seed": 7,
+ "days": 800,
+ "market": false,
+ "flags": {
+  "cal": false,
+  "tc": false,
+  "pool": false,
+  "life": false,
+  "legacy": false,
+  "def30": false
+ },
+ "curve": null,
+ "basket": false,
+ "t474": true,
+ "rows": 21799,
+ "rowsToStarv": 671,
+ "feTo": 610193.3,
+ "feToStarv": 13159.8,
+ "feToOk": 597033.4,
+ "feRet": 815174.6,
+ "feRetToStarv": 3295.4,
+ "rowsFromStarv": 211,
+ "feFromStarv": 410.1,
+ "vd": 40800,
+ "vdDebt": 465,
+ "vdStarv": 104,
+ "deaths": 1466,
+ "deathsInDebt": 112,
+ "feDaysMean": 3387.9,
+ "byItem": [
+  {
+   "res": "rice",
+   "fe": 203903.6
+  },
+  {
+   "res": "wheat",
+   "fe": 183216.1
+  },
+  {
+   "res": "barley",
+   "fe": 108928.7
+  },
+  {
+   "res": "meat",
+   "fe": 65380.5
+  },
+  {
+   "res": "food",
+   "fe": 28400
+  },
+  {
+   "res": "cooked_food",
+   "fe": 8873.7
+  },
+  {
+   "res": "fish",
+   "fe": 6152.1
+  },
+  {
+   "res": "salmon",
+   "fe": 2564.6
+  },
+  {
+   "res": "crab",
+   "fe": 709.7
+  },
+  {
+   "res": "shrimp",
+   "fe": 661.7
+  },
+  {
+   "res": "mushroom",
+   "fe": 603.6
+  },
+  {
+   "res": "seaweed",
+   "fe": 435.6
+  }
+ ],
+ "pay": {
+  "n": 46,
+  "feDays": {
+   "p50": 0
+  },
+  "pFood": {
+   "p50": 1000,
+   "p90": 1000
+  },
+  "pFoodMed": {
+   "p50": 1.703
+  },
+  "payOwn": {
+   "p50": 44.25,
+   "p90": 119.99
+  },
+  "payMed": {
+   "p50": 44.05,
+   "p90": 191.59
+  },
+  "keepOwn": {
+   "capital": {
+    "p50": 155.26,
+    "p90": 486.75
+   },
+   "arms": {
+    "p50": 15.81,
+    "p90": 27.02
+   },
+   "build": {
+    "p50": 98.71,
+    "p90": 298.65
+   },
+   "ore": {
+    "p50": 0.01,
+    "p90": 0.4
+   },
+   "other": {
+    "p50": 515.38,
+    "p90": 1149.07
+   }
+  },
+  "keepMed": {
+   "capital": {
+    "p50": 52.51,
+    "p90": 132.15
+   },
+   "arms": {
+    "p50": 10.41,
+    "p90": 34.23
+   },
+   "build": {
+    "p50": 47.96,
+    "p90": 33923.43
+   },
+   "ore": {
+    "p50": 0,
+    "p90": 0
+   },
+   "other": {
+    "p50": 275.12,
+    "p90": 545.46
+   }
+  },
+  "trOwn": {
+   "p50": 416191.5,
+   "p90": 550338.77
+  },
+  "trMed": {
+   "p50": 29538.96,
+   "p90": 44185.56
+  },
+  "cash": {
+   "p50": 9041.42,
+   "p90": 50616.56
+  },
+  "N": {
+   "p50": 78
+  },
+  "noCands": 15,
+  "trFE": {
+   "p50": 563.22,
+   "p90": 730.86
+  },
+  "trFood": {
+   "p50": 198.67,
+   "p90": 352.89
+  },
+  "trFEdays": {
+   "p50": 7.214,
+   "p90": 14.193
+  }
+ },
+ "mvAll": {
+  "n": 4080,
+  "p10": 0.004,
+  "p50": 0.014,
+  "p90": 0.953
+ }
+}

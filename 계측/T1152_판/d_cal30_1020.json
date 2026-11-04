@@ -1,0 +1,473 @@
+{
+  "seed": 1020,
+  "days": 800,
+  "villages": 51,
+  "live": 45,
+  "axes": {
+    "tool": true,
+    "preserve": true,
+    "salt": true
+  },
+  "base": {
+    "pop": 2650,
+    "dead": 6,
+    "ever": 51,
+    "weapQ": 353,
+    "expand": 2444,
+    "trades": 5000
+  },
+  "vpop": [
+    {
+      "name": "광산1",
+      "pop": 20
+    },
+    {
+      "name": "광산2",
+      "pop": 72
+    },
+    {
+      "name": "광산3",
+      "pop": 24
+    },
+    {
+      "name": "광산4",
+      "pop": 24
+    },
+    {
+      "name": "어촌1",
+      "pop": 24
+    },
+    {
+      "name": "광산5",
+      "pop": 27
+    },
+    {
+      "name": "광산6",
+      "pop": 54
+    },
+    {
+      "name": "광산7",
+      "pop": 3
+    },
+    {
+      "name": "어촌2",
+      "pop": 228
+    },
+    {
+      "name": "임업1",
+      "pop": 54
+    },
+    {
+      "name": "임업2",
+      "pop": 316
+    },
+    {
+      "name": "임업3",
+      "pop": 30
+    },
+    {
+      "name": "농촌1",
+      "pop": 30
+    },
+    {
+      "name": "임업4",
+      "pop": 24
+    },
+    {
+      "name": "임업5",
+      "pop": 24
+    },
+    {
+      "name": "어촌3",
+      "pop": 36
+    },
+    {
+      "name": "임업6",
+      "pop": 162
+    },
+    {
+      "name": "농촌2",
+      "pop": 168
+    },
+    {
+      "name": "농촌3",
+      "pop": 60
+    },
+    {
+      "name": "어촌4",
+      "pop": 54
+    },
+    {
+      "name": "농촌4",
+      "pop": 36
+    },
+    {
+      "name": "농촌5",
+      "pop": 36
+    },
+    {
+      "name": "어촌5",
+      "pop": 54
+    },
+    {
+      "name": "어촌6",
+      "pop": 54
+    },
+    {
+      "name": "어촌7",
+      "pop": 24
+    },
+    {
+      "name": "어촌8",
+      "pop": 0
+    },
+    {
+      "name": "어촌9",
+      "pop": 24
+    },
+    {
+      "name": "어촌10",
+      "pop": 36
+    },
+    {
+      "name": "어촌11",
+      "pop": 54
+    },
+    {
+      "name": "어촌12",
+      "pop": 87
+    },
+    {
+      "name": "어촌13",
+      "pop": 87
+    },
+    {
+      "name": "어촌14",
+      "pop": 24
+    },
+    {
+      "name": "어촌15",
+      "pop": 30
+    },
+    {
+      "name": "농촌6",
+      "pop": 27
+    },
+    {
+      "name": "어촌16",
+      "pop": 42
+    },
+    {
+      "name": "농촌7",
+      "pop": 66
+    },
+    {
+      "name": "농촌8",
+      "pop": 78
+    },
+    {
+      "name": "농촌9",
+      "pop": 7
+    },
+    {
+      "name": "농촌10",
+      "pop": 0
+    },
+    {
+      "name": "농촌11",
+      "pop": 72
+    },
+    {
+      "name": "농촌12",
+      "pop": 96
+    },
+    {
+      "name": "농촌13",
+      "pop": 72
+    },
+    {
+      "name": "농촌14",
+      "pop": 0
+    },
+    {
+      "name": "농촌15",
+      "pop": 0
+    },
+    {
+      "name": "농촌16",
+      "pop": 30
+    },
+    {
+      "name": "농촌17",
+      "pop": 36
+    },
+    {
+      "name": "농촌18",
+      "pop": 0
+    },
+    {
+      "name": "농촌19",
+      "pop": 36
+    },
+    {
+      "name": "농촌20",
+      "pop": 0
+    },
+    {
+      "name": "농촌21",
+      "pop": 72
+    },
+    {
+      "name": "농촌22",
+      "pop": 36
+    }
+  ],
+  "eight": {
+    "grain": 41006.5,
+    "densAll": 4.25,
+    "densValue": 4.76,
+    "eventsValue": 7563,
+    "eventsDeed": 900,
+    "eventsAll": 8463
+  },
+  "board": {
+    "reqOpened": 1655,
+    "reqClosed": 1578,
+    "emitted": 8463,
+    "daysPer": 4.25
+  },
+  "short": {
+    "hide": 646,
+    "leather": 331,
+    "stone": 286,
+    "fur": 237,
+    "hemp": 95,
+    "herb": 76,
+    "salt": 75,
+    "clothes": 68,
+    "wood": 58,
+    "ore": 31,
+    "fish": 28,
+    "tool": 21,
+    "clay": 10,
+    "copper": 7,
+    "lead": 2,
+    "ramie": 2,
+    "charcoal": 2,
+    "silver": 1
+  },
+  "glut": {
+    "hide": 506,
+    "leather": 242,
+    "fur": 205,
+    "hemp": 122,
+    "herb": 111,
+    "stone": 103,
+    "clothes": 96,
+    "tool": 73,
+    "wood": 52,
+    "bone": 48,
+    "ore": 43,
+    "fish": 42,
+    "ramie": 28,
+    "salt": 17,
+    "copper": 17,
+    "silver": 11,
+    "tin": 10,
+    "weapon": 8,
+    "lead": 6,
+    "gold": 3,
+    "meat": 3,
+    "obsidian": 2,
+    "clay": 1,
+    "charcoal": 1
+  },
+  "tool": {
+    "stock": 3465.7,
+    "q": 4644.9,
+    "short": 21
+  },
+  "preserve": {
+    "stock": 182.3,
+    "trades": 0,
+    "amt": 0,
+    "each": {
+      "dried_fish": 15.8,
+      "dried_fruit": 0,
+      "smoked_meat": 166.5,
+      "pickled_veg": 0
+    }
+  },
+  "msy": {
+    "on": true,
+    "capped": 40,
+    "fishVillages": 28,
+    "fishPop": 1957,
+    "fishers": 447,
+    "fishStock": 4692.1,
+    "fishPrice": 18.121
+  },
+  "fish": {
+    "mode": "legacy",
+    "headroom": 2,
+    "capOn": true,
+    "n": 27,
+    "ratioMin": 0.113,
+    "ratioMed": 0.576,
+    "ratioMax": 9.739,
+    "binding": 21,
+    "rows": [
+      {
+        "name": "광산2",
+        "fishers": 11,
+        "raw": 21.92,
+        "cap": 11.25,
+        "ratio": 0.513
+      },
+      {
+        "name": "광산4",
+        "fishers": 23,
+        "raw": 33,
+        "cap": 20.93,
+        "ratio": 0.634
+      },
+      {
+        "name": "어촌1",
+        "fishers": 21,
+        "raw": 35.21,
+        "cap": 29.04,
+        "ratio": 0.825
+      },
+      {
+        "name": "광산6",
+        "fishers": 10,
+        "raw": 12.67,
+        "cap": 1.59,
+        "ratio": 0.126
+      },
+      {
+        "name": "광산7",
+        "fishers": 3,
+        "raw": 1.54,
+        "cap": 6.19,
+        "ratio": 4.027
+      },
+      {
+        "name": "어촌2",
+        "fishers": 45,
+        "raw": 110.23,
+        "cap": 12.44,
+        "ratio": 0.113
+      },
+      {
+        "name": "임업2",
+        "fishers": 34,
+        "raw": 70.96,
+        "cap": 34.88,
+        "ratio": 0.492
+      },
+      {
+        "name": "어촌3",
+        "fishers": 2,
+        "raw": 4.62,
+        "cap": 44.99,
+        "ratio": 9.739
+      },
+      {
+        "name": "임업6",
+        "fishers": 40,
+        "raw": 83.34,
+        "cap": 14.59,
+        "ratio": 0.175
+      },
+      {
+        "name": "농촌2",
+        "fishers": 49,
+        "raw": 118.21,
+        "cap": 27.36,
+        "ratio": 0.231
+      },
+      {
+        "name": "농촌3",
+        "fishers": 13,
+        "raw": 28.74,
+        "cap": 15.08,
+        "ratio": 0.525
+      },
+      {
+        "name": "어촌4",
+        "fishers": 13,
+        "raw": 29.84,
+        "cap": 13.71,
+        "ratio": 0.46
+      },
+      {
+        "name": "농촌4",
+        "fishers": 17,
+        "raw": 39.28,
+        "cap": 55.66,
+        "ratio": 1.417
+      },
+      {
+        "name": "농촌5",
+        "fishers": 20,
+        "raw": 47.87,
+        "cap": 13.57,
+        "ratio": 0.283
+      },
+      {
+        "name": "어촌5",
+        "fishers": 5,
+        "raw": 11.78,
+        "cap": 11.06,
+        "ratio": 0.939
+      },
+      {
+        "name": "어촌6",
+        "fishers": 26,
+        "raw": 62.01,
+        "cap": 90.97,
+        "ratio": 1.467
+      },
+      {
+        "name": "어촌7",
+        "fishers": 9,
+        "raw": 21.08,
+        "cap": 9.55,
+        "ratio": 0.453
+      },
+      {
+        "name": "어촌9",
+        "fishers": 12,
+        "raw": 24.91,
+        "cap": 10.72,
+        "ratio": 0.43
+      },
+      {
+        "name": "어촌10",
+        "fishers": 2,
+        "raw": 4.69,
+        "cap": 6.28,
+        "ratio": 1.338
+      },
+      {
+        "name": "어촌11",
+        "fishers": 12,
+        "raw": 27.45,
+        "cap": 15.82,
+        "ratio": 0.576
+      }
+    ]
+  },
+  "salt": {
+    "coastStock": 28.8,
+    "inlandStock": 0,
+    "coastN": 1,
+    "inlandN": 44,
+    "coastPrice": 4.297,
+    "inlandPrice": 691.066,
+    "gap": 160.825,
+    "trades": 121,
+    "amt": 647
+  }
+}

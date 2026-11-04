@@ -1,0 +1,189 @@
+{
+ "card": "T1152",
+ "zone": "hanbando",
+ "seed": 1020,
+ "days": 800,
+ "market": true,
+ "flags": {
+  "cal": true,
+  "tc": true,
+  "pool": false,
+  "life": false,
+  "legacy": false,
+  "def30": false
+ },
+ "curve": {
+  "src": "granary",
+  "H": 19.113314447592384,
+  "e": 0.31394181019867595,
+  "m": 9.096450274195805,
+  "X": 173.8633144475924,
+  "y": 3
+ },
+ "basket": false,
+ "t474": true,
+ "rows": 25574,
+ "rowsToStarv": 23,
+ "feTo": 705115.1,
+ "feToStarv": 873.2,
+ "feToOk": 704241.9,
+ "feRet": 1313928.7,
+ "feRetToStarv": 256.4,
+ "rowsFromStarv": 5,
+ "feFromStarv": 72,
+ "vd": 40800,
+ "vdDebt": 9,
+ "vdStarv": 0,
+ "deaths": 1071,
+ "deathsInDebt": 0,
+ "feDaysMean": 3210.8,
+ "byItem": [
+  {
+   "res": "rice",
+   "fe": 215468.1
+  },
+  {
+   "res": "wheat",
+   "fe": 207122.9
+  },
+  {
+   "res": "meat",
+   "fe": 132531.6
+  },
+  {
+   "res": "barley",
+   "fe": 108990.2
+  },
+  {
+   "res": "food",
+   "fe": 11300
+  },
+  {
+   "res": "fish",
+   "fe": 9874.8
+  },
+  {
+   "res": "cooked_food",
+   "fe": 8397.1
+  },
+  {
+   "res": "salmon",
+   "fe": 5161.1
+  },
+  {
+   "res": "shrimp",
+   "fe": 1886.8
+  },
+  {
+   "res": "crab",
+   "fe": 1457.2
+  },
+  {
+   "res": "seaweed",
+   "fe": 1321.8
+  },
+  {
+   "res": "oyster",
+   "fe": 626.3
+  }
+ ],
+ "pay": {
+  "n": 0,
+  "feDays": {
+   "p50": null
+  },
+  "pFood": {
+   "p50": null,
+   "p90": null
+  },
+  "pFoodMed": {
+   "p50": null
+  },
+  "payOwn": {
+   "p50": null,
+   "p90": null
+  },
+  "payMed": {
+   "p50": null,
+   "p90": null
+  },
+  "keepOwn": {
+   "capital": {
+    "p50": null,
+    "p90": null
+   },
+   "arms": {
+    "p50": null,
+    "p90": null
+   },
+   "build": {
+    "p50": null,
+    "p90": null
+   },
+   "ore": {
+    "p50": null,
+    "p90": null
+   },
+   "other": {
+    "p50": null,
+    "p90": null
+   }
+  },
+  "keepMed": {
+   "capital": {
+    "p50": null,
+    "p90": null
+   },
+   "arms": {
+    "p50": null,
+    "p90": null
+   },
+   "build": {
+    "p50": null,
+    "p90": null
+   },
+   "ore": {
+    "p50": null,
+    "p90": null
+   },
+   "other": {
+    "p50": null,
+    "p90": null
+   }
+  },
+  "trOwn": {
+   "p50": null,
+   "p90": null
+  },
+  "trMed": {
+   "p50": null,
+   "p90": null
+  },
+  "cash": {
+   "p50": null,
+   "p90": null
+  },
+  "N": {
+   "p50": null
+  },
+  "noCands": 0,
+  "trFE": {
+   "p50": null,
+   "p90": null
+  },
+  "trFood": {
+   "p50": null,
+   "p90": null
+  },
+  "trFEdays": {
+   "p50": null,
+   "p90": null
+  }
+ },
+ "mvAll": {
+  "n": 4080,
+  "p10": 0.004,
+  "p50": 0.019,
+  "p90": 0.957
+ }
+}

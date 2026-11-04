@@ -16468,6 +16468,138 @@ function _t784Arrive(c, res, day) {   // 도착 순간 그 짐의 신선도 — 
   const n = Math.max(0, c._xzHome ? Math.max(d0, +c.travelDays || 0) : d0);   // 이웃 존에서 넘어온 짐은 departDay 가 넘어온 날이다
   return _t784F(res, n, day - n, _elevKmOf(c.to));   // ★[T812] 떠난 날 = 도착 날 − 길 날 수(이웃 존 짐도 같은 셈) · ★[T840] 도착 마을 고도
 }
+// ═══ ★★[T1152 2026-11-04 · ★재민 11-04 T1136 ㄱ "교역 바구니는 최종적으로 도달해야 할 목표"] **바구니가 서는 값 곡선 — 시장 깊이 · 운반비**
+//   손잡이 `T1152_MARKET`('1' 만 켬 · 끔 기본 = 아래 갈래가 한 줄도 안 닿는다 = 종전 바이트 · 번들(랩)은 process 가 없어 끔).
+//   ① **식량 값 곡선의 두 수(목표 30날 · 탄력 1.2)를 유도한 수로**(카드 식 `1.0 × (목표 ÷ 재고)^1.2 · 목표 = 인구 × 30날` 의 그 `food` 한 품목 · 품목마다의 곡선 그대로).
+//      읽는 정본은 **지금 세계의 곳간**이다(기본 판 — 밭은 날마다 곳간에 든다 `T100_FIELD_YIELD` 끔 · 곳간 손실은 econ `tickDecay` · `T789` 끔):
+//      · H(목표 날) = **달력의 고비** — 한 해(봄 기점 · 윤년) 날마다 밭 배수 m(d) = `SEASON_MULT[seasonOf(d)].fertility`, 평균 m̄ 에 맞춘 마을이
+//        (1 − m/m̄) 를 쌓아 가장 깊이 파이는 구간 합(= 겨울 · 18.9날) — 그만큼 먹을 것을 쥐고 들어가야 다음 밭이 메운다.
+//      · 반값 재고 X = 목표 위 낱개가 먹히기까지(재고가 H 날치로 내려오기까지) 곳간 손실로 반이 사라지는 재고 — ∫_H^X ρ(x) dx = ln 2 ·
+//        ρ(x) = x 날치를 쥔 곳간의 하루 손실률(정본 `tickDecay` 를 가짜 마을 하나에 그대로 — 과잉 가속 포함 · 사본 0) ⇒ 반값 배수 m = X ÷ H · 탄력 e = ln 2 ÷ ln m.
+//      · 유효 재고의 구조 적자 선반영(`surplusEMA.food` < 0)도 × H(종전 × 30). 천장 · 바닥 · 기준값 · 다른 품목은 그대로.
+//      (측정 갈래) `T1152_SRC=life` = 생활층 읽기(밭 달력 `crops.daysToFirstHarvest` · 길 위 신선도 `spoil` — `T100_FIELD_YIELD` 켬 세계의 수):
+//        H = 다음 거둠까지 날(수명 180 상한) · m = 1 + 반감(90) ÷ H. `T1152_POOL=1` = 열량 하나의 시장(식량 환산 25종을 한 곡선에 — 낱개 값 = φ × p열량).
+//        `T1152_CAL_LEGACY=1` = H 30 · 탄력 1.2(종전 수) · `T1152_DEF30=1` = 적자 선반영만 30날 · `T1152_ONLY=cal|tc` = 한 갈래만.
+//   ② **운반비 = 상인 하루 몫 × 다리 날 × 낱개 kg ÷ 몸 짐.** 종전 낱개당 2/1,000 거리(빙산 — 무게 · 걸음 · 사람과 무관)를
+//      몸 걸음(`CARAVAN_DAY_SPEED` — T474 켬 7,200/일) · 상인 하루 몫(그 원정의 가장 값싼 생산자 한계값 `lowestProducer.mv` — 기회비용 관문과 같은 수) ·
+//      짐 kg(정본 `weights` · 몸 짐 정본 `carry.CAP_KG`)에서: 낱개 하나가 차지한 몸 짐 몫만큼의 걸음 값 · 말 시대 배수(`haulMul`) 그대로.
+//   ③ 치를 힘(받는 마을이 내줄 수 있는 것)은 표만 — 새 장치(외상 · 구호 · 금고 · 사람 손 · 교환 조건)는 회부(보고/T1152 §3).
+const T1152_MARKET = (typeof process !== 'undefined' && process.env && process.env.T1152_MARKET === '1');
+const _T1152_ENV = (typeof process !== 'undefined' && process.env) ? process.env : {};
+const T1152_CAL = T1152_MARKET && _T1152_ENV.T1152_ONLY !== 'tc';
+const T1152_TC = T1152_MARKET && _T1152_ENV.T1152_ONLY !== 'cal';
+const T1152_POOL = T1152_CAL && _T1152_ENV.T1152_POOL === '1';
+const T1152_SRC_LIFE = T1152_CAL && _T1152_ENV.T1152_SRC === 'life';
+const T1152_CAL_LEGACY = T1152_CAL && _T1152_ENV.T1152_CAL_LEGACY === '1';
+const T1152_DEF30 = T1152_CAL && _T1152_ENV.T1152_DEF30 === '1';
+let _t1152Mods;
+function _t1152M() {
+  if (_t1152Mods === undefined) {
+    let Cr = null, Sp = null;
+    try { Cr = require('../server/crops'); } catch (e) { Cr = null; }
+    try { Sp = require('../server/spoil'); } catch (e) { Sp = null; }
+    _t1152Mods = (Cr && typeof Cr.daysToFirstHarvest === 'function' && Sp && typeof Sp.shelfOf === 'function' && typeof Sp.freshnessOf === 'function') ? { Cr, Sp } : null;
+  }
+  if (!_t1152Mods) throw new Error('[T1152] 달력 · 저장 정본(crops · spoil)을 못 읽었다 — 번들에선 켤 수 없다');
+  return _t1152Mods;
+}
+let _t1152Keep = null;
+function _t1152KeepHalf() {   // (생활층 읽기) 저장 수명 · 반감 날(길 위 신선도 정본 — 신선도 0 · 0.5 가 되는 나이 · 이분법)
+  if (_t1152Keep) return _t1152Keep;
+  const S = _t1152M().Sp, keep = S.shelfOf('food');
+  let lo = 0, hi = keep;
+  for (let i = 0; i < 60; i++) { const mid = (lo + hi) / 2; if (S.freshnessOf('food', mid) > 0.5) lo = mid; else hi = mid; }
+  _t1152Keep = { keep, half: (lo + hi) / 2 };
+  return _t1152Keep;
+}
+// 달력의 고비(곳간 읽기) — 그 날이 든 봄 기점 해의 날마다 밭 배수로 (1 − m/m̄) 의 가장 깊은 구간 합(두 해를 이어 해 경계를 넘는 구간도 · 평년은 겨울 한 덩이)
+const _t1152LeanY = new Map();
+function _t1152Lean(day) {
+  const y = CAL.springYearOf(Math.floor(+day || 0));
+  let c = _t1152LeanY.get(y);
+  if (c) return c;
+  const d0 = CAL.dayOf(y, 3, 1), d1 = CAL.dayOf(y + 1, 3, 1), m = [];
+  for (let d = d0; d < d1; d++) m.push((SEASON_MULT[seasonOf(d)] || {}).fertility || 1);
+  let sum = 0; for (const q of m) sum += q;
+  const mean = sum / m.length;
+  let best = 0, cur = 0;
+  for (let k = 0; k < 2 * m.length; k++) { cur = Math.max(0, cur + (1 - m[k % m.length] / mean)); if (cur > best) best = cur; }
+  c = { y, len: m.length, mean, H: best };
+  _t1152LeanY.set(y, c);
+  return c;
+}
+// 곳간 식량 하루 손실률 — x 날치(인구 100 · 식량 100x)를 쥔 가짜 마을에 정본 `tickDecay` 를 한 번(옹기 0 · 다른 품목 0 · 사본 0)
+let _t1152Probing = false;
+function _t1152Rho(x) {
+  const N = 100, v = { npcs: new Array(N).fill(null).map(() => ({})), storage: { food: x * N }, counts: {}, _consEMA: {}, surplusEMA: {}, dailyProductionBuf: {}, treasury: {} };
+  const L = _LOTH; _LOTH = null;   // 가짜 마을은 호스트 곳간 장부에 없다(장부 훅을 잠깐 내린다 · 랩은 늘 null)
+  _t1152Probing = true;            // (T726 켬이면 부패 목표가 `_targetV2` 를 부른다 — 재는 동안 식량 곡선 훅은 쉰다 · 되부름 0 · 부패 물리 = 종전 목표 30날)
+  try { tickDecay(v); } finally { _LOTH = L; _t1152Probing = false; }
+  return 1 - v.storage.food / (x * N);
+}
+const _t1152HalfX = new Map();
+function _t1152Half(H) {   // ∫_H^X ρ = ln 2 인 X(사다리꼴 · 걸음 0.25날 · 결정론)
+  let X = _t1152HalfX.get(H);
+  if (X != null) return X;
+  let I = 0, x = H, a = _t1152Rho(x);
+  const dx = 0.25;
+  while (I < Math.LN2 && x < 1e5) { const b = _t1152Rho(x + dx); I += (a + b) / 2 * dx; x += dx; a = b; }
+  X = x; _t1152HalfX.set(H, X);
+  return X;
+}
+const _t1152Day = new Map();
+function _t1152Cal(day) {   // 그날의 식량 곡선 { H 날 · 탄력 e · 반값 배수 m · 읽기 src · (곳간) 반값 재고 X · (생활층) 다음 거둠 · 수명 · 반감 }
+  const d = Math.floor(+day || 0);
+  let c = _t1152Day.get(d);
+  if (c) return c;
+  if (T1152_CAL_LEGACY) { const m = Math.pow(2, 1 / (ELASTICITY.food || 1)); c = { src: 'legacy', H: 30, e: ELASTICITY.food || 1, m }; }
+  else if (T1152_SRC_LIFE) {
+    const K = _t1152KeepHalf(), next = _t1152M().Cr.daysToFirstHarvest(d);
+    const H = Math.max(1, Math.min(K.keep, next != null && next > 0 ? next : K.keep)), m = 1 + K.half / H;
+    c = { src: 'life', H, e: Math.LN2 / Math.log(m), m, next, keep: K.keep, half: K.half };
+  } else {
+    const L = _t1152Lean(d), H = Math.max(1, L.H), X = _t1152Half(H), m = X / H;
+    c = { src: 'granary', H, e: Math.LN2 / Math.log(m), m, X, y: L.y };
+  }
+  _t1152Day.set(d, c); if (_t1152Day.size > 1000) _t1152Day.delete(_t1152Day.keys().next().value);
+  return c;
+}
+// 식량 곡선(풀지 않은 판 · 기본) — 그 품목 곡선의 날 수(목표의 닻 subs × 30 = 인구 × 30)를 H 로 · 탄력을 e 로 · 적자 선반영 × H. `food` 밖은 그대로(같은 객체).
+//   목표 = max(subs × 30, 보유 · 흐름 · 파생 항) — 식량은 subs × 30(= 30N)이 늘 이긴다(보유 1.8N · 흐름 가드 0 · 파생 0 · 다양성 표 밖 — 하네스가 잰다) ⇒ × H/30 = 인구 × H.
+function _t1152Food(v, r, P) {
+  if (!T1152_CAL || T1152_POOL || r !== 'food' || !P || _t1152Probing) return P;
+  const C = _t1152Cal(v._world ? v._world.day : 0);
+  P.target = P.target * C.H / 30;
+  if (v.surplusEMA && v.surplusEMA.food < 0) P.sEff = Math.max(0.1, Math.max(0.1, _t859Stock(v, r)) + v.surplusEMA.food * (T1152_DEF30 ? 30 : C.H));   // 종전 두 줄과 같은 차례(바닥 → 선반영 → 바닥)
+  P.e = C.e;
+  return P;
+}
+// 그 곡선이 선 품목인가(출발 직후 값 · 계측) — 풀지 않은 판 = `food` · 열량 시장 = 식량 환산이 있는 품목
+function _t1152Own(v, r) { return T1152_CAL && (T1152_POOL ? _t825FoodPer(v, r) > 0 : r === 'food'); }
+// (측정 · `T1152_POOL=1`) 열량 하나의 시장 — 열량 곡선을 품목 r 의 낱개 좌표로(φ = 낱개 하나의 식량 환산) · 반환 꼴은 `_targetV2` 와 같다(같은 적분 · 같은 클램프).
+//   목표 = 인구 × H(위 읽기) · 유효 재고 = 곳간 열량(정본 `totalFoodEquivalent`) + 구조 적자 × H · 낱개 좌표 = 열량 좌표 ÷ φ · 다양성 · 품목 제 목표는 이 품목들에선 안 쓴다.
+//   문맥(ctx)이 있으면 마을 열량 · 목표를 한 번만 센다(결정층 값표 226 품목 가운데 25 가 이 자리).
+function _t1152CalParams(v, r, phi, ctx) {
+  let K = ctx ? ctx._t1152 : null;
+  if (!K) {
+    const N = v.npcs.length || 1, w = v._world, C = _t1152Cal(w ? w.day : 0);
+    let S = +v1.totalFoodEquivalent(v) || 0;
+    if (v.surplusEMA && v.surplusEMA.food < 0) S += v.surplusEMA.food * (T1152_DEF30 ? 30 : C.H);
+    const util = UTILITY_WEIGHT.food || 0.1;
+    K = { T: (SUBSISTENCE_PER_NPC.food || 0) * N * C.H, S: Math.max(0.1, S), e: C.e, maxAdj: Math.min(PRICE_ADJ_MAX, 10 * Math.pow(10, util * 2)) };
+    if (ctx) ctx._t1152 = K;
+  }
+  return { base: (BASE_VALUE_V2.food || 1) * phi, e: K.e, target: K.T / phi, sEff: K.S / phi, physical: Math.max(0, v.storage[r] || 0), maxAdj: K.maxAdj };
+}
+// 낱개 운반비 — 상인 하루 몫 × 다리 날(몸 걸음) × 낱개 kg ÷ 몸 짐 kg × 말 시대 배수(종전 항 그대로)
+function _t1152TcD(mv, days, r) { return Math.max(0, +mv || 0) * Math.max(0, +days || 0) * _t1136Kg(r) / _t1136CapKg() * haulMul(); }
+function _t1152Tc(mv, dist, r) { return _t1152TcD(mv, Math.max(0, +dist || 0) / CARAVAN_DAY_SPEED, r); }
+// 바구니 예약(T1136 ①)의 열량 몫 — 그 마을에 먼저 닿을 짐 가운데 식량 환산이 있는 품목의 열량 합(같은 열량 곡선을 민다 · φ 로 나누면 품목 낱개 좌표)
+function _t1152RvCal(R, v, tBy) {
+  const a = R && R.get(v); if (!a) return 0;
+  let s = 0; for (let i = 0; i < a.length; i += 3) if (a[i + 2] <= tBy) { const f = _t825FoodPer(v, a[i]); if (f > 0) s += a[i + 1] * f; }
+  return s;
+}
 // 마을 하나의 문맥 — 자본재 커버리지(결정층 식 그대로).
 function _targetCtxV2(v) {
   const N = v.npcs.length || 1;
@@ -16490,6 +16622,7 @@ function _targetCtxV2(v) {
 }
 // 품목 하나 — 목표 · 유효 재고 · 웃돈 상한(결정층 식 그대로 · 네 자리가 부른다). 값은 `_priceFromV2`.
 function _targetV2(v, r, ctx) {
+  if (T1152_POOL) { const _phi = _t825FoodPer(v, r); if (_phi > 0) return _t1152CalParams(v, r, _phi, ctx); }   // ★[T1152 ① 측정] 열량 하나의 시장(끔 = 이 줄 무동작)
   const N = ctx.N, CAP_TARGET = ctx.CAP_TARGET, CAP_STOCK = ctx.CAP_STOCK;
   const base = BASE_VALUE_V2[r] || 1;
   const elast = ELASTICITY[r] || 1.0;
@@ -16565,7 +16698,7 @@ function _targetV2(v, r, ctx) {
   //   외래 부산물이 재고0→550배 폭발해 교역 독식하는 걸 막아 staple(돌·식량) 재분배가 캐러밴을 잡게 함.
   let maxAdj = Math.min(PRICE_ADJ_MAX, 10 * Math.pow(10, util * 2));
   if (ORNAMENTAL[r]) maxAdj = Math.min(maxAdj, LUX_ADJ_MAX);   // ②위신재는 웃돈 상한
-  return { base, e: elast, target, sEff: stock, physical: Math.max(0, v.storage[r] || 0), maxAdj };
+  return _t1152Food(v, r, { base, e: elast, target, sEff: stock, physical: Math.max(0, v.storage[r] || 0), maxAdj });   // ★[T1152 ①] 식량 곡선의 두 수(끔 = 같은 객체 그대로)
 }
 // 값 한 줄 — 목표 · 유효 재고 · 탄력 · 웃돈 상한 → 그림자가격(원석 상한 앞).
 function _priceFromV2(T) { return T.base * Math.max(PRICE_ADJ_MIN, Math.min(T.maxAdj, Math.pow(T.target / T.sEff, T.e))); }
@@ -16621,6 +16754,7 @@ function computeShadowPrices(v) {
 //   출발 EV(totalProfit)는 flat+0.95 마진 휴리스틱 유지 — 기대는 근사, 정산은 진실(후속 정합 후보).
 // =============================================================================
 function _priceParamsV2(v, r) {
+  if (T1152_POOL) { const _phi = _t825FoodPer(v, r); if (_phi > 0) return _t1152CalParams(v, r, _phi, null); }   // ★[T1152 ① 측정] 정산도 같은 열량 곡선(끔 = 이 줄 무동작)
   // ★★[T726] 켬 — 결정층과 같은 함수 · 같은 상한 둘(위신재 웃돈은 `_targetV2` 안 · 원석은 `_settleParamsV2`). 끔 = 아래 종전 식(main 비트).
   if (T726_ONE_TARGET) return _settleParamsV2(v, r);
   const N = v.npcs.length || 1;
@@ -16649,7 +16783,7 @@ function _priceParamsV2(v, r) {
     if (r === 'food' && v.surplusEMA && v.surplusEMA.food < 0) stock = Math.max(0.1, stock + v.surplusEMA.food * 30);
   }
   const maxAdj = Math.min(PRICE_ADJ_MAX, 10 * Math.pow(10, util * 2));
-  return { base, e, target, sEff: stock, physical: Math.max(0, v.storage[r] || 0), maxAdj };
+  return _t1152Food(v, r, { base, e, target, sEff: stock, physical: Math.max(0, v.storage[r] || 0), maxAdj });   // ★[T1152 ①] 정산 종전 식도 같은 두 수(끔 = 같은 객체 그대로)
 }
 // ★★[T726] 정산 곡선 = 결정층 값 곡선 — p(s) = base × clamp(바닥 0.01, 천장, (목표/s)^e) 에 원석 상한(값 ≤ cap)까지 같이.
 //   결정층은 원석 값을 min(·, cap) 으로 깎는다 ⇒ 곡선 천장을 cap/base 로 낮춘 것과 같다(cap 이 바닥 밑이면 곡선 전체가 cap 에서 평평).
@@ -16972,8 +17106,9 @@ function _t1136OutItems(ctx, av, bv, t0, tOut, risk) {
     const max = Math.floor(Math.min(cand.surplus, av.storage[r] || 0) + 1e-9);
     if (max < 1) continue;
     const CA = _t1136Cv(ctx.cache, av, r, 'd'), CB = _t1136Cv(ctx.cache, bv, r, 's');   // 내 값 = 결정층 곡선 · B 장터에서 받을 값 = 정산 곡선(실제로 치르는 값 — 받아 올 짐을 사는 값과 같은 곡선이라 남는 값이 계획과 맞는다)
-    const sA = CA.P.sEff, sB = CB.P.sEff + _t1136Rv(ctx.R, bv, r, t0 + tOut);
-    const f = _t1136F(r, t0, t0 + tOut, _elevKmOf(bv)), fwd = ctx.fwd, tc = risk.transportCostPerUnit, loss = risk.expectedLossRatio;
+    const _phB = T1152_POOL ? _t825FoodPer(bv, r) : 0;   // ★[T1152 ① 측정 · 열량 시장] 열량 품목이면 먼저 닿을 짐의 열량 전부가 같은 곡선을 민다(그 밖 = 0 → 종전 줄)
+    const sA = CA.P.sEff, sB = CB.P.sEff + (_phB > 0 ? _t1152RvCal(ctx.R, bv, t0 + tOut) / _phB : _t1136Rv(ctx.R, bv, r, t0 + tOut));
+    const f = _t1136F(r, t0, t0 + tOut, _elevKmOf(bv)), fwd = ctx.fwd, tc = T1152_TC ? _t1152TcD(risk.mv, tOut, r) : risk.transportCostPerUnit, loss = risk.expectedLossRatio;   // ★[T1152 ②] 운반비 = 상인 하루 몫 × 다리 날 × kg ÷ 몸 짐
     items.push({ res: r, kg, max, at: (j) => {
       const c = _t1136I(CA, sA - j + 1) - _t1136I(CA, sA - j);            // 꺼낸 j 번째 낱개의 내 값(기회비용)
       const pTo = (_t1136I(CB, sB + j) - _t1136I(CB, sB + j - 1)) * fwd * f;   // 받는 j 번째 낱개의 그쪽 값 × 선도 할인 × 도착 신선도
@@ -16994,8 +17129,9 @@ function _t1136RetItems(cache, R, av, bv, sent, candB, capKg, t1, tBack, risk, f
     const max = Math.floor(Math.min(cand.surplus - ro, (bv.storage[r] || 0) - ro) + 1e-9);
     if (max < 1) continue;
     const CB = _t1136Cv(cache, bv, r, kind), CA = _t1136Cv(cache, av, r, 'd');
-    const sB = CB.P.sEff - ro, sA = CA.P.sEff + _t1136Rv(R, av, r, t1 + tBack);
-    const f = _t1136F(r, t1, t1 + tBack, _elevKmOf(av)), tc = risk.transportCostPerUnit, loss = risk.expectedLossRatio;
+    const _phA = T1152_POOL ? _t825FoodPer(av, r) : 0;   // ★[T1152 ① 측정 · 열량 시장] A 쪽 예약은 열량 합 · B 쪽 파는 몫(먼저 사 갈 짐)도 열량 합이 곡선을 민다(그 밖 = 종전 줄)
+    const sB = CB.P.sEff - (_phA > 0 && R && R.out ? _t1152RvCal(R.out, bv, t1) / _phA : ro), sA = CA.P.sEff + (_phA > 0 ? _t1152RvCal(R, av, t1 + tBack) / _phA : _t1136Rv(R, av, r, t1 + tBack));
+    const f = _t1136F(r, t1, t1 + tBack, _elevKmOf(av)), tc = T1152_TC ? _t1152TcD(risk.mv, tBack, r) : risk.transportCostPerUnit, loss = risk.expectedLossRatio;   // ★[T1152 ②]
     items.push({ res: r, kg, max, at: (j) => {
       const c = _t1136I(CB, sB - j + 1) - _t1136I(CB, sB - j);            // B 에서 사는 j 번째 낱개 값
       const pTo = (_t1136I(CA, sA + j) - _t1136I(CA, sA + j - 1)) * fwd * f;   // 집에 든 j 번째 낱개의 내 값 × 선도 할인 × 집 도착 신선도
@@ -17010,6 +17146,7 @@ function _t1136RetItems(cache, R, av, bv, sent, candB, capKg, t1, tBack, risk, f
 //   (값이 큰 낱개 하나가 받아 올 값을 크게 넘으면 그 몫이 B 에 남는다 — 낱개 단위 손해 ⑤ · 계획 ㄴ 이 그 자리를 작은 낱개로 메운다.)
 function _t1136Plan(world, ctx, a, bv, dist) {
   const av = a.v, risk = _legRiskV2(world, a, { v: bv }, dist);
+  if (T1152_MARKET) risk.mv = ctx.mv;   // ★[T1152 ②] 상인 하루 몫(그 원정의 가장 값싼 생산자 — 관문과 같은 수)
   const tOut = _t1136Days(dist), tBack = tOut;   // 거리는 대칭(종전 왕복 = 가는 날 × 2 와 같은 가정)
   const outItems = _t1136OutItems(ctx, av, bv, ctx.t0, tOut, risk);
   if (!outItems.length) return null;
@@ -17068,6 +17205,7 @@ function _t1136Village(world, a, evToData, nbList, spareCap, currentlyTrading, d
   while (launched + currentlyTrading < spareCap) {
     const lp = lowestProducer(a.v, a.prices, day);
     if (!lp.npc) break;
+    ctx.mv = lp.mv;   // ★[T1152 ②] 운반비의 상인 하루 몫(끔 = 안 읽는다)
     ctx.candA = _t1136Cands(a.v);
     if (!ctx.candA.length) break;
     let best = null;
@@ -17121,7 +17259,7 @@ function _t1136Launch(world, a, P, lp, day, ctx) {
     departDay: day, arriveDay: day + P.tOut, returnArriveDay: day + P.tOut + P.tBack,
     state: 'outbound', travelDays: P.tOut,
     basket, kg, capKg,
-    _t1136: { ret, tBack: P.tBack, gain: P.gain, val, kgRet: P.kgRet, credit: P.credit, spent: P.spent, leftover: P.leftover, how: P.how, fwd: ctx.fwd },   // 계획(받아 올 짐 · 받을 값 · 쓸 값 · 남는 값 · 계획 ㄱ/ㄴ) — 예약 · 계측이 읽는다
+    _t1136: { ret, tBack: P.tBack, gain: P.gain, val, kgRet: P.kgRet, credit: P.credit, spent: P.spent, leftover: P.leftover, how: P.how, fwd: ctx.fwd, ...(T1152_MARKET ? { mv: ctx.mv } : {}) },   // 계획(받아 올 짐 · 받을 값 · 쓸 값 · 남는 값 · 계획 ㄱ/ㄴ) — 예약 · 계측이 읽는다
   };
   world.caravans.push(c);
   if (_LOTH) basket.forEach((it, i) => { if (lots[i]) _LOTH.cargo(c, 'b:' + it.res, lots[i]); });
@@ -17193,7 +17331,9 @@ function _t1136Arrive(world, c, t) {
   const sent = new Set(c.basket.map((it) => it.res));
   const capKg = c.capKg || _t1136CapKg();
   const fwd = (c._t1136 && c._t1136.fwd != null) ? c._t1136.fwd : FORWARD_PRICE_MARGIN_NEV;   // 떠날 때 쓴 선도 할인(종전 0.95 — 두 리터럴은 test-valuechain ⑥ 이 같음을 지킨다)
-  const items = _t1136RetItems(cache, R, A, B, sent, _t1136Cands(B), capKg, t, tBack, _legRiskV2(world, { v: A }, { v: B }, c.distance), fwd, 's');
+  const _risk = _legRiskV2(world, { v: A }, { v: B }, c.distance);
+  if (T1152_MARKET) _risk.mv = (c._t1136 && c._t1136.mv != null) ? c._t1136.mv : 0;   // ★[T1152 ②] 떠날 때 그 상인 하루 몫
+  const items = _t1136RetItems(cache, R, A, B, sent, _t1136Cands(B), capKg, t, tBack, _risk, fwd, 's');
   const need = _t1136Fill(items, capKg, full * (1 - TAU), 'kg', null).spent;   // 받아 올 수 있는 값(다 판 값을 예산으로)
   // ② 치를 만큼만 판다 — 다 팔아도 모자라거나 같으면 다 판다
   if (need >= full * (1 - TAU) - 1e-9) for (const x of L) x.sold = x.cum.length - 1;
@@ -17404,7 +17544,8 @@ function* tickTradeV2Steps(world, day) {
           const pFrom = a.prices[cand.res];
           const pTo = b.prices[cand.res] * FORWARD_PRICE_MARGIN; // 위험 마진
           const N_units = Math.min(cand.surplus, CARGO_PER_TRIP);
-          const { transportCostPerUnit, expectedLossRatio } = _legRiskV2(world, a, b, dist);   // ★[T1136] 운반비 · 기대 손실(아래 함수 — 이름만 올렸다 · 값 · 차례 무변)
+          const { transportCostPerUnit: _tc1136, expectedLossRatio } = _legRiskV2(world, a, b, dist);   // ★[T1136] 운반비 · 기대 손실(아래 함수 — 이름만 올렸다 · 값 · 차례 무변)
+          const transportCostPerUnit = T1152_TC ? _t1152Tc(lp.mv, dist, cand.res) : _tc1136;   // ★[T1152 ②] 켬 = 상인 하루 몫 × 다리 날 × 낱개 kg ÷ 몸 짐(끔 = 종전 수 그대로)
           // ★출발 EV는 의도적으로 flat×수량 유지(정산은 적분 — 1b 참조). 2026-07-12 정합 시도 A/B로 기각:
           //   EV를 적분으로 정합하면 체계적 과소 발진(교역 s7 −37%·s101 −60%, s8 pop657→7 붕괴 실측).
           //   원인 — EV는 출발 leg만 계산하고 귀환 leg 차익(도착지 저가 매입)은 미계상인데, flat의 낙관
@@ -17461,6 +17602,7 @@ function* tickTradeV2Steps(world, day) {
           subs = (SUBSISTENCE_PER_NPC[r] || 0) * N, buf = N * Math.max(0.5, (UTILITY_WEIGHT[r] || 0.1) * 1.2),
           tg = Math.max(subs * 30, buf), st = Math.max(0.1, T859_FOOD_HUNGER ? _t859Stock(a.v, r) : (a.v.storage[r] || 0));   // ★[T859]
         a.prices[r] = base * Math.max(PRICE_ADJ_MIN, Math.min(PRICE_ADJ_MAX, Math.pow(tg / st, elast))); }
+      if (!T726_ONE_TARGET && _t1152Own(a.v, cand.res)) a.prices[cand.res] = _priceNowV2(a.v, cand.res);   // ★[T1152 ①] 그 곡선이 선 품목은 출발 직후 값도 결정층 한 함수(종전 축약식은 목표 30날 · 탄력을 글자로 가진다 · 끔 = 무동작)
 
       // ★★★[T206 2026-09-12 · 이 파일의 접점 ①/② 중 ①] **남는 용량에 둘째 후보.**
       //   §0-ⓐ 실측(시드 1020 · 8,152 leg): 적재율 중앙 92%(바닥 마을 82.8%) · 만재는 46.6% 뿐이고
@@ -17517,6 +17659,7 @@ function* tickTradeV2Steps(world, day) {
             subs = (SUBSISTENCE_PER_NPC[r] || 0) * N, buf = N * Math.max(0.5, (UTILITY_WEIGHT[r] || 0.1) * 1.2),
             tg = Math.max(subs * 30, buf), st = Math.max(0.1, T859_FOOD_HUNGER ? _t859Stock(a.v, r) : (a.v.storage[r] || 0));   // ★[T859]
           a.prices[r] = base * Math.max(PRICE_ADJ_MIN, Math.min(PRICE_ADJ_MAX, Math.pow(tg / st, elast))); }
+        if (!T726_ONE_TARGET && _t1152Own(a.v, _res2)) a.prices[_res2] = _priceNowV2(a.v, _res2);   // ★[T1152 ①] 첫 품목과 같은 문(끔 = 무동작)
       }
 
       // 가져갈 자원 결정
@@ -17577,6 +17720,7 @@ function* tickTradeV2Steps(world, day) {
         returnArriveDay: day + travelDays * 2,
         state: 'outbound',
         travelDays,
+        ...(T1152_MARKET ? { _t1152Mv: lp.mv } : {}),   // ★[T1152 ②] 재routing 운반비의 상인 하루 몫(끔 = 칸 없음 = 종전 레코드)
       });
       if (_LOTH) { const _c = world.caravans[world.caravans.length - 1]; if (_lotG) _LOTH.cargo(_c, 'give', _lotG); if (_lotG2) _LOTH.cargo(_c, 'give2', _lotG2); }   // ★[T732] 짐에 로트가 실려 간다(주입 없으면 이 줄 안 탐)
       // ★★[T533] 목적지가 이웃 존 스텁 — **경계 칸에 서는 날**을 적는다(몸이 넘는 날 = 기록이 넘는 날). 호스트가 `split` 을 안 주면 적지 않는다(T525 뼈대 = 도착일).
@@ -17813,7 +17957,7 @@ function _caravanArrive(world, c, day) {
         const altPrices = computeShadowPrices(b);
         const altPto = altPrices[c.giveRes] || 0;
         const altRev = deliveredGive * altPto * (1 - TAU);
-        const extraTransport = (TRANSPORT_COST_PER_1000 * distFromHere / 1000) * deliveredGive;
+        const extraTransport = T1152_TC ? _t1152Tc(c._t1152Mv || 0, distFromHere, c.giveRes) * deliveredGive : (TRANSPORT_COST_PER_1000 * distFromHere / 1000) * deliveredGive;   // ★[T1152 ②](끔 = 종전 식)
         const altNet = altRev - extraTransport;
         if (altNet > expectedRevenue * 1.3 && (!bestAlt || altNet > bestAlt.netRev)) {
           bestAlt = { v: b, netRev: altNet, dist: distFromHere };
@@ -18577,6 +18721,7 @@ function netExportValue(world, from, res) {
   const vk = from.name + ' ' + res;
   if (C.val.has(vk)) return C.val.get(vk);
   const px = (b) => { let t = C.px.get(b); if (!t) { t = computeShadowPrices(b); C.px.set(b, t); } return t; };
+  let _mv = null; const _nevMv = () => (_mv != null ? _mv : (_mv = (C.mv || (C.mv = new Map())).get(from) != null ? C.mv.get(from) : (() => { const x = lowestProducer(from, px(from), day).mv; C.mv.set(from, isFinite(x) ? x : 0); return C.mv.get(from); })()));   // ★[T1152 ②] 그날 그 마을 상인 하루 몫(끔 = 안 부른다)
   const infoR = world.infoRange || 400;
   const near = (from._near20 && from._near20.length) ? from._near20 : (world.villages || []);
   let best = 0;
@@ -18601,7 +18746,7 @@ function netExportValue(world, from, res) {
         expectedLossRatio = Math.max(expectedLossRatio, (1 - _repelP) * 0.6);
       }
     }
-    const net = pTo * (1 - TAU) * (1 - expectedLossRatio) - (TRANSPORT_COST_PER_1000 * dist / 1000) * haulMul();   // ★말 사역(⑥) — 발주 EV 와 같은 항·같은 배수
+    const net = pTo * (1 - TAU) * (1 - expectedLossRatio) - (T1152_TC ? _t1152Tc(_nevMv(), dist, res) : (TRANSPORT_COST_PER_1000 * dist / 1000) * haulMul());   // ★말 사역(⑥) — 발주 EV 와 같은 항·같은 배수 · ★[T1152 ②] 켬 = 같은 유도식(그날 가장 값싼 생산자)
     if (net > best) best = net;
   }
   C.val.set(vk, best);
@@ -18877,6 +19022,9 @@ module.exports = {
   T1049_FLOOR_STONE,   // ★[T1049] 돌 바닥 마을은 제 돌을 안 판다(하네스 `test-floor-stone` 가 읽는다)
   T812_CARGO_TEMP, _t812Probe: { exp: _t812Exp },
   T1136_BASKET, T1136_ESCORT_CARRY, basketFlush, basketBounce,   // ★[T1136] 바구니 교역 손잡이(끔 기본) · 사건 처리기(서버 호스트가 몸 시계로 부른다 · 헤드리스는 날 머리) · 몸이 막혀 되돌아섬(서버 §5.5b)
+  _lowestProducer: lowestProducer,   // ★[T1152] 계측기가 상인 하루 몫을 같은 함수로 잰다(사본 0)
+  T1152_MARKET, _t1152Probe: { cal: _t1152Cal, lean: _t1152Lean, rho: _t1152Rho, half: _t1152Half, food: _t1152Food, own: _t1152Own, keepHalf: _t1152KeepHalf, params: _t1152CalParams, tc: _t1152Tc, tcD: _t1152TcD, rvCal: _t1152RvCal, foodPer: _t825FoodPer,
+    seasonMult: SEASON_MULT, flags: { cal: T1152_CAL, tc: T1152_TC, pool: T1152_POOL, life: T1152_SRC_LIFE, legacy: T1152_CAL_LEGACY, def30: T1152_DEF30 } },   // ★[T1152] 하네스 · 계측기가 같은 함수를 부른다(사본 0)
   _t1136Probe: { on: _t1136On, plan: _t1136Plan, fill: _t1136Fill, F: _t1136F, days: _t1136Days, kg: _t1136Kg, capKg: _t1136CapKg, cands: _t1136Cands, resv: _t1136Resv, rv: _t1136Rv, exportCands: _exportCandidatesV2, ARRIVE_BAIL_FRAC },   // ★[T1136] 하네스가 이 함수들을 그대로 부른다(사본 0)
   T840_LEG_ELEV, elevKmOf: _elevKmOf,   // ★[T840] 다리 고도 — 장부(`granary-lots.unload`)가 같은 함수를 부른다(사본 0)   // ★[T812] 길 위 노출 — 하네스가 이 함수를 그대로 부른다(사본 0)   // ★[T784] 짐 늙음 — 하네스가 **이 두 함수**를 그대로 부른다(사본 0 · 값 무변)
 };

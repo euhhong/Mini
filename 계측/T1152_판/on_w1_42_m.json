@@ -1,0 +1,155 @@
+{
+ "card": "T1152",
+ "zone": "hanbando",
+ "seed": 42,
+ "days": 800,
+ "market": false,
+ "basket": true,
+ "t474": true,
+ "rows": 23024,
+ "rowsToStarv": 96,
+ "feTo": 10884.7,
+ "feToStarv": 23.4,
+ "feToOk": 10861.4,
+ "feRet": 94431.5,
+ "feRetToStarv": 9853.8,
+ "rowsFromStarv": 647,
+ "feFromStarv": 0,
+ "vd": 39498,
+ "vdDebt": 4723,
+ "vdStarv": 994,
+ "deaths": 2805,
+ "deathsInDebt": 1098,
+ "feDaysMean": 3031.4,
+ "byItem": [
+  {
+   "res": "rice",
+   "fe": 2737.4
+  },
+  {
+   "res": "barley",
+   "fe": 2612.9
+  },
+  {
+   "res": "wheat",
+   "fe": 2408.4
+  },
+  {
+   "res": "meat",
+   "fe": 1490
+  },
+  {
+   "res": "food",
+   "fe": 1170
+  },
+  {
+   "res": "fish",
+   "fe": 276
+  },
+  {
+   "res": "salmon",
+   "fe": 109.9
+  },
+  {
+   "res": "crab",
+   "fe": 22.1
+  },
+  {
+   "res": "shrimp",
+   "fe": 21.4
+  },
+  {
+   "res": "seaweed",
+   "fe": 14.8
+  },
+  {
+   "res": "mulberry_fruit",
+   "fe": 7.2
+  },
+  {
+   "res": "mushroom",
+   "fe": 5.1
+  }
+ ],
+ "pay": {
+  "n": 475,
+  "feDays": {
+   "p50": 0
+  },
+  "pFood": {
+   "p50": 1000,
+   "p90": 1000
+  },
+  "pFoodMed": {
+   "p50": 0.94
+  },
+  "payOwn": {
+   "p50": 4.43,
+   "p90": 26.78
+  },
+  "payMed": {
+   "p50": 5.52,
+   "p90": 92.51
+  },
+  "keepOwn": {
+   "capital": {
+    "p50": 32.63,
+    "p90": 171.35
+   },
+   "arms": {
+    "p50": 13.91,
+    "p90": 16.09
+   },
+   "build": {
+    "p50": 0,
+    "p90": 32.02
+   },
+   "ore": {
+    "p50": 0.03,
+    "p90": 0.21
+   },
+   "other": {
+    "p50": 21.92,
+    "p90": 132.67
+   }
+  },
+  "keepMed": {
+   "capital": {
+    "p50": 25.12,
+    "p90": 95.37
+   },
+   "arms": {
+    "p50": 5.23,
+    "p90": 10.31
+   },
+   "build": {
+    "p50": 0,
+    "p90": 46.37
+   },
+   "ore": {
+    "p50": 0.03,
+    "p90": 0.19
+   },
+   "other": {
+    "p50": 9.91,
+    "p90": 352.88
+   }
+  },
+  "trOwn": {
+   "p50": 142788.17,
+   "p90": 368981.31
+  },
+  "trMed": {
+   "p50": 2339.55,
+   "p90": 63579.58
+  },
+  "cash": {
+   "p50": 15.24,
+   "p90": 241.13
+  },
+  "N": {
+   "p50": 14
+  },
+  "noCands": 61
+ }
+}

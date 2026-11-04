@@ -301,6 +301,102 @@ const _T1136 = process.env.T17_BASKET ? (() => {
   };
   return { day, out };
 })() : null;
+// ★[T1152 · 계측 전용 · **env 가 없으면 한 글자도 안 바뀐다**] 식량이 어디서 어디로 · 굶는 마을의 치를 힘 — `T17_MARKET=<파일>` 이면 날마다 읽기만 한다.
+//   ⓐ 마을·날 — 식량 빚(T1074 정본 `foodDebtOf` · 빚 > 0 = 굶는 마을) · 그날 죽음(정본 `lib-day-deaths` — `_deadTot` 의 하루 차) · 곳간 식량 환산(정본 `totalFoodEquivalent`)
+//   ⓑ 장부 줄(그날 새 줄)마다 받는 마을 곳간에 든 식량 환산 — 바구니 = 판 품목(`basket`) · 종전 = `sent` · 받아 온 짐(→ 보낸 마을) ·
+//      받는 마을이 그 날 앞(어제 끝)에 굶었나로 가른다 · 낱개 환산 = 정본 함수에 곳간 한 칸만 넣어 잰다(econ `_t825FoodPer` 와 같은 셈)
+//   ⓒ 열흘마다 굶는 마을의 치를 힘 — 내보낼 몫(정본 후보 함수 · 정산이 보는 칸)의 값 · 몫 밖 곳간(유보 줄 아래 · 갈래별 — 정산이 못 보는 칸) ·
+//      금고(품목 · 채권 `_cash`) · 사람 수 — 값은 그 마을 그림자가격(그날) · 온 세계 가운데 값(인구 있는 마을의 그 품목 값 중앙) 둘
+//   판정 0 — 수만 낸다(보고/T1152). 세계에는 아무것도 안 넣는다(장부 줄 · 곳간 · 빚을 읽기만).
+const _T1152 = process.env.T17_MARKET ? (() => {
+  const V1 = econ, V2 = econV2;
+  const phi = new Map();
+  const phiOf = (r) => {
+    if (phi.has(r)) return phi.get(r);
+    let f = 0;
+    try { const st = { food: 0, fish: 0, meat: 0, cooked_food: 0 }; st[r] = (st[r] || 0) + 1; f = +V1.totalFoodEquivalent({ storage: st, npcs: [], _world: world }) || 0; } catch (e) { f = 0; }
+    phi.set(r, f); return f;
+  };
+  const byName = new Map(); for (const v of world.villages) byName.set(v.name, v);
+  const DD = require('./lib-day-deaths');   // 그날 죽음 정본(T963 — `_deadTot` 의 하루 차 · 빈 마을에 남은 전날 `_deathsToday` 를 다시 세지 않는다 · 사본 0)
+  const lastDead = new Map(); for (const v of world.villages) lastDead.set(v, DD.deadTot(v));
+  const prev = new Map();   // 마을 → 어제 끝 { debt, starving }
+  const seen = new WeakSet();
+  const S = { rows: 0, rowsToStarv: 0, feTo: 0, feToStarv: 0, feToOk: 0, feRet: 0, feRetToStarv: 0, feFromStarv: 0, rowsFromStarv: 0,
+    vd: 0, vdDebt: 0, vdStarv: 0, deaths: 0, deathsInDebt: 0, feSum: 0, pay: [], byItem: {}, mvs: [], mvAll: [] };
+  const CAT = (r) => (r === 'tool' || r === 'bronze_tool' || r === 'iron_tool' || r === 'clothes') ? 'capital' : (r === 'weapon' || r === 'armor') ? 'arms'
+    : (r === 'stone' || r === 'wood') ? 'build' : (r === 'ore') ? 'ore' : 'other';
+  const items = (row) => row.basket ? row.basket : (row.sent && !row.abandoned ? [row.sent] : []);
+  const rets = (row) => row.retBasket ? row.retBasket : (row.bought ? [row.bought] : []);
+  const fe = (list) => { let s = 0; for (const it of list) if (it && it.res && it.amt > 0) s += it.amt * phiOf(it.res); return s; };
+  const day = (d) => {
+    const TL = world.tradeLog || [];
+    for (let i = TL.length - 1; i >= 0 && !seen.has(TL[i]); i--) {
+      const t = TL[i]; seen.add(t);
+      if (t.rerouted) continue;
+      const to = byName.get(t.to), from = byName.get(t.from);
+      const pt = prev.get(to), pf = prev.get(from);
+      const giv = items(t), x = fe(giv), y = fe(rets(t));
+      S.rows++; S.feTo += x; S.feRet += y;
+      for (const it of giv) if (it && it.res && it.amt > 0 && phiOf(it.res) > 0) S.byItem[it.res] = (S.byItem[it.res] || 0) + it.amt * phiOf(it.res);
+      if (pt && pt.debt) { S.rowsToStarv++; S.feToStarv += x; } else S.feToOk += x;
+      if (pf && pf.debt) { S.feRetToStarv += y; S.rowsFromStarv++; S.feFromStarv += x; }
+    }
+    let medP = null;
+    const sample = d % 10 === 9;
+    if (sample && V2._lowestProducer) for (const v of world.villages) { if (!(v.npcs || []).length) continue; try { const lp = V2._lowestProducer(v, v._priceCache || V2.computeShadowPrices(v), world.day); if (lp && isFinite(lp.mv)) S.mvAll.push(lp.mv); } catch (e) {} }   // 상인 하루 몫(가장 값싼 생산자 · 그날 교역 값표)
+    for (const v of world.villages) {
+      const N = (v.npcs || []).length;
+      const D = V1.foodDebtOf ? V1.foodDebtOf(v) : { max: 0, starving: 0 };
+      const debt = N > 0 && D.max > 0, starving = N > 0 && D.starving > 0;
+      if (N > 0) { S.vd++; S.feSum += +V1.totalFoodEquivalent(v) || 0; if (debt) S.vdDebt++; if (starving) S.vdStarv++; }
+      const dead = DD.dayDelta(lastDead, v, v); S.deaths += dead; if (debt) S.deathsInDebt += dead;
+      prev.set(v, { debt, starving });
+      if (!sample || !debt) continue;
+      if (!medP) {   // 온 세계 가운데 값(그날 · 인구 있는 마을)
+        const cols = {};
+        for (const x of world.villages) { if (!(x.npcs || []).length) continue; const P = V2.computeShadowPrices(x); for (const r in P) (cols[r] || (cols[r] = [])).push(+P[r] || 0); }
+        medP = {}; for (const r in cols) { const a = cols[r].sort((p, q) => p - q); medP[r] = a[Math.floor(a.length / 2)]; }
+      }
+      const P = V2.computeShadowPrices(v), C = V2._t1136Probe.exportCands({ v }, N), sur = {};
+      for (const c of C) sur[c.res] = Math.min(c.surplus, v.storage[c.res] || 0);
+      const rec = { d, N, feDays: +((+V1.totalFoodEquivalent(v) || 0) / N).toFixed(3), pFood: +(P.food || 0).toFixed(3), pFoodMed: +(medP.food || 0).toFixed(3),
+        payOwn: 0, payMed: 0, keepOwn: {}, keepMed: {}, trOwn: 0, trMed: 0, cash: +((v.treasury && v.treasury._cash) || 0).toFixed(2), cands: C.length };
+      for (const r in v.storage) {
+        const s = +v.storage[r] || 0; if (!(s > 0) || phiOf(r) > 0) continue;
+        const po = +P[r] || 0, pm = +medP[r] || 0, u = sur[r] || 0, k = Math.max(0, s - u), cat = CAT(r);
+        rec.payOwn += u * po; rec.payMed += u * pm;
+        rec.keepOwn[cat] = (rec.keepOwn[cat] || 0) + k * po; rec.keepMed[cat] = (rec.keepMed[cat] || 0) + k * pm;
+      }
+      rec.trFE = 0; rec.trFood = +((v.treasury && v.treasury.food) || 0).toFixed(2);
+      for (const r in (v.treasury || {})) { if (r === '_cash') continue; const s = +v.treasury[r] || 0; if (!(s > 0)) continue; rec.trOwn += s * (+P[r] || 0); rec.trMed += s * (+medP[r] || 0); rec.trFE += s * phiOf(r); }
+      rec.trFE = +rec.trFE.toFixed(2); rec.needDay = N;   // 금고 식량 환산(그 마을 하루 먹는 양 N 과 견준다)
+      if (S.mvs.length < 20000) { try { const lp = V2._lowestProducer ? V2._lowestProducer(v, P, world.day) : null; if (lp && isFinite(lp.mv)) S.mvs.push(lp.mv); } catch (e) {} }
+      for (const k of ['payOwn', 'payMed', 'trOwn', 'trMed']) rec[k] = +rec[k].toFixed(2);
+      for (const o of [rec.keepOwn, rec.keepMed]) for (const k in o) o[k] = +o[k].toFixed(2);
+      S.pay.push(rec);
+    }
+  };
+  const out = () => {
+    const q = (a, p) => { if (!a.length) return null; const s = a.slice().sort((x, y) => x - y); return +s[Math.min(s.length - 1, Math.floor(p * s.length))].toFixed(3); };
+    const col = (k) => S.pay.map((r) => r[k]);
+    const colc = (k, c) => S.pay.map((r) => r[k][c] || 0);
+    const cats = ['capital', 'arms', 'build', 'ore', 'other'];
+    return { rows: S.rows, rowsToStarv: S.rowsToStarv, feTo: +S.feTo.toFixed(1), feToStarv: +S.feToStarv.toFixed(1), feToOk: +S.feToOk.toFixed(1), feRet: +S.feRet.toFixed(1),
+      feRetToStarv: +S.feRetToStarv.toFixed(1), rowsFromStarv: S.rowsFromStarv, feFromStarv: +S.feFromStarv.toFixed(1),
+      vd: S.vd, vdDebt: S.vdDebt, vdStarv: S.vdStarv, deaths: S.deaths, deathsInDebt: S.deathsInDebt, feDaysMean: S.vd ? +(S.feSum / S.vd).toFixed(1) : null,
+      byItem: Object.entries(S.byItem).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([r, x]) => ({ res: r, fe: +x.toFixed(1) })),
+      pay: { n: S.pay.length, feDays: { p50: q(col('feDays'), 0.5) }, pFood: { p50: q(col('pFood'), 0.5), p90: q(col('pFood'), 0.9) }, pFoodMed: { p50: q(col('pFoodMed'), 0.5) },
+        payOwn: { p50: q(col('payOwn'), 0.5), p90: q(col('payOwn'), 0.9) }, payMed: { p50: q(col('payMed'), 0.5), p90: q(col('payMed'), 0.9) },
+        keepOwn: Object.fromEntries(cats.map((c) => [c, { p50: q(colc('keepOwn', c), 0.5), p90: q(colc('keepOwn', c), 0.9) }])),
+        keepMed: Object.fromEntries(cats.map((c) => [c, { p50: q(colc('keepMed', c), 0.5), p90: q(colc('keepMed', c), 0.9) }])),
+        trOwn: { p50: q(col('trOwn'), 0.5), p90: q(col('trOwn'), 0.9) }, trMed: { p50: q(col('trMed'), 0.5), p90: q(col('trMed'), 0.9) }, cash: { p50: q(col('cash'), 0.5), p90: q(col('cash'), 0.9) },
+        N: { p50: q(col('N'), 0.5) }, noCands: S.pay.filter((r) => !r.cands).length,
+        trFE: { p50: q(col('trFE'), 0.5), p90: q(col('trFE'), 0.9) }, trFood: { p50: q(col('trFood'), 0.5), p90: q(col('trFood'), 0.9) }, trFEdays: { p50: q(S.pay.map((r) => r.trFE / Math.max(1, r.N)), 0.5), p90: q(S.pay.map((r) => r.trFE / Math.max(1, r.N)), 0.9) } },
+      mvAll: { n: S.mvAll.length, p10: q(S.mvAll, 0.1), p50: q(S.mvAll, 0.5), p90: q(S.mvAll, 0.9) } };
+  };
+  return { day, out };
+})() : null;
 const depositMap = Villages.playerVillageDepositMap();
 const shortByItem = new Map(), glutByItem = new Map(), reqByItem = new Map();
 const L = Events.createLedger({
@@ -336,6 +432,7 @@ for (let d = 0; d < DAYS; d++) {
   econV2.tickWorldV2(world); L.scanDay(world, world.day, {});
   if (_T1088) _t1088Day(d);                                      // ★[T1088] 품목 빈도(env 있을 때만)
   if (_T1136) _T1136.day(d);                                     // ★[T1136] 바구니 표(env 있을 때만)
+  if (_T1152) _T1152.day(d);                                     // ★[T1152] 식량 흐름 · 치를 힘 표(env 있을 때만)
   if (_CLEAR) P._clearProbe.tickDay(_clearVils);                 // [T100 4판] 개간 관측
   for (let k = 0; k < floorIdx.length; k++) {                    // ★[T152] 석재 바닥 마을 표본
     const v = floorIdx[k][0], t = floorTrace[k];
@@ -352,6 +449,10 @@ for (let d = 0; d < DAYS; d++) {
 }
 if (_CLEAR) console.log(`  [T100] 개간 관측 — 끝 밭 ${_clearVils.reduce((a, v) => a + v._farmSet.size, 0)}칸 · 마을당 중앙 ${_clearVils.map((v) => v._farmSet.size).sort((a, b) => a - b)[Math.floor(_clearVils.length / 2)]}칸`);
 console.log = _log;
+if (_T1152) {   // ★[T1152] 식량 흐름 · 치를 힘 표 JSON(env 있을 때만)
+  fs.writeFileSync(process.env.T17_MARKET, JSON.stringify({ card: 'T1152', zone: Z, seed: SEED, days: DAYS, market: !!econV2.T1152_MARKET, flags: econV2._t1152Probe ? econV2._t1152Probe.flags : null, curve: (econV2.T1152_MARKET && econV2._t1152Probe && econV2._t1152Probe.flags.cal) ? econV2._t1152Probe.cal(world.day) : null, basket: !!econV2.T1136_BASKET, t474: econV2.CARAVAN_DAY_SPEED !== econV2.NPC_SPEED, ..._T1152.out() }, null, 1));
+  console.log(`  [T1152] 식량 흐름 표: ${process.env.T17_MARKET}`);
+}
 if (_T1136) {   // ★[T1136] 바구니 표 JSON(env 있을 때만)
   fs.writeFileSync(process.env.T17_BASKET, JSON.stringify({ card: 'T1136', zone: Z, seed: SEED, days: DAYS, basket: !!econV2.T1136_BASKET, escortCarry: !!econV2.T1136_ESCORT_CARRY, t474: econV2.CARAVAN_DAY_SPEED !== econV2.NPC_SPEED,
     caravanDaySpeed: econV2.CARAVAN_DAY_SPEED, ..._T1136.out() }, null, 1));

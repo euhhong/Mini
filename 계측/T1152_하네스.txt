@@ -1,0 +1,61 @@
+# T1152 하네스 — 하네스마다 한 줄(이름 rc 초 :: 마지막 결과 줄 · ✗ 줄) · 가지 최종 나무(손잡이 끔 · env 없음)
+
+## ① 고친 글자(econ v2 · 출발 직후 두 줄 · 반환 두 줄 · 바구니 줄)를 읽는 하네스 · 바구니 하네스 · 새 하네스
+test-t1152-market rc=0 :: === 32건 중 PASS 32 · FAIL 0 ===
+test-one-target rc=0 18s :: === 결과: 24 PASS / 0 FAIL ===
+test-wood-flow rc=0 0s :: === 결과: 18 PASS / 0 FAIL ===
+test-one-decay rc=0 1s :: === 17 통과 / 0 실패 ===
+test-t1136-basket rc=0 9s :: === 40건 중 PASS 40 · FAIL 0 ===
+test-valuechain rc=0 0s :: 결과: PASS
+test-seed-reserve rc=0 5s :: === 결과: 27 PASS / 0 FAIL ===
+test-events rc=0 188s :: === 305건 중 PASS 305 · FAIL 0 ===
+test-move-soa rc=0 89s :: === 결과: 286 PASS / 0 FAIL ===
+
+## ② econ v2 · t17 · 번들 글자를 읽거나 교역 값 줄을 부르는 하네스(@regress)
+test-body rc=0 9s :: === 324건 중 PASS 324 · FAIL 0 ===
+test-calendar rc=0 0s :: === 48건 중 PASS 48 · FAIL 0 ===
+test-cargo-age rc=0 122s :: === 44건 중 PASS 44 · FAIL 0 ===
+test-crop-cal rc=0 2s :: === 결과: 86 PASS / 0 FAIL ===
+test-crop-memo rc=0 1s :: === 13건 중 PASS 13 · FAIL 0 ===
+test-econ-diet rc=0 0s :: === 결과: 27 PASS / 0 FAIL ===
+test-econ-fast rc=124 900s :: ✓ ★자명 통과 금지 — 끔 판은 부팅 복원 직후 econ 객체가 전부 사전 모드(종전)  51/51
+test-econ-fieldyield rc=0 33s :: === 결과: 203 PASS / 0 FAIL ===
+test-econ-rawgrain rc=0 0s :: === 결과: 25 PASS / 0 FAIL ===
+test-farm-metrics rc=0 80s :: === 결과: 46 PASS / 0 FAIL ===
+test-fell-loot rc=0 2s :: === 결과: 31 PASS / 0 FAIL ===
+test-floor-stone rc=1 15s :: === 10건 중 PASS 9 · FAIL 1 ===
+    ✗ ★★자명 통과 금지 — 끔(기본)에선 같은 세계에서 바닥 마을 돌이 교역 문(수출 · 귀환 화물)으로 나간다  0.00
+test-food-floor rc=0 7s :: === 8건 중 PASS 8 · FAIL 0 ===
+test-food-hunger rc=0 8s :: === 8건 중 PASS 8 · FAIL 0 ===
+test-lab-happywork rc=1 32s :: === 결과: 58 PASS / 1 FAIL ===
+    ✗ ③ ★[T244] 엔진이 계수를 **얻는 자리가 한 줄**이다(`const _hwW = happyWorkWOf(v)`)  2줄
+test-lab-stone rc=0 109s :: === T299 둘째 화물 기본 끔(정정) 포함: 통과 132 · 실패 0 ===
+test-local-clocks rc=0 21s :: === 21건 중 PASS 21 · FAIL 0 ===
+test-msy rc=0 0s :: === 결과: 20 PASS / 0 FAIL ===
+test-oremix rc=0 0s :: === 유효 제련 조성 하네스: PASS ✅ ===
+test-spoil2 rc=0 4s :: === 결과: 38 PASS / 0 FAIL ===
+test-stone-real rc=0 11s :: === 67/67 ✓ ===
+test-streams rc=0 27s :: === 54건 중 PASS 54 · FAIL 0 ===
+test-t931-slotk-ema rc=1 6s :: 결과: 37 통과 / 2 실패
+    ✗ 날마다 `_slotKfEma` = 0.98 × 어제 + 0.02 × (그날 자리 ÷ 원래 땅의 자리)  틀린 날 1 / 519
+    ✗ slot(K 에 든 값) = 원래 땅의 자리 × 관성 f  틀린 날 1
+test-war-world rc=1 218s :: 결과: 200 통과 / 1 실패
+    ✗ ⓧ① 등가 표 — 대응 정본의 이름이 다른 줄 10 중 **같은 물건 2**(kg당 열량이 같다) · 가공·제련 대응 5 와 사냥 고기 셋(T694 — 곰고기 1,610 ≠ 1,200 · 익힌 둘)은 "바꿔 받는 물건"이라 빠진다  berry=fruit(500) ·
+test-wood-act rc=0 7s :: === 결과: 159 PASS / 0 FAIL ===
+test-wood-step1 rc=0 1s :: === 결과: 25 PASS / 0 FAIL ===
+
+## ③ 빨강 — main 44f9e5fb 나무(git worktree · 같은 env)에서 같은 하네스
+test-floor-stone main :: === 10건 중 PASS 9 · FAIL 1 === (같은 ✗ 줄 — 종전)
+test-lab-happywork main :: === 결과: 58 PASS / 1 FAIL === (같은 ✗ 줄 — 종전)
+test-t931-slotk-ema main :: 결과: 37 통과 / 2 실패 (같은 ✗ 두 줄 — 종전)
+test-war-world main :: 결과: 200 통과 / 1 실패 (같은 ✗ 줄 — 종전)
+test-econ-fast main :: === 18 통과 / 1 실패 === (같은 ✗ 줄 — 종전) · 가지도 main 과 나란히 단독 판 18/1 같은 줄(위 ② 의 rc=124 = 경합 판에서 900초 넘김)
+    ✗ ★★켬 판 econ 객체는 400날 내내 전부 빠른 꼴(자국이 붙었다 지워진 판에서)  최대 3 · 자국 날 5
+
+## ④ 게이트
+server-baseline-check 계측/서버기준선_2026-11-04b.json :: 같음 3/3 · 날 지문 400일 · 판 JSON · 여덟 수(인구 3,412 · 3,428 · 3,224) · 584초
+랩 자 t17 800날 끔 3시드 — 가지 최종(계측 훅 T17_BASKET · T17_MARKET 꽂음) ↔ main 44f9e5fb(훅 없음) 판 JSON cmp :: 3/3 바이트 같음 (sha1 1020 4c01ca44160b · 7 1b4b5c068790 · 42 c0c8e448141a)
+랩 자 t17 800날 바구니(T1136_BASKET=1 · T1152 끔) 시드 1020 — 가지 첫 나무(훅 꽂음) ↔ main 44f9e5fb(훅 없음) 판 JSON cmp :: 바이트 같음 (sha1 b8543d36be91 · 지금 곡선 바구니 줄의 판)
+build-econ-bundle 다시 굽기 · --check :: 회귀검증 16 일치 / 0 불일치
+inline-engine · --check :: 마을실험실 · 전쟁실험실 최신
+lab-wiring-check :: 실패 0 · 경고 1(서버가 세계에 다는 것 world._warSeq · _warStats — main 과 같은 줄)

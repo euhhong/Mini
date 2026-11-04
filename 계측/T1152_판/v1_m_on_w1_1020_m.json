@@ -1,0 +1,155 @@
+{
+ "card": "T1152",
+ "zone": "hanbando",
+ "seed": 1020,
+ "days": 800,
+ "market": true,
+ "basket": true,
+ "t474": true,
+ "rows": 28506,
+ "rowsToStarv": 255,
+ "feTo": 36515.3,
+ "feToStarv": 108.8,
+ "feToOk": 36406.5,
+ "feRet": 134885.9,
+ "feRetToStarv": 10713.3,
+ "rowsFromStarv": 880,
+ "feFromStarv": 0,
+ "vd": 37925,
+ "vdDebt": 4502,
+ "vdStarv": 1234,
+ "deaths": 4329,
+ "deathsInDebt": 1190,
+ "feDaysMean": 2857.1,
+ "byItem": [
+  {
+   "res": "food",
+   "fe": 13465
+  },
+  {
+   "res": "barley",
+   "fe": 11021.8
+  },
+  {
+   "res": "rice",
+   "fe": 5630.4
+  },
+  {
+   "res": "wheat",
+   "fe": 4290.5
+  },
+  {
+   "res": "seaweed",
+   "fe": 713.3
+  },
+  {
+   "res": "fish",
+   "fe": 495
+  },
+  {
+   "res": "shrimp",
+   "fe": 348.3
+  },
+  {
+   "res": "meat",
+   "fe": 336
+  },
+  {
+   "res": "crab",
+   "fe": 112.3
+  },
+  {
+   "res": "salmon",
+   "fe": 100.1
+  },
+  {
+   "res": "oyster",
+   "fe": 1.8
+  },
+  {
+   "res": "mulberry_fruit",
+   "fe": 0.9
+  }
+ ],
+ "pay": {
+  "n": 448,
+  "feDays": {
+   "p50": 0
+  },
+  "pFood": {
+   "p50": 1000,
+   "p90": 1000
+  },
+  "pFoodMed": {
+   "p50": 2.181
+  },
+  "payOwn": {
+   "p50": 12.01,
+   "p90": 89.42
+  },
+  "payMed": {
+   "p50": 8.74,
+   "p90": 63.79
+  },
+  "keepOwn": {
+   "capital": {
+    "p50": 53.57,
+    "p90": 428.31
+   },
+   "arms": {
+    "p50": 17.79,
+    "p90": 25.94
+   },
+   "build": {
+    "p50": 0,
+    "p90": 33.93
+   },
+   "ore": {
+    "p50": 0.01,
+    "p90": 0.05
+   },
+   "other": {
+    "p50": 36.15,
+    "p90": 274.39
+   }
+  },
+  "keepMed": {
+   "capital": {
+    "p50": 33.84,
+    "p90": 195.02
+   },
+   "arms": {
+    "p50": 15.04,
+    "p90": 30.57
+   },
+   "build": {
+    "p50": 0,
+    "p90": 13.04
+   },
+   "ore": {
+    "p50": 0.02,
+    "p90": 0.23
+   },
+   "other": {
+    "p50": 29.83,
+    "p90": 524.21
+   }
+  },
+  "trOwn": {
+   "p50": 126498.19,
+   "p90": 1387976.67
+  },
+  "trMed": {
+   "p50": 2313,
+   "p90": 49200.7
+  },
+  "cash": {
+   "p50": 177.12,
+   "p90": 2098.84
+  },
+  "N": {
+   "p50": 21
+  },
+  "noCands": 86
+ }
+}
