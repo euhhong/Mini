@@ -1956,6 +1956,7 @@ function walkPerf(reset) {
               ejPerStep: _walk.steps ? +(_walk.ej / _walk.steps).toFixed(4) : 0,
               terrPerStep: _walk.steps ? +(_walk.terrQ / _walk.steps).toFixed(2) : 0,
               wallPerStep: _walk.steps ? +(_walk.wallQ / _walk.steps).toFixed(2) : 0 };
+  if (_t1145C) o.t1145 = Object.assign({ cap: _t1145C.cap(), hi: _t1145C.hi() }, _t1145C.st);   // ★[T1145] x · y 열(번호 · 되돌림 · 수 아닌 쓰기) — 관측
   if (_WW) { o.ww = { mode: T461_WALK_WASM, ticks: _wwStat.ticks, steps: _wwStat.steps, bad: _wwStat.bad, badTicks: _wwStat.badTicks, gateBad: _wwStat.gateBad, sample: _wwStat.sample.slice(), memMB: +(_WW.bytes() / 1048576).toFixed(2) };
     if (T672_WALK_CUT) { o.ww.t672 = { treeHit: _wwTC.hit, treeMiss: _wwTC.miss, treeBad: _wwTC.treeBad, still: _wwTC.still, stillBad: _wwTC.stillBad, k: _wwTC.k };   // ★[T672] 관측
       if (reset) { _wwTC.hit = 0; _wwTC.miss = 0; _wwTC.treeBad = 0; _wwTC.still = 0; _wwTC.stillBad = 0; } }
@@ -3711,6 +3712,40 @@ function _t1140Lit(pid, npcId, name, color, cx, cy, opts) {
     simJob: undefined,
   };
 }
+// ★★[T1145 2026-11-04 · µs 줄기 ② · 손잡이 `T1145_XY_COL`(기본 끔 · `'1'` 만 켬 · 끔 = 아래가 안 불린다 = 종전 글자)] **x · y 열 정본** — `sim/body-cols.js` 머리 주석.
+//   켬이면 주민 몸의 x · y 는 몸 객체가 아니라 열(`Float64Array`)이 든다 · 몸의 x · y 는 열 칸을 보는 창(모든 몸이 같은 접근자 넷 — 빠른 속성 · 단형).
+//   리터럴은 T806 켬 리터럴과 **같은 칸 · 같은 값 글자 · 같은 차례**에서 `x: cx, y: cy` 자리에 몸 번호 칸 `_colS` 하나(test-body-fields 가 잰다) —
+//   x · y 창은 리터럴 **바로 뒤에** 덧붙인다(`attach` · 키 차례에서 x · y 만 뒤로 · 키 차례를 읽는 자리 0 — T671 §2 · T806 §3 · T1140 · T1145 전수).
+//   몸 번호 재사용 = 세계(`players`)를 떠난 몸을 다음 번호 줄 때 훑어 되돌린다(열 값을 데이터 칸으로 되적고 번호를 빈 목록으로 — 떠난 몸을 누가 읽어도 제 값).
+//   ⚠T806 켬 · T1140 차례 리터럴 끔(둘 다 기본)일 때만 선다 — 아니면 켬을 무시하고 로그 한 줄.
+const T1145_XY_COL = process.env.T1145_XY_COL === '1' && T806_HOT_INOBJ && !T1140_HOT_ORDER;
+if (process.env.T1145_XY_COL === '1' && !T1145_XY_COL) console.log(`[${ZONE_ID}] ⚠T1145 x · y 열 — T806_HOT_INOBJ 켬 · T1140_HOT_ORDER 끔에서만 선다(무시)`);
+const _t1145C = T1145_XY_COL ? require('../sim/body-cols').create({ cap: 1024, alive: (p) => players.get(p.pid) === p }) : null;
+function _t1145Lit(pid, npcId, name, color, cx, cy, opts) {
+  const s = _t1145C.alloc();
+  return {
+    pid, playerId: npcId, ws: null,
+    name, color,
+    _colS: s, vx: 0, vy: 0,
+    inventory: { wood: 0, stone: 0, berry: 0, fiber: 0, meat_raw: 0, hide: 0, seed_berry: 2 },
+    tools: {}, equipped: null,
+    equipment: [], equipSlots: {}, craftSkill: {}, // 플레이어 아이템: NPC는 빈 컨테이너(인스턴스 미생성 — econ 스칼라 유지)
+
+    hp: PLAYER_MAX_HP, maxHp: PLAYER_MAX_HP,
+    hunger: HUNGER_MAX, thirst: THIRST_MAX, vp: 0,
+    // NPC끼리 같은 마을 = 같은 길드 (zone 안 메모리 길드 — central 등록 X, 시각상만)
+    tribeId: opts.villageId || null,
+    tribeName: opts.villageName || null,
+    pvpEnabled: false,
+    isNpc: true,
+    behavior: 'wander', targetX: cx, targetY: cy,
+    nextDecisionAt: 0,
+    lastAttackAt: 0, lastDamagedAt: 0,
+    handingOff: false, lastSeen: Date.now(),
+    // ★[T806 ③] 걸음 몸통이 틱마다 짚는 칸을 **객체 안**에(값은 다 `undefined` — 종전엔 뒤에 붙어 바깥 속성 배열에 살았다 · 아래 줄들 · `_t671Shape` 가 같은 값을 그대로 쓴다)
+    path: undefined, pathIndex: undefined, _pathFor: undefined, _pathAt: undefined, _t670Tk: undefined, _t670TkX: undefined, _t670TkY: undefined, _t791P: undefined, _t791Pn: undefined, _t791Px: undefined, _t791Py: undefined, _stuckPos: undefined, _stuckN: undefined, _t540StepAt: undefined, simEvacUntil: undefined, canadiaVillage: undefined, canadiaTask: undefined, simLonOff: undefined, _t720: undefined, gatherTarget: undefined, harvestTarget: undefined, fightTarget: undefined, npcJob: undefined, npcHomeX: undefined, npcHomeY: undefined, npcBedX: undefined, npcBedY: undefined, _lifeAct: undefined, _lifeActAt: undefined, _huntSpd: undefined, myClaim: undefined, simVillageId: undefined, simJob: undefined,
+  };
+}
 function spawnNpc(opts = {}) {
   // 위치: opts.x/y 우선, 없으면 zone 내부 랜덤 (클레임 충돌 안 나는 곳)
   let cx, cy;
@@ -3754,7 +3789,7 @@ function spawnNpc(opts = {}) {
   //   객체 밖 속성 배열에 살아, 틱마다 그 배열을 처음 짚는 몫이 줄 하나 ≈0.13 µs 였다. 켬이면 그 칸들을 리터럴에 미리 둔다(값 `undefined` = 없을 때와 같은 읽기 ·
   //   몸 키를 차례로 도는 · `in` · `delete` · 펼침 자리 0 — 보고/T806 §3) — 값 · 판정 무변 · 키 차례만 다르다(넷째 줄 아래 · `_t671Shape` 가 세우는 칸은 같은 값 그대로 ·
   //   켬에서 키가 늘어나는 것은 다섯 — `simEvacUntil` · `canadiaVillage` · `canadiaTask` · `harvestTarget` · `fightTarget`(값 `undefined` · 없는 칸 읽기와 같은 답)).
-  const player = T1140_HOT_ORDER ? _t1140Lit(pid, npcId, name, color, cx, cy, opts) : T806_HOT_INOBJ ? {   // ★[T1140 ③-가] 켬 = 같은 칸 · 차례만(위 함수)
+  const player = T1145_XY_COL ? _t1145C.attach(_t1145Lit(pid, npcId, name, color, cx, cy, opts), cx, cy) : T1140_HOT_ORDER ? _t1140Lit(pid, npcId, name, color, cx, cy, opts) : T806_HOT_INOBJ ? {   // ★[T1140 ③-가] 켬 = 같은 칸 · 차례만(위 함수)
     pid, playerId: npcId, ws: null,
     name, color,
     x: cx, y: cy, vx: 0, vy: 0,
@@ -13297,7 +13332,7 @@ function tryFurnaceSmelt(player, buildingId) {
 function __testBind() {
   return {
     claims, buildings, players, BUILDING_SIZE, Specialty, tryAssignJob, tryVillageBoard, JOB_KR_NPC,   // ★[T1085] 촌장 일 맡기기(하네스가 진짜 문을 부른다)
-    _t738Adopt, _t738: () => _t738, observers, isPositionActive: (x, y) => isPositionActive(x, y), _t774: () => ({ X: _t774X, Y: _t774Y, n: _t774N, src: _t774Src, ref: _spInc.ref, act: _spInc.act, hit: _t774Stat.hit, miss: _t774Stat.miss, same: _t774Src === activeChunkKeys }),   // ★[T774] 활성 열 증인(읽기)
+    _t738Adopt, _t738: () => _t738, _t1145: () => _t1145C, observers, isPositionActive: (x, y) => isPositionActive(x, y), _t774: () => ({ X: _t774X, Y: _t774Y, n: _t774N, src: _t774Src, ref: _spInc.ref, act: _spInc.act, hit: _t774Stat.hit, miss: _t774Stat.miss, same: _t774Src === activeChunkKeys }),   // ★[T774] 활성 열 증인(읽기)
       // ★[T738] SoA x·y 증인(`scripts/t738-witness.js` · 읽기 · 부르기만)
     FURNACE_STAGES, FURNACE_KINDS, FURNACE_FUEL_PER_ORE, CHARCOAL_KILN_STAGES, CHARCOAL_KILN_YIELD, CHARCOAL_KILN_WOOD,
     tryFurnaceStart, tryFurnaceAdvance, tryFurnaceSmelt,

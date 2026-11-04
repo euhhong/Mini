@@ -35,7 +35,8 @@ const FROZEN = {
 };
 
 // ★[T1140 ③-가] 켬 리터럴 머리 줄 — `T1140_HOT_ORDER ? _t1140Lit(…) : ` 가 앞에 붙을 수 있다(같은 칸 · 차례만 — 아래 ⑤ 가 잰다)
-function litHead(Z) { const m = /  const player = (?:T1140_HOT_ORDER \? _t1140Lit\([^)]*\) : )?T806_HOT_INOBJ \? \{[^\n]*\n/.exec(Z); return m ? { i: m.index, n: m[0].length } : { i: -1, n: 0 }; }
+//   ★[T1145] 그 앞에 `T1145_XY_COL ? _t1145C.attach(_t1145Lit(…), cx, cy) : ` 도(x · y 자리에 몸 번호 칸 — 아래 ⑥ 이 잰다)
+function litHead(Z) { const m = /  const player = (?:T1145_XY_COL \? _t1145C\.attach\(_t1145Lit\([^)]*\), cx, cy\) : )?(?:T1140_HOT_ORDER \? _t1140Lit\([^)]*\) : )?T806_HOT_INOBJ \? \{[^\n]*\n/.exec(Z); return m ? { i: m.index, n: m[0].length } : { i: -1, n: 0 }; }
 function known(Z) {
   const i = Z.indexOf('function _t671Shape(p) {'), j = Z.indexOf('\n}\n', i);
   const shape = new Set([...Z.slice(i, j).matchAll(/p\.([A-Za-z_$][\w$]*) = undefined/g)].map((m) => m[1]));
@@ -109,6 +110,20 @@ ok(bad.length === 0, '★몸 필드 규약 — `npc.` 에 쓰는 이름이 전�
     const bait = new Map(m1140); bait.set('nextDecisionAt', 'nextDecisionAt: 1');
     ok([...m806.keys()].some((k) => m806.get(k) !== bait.get(k)), '★[T1140 ③-가] 자명 통과 금지 — 값 하나(`nextDecisionAt: 1`)를 바꾸면 문다');
   } else ok(true, '[T1140 ③-가] 차례 리터럴 없음(손잡이 없는 판)');
+}
+// ★[T1145] `T1145_XY_COL` 리터럴(`_t1145Lit`) = T806 켬 리터럴과 같은 칸 · 같은 값 글자 · 같은 차례 — `x: cx` · `y: cy` 자리에 몸 번호 칸 `_colS: s` 하나만 다르다
+{
+  const H = litHead(Z), b = Z.indexOf('  } : {\n    pid, playerId', H.i), f = Z.indexOf('function _t1145Lit('), g = f > 0 ? Z.indexOf('\n  };\n}', f) : -1;
+  if (H.i > 0 && b > H.i && f > 0 && g > f) {
+    const parts = (t) => { t = t.replace(/\/\/.*$/gm, ''); let d = 0, c = '', o = []; for (const ch of t) { if (ch === '{' || ch === '[') d++; if (ch === '}' || ch === ']') d--; if (ch === ',' && d === 0) { o.push(c.trim().replace(/\s+/g, ' ')); c = ''; } else c += ch; } if (c.trim()) o.push(c.trim().replace(/\s+/g, ' ')); return o; };
+    const P806 = parts(Z.slice(H.i + H.n, b)), P1145 = parts(Z.slice(Z.indexOf('return {\n', f) + 'return {\n'.length, g));
+    const want = (P) => P.flatMap((x) => (x === 'x: cx' ? ['_colS: s'] : x === 'y: cy' ? [] : [x]));
+    const same = (A, B) => A.length === B.length && A.every((x, i) => x === B[i]);
+    const ok1 = same(want(P806), P1145) && P806.includes('x: cx') && P806.includes('y: cy') && P806.length > 50;
+    ok(ok1, '★[T1145] 열 리터럴 = T806 켬 리터럴에서 `x: cx` · `y: cy` 자리에 `_colS: s` 하나 — 같은 칸 · 같은 값 글자 · 같은 차례', `칸 ${P806.length} → ${P1145.length}`);
+    const bait = P1145.slice(); bait[bait.indexOf('nextDecisionAt: 0')] = 'nextDecisionAt: 1';
+    ok(!same(want(P806), bait), '★[T1145] 자명 통과 금지 — 값 하나(`nextDecisionAt: 1`)를 바꾸면 문다');
+  } else ok(false, '[T1145] 열 리터럴(`_t1145Lit`)을 못 찾았다');
 }
 console.log(`\n=== ${pass} 통과 / ${fail} 실패 ===\n`);
 process.exit(fail ? 1 : 0);
