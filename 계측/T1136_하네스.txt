@@ -1,0 +1,259 @@
+# T1136 하네스 — run-regress.sh 러너 · 하네스마다 한 줄(이름 rc 초 :: 마지막 결과 줄 · ✗ 줄)
+
+## ① 첫 묶음 38종(교역 · 캐러밴 · 소문 · 도적 · 거래소 + 새 하네스) — 가지 나무 · 고침 앞뒤가 섞인 판(빨강 넷 중 셋은 이 가지 글자 → 고친 뒤 ② 에서 다시)
+test-bandit-all rc=0 2s :: 결과: PASS (31 통과 · 0 실패)
+test-bandit-body rc=0 2s :: 결과: PASS (65 통과 · 0 실패)
+test-bandit-camp rc=0 3s :: 결과: PASS (34 통과 · 0 실패)
+test-bandit-walk rc=0 2s :: 결과: PASS (31 통과 · 0 실패)
+test-car-fast rc=0 120s :: === 11 통과 / 0 실패 ===
+test-cargo-age rc=0 98s :: === 44건 중 PASS 44 · FAIL 0 ===
+test-events rc=1 186s :: === 305건 중 PASS 304 · FAIL 1 ===
+    ✗ ⑲d 시계를 미는 두 자리가 **`travelDays` 를 같이 갱신한다**(소스 계약 · T17 ④)  재routing O · 빈손귀환 X · 표본 안 꺾임 2/16건
+test-floor-stone rc=0 14s :: === 10건 중 PASS 10 · FAIL 0 ===
+test-food-keep rc=0 7s :: === 10건 중 PASS 10 · FAIL 0 ===
+test-granary-item rc=0 9s :: === 42건 중 PASS 42 · FAIL 0 ===
+test-lab-stone rc=0 99s :: === T299 둘째 화물 기본 끔(정정) 포함: 통과 132 · 실패 0 ===
+test-local-clocks rc=0 12s :: === 21건 중 PASS 21 · FAIL 0 ===
+test-local-midnight-window rc=0 140s :: === 12건 중 PASS 12 · FAIL 0 ===
+test-local-midnight rc=0 3s :: === 14건 중 PASS 14 · FAIL 0 ===
+test-moment-lot rc=0 50s :: === 107건 중 PASS 107 · FAIL 0 ===
+test-move-soa rc=1 84s :: === 결과: 285 PASS / 1 FAIL ===
+    ✗ ⑱-a 손잡이 `T474_CARAVAN_WALK` 하나 · 읽는 자리 econ 하나(선언 2 + 시계 1 · 존·소문·장부·도적·전쟁·계측기는 안 읽는다)  scripts/t17-metrics.js
+test-one-target rc=0 13s :: === 결과: 24 PASS / 0 FAIL ===
+test-resume-one rc=1 181s :: === 7 통과 / 3 실패 ===
+    ✗ 켬 줄은 `spawnCaravanBody` 부름 바로 앞 한 줄 · 끔 갈래 = 종전 두 줄 그대로
+    ✗ [상황 · 자명 통과 금지] 끔: 빈 쌍이 둘 이상 줄에 서서 교역로 일을 서로 버렸다  첫 기다림 33 · 버림 0 · 일 시작 65
+    ✗ ★켬: 끔보다 일찍(또는 같이) 끝나고 덜 버린다  끝 끔 40 · 켬 40초 · 버림 끔 0 · 켬 0
+test-route-persist rc=0 373s :: === 57 통과 / 0 실패 ===
+test-seed-reserve rc=1 3s :: === 결과: 24 PASS / 3 FAIL ===
+    ✗ ⓔ v2 곳간 읽기 다섯(발주 후보 · 출발 때 귀환 후보 · 도착 무효 판정 · 다시 고르기 · 귀환 당김 훅) · 되사 감 수량 한 자리
+    ✗ ⓕ 번들이 같은 줄 다섯을 싣는다
+    ✗ ⓖ [자명 통과 금지] 발주 후보 자리를 종전 읽기로 되돌린 v2 사본 — 켬에서도 발주가 비축을 판다 ⇒ ⓓ 가 빨개진다  Command failed: /opt/node22/bin/node -e
+test-server-market rc=0 3s :: === 28건 중 PASS 28 · FAIL 0 ===
+test-t1034-caravan-keep rc=0 331s :: === T1034: 통과 26 · 실패 0 ===
+test-t1136-basket rc=0 5s :: === 40건 중 PASS 40 · FAIL 0 ===
+test-t762-sync rc=0 1s :: === 결과: 14 PASS / 0 FAIL ===
+test-t766-dissolve rc=0 1s :: === 17건 중 PASS 17 · FAIL 0 ===
+test-t772-leg rc=0 1s :: === 17건 중 PASS 17 · FAIL 0 ===
+test-t807-quote-exec rc=0 357s :: === 24건 중 PASS 24 · FAIL 0 ===
+test-t835-quote-weight rc=0 211s :: === 16건 중 PASS 16 · FAIL 0 ===
+test-t965-want-start rc=0 118s :: === 15건 중 PASS 15 · FAIL 0 ===
+test-t976-want-capped rc=0 44s :: === 27건 중 PASS 27 · FAIL 0 ===
+test-t986-bandit-day rc=0 204s :: === PASS 5 / FAIL 0 ===
+test-t988-trade-words rc=0 868s :: === 35건 중 PASS 35 · FAIL 0 ===
+test-t999-trade-cap rc=0 442s :: === 22건 중 PASS 22 · FAIL 0 ===
+test-tick-slicer rc=0 246s :: === 37 통과 / 0 실패 ===
+test-trade rc=0 12s :: === 68건 중 PASS 68 · FAIL 0 ===
+test-valuechain rc=0 0s :: ✔   ★검사 상황 확인: 기대 지불액이 양수다 (30.370) — 0 = 0 통과 방지
+test-village-found rc=0 2s :: === 마을 건립 하네스: 51 통과 / 0 실패 ✅ ===
+test-village-view rc=0 16s :: 결과: PASS 97 · FAIL 0
+  러너 요약: 통과 34 · 실패 4 — test-events.js(rc=1) test-move-soa.js(rc=1) test-resume-one.js(rc=1) test-seed-reserve.js(rc=1)
+
+## ② 최종 나무 — ① 에서 최종 고침(20:10) 앞에 돈 22종 다시
+test-bandit-all rc=0 3s :: 결과: PASS (31 통과 · 0 실패)
+test-bandit-body rc=0 3s :: 결과: PASS (65 통과 · 0 실패)
+test-bandit-camp rc=0 2s :: 결과: PASS (34 통과 · 0 실패)
+test-bandit-walk rc=0 2s :: 결과: PASS (31 통과 · 0 실패)
+test-car-fast rc=0 126s :: === 11 통과 / 0 실패 ===
+test-cargo-age rc=0 79s :: === 44건 중 PASS 44 · FAIL 0 ===
+test-events rc=0 171s :: === 305건 중 PASS 305 · FAIL 0 ===
+test-floor-stone rc=0 13s :: === 10건 중 PASS 10 · FAIL 0 ===
+test-food-keep rc=0 7s :: === 10건 중 PASS 10 · FAIL 0 ===
+test-granary-item rc=0 11s :: === 42건 중 PASS 42 · FAIL 0 ===
+test-lab-stone rc=0 97s :: === T299 둘째 화물 기본 끔(정정) 포함: 통과 132 · 실패 0 ===
+test-local-clocks rc=0 13s :: === 21건 중 PASS 21 · FAIL 0 ===
+test-local-midnight-window rc=0 90s :: === 12건 중 PASS 12 · FAIL 0 ===
+test-local-midnight rc=0 4s :: === 14건 중 PASS 14 · FAIL 0 ===
+test-moment-lot rc=0 51s :: === 107건 중 PASS 107 · FAIL 0 ===
+test-move-soa rc=0 83s :: === 결과: 286 PASS / 0 FAIL ===
+test-one-target rc=0 12s :: === 결과: 24 PASS / 0 FAIL ===
+test-resume-one rc=1 177s :: === 7 통과 / 3 실패 ===
+    ✗ 켬 줄은 `spawnCaravanBody` 부름 바로 앞 한 줄 · 끔 갈래 = 종전 두 줄 그대로
+    ✗ [상황 · 자명 통과 금지] 끔: 빈 쌍이 둘 이상 줄에 서서 교역로 일을 서로 버렸다  첫 기다림 38 · 버림 0 · 일 시작 85
+    ✗ ★켬: 끔보다 일찍(또는 같이) 끝나고 덜 버린다  끝 끔 40 · 켬 40초 · 버림 끔 0 · 켬 0
+test-route-persist rc=0 363s :: === 57 통과 / 0 실패 ===
+test-seed-reserve rc=0 4s :: === 결과: 27 PASS / 0 FAIL ===
+test-server-market rc=0 3s :: === 28건 중 PASS 28 · FAIL 0 ===
+test-t1034-caravan-keep rc=0 523s :: === T1034: 통과 26 · 실패 0 ===
+  러너 요약: 통과 21 · 실패 1 — test-resume-one.js(rc=1)
+
+## ③ 최종 나무 — 고친 파일 글자를 읽는 나머지 하네스 · villages 밖 82종
+test-army-morale rc=0 1s :: === 21건 중 PASS 21 · FAIL 0 ===
+test-audio rc=0 7s :: === PASS 208 / FAIL 0 ===
+test-body rc=0 7s :: === 324건 중 PASS 324 · FAIL 0 ===
+test-calendar rc=0 1s :: === 48건 중 PASS 48 · FAIL 0 ===
+test-carrier rc=0 1s :: === 54건 중 PASS 54 · FAIL 0 ===
+test-charsheet rc=0 14s :: === test-charsheet 결과: 통과 194 · 실패 0 ===
+test-chron-icons rc=0 0s :: === PASS 8 / FAIL 0 ===
+test-clothes rc=0 0s :: === 33건 중 PASS 33 · FAIL 0 ===
+test-crop-cal rc=0 2s :: === 결과: 86 PASS / 0 FAIL ===
+test-crop-memo rc=0 1s :: === 13건 중 PASS 13 · FAIL 0 ===
+test-crops rc=0 3s :: === 결과: 170 PASS / 0 FAIL ===
+test-deforest-game rc=0 0s :: === 17건 중 PASS 17 · FAIL 0 ===
+test-doors rc=0 5s :: === 문 전수 하네스: 45 통과 / 0 실패 ✅ ===
+test-downed rc=0 328s :: === 180건 중 PASS 180 · FAIL 0 ===
+test-drop-kg rc=0 7s :: === 51건 중 PASS 51 · FAIL 0 ===
+test-econ-diet rc=0 0s :: === 결과: 27 PASS / 0 FAIL ===
+test-econ-fast rc=1 536s :: === 18 통과 / 1 실패 ===
+    ✗ ★★켬 판 econ 객체는 400날 내내 전부 빠른 꼴(자국이 붙었다 지워진 판에서)  최대 6 · 자국 날 11
+test-econ-fieldyield rc=0 25s :: === 결과: 203 PASS / 0 FAIL ===
+test-econ-rawgrain rc=0 1s :: === 결과: 25 PASS / 0 FAIL ===
+test-farm-act rc=0 8s :: === 결과: 78 PASS / 0 FAIL ===
+test-farm-metrics rc=0 63s :: === 결과: 46 PASS / 0 FAIL ===
+test-fell-loot rc=0 2s :: === 결과: 31 PASS / 0 FAIL ===
+test-fish-act rc=0 1s :: === 결과: 86 PASS / 0 FAIL ===
+test-fishing rc=0 30s :: === 120건 중 PASS 120 · FAIL 0 ===
+test-food-floor rc=0 4s :: === 8건 중 PASS 8 · FAIL 0 ===
+test-food-sick rc=0 16s :: === 42건 중 PASS 42 · FAIL 0 ===
+test-forage-act rc=0 15s :: === 결과: 251 PASS / 0 FAIL ===
+test-frontier-iron rc=0 1s :: === 프런티어 철 하네스: 11 통과 / 0 실패 ✅ ===
+test-game-meat rc=0 8s :: === 54건 중 PASS 54 · FAIL 0 ===
+test-gap-ruler rc=0 0s :: === 격차 자 셈: 통과 25 · 실패 0 ===
+test-ghost-tree rc=0 4s :: === 결과: 9 PASS / 0 FAIL ===
+test-granary-age rc=0 25s :: === 31건 중 PASS 31 · FAIL 0 ===
+test-granary-haul rc=0 0s :: (결과 줄 없음)
+test-granary-rot rc=0 9s :: === 28건 중 PASS 28 · FAIL 0 ===
+test-hall-units rc=0 12s :: === 23건 중 PASS 23 · FAIL 0 ===
+test-harness-lint rc=0 45s :: === 69건 중 PASS 69 · FAIL 0 ===
+test-hunt-port rc=0 1s :: === 78건 중 PASS 78 · FAIL 0 ===
+test-icons rc=0 10s :: (결과 줄 없음)
+test-kcal rc=0 1s :: === 64건 중 PASS 64 · FAIL 0 ===
+test-lab-alloc rc=0 98s :: === 결과: 54 PASS / 0 FAIL ===
+test-lab-diverge-ctl rc=0 279s :: === 11건 중 PASS 11 · FAIL 0 ===
+test-lab-happywork rc=1 22s :: === 결과: 58 PASS / 1 FAIL ===
+    ✗ ③ ★[T244] 엔진이 계수를 **얻는 자리가 한 줄**이다(`const _hwW = happyWorkWOf(v)`)  2줄
+test-lab-hunt rc=0 0s :: === 62건 중 PASS 62 · FAIL 0 ===
+test-lab-psite rc=0 613s :: (결과 줄 없음)
+test-lab-trees rc=0 10s :: === test-lab-trees: 52 PASS / 0 FAIL ===
+test-lab-wood rc=0 1s :: === 36건 중 PASS 36 · FAIL 0 ===
+test-land-elev rc=0 0s :: === 13건 중 PASS 13 · FAIL 0 ===
+test-membership rc=0 4s :: === PASS 85 / FAIL 0 ===
+test-msy rc=0 0s :: === 결과: 20 PASS / 0 FAIL ===
+test-onboarding rc=0 52s :: === PASS 38 / FAIL 0 ===  (총 52초)
+test-one-clock rc=0 1s :: === 14건 중 PASS 14 · FAIL 0 ===
+test-one-decay rc=0 0s :: === 17 통과 / 0 실패 ===
+test-oremix rc=0 0s :: (결과 줄 없음)
+test-preserve-carry rc=0 16s :: === 결과: 41 PASS / 0 FAIL ===
+test-preserve rc=0 6s :: === 결과: 70 PASS / 0 FAIL ===
+test-recut rc=0 49s :: === 결과: 24 PASS / 0 FAIL ===
+test-regrow-block rc=1 2s :: === 결과: 23 PASS / 1 FAIL ===
+    ✗ ★ⓘ 시더 — 나무 두 갈래(흩뿌림 · 숲 격자)만 술어를 묻는다 · 덤불·풀·군락 세 갈래는 종전 `_stage` 그대로(무접촉)
+test-regrow rc=0 17s :: === 100건 중 PASS 100 · FAIL 0 ===
+test-relic rc=0 0s :: (결과 줄 없음)
+test-salt rc=0 2s :: === 결과: 73 PASS / 0 FAIL ===
+test-snow rc=0 0s :: === 43건 중 PASS 43 · FAIL 0 ===
+test-spoil2 rc=0 3s :: === 결과: 38 PASS / 0 FAIL ===
+test-stone-real rc=0 8s :: (결과 줄 없음)
+test-streams rc=0 26s :: === 54건 중 PASS 54 · FAIL 0 ===
+test-t1094-arms-trip rc=0 2s :: === 결과: 13 PASS / 0 FAIL ===
+test-t1094-carry-cap rc=0 1s :: === 결과: 15 PASS / 0 FAIL ===
+test-t1118-rack-age rc=0 18s :: === 결과: 50 PASS / 0 FAIL ===
+test-t1120-next-tool rc=0 5s :: === T1120: 85건 중 PASS 85 · FAIL 0 ===
+test-t860-catch-dry rc=0 11s :: === 25/25 통과 ===
+test-t877-dry-fix rc=0 17s :: === 28/28 통과 ===
+test-t931-slotk-ema rc=0 4s :: 결과: 39 통과 / 0 실패
+test-tidal rc=0 1s :: === 123건 중 PASS 123 · FAIL 0 ===
+test-trees rc=0 1s :: === 결과: 91 PASS / 0 FAIL ===
+test-village-label rc=0 110s :: === 결과: 34 PASS / 0 FAIL ===
+test-war-world rc=0 170s :: 결과: 201 통과 / 0 실패
+test-weather rc=0 0s :: === 57건 중 PASS 57 · FAIL 0 ===
+test-weight rc=0 19s :: === 64건 중 PASS 64 · FAIL 0 ===
+test-winter-fx rc=0 2s :: === 61건 중 PASS 61 · FAIL 0 ===
+test-winter rc=0 21s :: === 46건 중 PASS 46 · FAIL 0 ===
+test-wood-act rc=0 7s :: === 결과: 158 PASS / 0 FAIL ===
+test-wood-flow rc=0 0s :: === 결과: 18 PASS / 0 FAIL ===
+test-wood-step1 rc=0 1s :: === 결과: 25 PASS / 0 FAIL ===
+  러너 요약: 통과 79 · 실패 3 — test-econ-fast.js(rc=1) test-lab-happywork.js(rc=1) test-regrow-block.js(rc=1)
+
+## ④ 최종 나무 — 고친 파일 글자를 읽는 나머지 하네스 · villages.js 만 58종
+test-arms-body rc=0 1s :: === 결과: 28 PASS / 0 FAIL ===
+test-assault-miss rc=0 0s :: === 결과: 21 PASS / 0 FAIL ===
+test-battle-fast rc=0 2s :: === 결과: 25 PASS / 0 FAIL ===
+test-body-fields rc=1 0s :: === 5 통과 / 3 실패 ===
+    ✗ ★몸 필드 규약 — `npc.` 에 쓰는 이름이 전부 스폰·`_t671Shape`·FROZEN 안에 있다(새 몸 필드면 `_t671Shape` 에 넣어라)  bandits.js:158 npc.age · villages.js:1867 npc.age
+    ✗ ★자명 통과 금지 — 미끼 필드(`npc._t673Bait = 1`)를 심으면 **문다**  bandits.js:158 npc.age · villages.js:1867 npc.age · villages.js:15687 npc._t673Bait
+    ✗ ★자명 통과 금지 — `??=` 꼴도 문다 · 읽기(`==`)는 안 문다  bandits.js:158 npc.age · villages.js:1867 npc.age · zone.js:17668 npc._t673Bait2
+test-body-seed-other rc=0 1s :: === 결과: 11 PASS / 0 FAIL ===
+test-body-seed-restart rc=0 0s :: === 16 통과 / 0 실패 ===
+test-bridge-act rc=0 9s :: (결과 줄 없음)
+test-build-act rc=0 2s :: (결과 줄 없음)
+test-building-anchor rc=0 0s :: (결과 줄 없음)
+test-cand-walk rc=0 1s :: === 46건 중 PASS 46 · FAIL 0 ===
+test-cell-memo rc=0 6s :: === 6 통과 / 0 실패 ===
+test-distmatrix rc=0 84s :: === 거리행렬 하네스: 45 통과 / 0 실패 ✅ ===
+test-ditch rc=0 0s :: (결과 줄 없음)
+test-dusk-stamp rc=0 2s :: === 결과: 21 PASS / 0 FAIL ===
+test-emptystart rc=0 15s :: === 41건 중 PASS 41 · FAIL 0 ===
+test-farm-life rc=0 1s :: === 결과: 33 PASS / 0 FAIL ===
+test-granary-add rc=0 0s :: (결과 줄 없음)
+test-guest-identity rc=0 17s :: === 게스트 영속 신원 하네스: 117 통과 / 0 실패 ✅ ===
+test-headless-parity rc=0 0s :: (결과 줄 없음)
+test-hunt-vis rc=0 58s :: === 32건 중 PASS 32 · FAIL 0 ===
+test-inv-ground rc=0 1s :: === 28건 중 PASS 28 · FAIL 0 ===
+test-itemlabel rc=0 1s :: === 58건 중 PASS 58 · FAIL 0 ===
+test-lab-army-morale rc=0 20s :: === 14건 중 PASS 14 · FAIL 0 ===
+test-lon-day rc=0 0s :: === 22건 중 PASS 22 · FAIL 0 ===
+test-loot-body rc=0 1s :: === 결과: 13 PASS / 0 FAIL ===
+test-newcomers rc=0 1s :: === PASS 56 / FAIL 0 ===
+test-nippon-boot rc=0 69s :: === 43건 중 PASS 43 · FAIL 0 ===
+test-npc-hp-door rc=1 1s :: === 21건 중 PASS 16 · FAIL 5 ===
+    ✗ ★★① 마을 몸 hp 를 **직접 쓰는 자리가 없다**(문 하나 · 사본 0)  1877: w.h = ent.h; w.hp = (w.hp != null ? w.hp : 100) - L;
+    ✗ ★② 옛 직접 대입 한 줄(줄어드는 몸의 그 자리 죽음 `p.hp = 0`)을 되살린 사본은 잡힌다  1468: p.hp = 0; | 1877: w.h = ent.h; w.hp = (w.hp != null ? w.hp : 100) - L;
+    ✗ ★② `+=` · `['hp']` 꼴도 잡힌다
+    ✗ ★② 그리고 전투 단위 줄은 **안** 잡는다(거름망이 몸만 본다)
+    ✗ ★③ 문을 부르는 자리 아홉(요양 · 전쟁 거울 · 포로 · 풀림 · 원정 굶음 둘 · 원정 굶어 죽음 · 그 자리 죽음 · 다시 뜬 판 복원)  11 — restore · died · starve · died · war · captive · release · starve · sta
+test-psite-server rc=0 8s :: (결과 줄 없음)
+test-region-profiles rc=0 1s :: === 74건 중 PASS 74 · FAIL 0 ===
+test-return-resume rc=0 95s :: === 11 통과 / 0 실패 ===
+test-road-day rc=0 23s :: === 결과: 30 PASS / 0 FAIL ===
+test-route-sig rc=0 121s :: === 10 통과 / 0 실패 ===
+test-shelter rc=0 31s :: === PASS 47 / FAIL 0 ===
+test-site-memo rc=0 363s :: === 23 통과 / 0 실패 ===
+test-sortie-miss rc=0 0s :: === 결과: 18 PASS / 0 FAIL ===
+test-t1001-econ-day rc=0 1s :: === PASS 4 / FAIL 0 ===
+test-t1013-band-day rc=0 113s :: === PASS 3 / FAIL 0 ===
+test-t1019-untrap rc=0 2s :: === 결과: 27 PASS / 0 FAIL ===
+test-t1044-scram-walk rc=0 3s :: === 결과: 18 PASS / 0 FAIL ===
+test-t1060-scram-hold rc=0 6s :: === 결과: 16 PASS / 0 FAIL ===
+test-t1080-road-life rc=0 0s :: === 32건 중 PASS 32 · FAIL 0 ===
+test-t1085-assign-job rc=0 20s :: === T1085: 통과 37 · 실패 0 ===
+test-t1087-crew-cap rc=0 1s :: === 8건 중 PASS 8 · FAIL 0 ===
+test-t1089-ret-walk rc=0 4s :: === 결과: 19 PASS / 0 FAIL ===
+test-t1093-shelter-roof rc=0 16s :: 결과: 19 통과 · 0 실패
+test-t1095-mine-demand rc=0 1s :: === 15건 중 PASS 15 · FAIL 0 ===
+test-t1107-regrow rc=0 2s :: === 16건 중 PASS 16 · FAIL 0 ===
+test-t1113-low-happy rc=0 0s :: === T1113: 통과 20 · 실패 0 ===
+test-t941-ruler rc=0 1s :: === PASS 9 / FAIL 0 ===
+test-t958-house-real rc=0 0s :: === 통과 24 · 실패 0 ===
+test-terr-backfill rc=0 1s :: (결과 줄 없음)
+test-terrain-memo rc=0 1s :: === 결과: 38 PASS / 0 FAIL ===
+test-vil-fast rc=0 277s :: === 10 통과 / 0 실패 ===
+test-village-boot-mem rc=0 61s :: === 10 통과 / 0 실패 ===
+test-villager-stuck rc=0 0s :: (결과 줄 없음)
+test-war-nosnap rc=0 2s :: === 결과: 60 PASS / 0 FAIL ===
+test-wild-door rc=0 9s :: === 26건 중 PASS 26 · FAIL 0 ===
+  러너 요약: 통과 56 · 실패 2 — test-body-fields.js(rc=1) test-npc-hp-door.js(rc=1)
+
+## ⑤ main 2ddf789a 나무 — 가지에서 빨간 여섯을 같은 러너로(종전 빨강 · 실패 줄 같음 · 줄 번호만 가지 삽입만큼 밀림)
+test-resume-one rc=1 172s :: === 7 통과 / 3 실패 ===
+    ✗ 켬 줄은 `spawnCaravanBody` 부름 바로 앞 한 줄 · 끔 갈래 = 종전 두 줄 그대로
+    ✗ [상황 · 자명 통과 금지] 끔: 빈 쌍이 둘 이상 줄에 서서 교역로 일을 서로 버렸다  첫 기다림 25 · 버림 0 · 일 시작 63
+    ✗ ★켬: 끔보다 일찍(또는 같이) 끝나고 덜 버린다  끝 끔 40 · 켬 40초 · 버림 끔 0 · 켬 0
+  러너 요약: 통과 0 · 실패 1 — test-resume-one.js(rc=1)
+test-econ-fast rc=1 497s :: === 18 통과 / 1 실패 ===
+    ✗ ★★켬 판 econ 객체는 400날 내내 전부 빠른 꼴(자국이 붙었다 지워진 판에서)  최대 6 · 자국 날 11
+test-lab-happywork rc=1 23s :: === 결과: 58 PASS / 1 FAIL ===
+    ✗ ③ ★[T244] 엔진이 계수를 **얻는 자리가 한 줄**이다(`const _hwW = happyWorkWOf(v)`)  2줄
+test-regrow-block rc=1 2s :: === 결과: 23 PASS / 1 FAIL ===
+    ✗ ★ⓘ 시더 — 나무 두 갈래(흩뿌림 · 숲 격자)만 술어를 묻는다 · 덤불·풀·군락 세 갈래는 종전 `_stage` 그대로(무접촉)
+test-body-fields rc=1 0s :: === 5 통과 / 3 실패 ===
+    ✗ ★몸 필드 규약 — `npc.` 에 쓰는 이름이 전부 스폰·`_t671Shape`·FROZEN 안에 있다(새 몸 필드면 `_t671Shape` 에 넣어라)  bandits.js:158 npc.age · villages.js:1856 npc.age
+    ✗ ★자명 통과 금지 — 미끼 필드(`npc._t673Bait = 1`)를 심으면 **문다**  bandits.js:158 npc.age · villages.js:1856 npc.age · villages.js:15614 npc._t673Bait
+    ✗ ★자명 통과 금지 — `??=` 꼴도 문다 · 읽기(`==`)는 안 문다  bandits.js:158 npc.age · villages.js:1856 npc.age · zone.js:17668 npc._t673Bait2
+test-npc-hp-door rc=1 0s :: === 21건 중 PASS 16 · FAIL 5 ===
+    ✗ ★★① 마을 몸 hp 를 **직접 쓰는 자리가 없다**(문 하나 · 사본 0)  1866: w.h = ent.h; w.hp = (w.hp != null ? w.hp : 100) - L;
+    ✗ ★② 옛 직접 대입 한 줄(줄어드는 몸의 그 자리 죽음 `p.hp = 0`)을 되살린 사본은 잡힌다  1457: p.hp = 0; | 1866: w.h = ent.h; w.hp = (w.hp != null ? w.hp : 100) - L;
+    ✗ ★② `+=` · `['hp']` 꼴도 잡힌다
+    ✗ ★② 그리고 전투 단위 줄은 **안** 잡는다(거름망이 몸만 본다)
+    ✗ ★③ 문을 부르는 자리 아홉(요양 · 전쟁 거울 · 포로 · 풀림 · 원정 굶음 둘 · 원정 굶어 죽음 · 그 자리 죽음 · 다시 뜬 판 복원)  11 — restore · died · starve · died · war · captive · release · starve · sta
+  러너 요약: 통과 0 · 실패 5 — test-econ-fast.js(rc=1) test-lab-happywork.js(rc=1) test-regrow-block.js(rc=1) test-body-fields.js(rc=1) test-npc-hp-door.js(rc=1)

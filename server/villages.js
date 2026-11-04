@@ -306,6 +306,17 @@ const T762_CARAVAN_BODY = process.env.T762_CARAVAN_BODY === '1';
 //   econ 도착일 · 장부(`_t661Day` 의 `T.L` · 답압 · 가드)는 무변 — 그림 · 몸 자리만 바뀐다. 새 수 0.
 const T772_ON = process.env.T772_LEG_FROM_LINGER !== '0';   // ★[T782 · PM 10-18] 켬 기본 · 되돌림 `=0`
 const _t772Stat = { legs: 0, home: 0, late: 0, lateMaxPx: 0, lateSumPx: 0 };
+// ★★[T1136 2026-11-04 · ★재민 11-03 교역 ⓐ] 바구니 교역 · 캐러밴 = 몸 걸음 — 손잡이 `T1136_BASKET`(econ 정본과 같은 이름 · '1' 만 켬 · 끔 = 아래 갈래가 한 줄도 안 닿는다 = 종전 바이트).
+//   econ(`sim/economy-sim-v2.js` T1136)이 캐러밴 시각을 몸 걸음(소수 날)으로 세우고 **닿은 그 시각에** 거래한다(사건 처리기 `basketFlush`). 서버 몫:
+//   ① 몸 시계 — 몸 틱(`tickCaravanBodies` 부르는 자리 바로 앞 · 그 함수 글자는 무변)마다 지금 econ 시각(econ 날 + 그날 몫 `_econDayFrac`)까지의 바구니 사건을 치른다 ·
+//      하루 마감 중(`state.tickJobs`) · 현지 자정 창 안(`state._t731`)에선 안 부른다(남은 것은 econ 날 머리가 같은 차례로 치른다).
+//      "econ arriveDay 가 진실"(몸을 econ 날 경계에 맞춰 늦추는 페이싱)을 뒤집는다 — 사건 시각 = 몸 걸음으로 잰 시각 · 장부 분모 = 소수 다리 날(`_t661Anchor` · `_t661Target`).
+//   ② 닿으면 종점에 서서 **곧장 돌아선다**(머묾 0 · 장 0 — 밤에도 걷는다 · T496 끔 그대로) · 집에 닿은 몸은 종점에서 기다리고 하루 경계 쓸기가 거둔다(종전 몸통 · 글자 무변).
+//   ③ 그날 econ 이 띄운 캐러밴의 그날 몸 = T762 ① 덧 조각(`T762_CARAVAN_BODY=1` 을 같이 켠다 — 덧 조각은 T762 손잡이 아래에서만 선다 · test-t762-sync ③ 계약 ·
+//      끔이면 종전대로 다음 날 몸 — 하루 안에 끝나는 다리는 몸 없이 econ 시각만 걷는다 · 회부).
+//   ④ 몸이 막혀 되돌아섬(§5.5b) — 안 판 바구니가 짐째 집으로(econ 정본 문 `basketBounce`).
+const T1136_ON = process.env.T1136_BASKET === '1';
+const _t1136Stat = { flush: 0, arrive: 0, bail: 0, home: 0, dead: 0, turn: 0, noBody: 0 };
 function _t762SyncNewJob(C, had) {   // 명부(문을 연 순간)에 없던 캐러밴 — 이 조각이 도는 때의 `world.caravans` 차례로 · 'retry' 면 같은 자리부터
   let q = null, i = 0;
   return () => {
@@ -4407,6 +4418,7 @@ function isolateCaravanReturn(body, p, now) {
   //   이웃 존 캐러밴은 집이 경계 너머라 이 존 곳간으로 못 돌린다 ⇒ 넘어온 경계 칸으로 되짚어 집 존에 돌려준다(`_xzIsolate`).
   if (c && c._xzPending) { body.repairFailN = 0; return; }
   if (c && c._xzHome) return _xzIsolate(body, p, now);
+  if (T1136_ON && c && c.basket && state.econV2 && typeof state.econV2.basketBounce === 'function') return _t1136Isolate(body, p, now);   // ★[T1136] 바구니 — 안 판 바구니가 짐째(끔 = 이 줄 무동작)
   c._returningRes = c.giveRes;
   c._returningAmt = c.giveAmt;   // 화물 보존(아직 미도착 — 매도 전량 회수)
   c._abandoned = true;
@@ -4436,6 +4448,31 @@ function isolateCaravanReturn(body, p, now) {
     travelDays: days, abandoned: true, note: '이동 차단 고립 → 화물 보존 귀환(§5.5b)',
   });
   console.log(`[${state.zoneId}] 🐂 캐러밴#${c.id} 완전 고립(재경로 ${CARAVAN_ISOLATE_FAILS}연속 실패) → 화물 보존 귀환: ${c.to.name}→${c.from.name} ${c.giveRes}×${Math.round(c.giveAmt)} ${days}일(econ 위임 — state='inbound')`);
+}
+// ★[T1136] 바구니 고립 — 막힌 몸이 걸어온 길을 되짚는다: 안 판 바구니가 짐째 집으로(econ 정본 문 `basketBounce` · 돌아선 시각 = 지금 econ 시각 · 날 = 걸어온 길 ÷ 몸 걸음).
+function _t1136Isolate(body, p, now) {
+  const c = body.c, world = state.world, E = state.econV2;
+  const rev = [{ x: p.x, y: p.y }];
+  for (let i = Math.min(body.segIdx, body.pts.length - 1); i >= 0; i--) rev.push(body.pts[i]);
+  setBodyPts(body, rev);
+  c.distance = body.len / PX_PER_ECON;
+  const t = world.day + _econDayFrac(now), days = E._t1136Probe.days(c.distance);
+  E.basketBounce(world, c, t, days);
+  c.travelDays = days;
+  body.phase = 'inbound';
+  body.departAt = now;
+  body.arriveAt = Math.max(now + 1, econDayToMs(c.returnArriveDay));
+  body.nomPxMs = body.len / Math.max(1, body.arriveAt - now);
+  body.repairFailN = 0;
+  _t1034Mark('iso');
+  if (world._tradeAudit) world._tradeAudit.isolated = (world._tradeAudit.isolated || 0) + 1;
+  world.tradeLog.push({
+    day: Math.floor(t) + 1, t: +t.toFixed(4), from: c.from.name, to: c.to.name,
+    sent: { res: c.giveRes, amt: +c.giveAmt.toFixed(2), pAtFrom: +(+c.pFrom_at_depart || 0).toFixed(2), pAtTo: 0 },
+    basket: c.basket.map((x) => ({ res: x.res, amt: +x.amt.toFixed(2) })), bought: null, retBasket: null, distance: +c.distance.toFixed(0), escort: c.escort, raided: false,
+    travelDays: +days.toFixed(4), abandoned: true, note: '이동 차단 고립 → 바구니 보존 귀환(§5.5b · T1136)',
+  });
+  console.log(`[${state.zoneId}] 🐂 캐러밴#${c.id} [T1136] 완전 고립 → 바구니 보존 귀환: ${c.to.name}→${c.from.name} ${c.basket.length}품목 ${days.toFixed(3)}일`);
 }
 // §5.5b 1단계 — 이동 중 차단: 로컬 A*(벽 인지 — 활성 청크는 건물이 메모리에 로드됨) 재경로 →
 //   연장분만큼 econ arriveDay 지연. 반복 실패 시 고립 처리.
@@ -4494,10 +4531,15 @@ function _t661Anchor(body, pts, leg) {
   const c = body.c, d = state.world.day;
   const path = _t661Path(pts);
   const D1 = leg === 'outbound' ? c.arriveDay : c.returnArriveDay;
+  if (T1136_ON && c && c.basket) {   // ★[T1136] 바구니 — 장부 시작 = 그 구간이 실제로 시작한 econ 시각(가는 길 = 떠난 날 · 귀로 = 닿은 시각) · 분모 = 소수 다리 날(몸 걸음 그대로 닿는다)
+    const D0 = leg === 'outbound' ? c.departDay : c.arriveDay;
+    body._t661 = { path, L: 0, D0, leg, ppd: path.len / Math.max(1e-6, D1 - D0), stall: false, day: d, frac: true };
+    return;
+  }
   body._t661 = { path, L: 0, D0: d, leg, ppd: path.len / Math.max(1, D1 - d), stall: false, day: d };
 }
 function _t661End(body) { const T = body._t661, c = body.c; return T.leg === 'outbound' ? c.arriveDay : c.returnArriveDay; }
-function _t661Target(T, dd, D1) { return T.path.len * Math.min(1, Math.max(0, (dd - T.D0) / Math.max(1, D1 - T.D0))); }
+function _t661Target(T, dd, D1) { return T.path.len * Math.min(1, Math.max(0, (dd - T.D0) / (T.frac ? Math.max(1e-6, D1 - T.D0) : Math.max(1, D1 - T.D0)))); }   // ★[T1136] `frac` = 바구니 장부(소수 분모 · 끔 = 칸 없음 = 종전 식)
 // [a, b] 구간의 셀을 찍는다 — 상인 다음 호위(틱 판의 차례) · 표본 간격 SZ/4(셀 한 칸을 건너뛰지 않는다).
 function _t661Stamp(body, a, b) {
   if (!state.roads || !(b > a)) return;
@@ -4718,6 +4760,7 @@ function _caravanSyncOne(now, c, S, budgetMs) {
       body.lingerUntil = now + state.dayMs * CARAVAN_LINGER_DAY_FRAC;
       if (T661_ON && body._t661) { const _m929 = _t929Mark(); _t661Anchor(body, _t661ReturnPts(body), 'inbound'); body._t661.L = 0; _t929Note(_m929); }   // ★[T929] 앞뒤 셈만 · ★[T661] 돌아가는 구간의 장부는 도착한 이 경계에서 연다(머묾은 보이는 것)
       if (T707_ON) _t707Linger(body, c, p);   // ★[T707] 장 끝까지 머문다 · 남문 앞 마당에 선다(끔 = 이 줄 무동작)
+      if (T1136_ON && c.basket) body.lingerUntil = now;   // ★[T1136] 바구니 — 머묾 0(닿은 시각에 거래하고 곧장 돌아선다 · 몸 시계가 놓친 도착을 econ 날 머리가 치른 판)
       if (T952_XZ_ON && T707_ON && c._xzHome) _t952XzStay(body, c, now);   // ★[T952] 교차 존 상인의 머묾 = 그 마을 장 끝(끔 = 이 줄 무동작)
       if (T707_ON && c._xzHome && _t1030On()) body._t1030 = { at: now };   // ★[T1030] 켬만 — 머묾을 연 시각(덤프 · 하네스 ⓘ 가 머묾 길이를 잰다 · 값 무변)
       S.arrived++;
@@ -4793,6 +4836,35 @@ function _caravanSyncSweep(S) {
     console.log(`[${state.zoneId}] 🐂 캐러밴#${id} ${killed ? '행상 사망(약탈 주사위) — 실체 소멸' : '귀환 완료 — 상인 회수'}${body.delayedDays ? ` (차단 지연 누계 ${body.delayedDays}일)` : ''}`);
   }
   return S;
+}
+// ★★[T1136] 몸 시계 — 지금 econ 시각까지 닿은 바구니 사건을 econ 정본이 치르고(시각 차례 · 같은 시각 = id 차례), 몸은 그 사건을 따른다.
+//   지금 econ 시각 = econ 날 + 그날 몫(`_econDayFrac` — 몸 보간 · 기온이 읽는 그 몫) · 다음 경계 앞까지만(경계 너머는 econ 날 머리가 치른다).
+function _t1136Clock(now) {
+  const E = state.econV2, w = state.world;
+  if (!E || typeof E.basketFlush !== 'function' || !w.caravans || !w.caravans.length) return;
+  const ev = E.basketFlush(w, Math.min(w.day + _econDayFrac(now), w.day + 1), false);
+  if (!ev.length) return;
+  _t1136Stat.flush++;
+  for (const e of ev) _t1136BodyEvent(e, now);
+}
+function _t1136BodyEvent(e, now) {
+  const c = e.c, bodies = state.caravanBodies, body = bodies && bodies.get(c.id);
+  _t1136Stat[e.kind] = (_t1136Stat[e.kind] || 0) + 1;
+  if (!body) { _t1136Stat.noBody++; return; }
+  if (e.kind === 'arrive' || e.kind === 'bail') { if (body.phase === 'outbound') _t1136Turn(body, now); }
+  // 집 · 죽음 — 몸은 종점에서 기다리고(종점 대기) 하루 경계 쓸기가 거둔다(종전 몸통 그대로 · 귀환 완료 · 행상 사망 줄도 거기서)
+}
+// 닿았다 — 종점에 서서 곧장 돌아선다(머묾 0 · 종전 동기 갈래의 도착 몸통과 같은 순서: 종점 스냅 → 귀로 장부 → 귀환 출발)
+function _t1136Turn(body, now) {
+  const c = body.c, p = state.deps.players.get(body.pid);
+  const end = caravanPointAt(body, body.len);
+  if (p) { p.x = end.x; p.y = end.y; p.vx = 0; p.vy = 0; }
+  body.prog = body.len;
+  if (T661_ON && body._t661) { _t661Anchor(body, _t661ReturnPts(body), 'inbound'); body._t661.L = 0; }
+  body.phase = 'linger'; body.lingerUntil = now;
+  startReturnLeg(body, now);
+  _t1136Stat.turn++;
+  console.log(`[${state.zoneId}] 🐂 캐러밴#${c.id} [T1136] 닿은 시각 econ ${(+c.arriveDay).toFixed(3)} — ${c.to.name} 거래 · 곧장 귀로(econ ${(+c.returnArriveDay).toFixed(3)} 집)`);
 }
 // 겉함수 — 종전 그대로(일괄). 조각내기 경로는 위 둘을 직접 부른다.
 //   ★[T85] 여기는 **일괄**이라 양보할 자리가 없다 ⇒ `'retry'` 가 나오면 그 자리에서 완주시킨다
@@ -8265,6 +8337,7 @@ function onGameTick(now) {
   if (!state.tickJobs) {
     // Stage 4B: 캐러밴 실체 30Hz 전진 — zone.js idle 존 스킵보다 앞(호출 위치)이라 무인 존에서도 econ과 동행.
     //   도착 임박 가드가 아래 경계 econ 틱보다 먼저 돌아 'econ이 몸을 앞지르는' 순서 역전이 없다.
+    if (T1136_ON && state.ready && state.world && !state._t731) { try { _t1136Clock(now); } catch (e) { console.error(`[${state.zoneId}] 🐂 [T1136] 몸 시계 실패:`, e.message); } }   // ★[T1136] 몸 시계 — 몸 틱 바로 앞 · 지금까지 닿은 바구니 사건(몸이 없어도 econ 은 그 시각에 · 마감 중 · 현지 자정 창 안엔 안 부른다 · 끔 = 이 줄 무동작)
     try { tickCaravanBodies(now); } catch (e) { console.error(`[${state.zoneId}] 🐂 캐러밴 실체 틱 실패:`, e.message); }
     // ★[T590] 줄어드는 몸 — 누운 몸의 시간 · 걸어 나가는 몸의 걸음(캐러밴 곁 · 같은 마감 정지)
     try { tickBodyExits(now); } catch (e) { console.error(`[${state.zoneId}] 🪦 줄어드는 몸 틱 실패:`, e.message); }

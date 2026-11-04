@@ -9,6 +9,7 @@
 //
 // ★무게 값은 여기서 정하지 않는다 — `server/weights.js` 가 정본이고 이 파일은 **합산만** 한다.
 // ⚠econ 무접촉: 이 모듈은 플레이어 층 전용이다(NPC 캐러밴 무게 예산은 회부 M항).
+//   ★[T1136] 예외 하나 — 바구니 교역(손잡이 `T1136_BASKET` · 끔 기본)을 켜면 econ 캐러밴 짐 상한이 `CFG.CAP_KG` 를 읽는다(사람 = 상인 하나 · 끔 = 안 읽는다).
 'use strict';
 const W = require('./weights');
 const Lots = require('./lots');   // ★로트 소수 몫(먹다 남은 0.75단위)도 무게다 — 합을 정본에서 읽는다

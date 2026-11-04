@@ -588,6 +588,16 @@ function unload(c, slot, v, res, amt) {
   delete K[slot];
   ST.cargoIn++;
 }
+// ★[T1136] 바구니 — 판 몫만 내리고 안 판 몫은 짐에 그대로(그 칸의 레코드를 같은 비율로 남긴다 · 집에 닿으면 `unload` 가 나머지를 내린다). 칸이 다 나가면 `unload` 와 같다.
+function unloadPart(c, slot, v, res, amt) {
+  const K = c && CARGO.get(c), recs = K && K[slot];
+  if (!recs || !recs.length || !(amt > 0)) return;
+  const U = recs.reduce((a, r) => a + r.u, 0);
+  const frac = U > EPS ? Math.min(1, amt / U) : 0;
+  if (frac > 0) pushIn(v, res, _legSettle(recs.map((r) => _copy(r, r.u * frac)), v));
+  if (frac >= 1 - EPS) delete K[slot]; else for (const r of recs) r.u *= (1 - frac);
+  ST.cargoIn++;
+}
 function bounce(c) {   // 빈손 귀환 — 안 판 짐이 그대로 돌아온다
   const K = c && CARGO.get(c); if (!K) return;
   if (K.give) { K.ret = K.give; delete K.give; }
@@ -794,7 +804,7 @@ function denSync(e, g) {   // 싸운 뒤 — 어댑터 줄(식량 칸 다 · 갱
 // ⑤ 존 경계 — 기록에 실을 짐 레코드 · 받은 기록의 짐 레코드를 그 캐러밴에(센다)
 function xzOut(c) { const K = cargoDump(c); if (K) ST.xzOut++; return K; }
 function xzIn(c, saved) { if (c && saved && typeof saved === 'object') { cargoLoad(c, saved); ST.xzIn++; } }
-const hooks = { capBegin, capEnd, cargo, unload, bounce, pushIn, clearIn, packFrom, packKeep, giveBegin, giveEnd, giveNoRec,
+const hooks = { capBegin, capEnd, cargo, unload, unloadPart, bounce, pushIn, clearIn, packFrom, packKeep, giveBegin, giveEnd, giveNoRec,   // ★[T1136] unloadPart = 바구니 판 몫만
   pendIn, pendOut, xzOut, xzIn };   // ★[T748] 대기 칸(econ 고르게) · 존 경계 기록
 // ★★[T803 ① 2026-10-19 · T789 손잡이 안 · 새 손잡이 0] **부패는 한 길.** 켬이면 장부 버림(`_rot` · spoil 정본 보관일)이 곳간 로트 칸의 썩음을 맡는다 —
 //   econ 일일 부패(`tickDecay` · 품목별 일일률)가 같은 칸을 또 깎으면 이중 셈이다(T789 §4-2: 장부가 FIFO 로 econ 부패 몫을 떼고 그 위에 보관일 버림이 또 뗐다).
