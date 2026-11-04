@@ -15,6 +15,11 @@
 //   ⓕ /zones 칸 `lobbyLazy` — 켬 기본 · `T1123_LOBBY_LAZY=0` 이면 칸 없음
 //   ⓖ Chromium(존 없이 central 만) — 켬: 게임 그림 요청은 **문이 열린 뒤에만** 시작 · 문이 열리고 나무 열둘이 다 온다 ·
 //      끔: 문이 /zones 에서 곧바로 열린다(`끔`) · 두 번째 방문은 304(바이트가 확 준다)
+//   ⓗ [T1131] 그림 매니페스트 — `/zones` 칸 `gimgMap`(손잡이 `T1131_WEBP` · `=0` 이면 칸 없음 · 길 404) · 표 = 클라가 짓는 주소 → 내는 주소
+//      (png 전부 → 같은 어간 webp 쌍둥이 + `?v=<내용 sha1 앞 10자>` · 문 json · terrain.json · 산 webp 도 해시) · 표 자신도 `?v=<표 sha1 앞 10자>` immutable · gzip ·
+//      앞 10자 이상만 immutable(9자 · 다른 값 = no-cache · 끔 = 40자 전부만) ·
+//      Chromium — 켬: 게임 그림 png 요청 0 · 전부 `?v=` · 둘째 방문 게임 그림 네트 요청 0(304 도 0) · 끔: 종전 png 주소 · 둘째 방문 304 ·
+//      ★표를 못 받으면(가로막음) 문은 표 없이 열려 종전 png 로 다 온다
 //
 // 실행: node scripts/test-static-cache.js
 'use strict';
@@ -167,6 +172,93 @@ function rawGet(port, u, h) {
   ok(O.first.g && O.first.g.lazy === false && /끔/.test(O.first.g.why) && O.first.trees === 12, '끔: /zones 에서 곧바로 열렸다(종전 꼴)', JSON.stringify(O.first.g));
   ok(L.second.tx < L.first.tx / 4, '★켬: 두 번째 방문 받은 바이트가 첫 방문의 ¼ 아래(304 · immutable)', `${(L.first.tx / 1e6).toFixed(2)} MB → ${(L.second.tx / 1e6).toFixed(2)} MB`);
   ok(O.second.tx > O.first.tx / 2, '대조 — 끔: 두 번째 방문도 다 받는다(no-store)', `${(O.first.tx / 1e6).toFixed(2)} MB → ${(O.second.tx / 1e6).toFixed(2)} MB`);
+
+  console.log('\nⓗ [T1131] 그림 매니페스트 · webp 쌍둥이 · 그림 주소 내용 해시');
+  {
+    const AL = require('./asset-lock.js');
+    const pW0 = await FB.freePort();
+    const uW0 = await bootCentral(pW0, { T1131_WEBP: '0' });
+    const W0 = `http://localhost:${pW0}`;
+    ok(uW0.ok, 'central 셋째 기동(`T1131_WEBP=0` · 나머지 기본 = T1123 그대로)', uW0.why);
+    const zW0 = JSON.parse((await get(W0, '/zones')).body.toString());
+    ok(/^\/gimg-map\.json\?v=[0-9a-f]{10}$/.test(zOn.gimgMap || '') && !('gimgMap' in zW0),
+       '/zones 칸 `gimgMap` — 켬 기본 있음(`/gimg-map.json?v=<10자>`) · `T1131_WEBP=0` 이면 칸 없음', `${zOn.gimgMap} / ${zW0.gimgMap}`);
+    const mr = await rawGet(pOn, zOn.gimgMap, { 'accept-encoding': 'gzip' });
+    let mb = Buffer.alloc(0); try { mb = zlib.gunzipSync(mr.body); } catch (e) {}
+    let M = {}; try { M = JSON.parse(mb.toString('utf8')); } catch (e) {}
+    ok(mr.s === 200 && mr.h['cache-control'] === 'public, max-age=31536000, immutable' && mr.h['content-encoding'] === 'gzip' && mr.h['content-type'] === 'application/json',
+       '표: immutable · gzip · application/json', `${mr.h['cache-control']} · ${(mb.length / 1024).toFixed(0)} KB → ${(mr.body.length / 1024).toFixed(0)} KB`);
+    ok(mb.length > 0 && sha(mb).startsWith(zOn.gimgMap.split('v=')[1]), '표 주소의 `?v=` = 표 몸의 sha1 앞 10자(표가 바뀌면 주소가 바뀐다)');
+    let n = 0; const bad = [];
+    for (const g of AL.TWIN_GROUPS) {
+      const d = path.join(PUB, 'assets', g);
+      for (const f of fs.readdirSync(d).filter((x) => x.endsWith('.png'))) {
+        n++; const k = f.slice(0, -4), w = path.join(d, k + '.webp');
+        const want = fs.existsSync(w) ? `/assets/${g}/${k}.webp?v=${sha(fs.readFileSync(w)).slice(0, 10)}` : null;
+        if (!want || M[`/assets/${g}/${f}`] !== want) bad.push(`${g}/${f}`);
+      }
+    }
+    ok(n > 0 && bad.length === 0, `★png ${n}장 전부 → 같은 어간 webp 쌍둥이 + \`?v=<그 webp 내용 sha1 앞 10자>\``, bad.slice(0, 3).join(' ') || `${AL.TWIN_GROUPS.length}무리`);
+    const doorJson = ['/assets/crops/crops_anchors.json', '/assets/nature/nature_anchors.json', '/assets/trees/tree_species.json', '/assets/icons.lock.json',
+      '/assets/mountains/mountain_anchors.json', '/assets/mountains/mountain_alpha.json', '/terrain.json'];
+    const fileOf = (u) => (u === '/terrain.json' ? path.join(ROOT, 'server', 'hanbando-terrain.json') : path.join(PUB, u));
+    const jBad = doorJson.filter((u) => M[u] !== `${u}?v=${sha(fs.readFileSync(fileOf(u))).slice(0, 10)}`);
+    ok(jBad.length === 0, '문 json 여섯 · terrain.json 도 `?v=<내용 sha1 앞 10자>`', jBad.join(' ') || `${doorJson.length}개`);
+    const mts = fs.readdirSync(path.join(PUB, 'assets', 'mountains')).filter((x) => x.endsWith('.webp'));
+    const mBad = mts.filter((f) => M[`/assets/mountains/${f}`] !== `/assets/mountains/${f}?v=${sha(fs.readFileSync(path.join(PUB, 'assets', 'mountains', f))).slice(0, 10)}`);
+    ok(mts.length > 0 && mBad.length === 0, `산 webp ${mts.length}장(이미 webp — 앵커 \`ext\`)도 해시가 붙는다`, mBad.slice(0, 3).join(' '));
+    const tu = M['/assets/trees/tree01.png'] || '', tv = tu.split('v=')[1] || '', tbase = tu.split('?')[0];
+    const t1 = await rawGet(pOn, tu, {});
+    ok(t1.s === 200 && t1.h['cache-control'] === 'public, max-age=31536000, immutable' && t1.h['content-type'] === 'image/webp' && t1.body.equals(fs.readFileSync(path.join(PUB, tbase))),
+       '그림 `?v=<10자>` → immutable · image/webp · 몸 = 그 파일', `${tu} · ${t1.h['cache-control']}`);
+    const t9 = await rawGet(pOn, `${tbase}?v=${tv.slice(0, 9)}`, {}), tx = await rawGet(pOn, `${tbase}?v=0000000000`, {});
+    ok(t9.h['cache-control'] === 'no-cache' && tx.h['cache-control'] === 'no-cache', '★9자 · 다른 10자 → no-cache(앞 10자 이상 · 맞을 때만 붙잡는다)', `${t9.h['cache-control']} · ${tx.h['cache-control']}`);
+    const full = sha(fs.readFileSync(path.join(PUB, tbase)));
+    const w10 = await rawGet(pW0, `${tbase}?v=${tv}`, {}), w40 = await rawGet(pW0, `${tbase}?v=${full}`, {}), wmap = await rawGet(pW0, '/gimg-map.json', {});
+    ok(w10.h['cache-control'] === 'no-cache' && w40.h['cache-control'] === 'public, max-age=31536000, immutable' && wmap.s === 404,
+       '끔(`T1131_WEBP=0`): 10자 → no-cache · 40자 전부 → immutable(T1123 그대로) · 표 길 404', `${w10.h['cache-control']} · ${w40.h['cache-control']} · ${wmap.s}`);
+
+    const GAME = /\/assets\/(trees|nature|buildings|bridge|crops|terrain|icons|mountains)\/|\/assets\/icons\.lock\.json|\/terrain\.json/;
+    const browser2 = await chromium.launch({ headless: true });
+    const lookT = async (base, opt) => {
+      const ctx = await browser2.newContext();
+      await ctx.addInitScript(() => { try { performance.setResourceTimingBufferSize(5000); } catch (e) {} });
+      if (opt && opt.blockMap) await ctx.route('**/gimg-map.json*', (r) => r.abort());
+      const visit = async () => {
+        const page = await ctx.newPage();
+        await page.goto(base + '/', { waitUntil: 'load' });
+        await page.waitForFunction(() => window.__gimg && window.__gimg().open && typeof TREE_SPRITES !== 'undefined' && TREE_SPRITES.every((im) => im.complete && im.naturalWidth > 0), null, { timeout: 120000 }).catch(() => {});
+        await new Promise((r) => setTimeout(r, 1500));
+        const r = await page.evaluate((src) => {
+          const re = new RegExp(src);
+          const res = performance.getEntriesByType('resource').filter((e) => re.test(e.name)).map((e) => ({ u: e.name.replace(location.origin, ''), tx: e.transferSize || 0 }));
+          return { g: window.__gimg ? window.__gimg() : null, res, trees: TREE_SPRITES.filter((im) => im.complete && im.naturalWidth > 0).length,
+            tsrc: TREE_SPRITES.map((im) => im.currentSrc || im.src).map((u) => u.replace(location.origin, '')).slice(0, 2) };
+        }, GAME.source);
+        await page.close();
+        return r;
+      };
+      const first = await visit(), second = await visit();
+      await ctx.close();
+      return { first, second };
+    };
+    const img = (r) => r.res.filter((e) => /\.(png|webp)(\?|$)/.test(e.u));
+    const A = await lookT(ON), B = await lookT(W0), C = await lookT(ON, { blockMap: true });
+    const aImg = img(A.first), aPng = aImg.filter((e) => /\.png(\?|$)/.test(e.u)), aNoV = A.first.res.filter((e) => !/\?v=[0-9a-f]{10}$/.test(e.u));
+    ok(A.first.g && A.first.g.map === 'ok' && A.first.g.mapN > 0 && A.first.trees === 12, '켬: 문이 표를 받고 열렸다 · 나무 열둘이 다 왔다', JSON.stringify(A.first.g));
+    ok(aImg.length > 0 && aPng.length === 0 && aNoV.length === 0, `★켬: 게임 그림 ${aImg.length}장 중 png 요청 0 · 게임 주소 ${A.first.res.length}개 전부 \`?v=<10자>\``,
+       (aPng[0] || aNoV[0] || {}).u || A.first.tsrc.join(' '));
+    const aNet2 = A.second.res.filter((e) => e.tx > 0);
+    ok(A.second.res.length > 0 && aNet2.length === 0, `★★켬: 둘째 방문 게임 주소 ${A.second.res.length}개 중 네트 요청 0(304 도 0 — immutable)`, aNet2.slice(0, 3).map((e) => e.u).join(' '));
+    const bImg = img(B.first), bWebp = bImg.filter((e) => /\.webp/.test(e.u) && !/\/mountains\//.test(e.u)), bV = B.first.res.filter((e) => /\?v=/.test(e.u));
+    ok(B.first.trees === 12 && bImg.length > 0 && bWebp.length === 0 && bV.length === 0 && B.first.g && B.first.g.map === null, '끔(`T1131_WEBP=0`): 종전 png 주소 · `?v=` 0 · 표를 안 받는다', `${bImg.length}장 · ${JSON.stringify(B.first.g)}`);
+    const bNet2 = B.second.res.filter((e) => e.tx > 0);
+    ok(bNet2.length > 0, '대조 — 끔: 둘째 방문은 게임 주소마다 304 왕복(T1123 그대로)', `${bNet2.length}개`);
+    const cImg = img(C.first), cWebp = cImg.filter((e) => /\.webp/.test(e.u) && !/\/mountains\//.test(e.u));
+    ok(C.first.g && C.first.g.open && C.first.g.map === 'fail' && C.first.trees === 12 && cImg.length > 0 && cWebp.length === 0,
+       '★표를 가로막으면 문은 표 없이 열린다 — 종전 png 로 나무 열둘이 다 온다', JSON.stringify(C.first.g));
+    await browser2.close();
+  }
   await browser.close();
 
   for (const f of dbs) for (const s of ['', '-wal', '-shm']) { try { fs.unlinkSync(f + s); } catch (e) {} }

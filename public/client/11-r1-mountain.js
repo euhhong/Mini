@@ -1678,7 +1678,7 @@
           const n = cls + String(i).padStart(2, '0');
           if (!_natAnchors[n]) continue;
           _natWanted++;
-          const im = new Image(); im.onload = () => _natLoaded++; im.src = '/assets/nature/' + n + '.png';
+          const im = new Image(); im.onload = () => _natLoaded++; _gsrc(im, '/assets/nature/' + n + '.png');   // ★[T1131] 문을 지난다(앵커 뒤 — 문은 열렸다 · 표대로 주소)
           NATX[n] = im;
         }
       }

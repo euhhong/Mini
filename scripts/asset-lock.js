@@ -144,7 +144,26 @@ const filesOf = (g) => fs.readdirSync(g.dir).filter((f) => ASSET_EXT.test(f)).so
 //   소리는 **한 소리에 두 파일**(`.ogg`+`.m4a`)이라 어간을 키로 쓰면 둘이 한 칸을 다툰다
 //   (실측: 그렇게 두니 기록기는 `.ogg` 를 적고 검사기는 `.m4a` 를 재서 2장이 거짓 빨강이었다).
 //   ⇒ 소리만 **파일 이름 그대로** 키로 쓴다.
+// ★★[T1131 2026-11-04] **그림 쌍둥이** — 게임 그림 일곱 무리(`TWIN_GROUPS`)는 png 옆에 **같은 화소 무손실 webp** 가 선다
+//   (`scripts/webp_twins.py` · central 손잡이 `T1131_WEBP` 가 켜면 클라가 webp 를 받는다 · 한 판 동안 png 도 둔다).
+//   소리와 달리 **한 칸을 같이 쓰는 게 뜻이다**: 같은 어간 = 같은 그림이므로 두 파일이 **같은 값**이어야 한다.
+//   ⇒ 검사기는 둘 다 그 칸에 댄다(하나라도 어긋나면 빨강) · 기록기는 둘이 다르면 **표를 안 쓰고 멈춘다**(카드 "다르면 멈추고 보고") —
+//     png 만 새로 굽고 쌍둥이를 안 다시 쓰면 낡은 webp 가 배포에 남는다. 그 자리를 표 쓰기에서 막는다.
+const TWIN_GROUPS = ['trees', 'nature', 'buildings', 'bridge', 'crops', 'terrain', 'icons'];
 const keyOf = (f) => (/\.(ogg|m4a)$/i.test(f) ? f : f.replace(ASSET_EXT, ''));
+/** [T1131] 쌍둥이 셈 — 무리마다 png · webp 장 수 · 짝 없는 쪽(표만 · 빨강 아님: 짝 없는 png 는 central 이 png 주소로 낸다). */
+function twins() {
+  const out = {};
+  for (const g of TWIN_GROUPS) {
+    const d = path.join(AST, g);
+    if (!fs.existsSync(d)) continue;
+    const fs0 = fs.readdirSync(d);
+    const P = new Set(fs0.filter((f) => /\.png$/i.test(f)).map((f) => f.slice(0, -4)));
+    const W = new Set(fs0.filter((f) => /\.webp$/i.test(f)).map((f) => f.slice(0, -5)));
+    out[g] = { png: P.size, webp: W.size, pngOnly: [...P].filter((k) => !W.has(k)).sort(), webpOnly: [...W].filter((k) => !P.has(k)).sort() };
+  }
+  return out;
+}
 
 const RULE_LINE =
   '값 = **화소 해시**: PNG 는 sha1("<w>x<h>|" + 디코드한 RGBA) 앞 16자 — 파일도 IDAT 도 아니다. ' +
@@ -153,7 +172,9 @@ const RULE_LINE =
   'devDependencies 에 넣었고, 다른 디코더(sharp/libvips)와 88장 중 **88장 일치**를 실측했다. ' +
   '⚠단 webp 는 **완전투명 아래 RGB 를 인코더가 고쳐 쓰므로**(실측: 무손실 재압축 세 판이 화소 해시가 다르고, ' +
   '투명을 빼면 다른 화소 0) PNG 자만큼 압축기에 둔하지는 않다 — 정규화는 전수 재잠금이라 별 카드다. ' +
-  '자는 `scripts/asset-lock.js` 하나이고 검사기·기록기가 같은 함수를 부른다.';
+  '자는 `scripts/asset-lock.js` 하나이고 검사기·기록기가 같은 함수를 부른다. ' +
+  '★[T1131] 게임 그림 일곱 무리(trees · nature · buildings · bridge · crops · terrain · icons)는 png 옆에 **같은 화소 무손실 webp 쌍둥이**가 서고 ' +
+  '둘이 **같은 칸**(어간)을 쓴다 — 검사기는 둘 다 그 값에 대고, 기록기는 둘이 다르면 표를 안 쓰고 멈춘다(`scripts/webp_twins.py` 로 쌍둥이를 다시 쓴다).';
 
 function check(lock) {
   lock = lock || JSON.parse(fs.readFileSync(LOCK, 'utf8'));
@@ -177,15 +198,23 @@ if (require.main === module) {
   if (process.argv.includes('--write')) {
     const gs = groups(lock);
     let n = 0;
+    const clash = [];                                      // ★[T1131] 같은 어간 두 파일(png · webp 쌍둥이)의 값이 다르다
     for (const [grp, g] of Object.entries(gs)) {
-      const tbl = {};
+      const tbl = {}, from = {};
       for (const f of filesOf(g)) {
         const key = keyOf(f);
         if (!(key in lock[grp])) continue;                 // ★있던 키만 — 새 키를 몰래 더하지 않는다
-        tbl[key] = lockValue(path.join(g.dir, f)).hash; n++;
+        const h = lockValue(path.join(g.dir, f)).hash; n++;
+        if (key in tbl && tbl[key] !== h) { clash.push(`${grp}/${from[key]} ${tbl[key]} ↔ ${f} ${h}`); continue; }
+        tbl[key] = h; from[key] = f;
       }
       for (const k of Object.keys(lock[grp])) if (!(k in tbl)) tbl[k] = lock[grp][k];   // 파일 없는 키는 그대로
       lock[grp] = tbl;
+    }
+    if (clash.length) {                                    // ★표를 안 쓴다 — 낡은 쪽을 다시 굽거나 쌍둥이를 다시 쓴 뒤 다시 부른다
+      console.log(`★잠금표를 안 썼다 — 같은 어간 두 파일의 화소가 다르다 ${clash.length}건(쌍둥이가 낡았다: \`python3 scripts/webp_twins.py public/assets/<무리>\` 뒤 다시):`);
+      for (const c of clash.slice(0, 20)) console.log('  ✗ ' + c);
+      process.exit(1);
     }
     lock._규약 = RULE_LINE;
     // ★[T260] 이 표를 **다시 쓴 상자**를 같이 남긴다(그림을 구운 상자가 아니다 — 위 주석).
@@ -199,8 +228,11 @@ if (require.main === module) {
     const { n, bad } = check(lock);
     console.log(`대조 ${n}장 · 어긋남 ${bad.length}`);
     for (const b of bad.slice(0, 20)) console.log(`  ✗ ${b.grp}/${b.key}  표 ${b.want} ↔ 파일 ${b.got} (${b.ruler})`);
+    // [T1131] 쌍둥이 셈(표만) — 같은 값인지는 위 대조가 이미 본다(같은 칸에 둘 다 댄다)
+    const T = twins(), tw = Object.values(T);
+    console.log(`쌍둥이(T1131 · ${Object.keys(T).length}무리): png ${tw.reduce((a, t) => a + t.png, 0)} · webp ${tw.reduce((a, t) => a + t.webp, 0)} · 짝 없는 png ${tw.reduce((a, t) => a + t.pngOnly.length, 0)} · 짝 없는 webp ${tw.reduce((a, t) => a + t.webpOnly.length, 0)}`);
     process.exit(bad.length ? 1 : 0);
   }
 }
 
-module.exports = { pixelHash, pixelHashOf, alphaStats, decodeImage, fileHash, lockValue, rulerOf, groups, filesOf, keyOf, check, bakeBox, bakeBoxLine, LOCK, AST, RULE_LINE, CUT };
+module.exports = { pixelHash, pixelHashOf, alphaStats, decodeImage, fileHash, lockValue, rulerOf, groups, filesOf, keyOf, check, twins, TWIN_GROUPS, bakeBox, bakeBoxLine, LOCK, AST, RULE_LINE, CUT };

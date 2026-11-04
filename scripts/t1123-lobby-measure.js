@@ -15,6 +15,11 @@
 // 실행: node scripts/t1123-lobby-measure.js [--runs 3] [--throttle] [--out 계측/x.json] [--browser chromium|webkit] [--central-only]
 //   --throttle = Chromium 망 조임(CDP · 내려받기 10 Mbit/s · 왕복 100ms — 라이브 1 MB 그림 0.8초와 같은 자릿수)
 //   --central-only = 존을 안 띄운다(시작 지역 칸 · 오른쪽 판 때는 비고 요청 · 바이트만 잰다 — 맥 VM WebKit 45초 판용)
+//   ★[T1131] --off-root <트리> = "끔" central 을 다른 트리(예: main 작업트리)에서 띄운다 — 그때 끔 env 기본은 빈 것(그 트리 기본 그대로)
+//            --off-env "K=V,K=V" = "끔" central env(기본 T1123 둘 = 0 · `--off-root` 면 빈 것) · --names 끔,켬 = 줄 이름
+//            --server-count = central 둘에 `scripts/t1123-count-hook.js` 를 얹어 **서버가 본** 응답을 방문마다 센다(게임 그림 주소 · 그 밖 × 상태) — WebKit 은 이것이 증인
+//            --persistent = 판마다 영속 문맥(빈 임시 폴더) — ⚠Playwright WebKit 은 영속 문맥이 아니면 HTTP 캐시를 안 쓴다(T1123 §1 실측) · webkit 이면 저절로 켠다
+//            줄마다 `game` = 게임 그림 주소(나무 · 산 · 자연물 · 지면 · 밭 · 건물 · 다리 · 아이콘 · 그 json · terrain.json) 요청 · 네트 · 304 · png · webp · `?v=` 붙은 것
 'use strict';
 const path = require('path');
 const fs = require('fs');
@@ -30,12 +35,21 @@ const BROWSER = arg('--browser', 'chromium');
 const CENTRAL_ONLY = process.argv.includes('--central-only');
 const DUMP = arg('--dump', null);   // 요청 목록 원본(파일 머리) — 표 재료 · 레포에 안 적는다
 let _lastRaw = null;
+const OFF_ROOT = arg('--off-root', null);
+const OFF_ENV = (() => { const v = arg('--off-env', OFF_ROOT ? '' : 'T1123_LOBBY_LAZY=0,T1123_STATIC_CACHE=0'); const o = {}; for (const kv of v.split(',').filter(Boolean)) { const i = kv.indexOf('='); o[kv.slice(0, i)] = kv.slice(i + 1); } return o; })();
+const NAMES = arg('--names', '끔,켬').split(',');
+const SRV_COUNT = process.argv.includes('--server-count');
+const CNT = {};   // port → 세는 파일
+const GAME = /\/assets\/(trees|nature|buildings|bridge|crops|terrain|icons|mountains)\/|\/assets\/icons\.lock\.json|\/terrain\.json/;   // [T1131] 게임 그림 문을 지나는 주소
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const procs = [];
-function boot(file, env) {
-  const p = spawn(process.execPath, [path.join(ROOT, 'server', file)], {
-    cwd: ROOT, env: Object.assign({}, process.env, env), stdio: ['ignore', 'pipe', 'pipe'],
+function boot(file, env, root) {
+  root = root || ROOT;
+  const pre = [];
+  if (SRV_COUNT && file === 'central.js') { const f = `/tmp/t1123-cnt-${process.pid}-${env.PORT}.txt`; fs.writeFileSync(f, ''); CNT[env.PORT] = f; env = Object.assign({}, env, { T1123_COUNT: f }); pre.push('-r', path.join(__dirname, 't1123-count-hook.js')); }
+  const p = spawn(process.execPath, [...pre, path.join(root, 'server', file)], {
+    cwd: root, env: Object.assign({}, process.env, env), stdio: ['ignore', 'pipe', 'pipe'],
   });
   procs.push(p); return p;
 }
@@ -52,7 +66,17 @@ const INIT = () => {
   }, 20);
 };
 
+function srvRead(url) {   // [T1131] 서버가 본 응답(이 방문) — 게임 그림 주소 · 그 밖 × 상태
+  const port = (/:(\d+)\//.exec(url) || [])[1], f = CNT[port];
+  if (!f || !fs.existsSync(f)) return null;
+  const L = fs.readFileSync(f, 'utf8').trim().split('\n').filter(Boolean);
+  const o = { game: {}, other: {}, gameImm: 0 };
+  for (const l of L) { const [st, u, cc] = l.split(' '); const g = GAME.test(u) ? 'game' : 'other'; o[g][st] = (o[g][st] || 0) + 1; if (g === 'game' && /immutable/.test(cc || '')) o.gameImm++; }
+  return o;
+}
+function srvReset(url) { const port = (/:(\d+)\//.exec(url) || [])[1]; if (CNT[port]) fs.writeFileSync(CNT[port], ''); }
 async function visit(ctx, url, waitReady) {
+  srvReset(url);
   const page = await ctx.newPage();
   if (THROTTLE && BROWSER === 'chromium') {
     const cdp = await ctx.newCDPSession(page);
@@ -84,6 +108,7 @@ async function visit(ctx, url, waitReady) {
   });
   r.wallMs = Date.now() - t0;
   await page.close();
+  r.srv = srvRead(url);
   return r;
 }
 
@@ -102,7 +127,11 @@ function sum(r) {
     bytes: net.reduce((a, e) => a + e.tx, 0) + r.navTx,
     lobbyReq: before.length + 1, lobbyBytes: before.reduce((a, e) => a + e.tx, 0) + r.navTx,
     304: r.res.filter((e) => e.tx > 0 && e.tx < 1000 && e.enc > 0 && e.tx < e.enc).length,
+    game: (() => { const g = r.res.filter((e) => GAME.test(e.n)); const net = g.filter((e) => e.tx > 0);
+      return { n: g.length, net: net.length, n304: net.filter((e) => e.tx < 1000 && e.enc > 0 && e.tx < e.enc).length, bytes: net.reduce((a, e) => a + e.tx, 0),
+        png: g.filter((e) => /\.png(\?|$)/.test(e.n)).length, webp: g.filter((e) => /\.webp(\?|$)/.test(e.n)).length, pinned: g.filter((e) => /\?v=[0-9a-f]{10,}$/.test(e.n)).length }; })(),
     gimg: r.gimg,
+    srv: r.srv || null,
     by,
   };
 }
@@ -112,7 +141,7 @@ function sum(r) {
   FB.mustBeFree(ports, 't1123-lobby-measure');
   const pid = process.pid;
   const dbs = [`/tmp/t1123-c0-${pid}.db`, `/tmp/t1123-c1-${pid}.db`, `/tmp/t1123-z-${pid}.db`];
-  const cOff = boot('central.js', { PORT: '3010', DB_PATH: dbs[0], PUBLIC_HOST: 'localhost', ENABLED_ZONES: 'hanbando', T1123_LOBBY_LAZY: '0', T1123_STATIC_CACHE: '0' });
+  const cOff = boot('central.js', Object.assign({ PORT: '3010', DB_PATH: dbs[0], PUBLIC_HOST: 'localhost', ENABLED_ZONES: 'hanbando' }, OFF_ENV), OFF_ROOT);
   const cOffUp = FB.waitUp(cOff, /central server up on/, { name: 'central 끔' });
   const cOn = boot('central.js', { PORT: '3011', DB_PATH: dbs[1], PUBLIC_HOST: 'localhost', ENABLED_ZONES: 'hanbando' });
   const cOnUp = FB.waitUp(cOn, /central server up on/, { name: 'central 켬' });
@@ -122,7 +151,7 @@ function sum(r) {
     zUp = FB.waitUp(z, /zone server up on/, { name: 'zone', capMs: 300000 });
   }
   for (const u of [await cOffUp, await cOnUp, await zUp]) if (!u.ok) { console.log('기동 실패', u.why); process.exit(1); }
-  console.log(`[t1123] 기동 끝 · 브라우저 ${BROWSER}${THROTTLE ? ' · 망 조임' : ''} · ${RUNS}판`);
+  console.log(`[t1123] 기동 끝 · 브라우저 ${BROWSER}${THROTTLE ? ' · 망 조임' : ''} · ${RUNS}판 · ${NAMES[0]} = ${OFF_ROOT || '이 트리'} ${JSON.stringify(OFF_ENV)} · ${NAMES[1]} = 이 트리 기본`);
   // 존이 /startinfo 를 낼 때까지(도착 지점 굽기) — 첫 판이 굽기를 기다리느라 늦게 재지 않게 한 번 데운다
   if (!CENTRAL_ONLY) {
     for (let i = 0; i < 120; i++) {
@@ -136,26 +165,32 @@ function sum(r) {
     }
   }
   const pw = require('playwright');
-  const browser = await pw[BROWSER].launch({ headless: true });
-  const out = { at: new Date().toISOString(), browser: BROWSER, throttle: THROTTLE, runs: RUNS, rows: [] };
+  const PERSIST = process.argv.includes('--persistent') || BROWSER === 'webkit';
+  const browser = PERSIST ? null : await pw[BROWSER].launch({ headless: true });
+  const os = require('os');
+  const out = { at: new Date().toISOString(), browser: BROWSER, throttle: THROTTLE, persistent: PERSIST, runs: RUNS, off: { root: OFF_ROOT, env: OFF_ENV }, names: NAMES, rows: [] };
   for (let i = 0; i < RUNS; i++) {
-    for (const [name, port] of [['끔', 3010], ['켬', 3011]]) {
-      const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    for (const [name, port] of [[NAMES[0], 3010], [NAMES[1], 3011]]) {
+      const pdir = PERSIST ? fs.mkdtempSync(path.join(os.tmpdir(), 't1123-pctx-')) : null;
+      const ctx = PERSIST ? await pw[BROWSER].launchPersistentContext(pdir, { headless: true, viewport: { width: 1280, height: 800 } })
+                          : await browser.newContext({ viewport: { width: 1280, height: 800 } });
       await ctx.addInitScript(INIT);
       const url = `http://localhost:${port}/`;
       const ra = await visit(ctx, url, !CENTRAL_ONLY), rb = await visit(ctx, url, !CENTRAL_ONLY);
       _lastRaw = [ra, rb];
       const a = sum(ra), b = sum(rb);
       await ctx.close();
+      if (pdir) fs.rmSync(pdir, { recursive: true, force: true });
       out.rows.push({ i: i + 1, knob: name, first: a, second: b });
       if (DUMP) fs.writeFileSync(`${DUMP}-${name}-${i + 1}.json`, JSON.stringify({ first: _lastRaw[0], second: _lastRaw[1] }));
-      const f = (s) => `요청 ${s.req}(네트 ${s.netReq} · 304 ${s[304]}) · ${(s.bytes / 1e6).toFixed(2)} MB · 로비 몫(오른쪽 판 전에 다 받음) ${s.lobbyReq}개 ${(s.lobbyBytes / 1e6).toFixed(2)} MB · 그림 문 ${s.gimg ? s.gimg.why + '@' + s.gimg.at : '-'} · FCP ${s.fcp} · 지역 칸 ${s.zone} · 오른쪽 판 ${s.cards} · load ${s.load}`;
+      const f = (s) => `요청 ${s.req}(네트 ${s.netReq} · 304 ${s[304]}) · ${(s.bytes / 1e6).toFixed(2)} MB · 게임 그림 주소 ${s.game.n}(네트 ${s.game.net} · 304 ${s.game.n304} · png ${s.game.png} · webp ${s.game.webp} · ?v= ${s.game.pinned}) ${s.srv ? ` · 서버가 본 게임 ${JSON.stringify(s.srv.game)}(immutable ${s.srv.gameImm}) · 그 밖 ${JSON.stringify(s.srv.other)}` : ''} · 로비 몫(오른쪽 판 전에 다 받음) ${s.lobbyReq}개 ${(s.lobbyBytes / 1e6).toFixed(2)} MB · 그림 문 ${s.gimg ? s.gimg.why + '@' + s.gimg.at : '-'} · FCP ${s.fcp} · 지역 칸 ${s.zone} · 오른쪽 판 ${s.cards} · load ${s.load}`;
       console.log(`${i + 1} ${name} 첫 방문: ${f(a)}`);
       console.log(`${i + 1} ${name} 둘째 방문: ${f(b)}`);
     }
   }
-  await browser.close();
+  if (browser) await browser.close();
   if (OUT) { fs.writeFileSync(path.join(ROOT, OUT), JSON.stringify(out, null, 1)); console.log('[t1123] 적음', OUT); }
   for (const f of dbs) for (const s of ['', '-wal', '-shm']) { try { fs.unlinkSync(f + s); } catch (e) {} }
+  for (const f of Object.values(CNT)) { try { fs.unlinkSync(f); } catch (e) {} }
   process.exit(0);
 })().catch((e) => { console.error(e); process.exit(1); });

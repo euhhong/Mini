@@ -17,6 +17,8 @@
 #   - 널은 y=0..1 전폭 → 폭 2셀 다리에서 두 줄이 맞닿아 하나의 상판으로 읽힌다.
 #
 # 실행:  blender -b -P bridge_render.py
+#   배치(손 · `scripts/bridge_renders/*.png` → `public/assets/bridge/`) 뒤 ★[T1131] `python3 scripts/webp_twins.py public/assets/bridge`
+#   (같은 화소 무손실 webp 쌍둥이 — 클라는 central 매니페스트대로 webp 를 받는다) → `node scripts/asset-lock.js --write`(쌍둥이가 낡았으면 멈춘다).
 # 결과:  ./bridge_renders/bridge_{mid,cap0,cap1}_{x,y}.png (256², 알파)
 # 고증: 청동기 후기(송국리) — 통나무 보 + 쪼갠 널 + 새끼 결속 + 말뚝. 석조 아치·제재목 금지.
 

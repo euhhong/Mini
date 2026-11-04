@@ -17,6 +17,12 @@
 //   · js · json · css · html · svg · txt 는 gzip(처음 한 번 눌러 붙잡아 둔다 · 내용 sha1 이 바뀌면 다시 누른다).
 //   · 형식 표에 json · webp · svg · ogg · m4a · woff2 · glb · jpg 를 더한다(종전엔 octet-stream 으로 갔다).
 // ⚠판정 0 · 그림 0 · 새 수 0(카드가 준 31536000 하나).
+//
+// ★★[T1131 2026-11-04] 그림 주소에 내용 해시 — 손잡이 `T1131_WEBP`(`!== '0'` 켬 · 되돌림 `=0` = 아래 둘 다 없음 = T1123 그대로).
+//   · `?v=` 가 **내용 sha1 의 앞 10자 이상**(카드가 준 수 10)이고 그 sha1 이 그 글자로 시작하면 immutable 이다(종전은 40자 전부만).
+//     까닭: central 그림 매니페스트(`server/gimg-map.js`)가 주소마다 sha1 앞 10자를 단다 — 매니페스트가 가볍고 주소가 짧다.
+//     옛 값 · 짧은 값(`5h0`) · 다른 값은 여태처럼 no-cache 다.
+//   · `serveMem` — 파일이 아니라 붙잡은 몸(매니페스트)을 같은 머리 규칙으로 낸다(ETag · 304 · gzip · immutable · 끔 = 종전 머리).
 // ═════════════════════════════════════════════════════════════════════════════
 const fs = require('fs');
 const path = require('path');
@@ -33,6 +39,10 @@ const GZ_EXT = new Set(['.js', '.json', '.css', '.html', '.svg', '.txt', '.md'])
 const IMMUTABLE = 'public, max-age=31536000, immutable';
 
 function on() { return process.env.T1123_STATIC_CACHE !== '0'; }
+// [T1131] 그림 주소 해시 — `?v=` 앞 10자(카드가 준 수) 이상이면 sha1 앞머리로 맞춘다 · 끔(`T1131_WEBP=0`)이면 종전(40자 전부만)
+const HASH_MIN = 10;
+function t1131() { return process.env.T1131_WEBP !== '0'; }
+function _pinned(v, sha) { return !!v && (v === sha || (t1131() && v.length >= HASH_MIN && /^[0-9a-f]+$/.test(v) && sha.startsWith(v))); }
 
 // 파일 하나의 붙잡은 값 — mtime · 크기가 같으면 다시 안 읽는다.
 const _ent = new Map();   // filePath → { mtimeMs, size, sha, gz, body(html 만) }
@@ -73,15 +83,17 @@ function serve(req, res, filePath, url, mimeOverride) {
     res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': '0' });
     return fs.createReadStream(filePath).pipe(res);
   }
-  const e = entry(filePath);
-  const mime = mimeOverride || MIME_NEW[ext] || 'application/octet-stream';
+  return _send(req, res, entry(filePath), url, mimeOverride || MIME_NEW[ext] || 'application/octet-stream', filePath);
+}
+// 머리 · 304 · gzip · 몸 — 파일(`serve`)과 붙잡은 몸(`serveMem`)이 같은 규칙을 쓴다(두 벌 0)
+function _send(req, res, e, url, mime, filePath) {
   const etag = `"${e.sha}"`;
   const v = _vOf(url || '');
   const h = {
     'Content-Type': mime,
     'ETag': etag,
     'Last-Modified': e.mtime.toUTCString(),
-    'Cache-Control': (v && v === e.sha) ? IMMUTABLE : 'no-cache',
+    'Cache-Control': _pinned(v, e.sha) ? IMMUTABLE : 'no-cache',
   };
   if (e.gz) h['Vary'] = 'Accept-Encoding';
   const inm = req.headers['if-none-match'];
@@ -102,4 +114,23 @@ function serve(req, res, filePath, url, mimeOverride) {
   return fs.createReadStream(filePath).pipe(res);
 }
 
-module.exports = { serve, on, entry, rewriteHtml, IMMUTABLE, _ent };
+// ★[T1131] 붙잡은 몸 — 키(가짜 경로)마다 한 벌 · 몸이 바뀌면(다른 Buffer) 다시 잰다. 끔(`T1123_STATIC_CACHE=0`)은 종전 머리.
+const _mem = new Map();
+function memEntry(key, buf) {
+  const e0 = _mem.get(key);
+  if (e0 && e0.body === buf) return e0;
+  const ext = path.extname(key).toLowerCase(), now = new Date();
+  const e = { mtimeMs: now.getTime(), mtime: now, size: buf.length, ext, sha: _sha(buf), gz: GZ_EXT.has(ext) ? zlib.gzipSync(buf) : null, body: buf, len: buf.length };
+  _mem.set(key, e);
+  return e;
+}
+function serveMem(req, res, key, buf, url, mimeOverride) {
+  const ext = path.extname(key).toLowerCase();
+  if (!on()) {
+    res.writeHead(200, { 'Content-Type': mimeOverride || MIME_OLD[ext] || 'application/octet-stream', 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': '0' });
+    return res.end(req.method === 'HEAD' ? undefined : buf);
+  }
+  return _send(req, res, memEntry(key, buf), url, mimeOverride || MIME_NEW[ext] || 'application/octet-stream', null);
+}
+
+module.exports = { serve, serveMem, memEntry, on, t1131, entry, rewriteHtml, IMMUTABLE, HASH_MIN, _ent };

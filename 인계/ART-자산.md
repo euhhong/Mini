@@ -731,6 +731,16 @@ T391 이 "07-30 판 · 코드 없음"이라고 한 11곡을 두 팔로 다시 �
 * 줄무늬 재질(`striped_mat`)은 가는 원통에서 결이 뭉개져 **바탕보다 훨씬 밝게** 뜬다(삼나무 · 티크 껍질이 연분홍 · 베이지로) — 껍질은 노이즈 재질로. `bumped_mat` 의 램프: 낮으면 첫 빛(c1)이, 높으면 둘째 빛(c2)이 넓다.
 * 재질 이름 `p_j_*` · 결정론 29/29 · 갈림 자 최소 41.1 · `test-icons ⑭`.
 
+### 게임 그림 webp 쌍둥이 — 558장 · 26.93 → 15.53 MB · 잠금 자 화소 같음 558/558 [T1131 2026-11-04]
+
+* 일곱 무리(`trees` · `nature` · `buildings` · `bridge` · `crops` · `terrain` · `icons`)는 png 옆에 **같은 어간 · 같은 화소 무손실 webp** 가 선다. 클라는 central 그림 매니페스트(`server/gimg-map.js` · 손잡이 `T1131_WEBP`)대로 **webp 를 받는다** — png 는 한 판 동안 그대로 둔다(되돌림 = `T1131_WEBP=0`).
+* 쌍둥이는 **굽기가 쓴다** — 설정 한 자리 `scripts/webp_twins.py`(PIL `lossless=True quality=100 method=6` · T1123 표와 같은 줄):
+  * 저절로: `nature-postprocess.py`(나무 · 자연물) · `ore-outcrop.py`(광맥) · `fields_render.py`(밭 · 배치한 장만) · `building_render.py`(`BLD_ONLY` 배치한 장만) · `icons-postprocess.js`(쓴 장 — 출력이 임시 폴더면 거기에) · `bake-rocktex.py`(배포 자리일 때).
+  * 손 배치(다리 · 지면 질감 `bake-terrain-tex.py`): `cp` 뒤 `python3 scripts/webp_twins.py public/assets/<무리>`.
+  * Blender 번들 파이썬엔 PIL 이 없을 수 있다 → `webp_twins.run()` 이 시스템 `python3`(`WEBP_PY` 로 바꿈)로 넘긴다 · 못 쓰면 굽기가 **멈춘다**.
+* 잠금: 쌍둥이는 png 와 **같은 칸**(어간)을 쓴다 — `asset-lock.js --check` 는 둘 다 그 값에 대고, `--write` 는 둘이 다르면 **표를 안 쓰고 멈춘다**(png 만 새로 굽고 쌍둥이를 안 다시 쓴 판 · 돌연변이로 쟀다). `test-icons ⑧` 이 짝 전수 · 쌍둥이 화소를 문다.
+* ⚠T303: 완전투명 아래 RGB 는 webp 인코더가 고쳐 쓴다 — 정규화하지 않은 자로 재면 다르다. 잠금 자는 정규화하므로 같다.
+
 ### 겨울이 보인다 — 지면 적설 색 · 활엽 철 판 18장(가을 잎 8 · 빈 가지 10) · 배지 ℃ [T487 2026-09-28]
 
 * **손잡이 하나** `T487_SNOW`(서버 · 기본 끔) — 켜면 날씨 스냅에 `snow` 칸(0..1 · 정본 `server/snow.js` · `인계/K-달력온도.md` 3-눈 절)이 생기고,

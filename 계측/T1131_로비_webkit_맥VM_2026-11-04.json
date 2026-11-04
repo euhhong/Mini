@@ -1,0 +1,881 @@
+{
+ "at": "2026-11-03T18:00:56.121Z",
+ "browser": "webkit",
+ "throttle": false,
+ "persistent": true,
+ "runs": 3,
+ "off": {
+  "root": "/tmp/s3wk/main",
+  "env": {}
+ },
+ "names": [
+  "main",
+  "켬"
+ ],
+ "rows": [
+  {
+   "i": 1,
+   "knob": "main",
+   "first": {
+    "304": 0,
+    "fcp": 241,
+    "dcl": 144,
+    "load": 207,
+    "zone": null,
+    "cards": null,
+    "req": 322,
+    "netReq": 321,
+    "bytes": 18299016,
+    "lobbyReq": 322,
+    "lobbyBytes": 18299016,
+    "game": {
+     "n": 276,
+     "net": 276,
+     "n304": 0,
+     "bytes": 17578930,
+     "png": 182,
+     "webp": 88,
+     "pinned": 0
+    },
+    "gimg": {
+     "open": true,
+     "why": "시작 화면 정보 없음",
+     "at": 280,
+     "queued": 0,
+     "lazy": true
+    },
+    "srv": {
+     "game": {
+      "200": 276
+     },
+     "other": {
+      "200": 45,
+      "404": 1
+     },
+     "gameImm": 0
+    },
+    "by": {
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 12991
+     },
+     ".js": {
+      "n": 40,
+      "net": 39,
+      "tx": 655566
+     },
+     "(없음)": {
+      "n": 3,
+      "net": 3,
+      "tx": 1658
+     },
+     ".json": {
+      "n": 7,
+      "net": 7,
+      "tx": 341145
+     },
+     ".png": {
+      "n": 182,
+      "net": 182,
+      "tx": 12444196
+     },
+     ".webp": {
+      "n": 88,
+      "net": 88,
+      "tx": 4833744
+     }
+    }
+   },
+   "second": {
+    "304": 0,
+    "fcp": 229,
+    "dcl": 82,
+    "load": 127,
+    "zone": null,
+    "cards": null,
+    "req": 322,
+    "netReq": 282,
+    "bytes": 85359,
+    "lobbyReq": 322,
+    "lobbyBytes": 85359,
+    "game": {
+     "n": 276,
+     "net": 276,
+     "n304": 0,
+     "bytes": 82800,
+     "png": 182,
+     "webp": 88,
+     "pinned": 0
+    },
+    "gimg": {
+     "open": true,
+     "why": "시작 화면 정보 없음",
+     "at": 135,
+     "queued": 0,
+     "lazy": true
+    },
+    "srv": {
+     "game": {
+      "304": 276
+     },
+     "other": {
+      "200": 3,
+      "304": 3,
+      "404": 1
+     },
+     "gameImm": 0
+    },
+    "by": {
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 300
+     },
+     ".js": {
+      "n": 40,
+      "net": 0,
+      "tx": 0
+     },
+     "(없음)": {
+      "n": 3,
+      "net": 3,
+      "tx": 1659
+     },
+     ".json": {
+      "n": 7,
+      "net": 7,
+      "tx": 2100
+     },
+     ".png": {
+      "n": 182,
+      "net": 182,
+      "tx": 54600
+     },
+     ".webp": {
+      "n": 88,
+      "net": 88,
+      "tx": 26400
+     }
+    }
+   }
+  },
+  {
+   "i": 1,
+   "knob": "켬",
+   "first": {
+    "304": 0,
+    "fcp": 290,
+    "dcl": 82,
+    "load": 131,
+    "zone": null,
+    "cards": null,
+    "req": 323,
+    "netReq": 322,
+    "bytes": 12940635,
+    "lobbyReq": 323,
+    "lobbyBytes": 12940635,
+    "game": {
+     "n": 276,
+     "net": 276,
+     "n304": 0,
+     "bytes": 12208805,
+     "png": 0,
+     "webp": 270,
+     "pinned": 276
+    },
+    "gimg": {
+     "open": true,
+     "why": "시작 화면 정보 없음",
+     "at": 148,
+     "queued": 0,
+     "lazy": true,
+     "map": "ok",
+     "mapN": 654,
+     "mapAt": 148
+    },
+    "srv": {
+     "game": {
+      "200": 276
+     },
+     "other": {
+      "200": 46,
+      "404": 1
+     },
+     "gameImm": 276
+    },
+    "by": {
+     ".js": {
+      "n": 40,
+      "net": 39,
+      "tx": 656681
+     },
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 12991
+     },
+     "(없음)": {
+      "n": 3,
+      "net": 3,
+      "tx": 1700
+     },
+     ".json": {
+      "n": 8,
+      "net": 8,
+      "tx": 351922
+     },
+     ".webp": {
+      "n": 270,
+      "net": 270,
+      "tx": 11907624
+     }
+    }
+   },
+   "second": {
+    "304": 0,
+    "fcp": 214,
+    "dcl": 74,
+    "load": 119,
+    "zone": null,
+    "cards": null,
+    "req": 323,
+    "netReq": 70,
+    "bytes": 21800,
+    "lobbyReq": 323,
+    "lobbyBytes": 21800,
+    "game": {
+     "n": 276,
+     "net": 64,
+     "n304": 0,
+     "bytes": 19200,
+     "png": 0,
+     "webp": 270,
+     "pinned": 276
+    },
+    "gimg": {
+     "open": true,
+     "why": "시작 화면 정보 없음",
+     "at": 414,
+     "queued": 0,
+     "lazy": true,
+     "map": "ok",
+     "mapN": 654,
+     "mapAt": 414
+    },
+    "srv": {
+     "game": {},
+     "other": {
+      "200": 3,
+      "304": 3,
+      "404": 1
+     },
+     "gameImm": 0
+    },
+    "by": {
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 300
+     },
+     ".js": {
+      "n": 40,
+      "net": 0,
+      "tx": 0
+     },
+     "(없음)": {
+      "n": 3,
+      "net": 3,
+      "tx": 1700
+     },
+     ".json": {
+      "n": 8,
+      "net": 1,
+      "tx": 300
+     },
+     ".webp": {
+      "n": 270,
+      "net": 64,
+      "tx": 19200
+     }
+    }
+   }
+  },
+  {
+   "i": 2,
+   "knob": "main",
+   "first": {
+    "304": 0,
+    "fcp": 256,
+    "dcl": 128,
+    "load": 130,
+    "zone": null,
+    "cards": null,
+    "req": 322,
+    "netReq": 321,
+    "bytes": 18299019,
+    "lobbyReq": 322,
+    "lobbyBytes": 18299019,
+    "game": {
+     "n": 276,
+     "net": 276,
+     "n304": 0,
+     "bytes": 17578930,
+     "png": 182,
+     "webp": 88,
+     "pinned": 0
+    },
+    "gimg": {
+     "open": true,
+     "why": "시작 화면 정보 없음",
+     "at": 140,
+     "queued": 0,
+     "lazy": true
+    },
+    "srv": {
+     "game": {
+      "200": 276
+     },
+     "other": {
+      "200": 45,
+      "404": 1
+     },
+     "gameImm": 0
+    },
+    "by": {
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 12991
+     },
+     ".js": {
+      "n": 40,
+      "net": 39,
+      "tx": 655566
+     },
+     "(없음)": {
+      "n": 3,
+      "net": 3,
+      "tx": 1661
+     },
+     ".json": {
+      "n": 7,
+      "net": 7,
+      "tx": 341145
+     },
+     ".png": {
+      "n": 182,
+      "net": 182,
+      "tx": 12444196
+     },
+     ".webp": {
+      "n": 88,
+      "net": 88,
+      "tx": 4833744
+     }
+    }
+   },
+   "second": {
+    "304": 0,
+    "fcp": 276,
+    "dcl": 72,
+    "load": 117,
+    "zone": null,
+    "cards": null,
+    "req": 322,
+    "netReq": 282,
+    "bytes": 85361,
+    "lobbyReq": 322,
+    "lobbyBytes": 85361,
+    "game": {
+     "n": 276,
+     "net": 276,
+     "n304": 0,
+     "bytes": 82800,
+     "png": 182,
+     "webp": 88,
+     "pinned": 0
+    },
+    "gimg": {
+     "open": true,
+     "why": "시작 화면 정보 없음",
+     "at": 125,
+     "queued": 0,
+     "lazy": true
+    },
+    "srv": {
+     "game": {
+      "304": 276
+     },
+     "other": {
+      "200": 3,
+      "304": 3,
+      "404": 1
+     },
+     "gameImm": 0
+    },
+    "by": {
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 300
+     },
+     ".js": {
+      "n": 40,
+      "net": 0,
+      "tx": 0
+     },
+     "(없음)": {
+      "n": 3,
+      "net": 3,
+      "tx": 1661
+     },
+     ".json": {
+      "n": 7,
+      "net": 7,
+      "tx": 2100
+     },
+     ".png": {
+      "n": 182,
+      "net": 182,
+      "tx": 54600
+     },
+     ".webp": {
+      "n": 88,
+      "net": 88,
+      "tx": 26400
+     }
+    }
+   }
+  },
+  {
+   "i": 2,
+   "knob": "켬",
+   "first": {
+    "304": 0,
+    "fcp": 235,
+    "dcl": 88,
+    "load": 137,
+    "zone": null,
+    "cards": null,
+    "req": 323,
+    "netReq": 322,
+    "bytes": 12940636,
+    "lobbyReq": 323,
+    "lobbyBytes": 12940636,
+    "game": {
+     "n": 276,
+     "net": 276,
+     "n304": 0,
+     "bytes": 12208805,
+     "png": 0,
+     "webp": 270,
+     "pinned": 276
+    },
+    "gimg": {
+     "open": true,
+     "why": "시작 화면 정보 없음",
+     "at": 145,
+     "queued": 0,
+     "lazy": true,
+     "map": "ok",
+     "mapN": 654,
+     "mapAt": 145
+    },
+    "srv": {
+     "game": {
+      "200": 276
+     },
+     "other": {
+      "200": 46,
+      "404": 1
+     },
+     "gameImm": 276
+    },
+    "by": {
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 12991
+     },
+     ".js": {
+      "n": 40,
+      "net": 39,
+      "tx": 656681
+     },
+     "(없음)": {
+      "n": 3,
+      "net": 3,
+      "tx": 1701
+     },
+     ".json": {
+      "n": 8,
+      "net": 8,
+      "tx": 351922
+     },
+     ".webp": {
+      "n": 270,
+      "net": 270,
+      "tx": 11907624
+     }
+    }
+   },
+   "second": {
+    "304": 0,
+    "fcp": 277,
+    "dcl": 73,
+    "load": 119,
+    "zone": null,
+    "cards": null,
+    "req": 323,
+    "netReq": 70,
+    "bytes": 21801,
+    "lobbyReq": 323,
+    "lobbyBytes": 21801,
+    "game": {
+     "n": 276,
+     "net": 64,
+     "n304": 0,
+     "bytes": 19200,
+     "png": 0,
+     "webp": 270,
+     "pinned": 276
+    },
+    "gimg": {
+     "open": true,
+     "why": "시작 화면 정보 없음",
+     "at": 128,
+     "queued": 0,
+     "lazy": true,
+     "map": "ok",
+     "mapN": 654,
+     "mapAt": 128
+    },
+    "srv": {
+     "game": {},
+     "other": {
+      "200": 3,
+      "304": 3,
+      "404": 1
+     },
+     "gameImm": 0
+    },
+    "by": {
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 300
+     },
+     ".js": {
+      "n": 40,
+      "net": 0,
+      "tx": 0
+     },
+     "(없음)": {
+      "n": 3,
+      "net": 3,
+      "tx": 1701
+     },
+     ".json": {
+      "n": 8,
+      "net": 1,
+      "tx": 300
+     },
+     ".webp": {
+      "n": 270,
+      "net": 64,
+      "tx": 19200
+     }
+    }
+   }
+  },
+  {
+   "i": 3,
+   "knob": "main",
+   "first": {
+    "304": 0,
+    "fcp": 236,
+    "dcl": 88,
+    "load": 136,
+    "zone": null,
+    "cards": null,
+    "req": 322,
+    "netReq": 321,
+    "bytes": 18299018,
+    "lobbyReq": 322,
+    "lobbyBytes": 18299018,
+    "game": {
+     "n": 276,
+     "net": 276,
+     "n304": 0,
+     "bytes": 17578930,
+     "png": 182,
+     "webp": 88,
+     "pinned": 0
+    },
+    "gimg": {
+     "open": true,
+     "why": "시작 화면 정보 없음",
+     "at": 434,
+     "queued": 0,
+     "lazy": true
+    },
+    "srv": {
+     "game": {
+      "200": 276
+     },
+     "other": {
+      "200": 45,
+      "404": 1
+     },
+     "gameImm": 0
+    },
+    "by": {
+     ".js": {
+      "n": 40,
+      "net": 39,
+      "tx": 655566
+     },
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 12991
+     },
+     "(없음)": {
+      "n": 3,
+      "net": 3,
+      "tx": 1660
+     },
+     ".json": {
+      "n": 7,
+      "net": 7,
+      "tx": 341145
+     },
+     ".png": {
+      "n": 182,
+      "net": 182,
+      "tx": 12444196
+     },
+     ".webp": {
+      "n": 88,
+      "net": 88,
+      "tx": 4833744
+     }
+    }
+   },
+   "second": {
+    "304": 0,
+    "fcp": 214,
+    "dcl": 75,
+    "load": 120,
+    "zone": null,
+    "cards": null,
+    "req": 322,
+    "netReq": 282,
+    "bytes": 85361,
+    "lobbyReq": 322,
+    "lobbyBytes": 85361,
+    "game": {
+     "n": 276,
+     "net": 276,
+     "n304": 0,
+     "bytes": 82800,
+     "png": 182,
+     "webp": 88,
+     "pinned": 0
+    },
+    "gimg": {
+     "open": true,
+     "why": "시작 화면 정보 없음",
+     "at": 413,
+     "queued": 0,
+     "lazy": true
+    },
+    "srv": {
+     "game": {
+      "304": 276
+     },
+     "other": {
+      "200": 3,
+      "304": 3,
+      "404": 1
+     },
+     "gameImm": 0
+    },
+    "by": {
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 300
+     },
+     ".js": {
+      "n": 40,
+      "net": 0,
+      "tx": 0
+     },
+     "(없음)": {
+      "n": 3,
+      "net": 3,
+      "tx": 1661
+     },
+     ".json": {
+      "n": 7,
+      "net": 7,
+      "tx": 2100
+     },
+     ".png": {
+      "n": 182,
+      "net": 182,
+      "tx": 54600
+     },
+     ".webp": {
+      "n": 88,
+      "net": 88,
+      "tx": 26400
+     }
+    }
+   }
+  },
+  {
+   "i": 3,
+   "knob": "켬",
+   "first": {
+    "304": 0,
+    "fcp": 308,
+    "dcl": 81,
+    "load": 130,
+    "zone": null,
+    "cards": null,
+    "req": 323,
+    "netReq": 322,
+    "bytes": 12940635,
+    "lobbyReq": 323,
+    "lobbyBytes": 12940635,
+    "game": {
+     "n": 276,
+     "net": 276,
+     "n304": 0,
+     "bytes": 12208805,
+     "png": 0,
+     "webp": 270,
+     "pinned": 276
+    },
+    "gimg": {
+     "open": true,
+     "why": "시작 화면 정보 없음",
+     "at": 139,
+     "queued": 0,
+     "lazy": true,
+     "map": "ok",
+     "mapN": 654,
+     "mapAt": 139
+    },
+    "srv": {
+     "game": {
+      "200": 276
+     },
+     "other": {
+      "200": 46,
+      "404": 1
+     },
+     "gameImm": 276
+    },
+    "by": {
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 12991
+     },
+     ".js": {
+      "n": 40,
+      "net": 39,
+      "tx": 656681
+     },
+     "(없음)": {
+      "n": 3,
+      "net": 3,
+      "tx": 1700
+     },
+     ".json": {
+      "n": 8,
+      "net": 8,
+      "tx": 351922
+     },
+     ".webp": {
+      "n": 270,
+      "net": 270,
+      "tx": 11907624
+     }
+    }
+   },
+   "second": {
+    "304": 0,
+    "fcp": 215,
+    "dcl": 73,
+    "load": 119,
+    "zone": null,
+    "cards": null,
+    "req": 323,
+    "netReq": 70,
+    "bytes": 21801,
+    "lobbyReq": 323,
+    "lobbyBytes": 21801,
+    "game": {
+     "n": 276,
+     "net": 64,
+     "n304": 0,
+     "bytes": 19200,
+     "png": 0,
+     "webp": 270,
+     "pinned": 276
+    },
+    "gimg": {
+     "open": true,
+     "why": "시작 화면 정보 없음",
+     "at": 413,
+     "queued": 0,
+     "lazy": true,
+     "map": "ok",
+     "mapN": 654,
+     "mapAt": 413
+    },
+    "srv": {
+     "game": {},
+     "other": {
+      "200": 3,
+      "304": 3,
+      "404": 1
+     },
+     "gameImm": 0
+    },
+    "by": {
+     ".css": {
+      "n": 1,
+      "net": 1,
+      "tx": 300
+     },
+     ".js": {
+      "n": 40,
+      "net": 0,
+      "tx": 0
+     },
+     "(없음)": {
+      "n": 3,
+      "net": 3,
+      "tx": 1701
+     },
+     ".json": {
+      "n": 8,
+      "net": 1,
+      "tx": 300
+     },
+     ".webp": {
+      "n": 270,
+      "net": 64,
+      "tx": 19200
+     }
+    }
+   }
+  }
+ ]
+}

@@ -877,7 +877,9 @@ function diffCountNoEnts(a, b, ents) {
         // ── ★[T178] 심은 나무의 판 — 화면에게 묻는다(T148-B ⓐ 문법) ────────────────
         {
           const sapWant = Object.values(TBL2).map((e) => e && e.sapling).filter(Boolean);
-          const sapGot = sapWant.filter((n) => [...GOT].some((u) => u.endsWith('/assets/trees/' + n + '.png')));
+          // ★[T1131] 주소는 central 그림 매니페스트가 정한다(켬 = 같은 화소 webp 쌍둥이 + `?v=<내용 sha1 앞 10자>` · 끔 = 종전 png) — 어간으로 댄다
+          const _stemOf = (u) => { const m = /\/assets\/trees\/([^/?#]+)\.(png|webp)(?:[?#]|$)/.exec(u); return m ? m[1] : null; };
+          const sapGot = sapWant.filter((n) => [...GOT].some((u) => _stemOf(u) === n));
           ok(sapGot.length === sapWant.length,
             `★★심기⑤ 화면이 **표가 댄 묘목 그림을 전부 받아 갔다** — ${sapGot.length}/${sapWant.length}장`
             + ` (소스 문자열이 아니라 네트워크가 증인 · \`sap_oak\` ${sapGot.includes('sap_oak') ? '○' : '✗'})`);
