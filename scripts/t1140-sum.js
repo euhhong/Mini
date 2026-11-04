@@ -20,7 +20,7 @@ const { execFileSync } = require('child_process');
 const _src = {}; const srcOf = (ref) => _src[ref] || (_src[ref] = execFileSync('git', ['show', `${ref}:server/zone.js`], { cwd: path.join(__dirname, '..'), encoding: 'utf8', maxBuffer: 1 << 28 }).split('\n'));
 function hotLines(ref) {
   const L = srcOf(ref), find = (fn, pre) => { const i = L.findIndex((x) => x.startsWith(`function ${fn}(`)); if (i < 0) return []; for (let j = i; j < Math.min(L.length, i + 260); j++) if (L[j].startsWith(pre)) return [j + 1]; return []; };
-  return { stuck: [...find('detectStuck', '      && (!npc.path || npc.pathIndex >= '), ...find('_t1140Detect', '      && (!npc.path || npc.pathIndex >= ')],
+  return { stuck: [...find('detectStuck', '      && (!npc.path || npc.pathIndex >= '), ...find('_t1140Detect', '      && (!npc.path || npc.pathIndex >= '), ...find('_t1145Detect', '      && (!npc.path || npc.pathIndex >= ')],   // ★[T1145] 켬이면 `_t1145Detect`
     gate: find('npcStep', '  if (!(T670_SKIP_IDLE && !npc.canadiaVillage'), arrive: find('npcStep', "    if (npc.behavior === 'gather' && npc.gatherTarget)").length ? find('npcStep', "    if (npc.behavior === 'gather' && npc.gatherTarget)") : [] };
 }
 // 대조 = 손 안 댄 구간 합 · 비 = npcStep ÷ 대조(상자 흐름 보정)
@@ -37,7 +37,7 @@ for (const r of T.runs) {
     path: r3(u('computeNpcPath@zone.js')), astar: r3(u('findPath@pathfind.js')), stuck: r3(u('detectStuck@zone.js')),
     req: r3(ns ? L.stepUs * reqN / ns : 0),
     ...(() => { const H = hotLines(r.ref), S = new Map((L.selfAll || []).map(([ln, n, us]) => [ln, us])), sum = (a) => r3(a.reduce((t, ln) => t + (S.get(ln) || 0), 0));
-      return { lnStuck: r3(sum(H.stuck) + u('detectStuck@zone.js') + u('_t1140Detect@zone.js')), lnGate: sum(H.gate), lnArrive: sum(H.arrive), lines3: H }; })(),   // 막힘 = 인라인된 줄 + 안 인라인된 판의 부름(포함)
+      return { lnStuck: r3(sum(H.stuck) + u('detectStuck@zone.js') + u('_t1140Detect@zone.js') + u('_t1145Detect@zone.js')), lnGate: sum(H.gate), lnArrive: sum(H.arrive), lines3: H }; })(),   // 막힘 = 인라인된 줄 + 안 인라인된 판의 부름(포함)
     p50: r.tq ? r3(r.tq.p50) : null, p95: r.tq ? r3(r.tq.p95) : null, p99: r.tq ? r3(r.tq.p99) : null, perfP50: r.tickP50, perfP95: r.tickP95,
     rem: L.stepUs != null ? r3(L.stepUs - 0.3) : null,
     ctrl: r3(CTRL.reduce((t, k) => t + (r.segUs[k] || 0), 0)), ratio: r3(L.stepUs / CTRL.reduce((t, k) => t + (r.segUs[k] || 0), 0)), samples: ns, chunks: L.chunks, reqBy: L.reqBy || null, groups: L.groups || null, selfTop: (L.selfTop || []).slice(0, 8) });

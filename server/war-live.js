@@ -53,6 +53,19 @@ const T995_CONTACT_REACH = _t995On('T995_CONTACT_REACH'), T995_DRY_STANDOFF = _t
 //   켬: 마중 한 걸음이 막힌 칸이면 축별로 미끄러지고 둘 다 막히면 그 자리(villages `_warWalkGroupTo` 의 원점 걸음 줄과 같은 꼴 · 술어 = 호스트 `blockedCell`). 새 수 0.
 //   같은 손잡이가 battle-core 클램프(갇힌 몸은 걸어 나온다)와 villages 포진점(막혔으면 설 수 있는 가장 가까운 칸)을 켠다.
 const T1019_UNTRAP = typeof process !== 'undefined' && !!process.env && process.env.T1019_UNTRAP !== '0';   // ★[T1019 10-31] 켬 기본 후보 · 되돌림 `=0`
+// ★[T1145] 몸 x · y 열 정본(손잡이 `T1145_XY_COLS` · 끔 = 이 파일 무변 동작 — 아래 덮기 줄들이 안 열린다) — 병사 · 대형 병사의 x · y 쓰기는 몸에 쓴다 ⇒ 켬이면
+//   묶은 뒤 같은 칸에 **같은 읽기 식 · 같은 쓰기 식**의 접근자를 한 번 더 덮어 쓰기만 쓰기 길(`server/body-cols.js` `wx` · `wy` — 열 · 몸 칸)로 보낸다(종전 줄 글자 무변 · 브라우저엔 `require` 가 없어 늘 끔).
+const _BC = (typeof module !== 'undefined' && module.exports && typeof require === 'function') ? require('./body-cols.js') : null;
+const T1145_XY_COLS = !!(_BC && _BC.ON);
+function _t1145Bind(o, p, k, m) {   // 읽기 = 종전 식(`p.x / k` · `/ m`) · 쓰기 = 종전 식의 수를 쓰기 길로(`v * k` · `v * m * k` — 같은 연산 · 같은 차례)
+  if (m === 1) {
+    Object.defineProperty(o, 'x', { get() { return p.x / k; }, set(v) { _BC.wx(p, v * k); }, enumerable: true, configurable: true });
+    Object.defineProperty(o, 'y', { get() { return p.y / k; }, set(v) { _BC.wy(p, v * k); }, enumerable: true, configurable: true });
+  } else {
+    Object.defineProperty(o, 'x', { get() { return p.x / k / m; }, set(v) { _BC.wx(p, v * m * k); }, enumerable: true, configurable: true });
+    Object.defineProperty(o, 'y', { get() { return p.y / k / m; }, set(v) { _BC.wy(p, v * m * k); }, enumerable: true, configurable: true });
+  }
+}
 const _T874 = (function () {
   class O { constructor(o) { return o; } }
   class B extends O {
@@ -66,8 +79,17 @@ const _T874 = (function () {
         gy: { get() { return this.#p.y / this.#k / this.#m; }, set(v) { this.#p.y = v * this.#m * this.#k; }, enumerable: true, configurable: true },
       };
     }
+    // ★[T1145] 켬 — 같은 넷(같은 읽기 식 · 쓰기 수)을 쓰기 길로(몸 사이 같은 함수 그대로 — T874 빠른 꼴 유지) · 끔이면 안 쓴다
+    static d1145() {
+      return {
+        ux: { get() { return this.#p.x / this.#k; }, set(v) { _BC.wx(this.#p, v * this.#k); }, enumerable: true, configurable: true },
+        uy: { get() { return this.#p.y / this.#k; }, set(v) { _BC.wy(this.#p, v * this.#k); }, enumerable: true, configurable: true },
+        gx: { get() { return this.#p.x / this.#k / this.#m; }, set(v) { _BC.wx(this.#p, v * this.#m * this.#k); }, enumerable: true, configurable: true },
+        gy: { get() { return this.#p.y / this.#k / this.#m; }, set(v) { _BC.wy(this.#p, v * this.#m * this.#k); }, enumerable: true, configurable: true },
+      };
+    }
   }
-  return { D: B.d(), stamp(o, p, k, m) { new B(o, p, k, m); return o; } };
+  return { D: T1145_XY_COLS ? B.d1145() : B.d(), stamp(o, p, k, m) { new B(o, p, k, m); return o; } };   // ★[T1145] 켬 = 쓰기 길 넷(끔 = 종전 넷)
 })();
 // battle-core spawn 리터럴 17칸 + addUnits 가 다는 칸(품질 `atk` · `agent`)만 아는 꼴이다 — 그 밖이면 null(종전 길).
 const _T874_UK = 'id,side,type,x,y,hp,maxHp,shp,shMax,tgt,st,cd,face,_rt,mrl,routing,form';
@@ -336,6 +358,7 @@ function createWarLive(opts) {
       Object.defineProperty(u, 'x', { get() { return p.x / PX_PER_M; }, set(v) { p.x = v * PX_PER_M; }, enumerable: true, configurable: true });
       Object.defineProperty(u, 'y', { get() { return p.y / PX_PER_M; }, set(v) { p.y = v * PX_PER_M; }, enumerable: true, configurable: true });
     }
+    if (T1145_XY_COLS && !uf) _t1145Bind(u, p, PX_PER_M, 1);   // ★[T1145] 켬 · 종전 갈래 — 같은 식 · 쓰기만 쓰기 길로(빠른 꼴은 위 `_T874.D` 가 이미 쓰기 길 · 끔 = 무동작)
     u.face = side === 'A' ? (f.w._heading || 0) : (f.w._heading || 0) + Math.PI;
     u.ctl = true;            // 처음엔 대형이 몬다
     u.gu = gu; gu.bu = u;    // 대형 병사 ↔ 전투 병사(같은 몸 — 위치는 p 하나)
@@ -349,6 +372,11 @@ function createWarLive(opts) {
     Object.defineProperty(gu, 'x', { get() { return p.x / PX_PER_M / M_PER_CELL; }, set(v) { p.x = v * M_PER_CELL * PX_PER_M; }, enumerable: true, configurable: true });
     Object.defineProperty(gu, 'y', { get() { return p.y / PX_PER_M / M_PER_CELL; }, set(v) { p.y = v * M_PER_CELL * PX_PER_M; }, enumerable: true, configurable: true });
     gu._bound = true;
+  }
+  if (T1145_XY_COLS) {   // ★[T1145] 켬 — 종전 갈래로 묶였으면 같은 식의 접근자를 덮어 쓰기만 쓰기 길로(끔 = 이 덮기 무동작 · 위 글자 무변)
+    const _b0 = bindGroupUnit;
+    bindGroupUnit = function (gu, p) { const was = !gu || !p || gu._bound; _b0(gu, p);
+      if (!was && gu._bound && Object.getOwnPropertyDescriptor(gu, 'x').set !== _T874.D.gx.set) _t1145Bind(gu, p, PX_PER_M, M_PER_CELL); };   // 빠른 꼴(T874)은 이미 쓰기 길
   }
   function setSideCtl(f, side, on) { for (const u of f.ctx.units) if (u.side === side && u.hp > 0) { u.ctl = !!on; if (on) { u.st = 'form'; u.tgt = null; } } }
   function aliveOf(f, side) { let a = 0, fr = 0; for (const u of f.ctx.units) { if (u.side !== side || u.hp <= 0) continue; a++; if (!u.routing) fr++; } return { alive: a, fighting: fr }; }

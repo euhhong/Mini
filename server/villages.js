@@ -141,6 +141,8 @@ const { seedRand: _t340Rng, pidHash: _pidHash, seedOf: _seedOf, makeStream: _mak
 //   식은 `village-kin.js` 의 `ON` 하나(사본 0 — T785 땐 같은 식 두 벌이었다).
 const VillageKin = require('./village-kin');
 const T785 = VillageKin.ON;
+const BC = require('./body-cols');   // ★[T1145] 몸 x · y 열 정본(손잡이 `T1145_XY_COLS` · 끔 = 아래 쓰기 자리가 종전 글자 그대로) — 이 파일의 몸 x · y 쓰기 자리 전부가 켬이면 쓰기 길(`BC.w`)로
+const T1145_XY_COLS = BC.ON;
 const TB = require('./tick-budget');   // ★[T687] 한 틱 공용 예산(손잡이 `T687_SHARED_BUDGET` · 끔 = 문마다 제 예산 그대로)
 //   ★[T687 ②] 같은 손잡이로 하루 마감 통짜를 더 잘게 — 생활층 한 마을의 갈래 경계 쉼표 · 사냥 밴드 짓기 뒤 · 인구 재동기 마을 하나씩(차례 그대로 · 끔 = 종전 글자)
 const T687_ON = TB.ON;
@@ -1156,7 +1158,7 @@ function _t747Restore() {
       R.bodies++;
       if (S._bag && T1133_BAG) { const _G = _t748G(); const n = _G ? _G.bagLoad(b, S._bag) : 0; if (n) { _t1133Stat.restored++; _t1133Stat.restoredRecs += n; if (S._packOf != null) b._warPackOf = S._packOf; } }   // ★[T1133] 같은 자리 몸에 짐 줄 · 표식(끄면 칸을 안 읽는다)
       if (S.simJob != null && b.simJob !== S.simJob) { R.jobMiss++; b.simJob = S.simJob; }   // 같은 자리 = 같은 몸(직업도 그 몸의 것)
-      if (Number.isFinite(S.x) && Number.isFinite(S.y)) { b.x = S.x; b.y = S.y; b.targetX = S.x; b.targetY = S.y; b.vx = 0; b.vy = 0; R.moved++; }
+      if (Number.isFinite(S.x) && Number.isFinite(S.y)) { if (T1145_XY_COLS) BC.w(b, S.x, S.y); else { b.x = S.x; b.y = S.y; } b.targetX = S.x; b.targetY = S.y; b.vx = 0; b.vy = 0; R.moved++; }
       if (Number.isFinite(S.hp) && S.hp > 0) { _setHp(b, Math.min(S.hp, b.maxHp || S.hp), 'restore'); if (b.hp < (b.maxHp || 100)) R.hpLow++; }   // ★[T942] 문으로
       if (S._rest != null) b._rest = S._rest;
       if (S.inventory && typeof S.inventory === 'object') { b.inventory = S.inventory; let any = false; for (const k in S.inventory) if (S.inventory[k] > 0 && k !== 'seed_berry') any = true; if (any) R.hands++; }
@@ -1565,7 +1567,7 @@ function tickBodyExits(now) {
     const next = caravanPointAt(r, r.prog + step);
     r.prog += step;
     p.vx = (next.x - p.x) / dtMs * 1000; p.vy = (next.y - p.y) / dtMs * 1000;
-    p.x = next.x; p.y = next.y;
+    if (T1145_XY_COLS) BC.w(p, next.x, next.y); else { p.x = next.x; p.y = next.y; }   // ★[T1145] 켬 = 쓰기 길
   }
 }
 function bodyExitStats() {
@@ -4174,11 +4176,11 @@ function _t775Put(body, p, path, at) {
   body.prog = at;
   const players = state.deps.players;
   const pt = caravanPointAt(path, at, { segIdx: 0 });
-  if (p) { p.x = pt.x; p.y = pt.y; p.vx = 0; p.vy = 0; }
+  if (p) { if (T1145_XY_COLS) BC.w(p, pt.x, pt.y); else { p.x = pt.x; p.y = pt.y; } p.vx = 0; p.vy = 0; }   // ★[T1145] 켬 = 쓰기 길
   if (body.escorts) for (let i = 0; i < body.escorts.length; i++) {
     const e = players.get(body.escorts[i].pid); if (!e) continue;
     const q = caravanPointAt(path, Math.max(0, at - 20 * (i + 1)), { segIdx: 0 });
-    e.x = q.x; e.y = q.y; e.vx = 0; e.vy = 0;
+    if (T1145_XY_COLS) BC.w(e, q.x, q.y); else { e.x = q.x; e.y = q.y; } e.vx = 0; e.vy = 0;
   }
 }
 // ★★[T1034 2026-11-01 · T1025 §0 회부 5 · 재민 캐논 "보이는 것 = 일어난 것"] **캐러밴 몸 칸을 메타 행에 싣는다** — 손잡이 `T1034_CARAVAN_KEEP`(켬 기본 후보 · 되돌림 `=0`).
@@ -4393,7 +4395,7 @@ function spawnCaravanBody(c, now, budgetMs) {
   body.escorts = N.escorts;   // ★[convoy 물리 행군] 호위 전사 실체(위 `_caravanNpcs` 가 상인 뒤에 세웠다 — 주석은 그 자리에)
   if (T661_ON) _t661Anchor(body, pts, body.phase);   // ★[T661] 장부는 오늘(econ 날)부터 — 세운 날은 안 움직인다
   if (T775_RESUME && T661_ON && !_t707Mk) _t775Place(body, c, outbound, p, now);   // ★[T775] 오늘 앞에 시작한 구간 = 장부 자리에 선다(끔 = 이 줄 무동작)
-  if (_t707Mk) { const vil = state.byEcon.get(c.to), rec = vil && vil._mkt; body.phase = 'linger'; body.lingerUntil = (rec && rec.cars.has(c.id)) ? rec.end : now + state.dayMs * CARAVAN_LINGER_DAY_FRAC; p.x = pts[0].x; p.y = pts[0].y; _t707Stat.spawnLinger++; }
+  if (_t707Mk) { const vil = state.byEcon.get(c.to), rec = vil && vil._mkt; body.phase = 'linger'; body.lingerUntil = (rec && rec.cars.has(c.id)) ? rec.end : now + state.dayMs * CARAVAN_LINGER_DAY_FRAC; if (T1145_XY_COLS) BC.w(p, pts[0].x, pts[0].y); else { p.x = pts[0].x; p.y = pts[0].y; } _t707Stat.spawnLinger++; }
   //   ★[T782 · T775 갈래] 장 마당 몸인데 **장이 이미 끝났다**(다시 뜬 판 · 늦게 선 몸 — `lingerUntil` ≤ 지금) — 종전엔 마당(길 머리)에 섰다가 다음 틱에 귀환을 열어
   //     길 전체를 따라잡았다(끔 = 명목 ×4 질주 · T772 켬 = 몸 걸음이라 집 도착에 길 위 = 늦음). 귀환을 여기서 열고 **장부 자리**(`_t775Place` · `_t661Vis` 같은 식)에 세운다(T775 계약 그대로 · 새 수 0).
   if (T775_RESUME && T661_ON && _t707Mk && Number.isFinite(body.lingerUntil) && body.lingerUntil <= now) { startReturnLeg(body, now); _t775Place(body, c, false, p, now); _probe.t782MktLate = (_probe.t782MktLate || 0) + 1; }
@@ -4628,7 +4630,7 @@ function _t661Day(body, now) {
     const p = state.deps.players.get(body.pid);
     if (p) {
       body.prog = T.L; caravanPointAt(body, T.L);
-      p.x = blockedAt.x; p.y = blockedAt.y;
+      if (T1145_XY_COLS) BC.w(p, blockedAt.x, blockedAt.y); else { p.x = blockedAt.x; p.y = blockedAt.y; }   // ★[T1145] 켬 = 쓰기 길
       const before = body.pts;
       caravanBlockedResponse(body, p, now);
       if (body.pts !== before && body._t661 === T) _t661Anchor(body, body.pts, body.phase === 'inbound' ? 'inbound' : 'outbound');   // 재경로(같은 구간) · 고립 귀환(돌아서는 구간)
@@ -4701,7 +4703,7 @@ function tickCaravanBodies(now) {
       if (isPositionActive && isPositionActive(p.x, p.y) && isBlockedByWall && isBlockedByWall(next.x, next.y, p.x, p.y, 0)) { p.vx = 0; p.vy = 0; continue; }   // 벽 앞에선 선다(재경로는 장부가)
       body.prog += step;
       p.vx = (next.x - p.x) / dtMs * 1000; p.vy = (next.y - p.y) / dtMs * 1000;
-      p.x = next.x; p.y = next.y;
+      if (T1145_XY_COLS) BC.w(p, next.x, next.y); else { p.x = next.x; p.y = next.y; }   // ★[T1145] 켬 = 쓰기 길
       _escortMarch(body, dtMs, players);
       continue;
     }
@@ -4725,7 +4727,7 @@ function tickCaravanBodies(now) {
     }
     body.prog += step;
     p.vx = (next.x - p.x) / dtMs * 1000; p.vy = (next.y - p.y) / dtMs * 1000; // 걷기 모션용(클라 facing)
-    p.x = next.x; p.y = next.y; // 경로가 위치의 진실 — 외부 이탈(부활 등)도 다음 틱에 스냅 복귀
+    if (T1145_XY_COLS) BC.w(p, next.x, next.y); else { p.x = next.x; p.y = next.y; } // ★[T1145] 켬 = 쓰기 길 · 경로가 위치의 진실 — 외부 이탈(부활 등)도 다음 틱에 스냅 복귀
     if (state.roads) state.roads.stampEntityPx(p, p.x, p.y);   // §16 답압(캐러밴 — 셀 변경 시만. 교역로가 길이 된다)
     _escortMarch(body, dtMs, players);   // ★[convoy] 호위 종대 갱신(상단 진행도 기준 후미 추종)
   }
@@ -4744,7 +4746,7 @@ function _escortMarch(body, dtMs, players) {
     if (ep.hp <= 0) { ep.vx = 0; ep.vy = 0; continue; }
     const tp = caravanPointAt(body, Math.max(0, body.prog - 20 * (i + 1)), e);
     ep.vx = (tp.x - ep.x) / dtMs * 1000; ep.vy = (tp.y - ep.y) / dtMs * 1000;   // 걷기 모션(클라 facing)
-    ep.x = tp.x; ep.y = tp.y;
+    if (T1145_XY_COLS) BC.w(ep, tp.x, tp.y); else { ep.x = tp.x; ep.y = tp.y; }   // ★[T1145] 켬 = 쓰기 길
     if (state.roads && !(T661_ON && body._t661)) state.roads.stampEntityPx(ep, ep.x, ep.y);   // ★[T661] 켬이면 호위 답압도 하루 경계 장부가(`_t661Stamp`) · §16 답압(★호위도 길을 밟는다 — 상인 동형. 대열 5명이면 답압 5배 = 교역로가 더 빨리 길이 됨)
   }
 }
@@ -4785,7 +4787,7 @@ function _caravanSyncOne(now, c, S, budgetMs) {
       // econ 도착 확정(매도 or 빈손 손절) — 실체는 종점 스냅 + 1게임시간 머묾 후 귀환(§5.5b 연출)
       const p = players.get(body.pid);
       const end = caravanPointAt(body, body.len);
-      if (p) { p.x = end.x; p.y = end.y; p.vx = 0; p.vy = 0; }
+      if (p) { if (T1145_XY_COLS) BC.w(p, end.x, end.y); else { p.x = end.x; p.y = end.y; } p.vx = 0; p.vy = 0; }   // ★[T1145] 켬 = 쓰기 길
       body.prog = body.len;
       body.phase = 'linger';
       body.lingerUntil = now + state.dayMs * CARAVAN_LINGER_DAY_FRAC;
@@ -4817,7 +4819,7 @@ function _caravanSyncOne(now, c, S, budgetMs) {
       else { despawnCaravanNpc(body); bodies.delete(c.id); S.removed++; return; } // 대상 마을 미상(방어) — 실체 생략, econ은 계속
       if (_t762End && body._t661.L < body._t661.path.len) { _t661Stamp(body, body._t661.L, body._t661.path.len); body._t661.L = body._t661.path.len; }   // ★[T762 ②] 옛 길 남은 구간 답압(집에 닿은 날 쓸기와 같은 꼴) — 길이 다 파인 뒤라 재진입 0
       setBodyPts(body, pts);
-      if (T661_ON && body._t661) { _t661Anchor(body, pts, 'outbound'); if (p) { p.x = pos.x; p.y = pos.y; } }   // ★[T661] 새 길에 장부를 다시 건다 · 몸은 장부 자리에서 다시 떠난다
+      if (T661_ON && body._t661) { _t661Anchor(body, pts, 'outbound'); if (p) { if (T1145_XY_COLS) BC.w(p, pos.x, pos.y); else { p.x = pos.x; p.y = pos.y; } } }   // ★[T661] 새 길에 장부를 다시 건다 · 몸은 장부 자리에서 다시 떠난다
       body.toV = c.to;
       const legDays = Math.max(1, c.arriveDay - world.day);
       body.departAt = now;
@@ -4954,8 +4956,8 @@ function _xzMakeBody(key, c, pts, phase, now, arriveAt, toV, who) {
   body.escorts = N.escorts;
   state.caravanBodies.set(key, body);
   //   spawnNpc 는 존 가장자리에서 안쪽으로 당겨 세운다(클레임 크기) — 길이 위치의 진실이라 첫 점으로 되돌린다(다음 틱 스냅과 같은 뜻 · 한 틱 앞당김).
-  N.p.x = pts[0].x; N.p.y = pts[0].y;
-  for (const e of N.escorts) { const E = state.deps.players.get(e.pid); if (E) { E.x = pts[0].x; E.y = pts[0].y; } }
+  if (T1145_XY_COLS) BC.w(N.p, pts[0].x, pts[0].y); else { N.p.x = pts[0].x; N.p.y = pts[0].y; }   // ★[T1145] 켬 = 쓰기 길(호위도)
+  for (const e of N.escorts) { const E = state.deps.players.get(e.pid); if (E) { if (T1145_XY_COLS) BC.w(E, pts[0].x, pts[0].y); else { E.x = pts[0].x; E.y = pts[0].y; } } }
   return body;
 }
 // 집 존 출발 — 스텁이 목적지인 캐러밴은 합친 길의 **제 존 몫**만 걷는다(경계 칸에 서는 날 = econ `_xzCross.day`).
@@ -12829,7 +12831,7 @@ function _t707Linger(body, c, p) {   // 상인 머묾 = 장 끝 · 남문 앞 �
   const vil = state.byEcon && state.byEcon.get(c.to), rec = vil && vil._mkt;
   if (rec && rec.cars.has(c.id)) body.lingerUntil = rec.end;
   const rp = (T661_ON && body._t661) ? body._t661.path.pts : _t661ReturnPts(body);
-  if (rp && rp.length) { setBodyPts(body, rp); if (p) { p.x = rp[0].x; p.y = rp[0].y; } }
+  if (rp && rp.length) { setBodyPts(body, rp); if (p) { if (T1145_XY_COLS) BC.w(p, rp[0].x, rp[0].y); else { p.x = rp[0].x; p.y = rp[0].y; } } }
   _t707Stat.linger++;
 }
 function _t707Walk(vil, npc, k) {   // 장 명부의 몸 — 제 자리로 걷고 선다(목표만 · 길은 존 걸음 · 사냥꾼은 두뇌 주도권을 내려놓는다 — `_lifeGoHome` 꼴)

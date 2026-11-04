@@ -50,6 +50,14 @@ const _ZONE_SH = _SEED.pidHash(process.env.ZONE_ID || 'hanbando');   // 존 신�
 // ★[2026-08-03e 배치 12 · 테스트 전용 손잡이] 기본 OFF. `E2E_GIVE=1` 일 때만 `__e2e_give` 분기가 산다(입력 핸들러 참조).
 const E2E_GIVE = (process.env.E2E_GIVE === '1');
 const Wildlife = require('./wildlife'); // §4-4 동물 AI 블록(마을실험실 이식) — 야생 5종 생태. ENABLE_WILDLIFE=0 → 완전 no-op
+// ★★[T1145 2026-11-04 · 손잡이 `T1145_XY_COLS`(기본 끔 · `'1'` 켬 · `verify` = 켬 + 틱마다 견줌 · 끔 = 아래 갈래가 한 번도 안 열린다 = 종전 글자 · 종전 값)]
+//   **몸 x · y 를 열 정본으로** — 정본 · 칸 · 쓰기 길은 `server/body-cols.js` 머리 주석. 이 파일 몫: 낳을 때 칸 받기(`spawnNpc`) · `players` 넣기 · 빼기에 칸 묶기 ·
+//   x · y 쓰기 자리 전부를 쓰기 길(`BC.w` · `wx` · `wy`)로 · 걸음 문의 뜨거운 읽기(걸음 커널 모으기 · 서 있는 몸 거름 · 활성 열 · 따라가기 · 막힘)를 열에서.
+//   거울(몸 x · y 칸)은 아직 안 옮긴 읽기 자리 몫으로 같은 수를 든다(설계 `설계/설계_T1145_몸열_정본.md`). 새 수 0 · 판정 0.
+const BC = require('./body-cols');
+const T1145_XY_COLS = BC.ON, _xyC = BC.C;
+function _xyX(p) { const s = p._t1145S; return s >= 0 ? _xyC.X[s] : p.x; }   // 열(칸이 없는 몸 = 사람 · 돌려준 몸은 몸 칸)
+function _xyY(p) { const s = p._t1145S; return s >= 0 ? _xyC.Y[s] : p.y; }
 // ★★[2026-08-26 재민 확정] `ENABLE_WILDLIFE=0` 의 뜻 = **적대 개체 전부 OFF**.
 //   왜 의미를 넓혔나: 종전엔 이 플래그가 `wildlife.js`(§4-4 생태 블록)만 껐고
 //   **레거시 `mobs`(늑대·자칼 무리)는 그대로 살아 있었다.** 그래서 `ENABLE_WILDLIFE=0` 으로
@@ -1312,6 +1320,11 @@ function _t774Put(i, p) {
 }
 function _t774Act(p, i) {
   const S = _spInc;
+  if (T1145_XY_COLS) {   // ★[T1145] 켬 — 같은 식 · x · y 는 열에서(끔 = 아래 종전 두 줄)
+    const px = _xyX(p), py = _xyY(p);
+    if (i < _t774N && S.ref[i] === p && _t774X[i] === px && _t774Y[i] === py && _t774Src === activeChunkKeys) { _t774Stat.hit++; return S.act[i]; }
+    _t774Stat.miss++; return isPositionActive(px, py);
+  }
   if (i < _t774N && S.ref[i] === p && _t774X[i] === p.x && _t774Y[i] === p.y && _t774Src === activeChunkKeys) { _t774Stat.hit++; return S.act[i]; }
   _t774Stat.miss++; return isPositionActive(p.x, p.y);
 }
@@ -1959,6 +1972,7 @@ function walkPerf(reset) {
               ejPerStep: _walk.steps ? +(_walk.ej / _walk.steps).toFixed(4) : 0,
               terrPerStep: _walk.steps ? +(_walk.terrQ / _walk.steps).toFixed(2) : 0,
               wallPerStep: _walk.steps ? +(_walk.wallQ / _walk.steps).toFixed(2) : 0 };
+  if (T1145_XY_COLS) o.xyc = BC.perf(reset);   // ★[T1145] 열 칸 수 · 받기 · 다시 쓰기 · 돌려주기 · 견줌(`verify`) — 끔 = 칸 없음(종전 바이트)
   if (_WW) { o.ww = { mode: T461_WALK_WASM, ticks: _wwStat.ticks, steps: _wwStat.steps, bad: _wwStat.bad, badTicks: _wwStat.badTicks, gateBad: _wwStat.gateBad, sample: _wwStat.sample.slice(), memMB: +(_WW.bytes() / 1048576).toFixed(2) };
     if (T672_WALK_CUT) { o.ww.t672 = { treeHit: _wwTC.hit, treeMiss: _wwTC.miss, treeBad: _wwTC.treeBad, still: _wwTC.still, stillBad: _wwTC.stillBad, k: _wwTC.k };   // ★[T672] 관측
       if (reset) { _wwTC.hit = 0; _wwTC.miss = 0; _wwTC.treeBad = 0; _wwTC.still = 0; _wwTC.stillBad = 0; } }
@@ -2415,6 +2429,11 @@ function getHardcodedTerrainForZone() {
 
 // === 상태 ===
 const players = new Map();      // pid -> { ws, x, y, vx, vy, name, inventory, handingOff }
+if (T1145_XY_COLS) BC.bindMap(players);   // ★[T1145] 빼면 칸을 돌려주고 · 돌려준 몸을 다시 넣으면 다시 받는다(끔 = 무동작)
+if (BC.VERIFY) {   // ★[T1145 견줌] 셈을 로그 한 줄로(60초마다 · 끝날 때 — T791 견줌과 같은 꼴 · 누계 · `/perf` 는 따로)
+  const _out = () => { const o = BC.perf(false); console.log(`[T1145 견줌] 틱 ${o.ticks} · 칸 견줌 ${o.checks} · 다름 ${o.bad} · 지도 밖 칸 ${o.stale} · 칸 없는 주민 ${o.noSlot} · 칸 ${o.n} · 산 칸 ${o.live} · 받기 ${o.alloc} · 다시 쓰기 ${o.reuse} · 돌려주기 ${o.release}` + (o.ex.length ? ' ' + JSON.stringify(o.ex) : '')); };
+  setInterval(_out, 60000).unref(); process.on('exit', _out);
+}
 const observers = new Map();    // ws -> { viewerX, viewerY, lastSeen }
 // ★[T537 2026-09-30] **지은 다리 복원** — 존 DB `village_bridges` 의 완공 행(`done`)이 세운 셀을 부팅 때 다시 올린다(같은 `addBridgeCells` · 새 길 0).
 //   손잡이와 무관하게 읽는다 — 다리는 이미 선 사물이다(행이 없으면 = 끔으로 한 번도 안 지은 존 = 종전 그대로 · 시딩 836셀).
@@ -3808,6 +3827,7 @@ function spawnNpc(opts = {}) {
   player.npcWorkX = opts.npcWorkX != null ? opts.npcWorkX : null;
   player.npcWorkY = opts.npcWorkY != null ? opts.npcWorkY : null;
   if (T671_SHAPE) _t671Shape(player);   // ★[T671 ②] 몸 모양 고정(끔 = 종전 그대로)
+  if (T1145_XY_COLS) BC.alloc(player);   // ★[T1145] 몸 번호 = 칸 — 이 몸의 x · y 는 이제 열이 정본(끔 = 무동작)
   players.set(pid, player);
   npcs.add(pid);
 
@@ -4709,6 +4729,28 @@ function followNpcPath(npc, speedMult) {
   npc.vy = (dy / dd) * speed;
   return false;
 }
+// ★[T1145] 켬 — `followNpcPath` 와 같은 식 · 같은 차례 · 같은 쓰기에서 몸 x · y 만 열에서 읽는다(`followNpcPath` 글자 무변 · 바인딩 되묶기 한 줄 · 끔 = 무동작).
+function _t1145Follow(npc, speedMult) {
+  const P = npc.path, M = P === npc._t791P;
+  if (!P || npc.pathIndex >= (M ? npc._t791Pn : P.length)) return true;
+  let wx, wy;
+  if (M && npc.pathIndex === 0) { wx = npc._t791Px; wy = npc._t791Py; } else { const wp = P[npc.pathIndex]; wx = wp.x; wy = wp.y; }
+  const dx = wx - _xyX(npc), dy = wy - _xyY(npc);
+  if (_t671Lt(dx, dy, 10)) {
+    npc.pathIndex++;
+    if (npc.pathIndex >= (M ? npc._t791Pn : P.length)) {
+      npc.vx = 0; npc.vy = 0;
+      return true;
+    }
+    return false;
+  }
+  const dd = Math.hypot(dx, dy);
+  const speed = MOVE_SPEED * (speedMult || NPC_WALK_MULT);
+  npc.vx = (dx / dd) * speed;
+  npc.vy = (dy / dd) * speed;
+  return false;
+}
+if (T1145_XY_COLS) followNpcPath = _t1145Follow;
 // stuck 감지: lastPos·lastPosAt 비교. 1.5s간 5px도 못 움직였으면 stuck.
 // ★★[2026-08-04c 배치 17 ②] **도착해서 서 있는 것은 stuck 이 아니다** — 낚시터 방황의 마지막 원인.
 //   stuck 의 정의는 "가려는데 못 간다"인데, 이 함수는 위치만 봐서 **목표에 도착해 가만히 선 NPC**도 stuck 으로
@@ -4774,6 +4816,34 @@ function detectStuck(npc, now) {
   return false;
 }
 if (T1140_STUCK_INLINE) detectStuck = _t1140Detect;   // ★[T1140 ③-다] 켬 = 같은 세 수 · 몸 칸(위 `_t1140Detect` · 부르는 자리 · `detectStuck` 글자 무변 — 끔 = 이 줄 무동작)
+// ★[T1145] 켬 — `detectStuck` · `_t670Stuck` 과 같은 식 · 같은 차례 · 같은 쓰기에서 몸 x · y 만 열에서 읽는다(머리에서 한 번 — 몸 칸 읽기는 부작용 0 · 이 함수 안에 x · y 쓰기 0).
+//   `detectStuck` 글자 무변(바인딩 되묶기 한 줄 · T1140 ③-다 와 같은 꼴) · T1140 ③-다 켬이면 그쪽이 먼저(이 줄 무동작).
+function _t1145Stuck(npc, now, x, y) { const S = npc._stuckPos; if (S) { S.x = x; S.y = y; S.at = now; } else npc._stuckPos = { x, y, at: now }; }
+function _t1145Detect(npc, now) {
+  const x = _xyX(npc), y = _xyY(npc);
+  if (npc.targetX != null && npc.targetY != null
+      && (!npc.path || npc.pathIndex >= (npc.path === npc._t791P ? npc._t791Pn : npc.path.length))
+      && _t671Lt(x - npc.targetX, y - npc.targetY, 12)) {
+    _t1145Stuck(npc, now, x, y);
+    npc._stuckN = 0;
+    return false;
+  }
+  if (!npc._stuckPos) {
+    npc._stuckPos = { x, y, at: now };
+    return false;
+  }
+  if (_t671Gt(x - npc._stuckPos.x, y - npc._stuckPos.y, 5)) {
+    _t1145Stuck(npc, now, x, y);
+    npc._stuckN = 0;
+    return false;
+  }
+  if (now - npc._stuckPos.at > 1500) {
+    _t1145Stuck(npc, now, x, y);
+    return true;
+  }
+  return false;
+}
+if (T1145_XY_COLS && !T1140_STUCK_INLINE) detectStuck = _t1145Detect;
 // stuck 해소: path·target 비우고 짧은 wander 방향 + 다음 decide 트리거
 // ★[생활 층 100% ①] 주민은 목표 유지·즉시 재경로(랩엔 랜덤 회피가 없다 — 경로가 벽 변을 인지하니 재탐색이 정답).
 //   A* 쿨다운·경로 캐시를 무효화해 다음 틱에 새 경로(스무딩 포함). 3연속 stuck만 현행 랜덤 회피 폴백(만능 방어).
@@ -4868,8 +4938,8 @@ function sepNpcs(dt) {
     if (hn) { const hl = Math.hypot(hx, hy); if (hl > 1e-9) { const hk = Math.min(1, Math.max(push, 2.5) / hl); mx += hx * hk; my += hy * hk; } }   // 몸 겹침 해소 최소 2.5px/틱(랩 0.08셀 동형) — 1×에서도 수 틱 내 단단히 풀림
     const pf = p.floor || 0;
     const nx = p.x + mx, ny = p.y + my;
-    if (!isTerrainBlockedLocal(nx, p.y) && !isBlockedByWall(nx, p.y, p.x, p.y, pf)) p.x = nx;   // 물·벽 변으로는 안 밀림(성분별 취소)
-    if (!isTerrainBlockedLocal(p.x, ny) && !isBlockedByWall(p.x, ny, p.x, p.y, pf)) p.y = ny;
+    if (!isTerrainBlockedLocal(nx, p.y) && !isBlockedByWall(nx, p.y, p.x, p.y, pf)) { if (T1145_XY_COLS) BC.wx(p, nx); else p.x = nx; }   // 물·벽 변으로는 안 밀림(성분별 취소) · ★[T1145] 켬 = 쓰기 길
+    if (!isTerrainBlockedLocal(p.x, ny) && !isBlockedByWall(p.x, ny, p.x, p.y, pf)) { if (T1145_XY_COLS) BC.wy(p, ny); else p.y = ny; }
   }
 }
 
@@ -7170,7 +7240,7 @@ async function _acceptConnection(ws, req, C) {
   //   **몸의 상태만** 가져온다 — 신원·사회 정보(playerId·tribe·home)는 central 이 정본이다.
   //   여기서 가져오지 않으면 그 값들은 "마지막 저장" 시점으로 되돌아간다.
   if (_takeover) {
-    player.x = _takeover.x; player.y = _takeover.y;
+    if (T1145_XY_COLS) BC.w(player, _takeover.x, _takeover.y); else { player.x = _takeover.x; player.y = _takeover.y; }   // ★[T1145] 켬 = 쓰기 길
     player.floor = _takeover.floor || 0;
     player.inventory = _takeover.inventory || player.inventory;
   }
@@ -7571,8 +7641,11 @@ function handlePlayerInput(player, raw) {
       send(ws, { type: 'notice', text: '강·바다 위로는 텔레포트할 수 없습니다.' });
       return;
     }
+    if (T1145_XY_COLS) BC.w(player, tx, ty);   // ★[T1145] 켬 = 쓰기 길
+    else {
     player.x = tx;
     player.y = ty;
+    }
     player.vx = 0; player.vy = 0;
     player.dirty = true;
     console.log(`[${ZONE_ID}] 🌀 teleport ${player.name} → (${tx},${ty})`);
@@ -11860,9 +11933,9 @@ function tryBuild(player, type, floor = 0, side = null, atX, atY, dir = null) {
     if (d <= 160) {
       // 임시로 player.x/y override → tryBuild 본문은 player.x/y로 cell 계산
       const oldX = player.x, oldY = player.y;
-      player.x = atX; player.y = atY;
+      if (T1145_XY_COLS) BC.w(player, atX, atY); else { player.x = atX; player.y = atY; }   // ★[T1145] 켬 = 쓰기 길(되돌림도)
       try { _tryBuildAt(player, type, floor, side, dir); }
-      finally { player.x = oldX; player.y = oldY; }
+      finally { if (T1145_XY_COLS) BC.w(player, oldX, oldY); else { player.x = oldX; player.y = oldY; } }
       return;
     }
   }
@@ -11890,9 +11963,9 @@ function _tryBuildAt(player, type, floor = 0, side = null, dir = null, opts = nu
     const d = Math.hypot(opts.atX - player.x, opts.atY - player.y);
     if (d <= 160) {
       const _ox = player.x, _oy = player.y;
-      player.x = opts.atX; player.y = opts.atY;
+      if (T1145_XY_COLS) BC.w(player, opts.atX, opts.atY); else { player.x = opts.atX; player.y = opts.atY; }   // ★[T1145] 켬 = 쓰기 길(되돌림도)
       try { return _tryBuildAt(player, type, floor, side, dir, { skipCost }); }
-      finally { player.x = _ox; player.y = _oy; }
+      finally { if (T1145_XY_COLS) BC.w(player, _ox, _oy); else { player.x = _ox; player.y = _oy; } }
     } else {
       send(player.ws, { type: 'notice', text: '너무 멉니다' }); return false;
     }
@@ -14133,7 +14206,7 @@ function damagePlayer(p, dmg, source) {
       setTimeout(() => {
         if (!players.has(p.pid)) return;
         setHp(p, p.maxHp, 'respawn');   // ★[T109] 바로 아래 `player_respawn` 이 이미 알린다 — 조용하다
-        p.x = respawnX; p.y = respawnY;
+        if (T1145_XY_COLS) BC.w(p, respawnX, respawnY); else { p.x = respawnX; p.y = respawnY; }   // ★[T1145] 켬 = 쓰기 길
         p.vx = 0; p.vy = 0;
         p.hunger = HUNGER_MAX; p.thirst = THIRST_MAX;
         for (const m of mobs.values()) if (m.aggroTarget === p.pid) m.aggroTarget = null;
@@ -14536,7 +14609,7 @@ function _wakeUp(p, x, y, hpFrac, msg) {
   p._deadUntil = 0;
   Body.ensure(p).hpDebt = 0;            // ★누워 있는 동안 쌓인 극단 빚을 지우고 일어난다(T44 와의 접점)
   setHp(p, Math.max(1, Math.round(p.maxHp * hpFrac)), 'rescue');   // ★[T109] 일어난 순간이 화면에 바로 온다(자기에게만)
-  if (Number.isFinite(x) && Number.isFinite(y)) { p.x = x; p.y = y; }
+  if (Number.isFinite(x) && Number.isFinite(y)) { if (T1145_XY_COLS) BC.w(p, x, y); else { p.x = x; p.y = y; } }   // ★[T1145] 켬 = 쓰기 길
   p.vx = 0; p.vy = 0;
   p.lastDamagedAt = Date.now();
   broadcast({ type: 'player_respawn', pid: p.pid, hp: p.hp, x: p.x, y: p.y });
@@ -14800,7 +14873,7 @@ function tickDowned(now) {
     if (p._carriedBy) {
       const c = players.get(p._carriedBy);
       if (!c || c.isDown || c.handingOff || !c.ws || c.ws.readyState !== 1) { _dropCarried(c, p, '놓쳤습니다.'); continue; }
-      p.x = c.x; p.y = c.y; p.floor = c.floor || 0;
+      if (T1145_XY_COLS) BC.w(p, c.x, c.y); else { p.x = c.x; p.y = c.y; } p.floor = c.floor || 0;   // ★[T1145] 켬 = 쓰기 길
       p._rescueHoldMs = (p._rescueHoldMs || 0) + dt;
       if (p._rescueHoldMs >= RESCUE_HOLD_MS) {
         _dropCarried(c, p, null);
@@ -15171,7 +15244,7 @@ const _wwStill = [], _wwStill0 = [];    // 서 있는 몸(차례대로) · 견�
 const _wwNoRes = [];                    // 빈 목록의 정체(새 배열을 틱마다 안 만든다 — 나무 열 열쇠가 서게)
 const _wwTC = { src: null, rx: null, gen: -1, k: 0, hit: 0, miss: 0, treeBad: 0, still: 0, stillBad: 0 };
 function _wwIsStill(p) {   // 커널 `terr()` 와 같은 칸 셈(정수 · 타일 2비트) — 구웠고(1) 안 막힘(2 아님)
-  const x = p.x, y = p.y;
+  const x = T1145_XY_COLS ? _xyX(p) : p.x, y = T1145_XY_COLS ? _xyY(p) : p.y;   // ★[T1145] 켬 = 열
   if (!(x > 0 && y > 0 && x < _WW.zw && y < _WW.zh)) return false;   // ±0 · NaN · 범위 밖은 커널로(±0 은 +0 속도와 더하면 부호가 바뀔 수 있다)
   const b = (Math.floor(y / 32) * _WW.tw + Math.floor(x / 32)) << 1;
   return ((_WW.TB[b >> 3] >> (b & 7)) & 3) === 1;
@@ -15215,7 +15288,8 @@ function _wwPre(moveDt) {
   const X = _WW.X, Y = _WW.Y, VX = _WW.VX, VY = _WW.VY, RD = _WW.RD;
   for (let i = 0; i < n; i++) {
     const p = _wwList[i], m = p._rdMul;
-    X[i] = p.x; Y[i] = p.y; VX[i] = p.vx; VY[i] = p.vy; RD[i] = ((m && m !== 1) ? m : 1) * _streamWalkMul(p);   // ★[T585] 커널도 같은 배율(길 × 개울)
+    if (T1145_XY_COLS) { X[i] = _xyX(p); Y[i] = _xyY(p); } else { X[i] = p.x; Y[i] = p.y; }   // ★[T1145] 켬 = 열에서 모은다
+    VX[i] = p.vx; VY[i] = p.vy; RD[i] = ((m && m !== 1) ? m : 1) * _streamWalkMul(p);   // ★[T585] 커널도 같은 배율(길 × 개울)
   }
   const RX = _WW.RX, RY = _WW.RY, RR = _WW.RR;
   if (!T672_WALK_CUT || res !== _wwTC.src || RX !== _wwTC.rx || _wwResGen !== _wwTC.gen) {   // ★[T672 ⓐ] 입력이 바뀐 틱만(끔이면 늘)
@@ -15254,7 +15328,7 @@ function _wwPre(moveDt) {
 // 이동 문 **안** — 커널 몸의 뒷일(원래 차례 그대로)
 function _wwPost(p, i) {
   if (T585_WALK_STAT) _t585WalkCount(p, _WW.X[i] - p.x, _WW.Y[i] - p.y);   // ★[T585] 관측(손잡이 켤 때만) — 개울 칸 위·밖 걸음당 거리
-  p.x = _WW.X[i]; p.y = _WW.Y[i];
+  if (T1145_XY_COLS) BC.w(p, _WW.X[i], _WW.Y[i]); else { p.x = _WW.X[i]; p.y = _WW.Y[i]; }   // ★[T1145] 켬 = 쓰기 길(열 · 거울)
   const st = _WW.ST[i];
   if (st < 2) { p.vx = 0; p.vy = 0; if (st === 1) p.dirty = true; if (p.pid) _walk.ejPids.add(p.pid); }
   else if (st === 2) Roads.stampEntityPx(p, p.x, p.y);
@@ -15524,6 +15598,7 @@ function _tickMsStats(reset) {
 
 setInterval(() => {
   const now = Date.now();
+  if (BC.VERIFY) BC.check(players);   // ★[T1145 견줌] 틱 머리 — 쓴 칸 전부 거울 = 열(비트) · 칸의 몸이 지도에 있나 · 주민 몸이 칸을 가졌나(`/perf walk.xyc` · 끔 · 켬 = 무동작)
   const _tickHr0 = process.hrtime();   // ★[T284 ④] 틱 본문 소요 계측(관측자)
   TB.begin(SimVillages.tickSliceMs ? SimVillages.tickSliceMs() : 0);   // ★★[T687] 한 틱 공용 몫 = 마을 하루 마감 예산 그 수(30Hz 한 프레임의 절반) — 켬일 때만 · 문들이 차례로 남은 몫을 쓴다
   // ★★[T153 2026-09-07 재민 확정] **틱 빚 — 잘라 낸 몫을 버리지 않고 다음 틱에 얹는다.**
@@ -15721,8 +15796,11 @@ setInterval(() => {
       if (found) {
         const len = Math.hypot(ejX, ejY) || 1;
         const push = MOVE_SPEED * moveDt * 1.8;
+        if (T1145_XY_COLS) BC.w(p, p.x + (ejX / len) * push, p.y + (ejY / len) * push);   // ★[T1145] 켬 = 쓰기 길(같은 두 수)
+        else {
         p.x += (ejX / len) * push;
         p.y += (ejY / len) * push;
+        }
         p.dirty = true;
       }
       p.vx = 0; p.vy = 0;
@@ -15831,12 +15909,15 @@ setInterval(() => {
     //   maxOut > COMMIT       : 이웃으로 확실히 진입 → 핸드오프 (도착은 경계에서 그만큼 안쪽).
     // 이래야 경계에서 왔다갔다 해도 양쪽 COMMIT px 띠 안에선 핸드오프가 안 일어나 핑퐁/렉이 없다.
     if (maxOut <= 0) {
-      p.x = nx; p.y = ny;
+      if (T1145_XY_COLS) BC.w(p, nx, ny); else { p.x = nx; p.y = ny; }   // ★[T1145] 켬 = 쓰기 길(아래 이 함수의 x · y 쓰기 전부 같은 꼴)
       Roads.stampEntityPx(p, p.x, p.y);   // §16 답압(전 개체 — NPC·플레이어. 셀 변경 시만·비활성=no-op)
     } else if (p.isNpc) {
       // NPC는 zone 핸드오프 안 함 — 항상 클램프
+      if (T1145_XY_COLS) BC.w(p, clamp(nx, 0, ZONE.zoneWidth), clamp(ny, 0, ZONE.zoneHeight));
+      else {
       p.x = clamp(nx, 0, ZONE.zoneWidth);
       p.y = clamp(ny, 0, ZONE.zoneHeight);
+      }
       p.nextDecisionAt = 0;
     } else {
       // 14.46-a: abs 좌표 lookup으로 핸드오프 대상 결정. ocean/월드끝은 클램프.
@@ -15848,23 +15929,29 @@ setInterval(() => {
           // ★★[T564] 막 넘기에 실패했다(2초 창 · `fireHandoff` 가 다시 안 쏜다) — 종전엔 이 창 동안 **이 존 좌표로 선 너머를 계속 걸었다가**
           //   다음 시도의 실패에서 선으로 되끌려 왔다(256px · "넘어가면 튕겨 나온다"). 이제 겹침 띠 끝(선 + COMMIT)에 세워 둔다 — 벽처럼 · 튕김 0.
           //   되돌림 `T564_HOLD_AT_SEAM=0` = 종전 바이트 동일.
+          if (T1145_XY_COLS) BC.w(p, clamp(nx, -HANDOFF_COMMIT, ZONE.zoneWidth + HANDOFF_COMMIT), clamp(ny, -HANDOFF_COMMIT, ZONE.zoneHeight + HANDOFF_COMMIT));
+          else {
           p.x = clamp(nx, -HANDOFF_COMMIT, ZONE.zoneWidth + HANDOFF_COMMIT);
           p.y = clamp(ny, -HANDOFF_COMMIT, ZONE.zoneHeight + HANDOFF_COMMIT);
+          }
         } else if (maxOut > HANDOFF_COMMIT) {
           // 확실히 넘어감 → 핸드오프. 진입 좌표 = 실제 abs 위치(경계에서 COMMIT 안쪽이라 즉시 되넘김 불가).
-          p.x = nx; p.y = ny;
+          if (T1145_XY_COLS) BC.w(p, nx, ny); else { p.x = nx; p.y = ny; }
           const HM = 80;
           const localX = Math.min(target.zoneWidth - HM, Math.max(HM, absExitX - target.worldOffsetX));
           const localY = Math.min(target.zoneHeight - HM, Math.max(HM, absExitY - target.worldOffsetY));
           fireHandoff(p, target.id, localX, localY);
         } else {
           // 겹침 띠 — 아직 이 zone 소유. 자유 이동 (클램프 안 함).
-          p.x = nx; p.y = ny;
+          if (T1145_XY_COLS) BC.w(p, nx, ny); else { p.x = nx; p.y = ny; }
         }
       } else {
         // 이웃이 바다/월드 끝 → 클램프
+        if (T1145_XY_COLS) BC.w(p, clamp(nx, 0, ZONE.zoneWidth), clamp(ny, 0, ZONE.zoneHeight));
+        else {
         p.x = clamp(nx, 0, ZONE.zoneWidth);
         p.y = clamp(ny, 0, ZONE.zoneHeight);
+        }
       }
     }
   } // ← movePlayerStep 함수 끝
@@ -16777,8 +16864,11 @@ async function fireHandoff(player, targetZoneId, newX, newY) {
   player.vx = 0;
   player.vy = 0;
   player._t564Pre = { x: player.x, y: player.y };   // ★[T564] 실패하면 이 자리(겹침 띠 안)로 돌려놓는다 — 선으로 되끌지 않는다
+  if (T1145_XY_COLS) BC.w(player, Math.max(0, Math.min(ZONE.zoneWidth, player.x)), Math.max(0, Math.min(ZONE.zoneHeight, player.y)));   // ★[T1145] 켬 = 쓰기 길
+  else {
   player.x = Math.max(0, Math.min(ZONE.zoneWidth, player.x));
   player.y = Math.max(0, Math.min(ZONE.zoneHeight, player.y));
+  }
   // ★★[T47] **저장을 기다린다.** 종전엔 fire-and-forget 이라 도착 존이 central 을 읽을 때
   //   아직 안 써져 있을 수 있었다. 이제 행과 페이로드가 **같은 스냅샷**이 되도록 순서를 잡는다.
   // ★★[T498 2026-09-28 · 팔 `T498_HANDOFF_PAYLOAD` · 기본 끔] **페이로드가 정본이면 central 을 기다리지 않는다.**
@@ -16897,7 +16987,7 @@ function _t564Hold(player) {
   player.handingOff = false;
   player.lastHandoffFailAt = Date.now();
   //   ★[T564] 되끌지 않는다 — 떠나기 직전 자리(겹침 띠 끝까지)로 돌려놓는다. 종전엔 위 clamp 가 선으로 256px 되끌었다(= 튕김).
-  if (T564_HOLD && player._t564Pre) { player.x = clamp(player._t564Pre.x, -HANDOFF_COMMIT, ZONE.zoneWidth + HANDOFF_COMMIT); player.y = clamp(player._t564Pre.y, -HANDOFF_COMMIT, ZONE.zoneHeight + HANDOFF_COMMIT); }
+  if (T564_HOLD && player._t564Pre) { if (T1145_XY_COLS) BC.w(player, clamp(player._t564Pre.x, -HANDOFF_COMMIT, ZONE.zoneWidth + HANDOFF_COMMIT), clamp(player._t564Pre.y, -HANDOFF_COMMIT, ZONE.zoneHeight + HANDOFF_COMMIT)); else { player.x = clamp(player._t564Pre.x, -HANDOFF_COMMIT, ZONE.zoneWidth + HANDOFF_COMMIT); player.y = clamp(player._t564Pre.y, -HANDOFF_COMMIT, ZONE.zoneHeight + HANDOFF_COMMIT); } }   // ★[T1145] 켬 = 쓰기 길
   player._t564Pre = null;
 }
 // ★★[T1092] 보낸 존 — ACK 시한. 받는 존에게 그 토큰을 놓으라 하고, 놓았으면 이 존에 돌려놓는다(손잡이 주석 `T1092_HANDOFF_BACK`). 아니면 종전 정리(`ackGone`).

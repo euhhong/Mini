@@ -112,6 +112,9 @@ const body = (name) => {
   for (let k = j; k < Z.length; k++) { if (Z[k] === '{') d++; else if (Z[k] === '}') { d--; if (!d) return Z.slice(i, k + 1); } }
   return '';
 };
+// ★[T1145] 열 손잡이 — 아래 절들이 뜬 제품 글자가 읽는 이름(`BC` · `T1145_XY_COLS` · `_xyC` · `_xyX` · `_xyY`)을 제품 모듈 · 제품 글자 그대로 싣는다(사본 0 · 손잡이는 이 프로세스 env `T1145_XY_COLS`)
+globalThis.__T1145BC = require(path.join(ROOT, 'server', 'body-cols.js'));
+const T1145P = 'const BC = globalThis.__T1145BC, T1145_XY_COLS = BC.ON, _xyC = BC.C;\n' + body('_xyX') + '\n' + body('_xyY') + '\n';
 
 console.log('\n③ 남은 할당 — 걸음 하나의 계수(T340 자를 그대로 다시 댄다)');
 {
@@ -1898,9 +1901,9 @@ console.log('\n⑱ T474 — 캐러밴 시계 = 몸 걸음에서 유도(손잡이
 console.log('\n⑳ T461 걸음 문 WASM 커널 — 1,000틱 뒤 전원 좌표 비트 동일(두 N) · 끔 = 옛 문 [T461]');
 {
   // ★제품 글자를 뜬다: 이동 문(`movePlayerStep`) · 커널 앞문(`_wwPre`) · 뒷문(`_wwPost`) — 커널은 `server/walk-wasm.js`(제품 껍데기) 그대로.
-  const MV = body('movePlayerStep'), POST = body('_wwPost');
+  const MV = T1145P + body('movePlayerStep'), POST = body('_wwPost');   // ★[T1145] 열 손잡이 이름을 앞에(이동 문 · 앞문 묶음마다 한 번)
   //   ★[T689] 앞문 몸통이 `_wwPreOne` 으로 나뉘었다(손잡이 `T689_GC` · 켬 = `players.forEach`) — 둘을 같이 뜬다 · 판 손잡이는 이 프로세스 env(끔·켬 두 번 돌린다)
-  const PRE = 'const T689_GC = ' + (process.env.T689_GC === '1') + ';\nlet _wwCut = false;\nconst T774_ACTIVE_COL = false; let _t774I = 0; const _t774Act = null;\n' + body('_wwPre') + '\n' + body('_wwPreOne');   // ★[T774] 앞문이 읽는 활성 열 손잡이 — 이 판은 끔 갈래
+  const PRE = T1145P + 'const T689_GC = ' + (process.env.T689_GC === '1') + ';\nlet _wwCut = false;\nconst T774_ACTIVE_COL = false; let _t774I = 0; const _t774Act = null;\n' + body('_wwPre') + '\n' + body('_wwPreOne');   // ★[T774] 앞문이 읽는 활성 열 손잡이 — 이 판은 끔 갈래
   const ISS = body('_wwIsStill'), SPOST = body('_wwStillPost');   // ★[T672] 서 있는 몸 거름 · 뒷일(앞문이 부른다 · 끔이면 안 열린다)
   const T672P = ['T672_WALK_CUT', '_wwStill', '_wwStill0', '_wwNoRes', '_wwTC', '_wwResGen', '_wwVerify'];
   const t672A = (on, gen) => [!!on, [], [], [], { src: null, rx: null, gen: -1, k: 0, hit: 0, miss: 0, treeBad: 0, still: 0, stillBad: 0 }, gen || 0, false];
@@ -1963,10 +1966,14 @@ console.log('\n⑳ T461 걸음 문 WASM 커널 — 1,000틱 뒤 전원 좌표 �
     if (k === 3) { x = ZW - rnd() * 3; }                          // 동쪽 끝 — 클램프
     if (k === 4) { y = rnd() * 2; x = 5000 + rnd() * 100; }       // 북쪽 끝(빙하 안)
     a.push({ pid: 'n' + i, isNpc: true, x, y, vx: 0, vy: 0, _rdMul: [undefined, 1, 1.1, 1.15, 0][i % 5], floor: 0 }); } return a; };
+  //   ★[T1145] 켬 — 판 몸마다 칸(존 `spawnNpc` 와 같은 문 · 그 뒤 x · y 정본 = 열) · 판 끝에 돌려준다(존 `players` 빼기와 같은 문) · 끔 = 무동작
+  const colOn = (...arrs) => { if (globalThis.__T1145BC.ON) for (const a of arrs) for (const p of a) globalThis.__T1145BC.alloc(p); };
+  const colOff = (...arrs) => { if (globalThis.__T1145BC.ON) for (const a of arrs) for (const p of a) globalThis.__T1145BC.release(p); };
   const velOf = (i, t, p) => { const a = h32(i, t >> 5, 3) / 4294967296 * 2 * Math.PI, sp = 64 * [0.6, 1, 2.5][h32(i, t >> 7, 5) % 3];
     return (i % 10 === 3) ? [sp, 0] : (i % 10 === 4) ? [0, -sp] : [Math.cos(a) * sp, Math.sin(a) * sp]; };
   for (const N of [1329, 2656]) {
     const A = mkNpcs(N, 12345 + N), B = mkNpcs(N, 12345 + N);
+    colOn(A, B);
     const WA = mkWalk(), WB = mkWalk();
     const move = mkMove(WA);
     const players = new Map(B.map((p) => [p.pid, p]));
@@ -1982,17 +1989,20 @@ console.log('\n⑳ T461 걸음 문 WASM 커널 — 1,000틱 뒤 전원 좌표 �
       stB += stamps.length;
       if (sa.length !== stamps.length || sa.some((v, j) => !Object.is(v, stamps[j]))) tickBad++;
     }
-    let bad = 0, nd = 0, dirty = 0;
+    let bad = 0, nd = 0, dirty = 0, colBad = 0;
+    const BCm = globalThis.__T1145BC, colOf = (p) => p._t1145S >= 0 && Object.is(BCm.C.X[p._t1145S], p.x) && Object.is(BCm.C.Y[p._t1145S], p.y);   // ★[T1145] 켬 — 거울 = 열(비트)
     for (let i = 0; i < N; i++) {
       if (!sameF64(A[i].x, B[i].x) || !sameF64(A[i].y, B[i].y) || !sameF64(A[i].vx, B[i].vx) || !sameF64(A[i].vy, B[i].vy)) bad++;
       if (A[i].nextDecisionAt !== B[i].nextDecisionAt) nd++; if (!!A[i].dirty !== !!B[i].dirty) dirty++;
+      if (BCm.ON && (!colOf(A[i]) || !colOf(B[i]))) colBad++;
     }
-    ok(bad === 0 && tickBad === 0 && nd === 0 && dirty === 0, `⑳-${N} ★1,000틱 뒤 ${N}명 x·y·vx·vy **비트 동일** · 답압 스탬프 차례·좌표 틱마다 같음 · 클램프·dirty 같음`,
-       `어긋남 ${bad} · 스탬프 틀린 틱 ${tickBad} · nextDecisionAt ${nd} · dirty ${dirty} · 스탬프 ${stA}/${stB}`);
+    ok(bad === 0 && tickBad === 0 && nd === 0 && dirty === 0 && colBad === 0, `⑳-${N} ★1,000틱 뒤 ${N}명 x·y·vx·vy **비트 동일** · 답압 스탬프 차례·좌표 틱마다 같음 · 클램프·dirty 같음` + (BCm.ON ? ' · [T1145 켬] 두 판 몸 x · y 거울 = 열' : ''),
+       `어긋남 ${bad} · 스탬프 틀린 틱 ${tickBad} · nextDecisionAt ${nd} · dirty ${dirty} · 스탬프 ${stA}/${stB}` + (BCm.ON ? ` · 거울≠열 ${colBad}` : ''));
     ok(WA.steps === WB.steps && WA.ej === WB.ej && WA.ejQ === WB.ejQ && WA.ejFail === WB.ejFail && WA.ej > 0 && WA.ejFail >= 0,
        `⑳-${N} 걸음·탈출 계수가 같다(커널이 센 것을 더한다 · 탈출 ${WA.ej}번은 실제로 일어났다)`);
     const moved = A.filter((p, i) => p.x !== mkNpcs(N, 12345 + N)[i].x).length;
     ok(moved > N * 0.8, `⑳-${N} [자명 통과 금지] 몸이 실제로 움직였다`, `${moved}/${N}`);
+    colOff(A, B);
   }
   // 자명 통과 금지 — 커널 산술 한 끝을 비틀면 게이트가 문다(가짜 앞문: 길 배속을 1.1 → 1.1000000000000003)
   {
@@ -2064,6 +2074,7 @@ console.log('\n⑳ T461 걸음 문 WASM 커널 — 1,000틱 뒤 전원 좌표 �
         MV + '\nreturn movePlayerStep;')(terr, (nx, ny, ox, oy) => wallJs(nx, ny, ox, oy), treeX, null, iceBand, Roads, clamp, ZONE,
         64, 1 / 30, WA, new Map(), null, { slide: true }, () => null, 'test', () => {}, 256, () => 1);
       const A = mkNpcs(N, 999 + N), B = mkNpcs(N, 999 + N), C = mkNpcs(N, 999 + N);
+      colOn(A, B, C);
       const fB = mkCut(new Map(B.map((p) => [p.pid, p])), WB, R, mkWW(), true, opt.still), fC = mkCut(new Map(C.map((p) => [p.pid, p])), WC, R, mkWW(), false);
       let tickBad = 0, stillTicks = 0;
       for (let t = 0; t < T; t++) {
@@ -2078,6 +2089,9 @@ console.log('\n⑳ T461 걸음 문 WASM 커널 — 1,000틱 뒤 전원 좌표 �
       }
       let bad = 0; for (let i = 0; i < N; i++) for (const k of ['x', 'y', 'vx', 'vy']) if (!sameF64(A[i][k], B[i][k]) || !sameF64(C[i][k], B[i][k])) { bad++; break; }
       let nd = 0; for (let i = 0; i < N; i++) if (A[i].nextDecisionAt !== B[i].nextDecisionAt || !!A[i].dirty !== !!B[i].dirty) nd++;
+      const BCm = globalThis.__T1145BC;   // ★[T1145] 켬 — 세 판 몸 x · y 거울 = 열(비트 · 어긋나면 `bad` 에 더한다)
+      if (BCm.ON) for (const a of [A, B, C]) for (const p of a) if (!(p._t1145S >= 0) || !Object.is(BCm.C.X[p._t1145S], p.x) || !Object.is(BCm.C.Y[p._t1145S], p.y)) bad++;
+      colOff(A, B, C);
       return { bad, tickBad, nd, WB, WC, tc: fB.tc, stillTicks };
     };
     for (const N of [1329, 2656]) {
@@ -2263,7 +2277,7 @@ console.log('\n㉒ T676 활성 판정 비트 · 서로 비키기 버킷 다시 �
 
   // ── ③ 서로 비키기: 제품 글자(`sepNpcs` · `_sepPut`) 두 벌 — 켬(버킷 다시 쓰기) · 끔 — 같은 몸들을 300틱 돌려 좌표를 비트로 견준다
   const mkSep = (on, put) => new Function('npcs', 'players', 'isPositionActive', 'isTerrainBlockedLocal', 'isBlockedByWall', 'T676_STAMP',
-    'const SEP_SOFT_PX = 27.2, SEP_BODY_PX = 16, SEP_BK = 64; const _sepG = new Map(), _sepUsed = [], _sepMovers = [];\n' + (put || body('_sepPut')) + '\n' + body('sepNpcs') + '\nreturn sepNpcs;');
+    T1145P + 'const SEP_SOFT_PX = 27.2, SEP_BODY_PX = 16, SEP_BK = 64; const _sepG = new Map(), _sepUsed = [], _sepMovers = [];\n' + (put || body('_sepPut')) + '\n' + body('sepNpcs') + '\nreturn sepNpcs;');
   const world = (seed) => { rs = seed; const P = new Map(), N = new Set();
     for (let i = 0; i < 700; i++) { const v = i % 7; const p = { pid: 'q' + i, isNpc: true, hp: v === 6 ? 0 : 10, handingOff: false, floor: i % 13 === 0 ? 1 : 0,
       x: 3000 + rnd() * 900 + (v === 5 ? 20000 : 0), y: 3000 + rnd() * 900, simCaravan: i % 17 === 0, simWar: false, canadiaVillage: null };
