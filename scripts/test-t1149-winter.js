@@ -7,6 +7,7 @@
 //         ④ k — 식량 흐름 K · 땔감 K 가 일자리 만충 가정이 아니라 지금 그 일을 하는 사람으로 선다
 //         ⑤ buy — 가을 · 겨울엔 주식 목표가 겨울을 안다(값이 오른다) · 제 겨울 몫을 넘는 식량만 판다
 //         ⑥ 끔 = 무동작(표지 칸이 안 선다 · 값 · 후보 그대로)
+//         ⑦ 식량 수출 문턱 그대로(여름 37일치 = 안 판다 — 갈래가 문턱 사슬을 안 끊는다)
 'use strict';
 const path = require('path');
 const { execFileSync } = require('child_process');
@@ -34,6 +35,8 @@ if (process.env.T1149_CHILD) {
   // ⑤ buy — 가을날(200) 주식 값 · 판매 후보(곳간 43일치 · 겨울 90일치에 모자람)
   { const v = mkV(20 * 43); v._world = { day: 200 }; out.price = V2.computeShadowPrices(v).food; const c = V2._t1136Probe.exportCands({ v }, v.npcs.length); out.cand = c.map((x) => x.res); out.tfe = E.totalFoodEquivalent(v); }
   { const v = mkV(20 * 43); v._world = { day: 100 }; out.priceSummer = V2.computeShadowPrices(v).food; out.candSummer = V2._t1136Probe.exportCands({ v }, v.npcs.length).map((x) => x.res); }
+  // ⑦ 끔 · 여름 · 곳간 37일치(식량 문턱 42일치 밑 · 그 밖 문턱 24일치 위) — 식량은 후보가 아니다(식량이 `else` 갈래로 떨어지면 선다)
+  { const v = mkV(20 * 37); v._world = { day: 100 }; out.cand37 = V2._t1136Probe.exportCands({ v }, v.npcs.length).map((x) => x.res); }
   console.log(JSON.stringify(out));
   process.exit(0);
 }
@@ -53,6 +56,7 @@ ok(!k.kRun.err && k.kRun.k && off.kRun.k && k.kRun.k.prod < off.kRun.k.prod && k
   `식량 ${off.kRun.k && off.kRun.k.prod} → ${k.kRun.k && k.kRun.k.prod} · 땔감 ${off.kRun.k && off.kRun.k.fuel} → ${k.kRun.k && k.kRun.k.fuel} · 자리 ${off.kRun.k && off.kRun.k.slot}`);
 ok(buy.price > off.price && near(buy.priceSummer, off.priceSummer), '★⑤ buy — 가을엔 주식 값이 오른다(목표가 겨울 90일치) · 여름엔 그대로', `가을 ${off.price} → ${buy.price} · 여름 ${off.priceSummer} → ${buy.priceSummer}`);
 ok(off.cand.includes('food') && !buy.cand.includes('food') && buy.candSummer.includes('food'), '★⑤ buy — 가을에 제 겨울 몫(90일치)에 모자라면 식량을 안 판다 · 여름엔 판다(43일치 > 42일치 문턱)', JSON.stringify([off.cand.includes('food'), buy.cand.includes('food'), buy.candSummer.includes('food')]));
+ok(!off.cand37.includes('food') && !buy.cand37.includes('food'), '⑦ 식량 수출 문턱(42일치)이 그대로 — 여름 37일치면 안 판다(끔 · buy 둘 다 · T1149 갈래가 if/else 사슬을 안 끊는다)', JSON.stringify([off.cand37.includes('food'), buy.cand37.includes('food')]));
 function near(a, b) { return Math.abs(a - b) <= 1e-9 * Math.max(1, Math.abs(a)); }
 console.log(`\n=== ${pass + fail}건 중 PASS ${pass} · FAIL ${fail} ===`);
 process.exit(fail ? 1 : 0);

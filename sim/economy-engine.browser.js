@@ -16768,18 +16768,18 @@ function _exportCandidatesV2(a, N) {   // a = 마을 칸({ v }) — 몸통 줄�
         const target = Math.max(subs * 30, buffer);
         let keep, thresh;
         if (FOODR[r]) { keep = target * 1.2; thresh = target * 1.4; }       // 식량: 36일치 보유(>기근30), 42일치 초과만 수출
-        if (FOODR[r] && _t1149Wd(a.v) > 0) {   // ★[T1149 ⓒ] 가을 · 겨울 — 제 겨울 몫(하루 생존량 × 겨울에 남은 날 · 곳간 식량 환산)을 넘는 몫만 판다
-          const _room = v1.totalFoodEquivalent(a.v) - (SUBSISTENCE_PER_NPC.food || 0) * N * _t1149Wd(a.v);
-          if (!(_room > 0)) continue;
-          if (stock > thresh) candidates.push({ res: r, surplus: Math.min(Math.max(1, stock - keep), _room) });
-          continue;
-        }
         else if (CAPITAL[r]) { keep = N * 1.2; thresh = N * 1.5; }          // 도구: 1.2개/명 보유, 1.5개/명 초과만 수출(덤핑 금지)
         else if (r === 'weapon') { keep = Math.max(2, (warN + huntN3) * 1.3); thresh = keep + N * 0.1; }   // ★무기: 전사+사냥꾼(활 — §9 3차) ×1.3 보유 후 잉여만
         else if (WEAPONR[r]) { keep = Math.max(2, warN * 1.3); thresh = keep + N * 0.1; }   // 갑옷: 전사 수×1.3 보유 후 잉여만
         else if (r === 'tigerhide') { keep = Math.max(1, N * TIGERHIDE_KEEP_PC); thresh = Math.max(2, N * TIGERHIDE_KEEP_PC * 1.6); }   // ★호피(§9 3차): 한계 위신 포화점(CAP/W≈0.025/인)×1.2만 쥐고 잉여=순수출재 — 일반칙(0.4N)이면 희소 위신재는 영영 수출 불가. 금·은·보석은 위신 포화(2/인)가 일반칙 위라 기존 규칙 유지
         else if (r === 'tin') { keep = Math.max(3, N * TIN_EXPORT_KEEP_PC); thresh = keep + N * TIN_EXPORT_SURPLUS_PC; }   // ★청동 희소성: 주석=전략재. 산지 마을이 대량 비축(자체 청동 독점 + 위세) 후 얇은 잉여만 수출 → 무산지 마을은 만성 주석 기근(청동 편중 유지, 무산지는 석기)
         else { keep = target * 0.5; thresh = target * 0.8; }                // 그 외: 15일치
+        if (FOODR[r] && _t1149Wd(a.v) > 0) {   // ★[T1149 ⓒ] (위 if/else 사슬 뒤 — 사슬에 끼우면 식량이 `else` 갈래로 떨어져 끔에도 keep · thresh 가 바뀐다) 가을 · 겨울 — 제 겨울 몫(하루 생존량 × 겨울에 남은 날 · 곳간 식량 환산)을 넘는 몫만 판다
+          const _room = v1.totalFoodEquivalent(a.v) - (SUBSISTENCE_PER_NPC.food || 0) * N * _t1149Wd(a.v);
+          if (!(_room > 0)) continue;
+          if (stock > thresh) candidates.push({ res: r, surplus: Math.min(Math.max(1, stock - keep), _room) });
+          continue;
+        }
         // ★★★[T180 2026-09-12 · 한 줄 결함 수리] **굶는 마을은 제 돌을 팔지 않는다.**
         //   T173 §0-ⓑ 실측: 절반 넘는 날을 `돌<0.2`(STONE_NET 1차 문턱) 아래서 사는 바닥 36마을이
         //   800일에 돌 **8,110~11,947 단위**를 수출한다. 위 문턱(`target×0.8`)은 STONE_NET 문턱을
