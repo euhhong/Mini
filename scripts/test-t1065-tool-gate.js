@@ -67,7 +67,9 @@ if (process.env.T1065_CHILD === '1') {
     const p = mkPlayer(r.x + 10, r.y);
     const hp0 = r.hp; H.gatherResource(p, r);
     const hpBare = H.resources.has(r.id) ? r.hp : 'gone';
-    const o = { type, hp0, hpBare, bareText: (last(p) || {}).text || null, bareStop: (last(p) || {}).stop || null, bareInv: Object.keys(p.inventory).length };
+    const chipOf = (x) => (H.t1146Chip ? +H.t1146Chip(x.id).toFixed(6) : 0);   // ★[T1146] 바위 장부(돌 한 개가 안 된 깎인 kg — 켬이면 한 타가 hp 대신 여기를 민다)
+    const o = { type, hp0, hpBare, bareText: (last(p) || {}).text || null, bareStop: (last(p) || {}).stop || null, bareInv: Object.keys(p.inventory).length,
+      chipBare: chipOf(r), rock1146: !!H.T1146_ROCK, kBed: H.T1146_K_BED || 0 };
     if (tool) {
       // 가졌는데 안 들었다
       give(p, H.RECIPES[tool].cost); H.doCraft(p, tool);
@@ -78,6 +80,7 @@ if (process.env.T1065_CHILD === '1') {
       const d0 = inst ? inst.d : null;
       p.notices.length = 0; H.gatherResource(p, r);
       o.hpTool = H.resources.has(r.id) ? r.hp : 'gone'; o.toolText = (last(p) || {}).text || null; o.mult = H.TOOL_EFFECTS[tool][kind === 'chop' ? 'gatherWoodMult' : 'gatherStoneMult'];
+      o.chipTool = chipOf(r);
       o.dura = inst ? [d0, inst.d, inst.max] : null;
     }
     res[kind] = o;
@@ -117,9 +120,10 @@ if (process.env.T1065_CHILD === '1') {
     if (spot) {
       put(spot.rock);
       const p = mkPlayer(spot.x, spot.y);
-      const hp0 = spot.rock.hp;
+      const hp0 = spot.rock.hp, c0 = H.t1146Chip ? H.t1146Chip(spot.rock.id) : 0;
       H.tryGather(p);
-      out.rockSide = { found: true, inv: Object.assign({}, p.inventory), text: (last(p) || {}).text || null, rockHp: [hp0, H.resources.has(spot.rock.id) ? spot.rock.hp : 'gone'] };
+      out.rockSide = { found: true, inv: Object.assign({}, p.inventory), text: (last(p) || {}).text || null, rockHp: [hp0, H.resources.has(spot.rock.id) ? spot.rock.hp : 'gone'],
+        chip: +((H.t1146Chip ? H.t1146Chip(spot.rock.id) : 0) - c0).toFixed(6) };   // ★[T1146] 켬이면 캔 한 타는 hp 대신 바위 장부를 민다(이 한 번에 늘어난 kg)
     } else out.rockSide = { found: false };
   }
   // ── 공격 — 맨손 · 조잡한 돌칼 · 무기 장비 ──
@@ -209,14 +213,19 @@ if (ON && OFF) {
   ok(/조잡한 돌도끼를 손에 들어야 나무를 벨 수 있습니다/.test(R.chop.ownText || '') && R.chop.hpOwn === R.chop.hp0, '★가졌는데 안 들었다 — "손에 들어야" · hp 그대로', R.chop.ownText);
   ok(R.chop.hpTool === R.chop.hp0 - R.chop.mult || (R.chop.hpTool === 'gone' && R.chop.hp0 <= R.chop.mult), '★★조잡한 돌도끼를 들면 벤다 — 배수 그대로(`TOOL_EFFECTS.crude_axe`)', `hp ${R.chop.hp0} → ${R.chop.hpTool} · 배수 ${R.chop.mult}`);
   ok(R.chop.dura && R.chop.dura[1] === R.chop.dura[0] - 1, '조잡한 돌도끼 내구 1 닳음(종전 문법)', JSON.stringify(R.chop.dura));
-  ok(R.quarry.hpBare === R.quarry.hp0 && /조잡한 돌괭이가 있어야 돌을 캘 수 있습니다/.test(R.quarry.bareText || ''), '★★맨손 채석 — hp 그대로 · 이유 한 줄', R.quarry.bareText);
+  ok(R.quarry.hpBare === R.quarry.hp0 && !(R.quarry.chipBare > 0) && /조잡한 돌괭이가 있어야 돌을 캘 수 있습니다/.test(R.quarry.bareText || ''), '★★맨손 채석 — hp 그대로(바위 장부도 0) · 이유 한 줄', R.quarry.bareText);
   ok(/자갈은 바위 곁에서 맨손으로 주울 수 있습니다\./.test(R.quarry.bareText || ''), '★맨손 채석 이유가 자갈 얻는 길을 같이 말한다(돌괭이가 자갈 3 을 먹는다 — 길이 돌지 않게)', R.quarry.bareText);
-  ok(R.quarry.hpTool === R.quarry.hp0 - R.quarry.mult || (R.quarry.hpTool === 'gone' && R.quarry.hp0 <= R.quarry.mult), '★조잡한 돌괭이를 들면 캔다 — 배수 그대로', `hp ${R.quarry.hp0} → ${R.quarry.hpTool}`);
+  //   ★[T1146] 돌 규칙 켬(기본)이면 한 타는 hp 대신 바위 장부에 배수 × 금 간 돌 한 타 kg 을 쌓는다(돌 한 개 kg 이 차야 hp 한 점) — 같은 배수가 kg 으로 보인다
+  const SR = require(path.join(ROOT, 'server', 'stone-rule.js'));
+  const qKg = R.quarry.rock1146 ? SR.kgPerSwing(R.quarry.mult, 'cracked', R.quarry.kBed) : 0;
+  ok(R.quarry.rock1146 ? (R.quarry.hpTool === R.quarry.hp0 && Math.abs(R.quarry.chipTool - R.quarry.chipBare - qKg) < 1e-6)
+       : (R.quarry.hpTool === R.quarry.hp0 - R.quarry.mult || (R.quarry.hpTool === 'gone' && R.quarry.hp0 <= R.quarry.mult)),
+    '★조잡한 돌괭이를 들면 캔다 — 배수 그대로(T1146 켬이면 hp 대신 깎인 kg = 배수 × 금 간 돌 한 타 kg)', R.quarry.rock1146 ? `깎인 ${R.quarry.chipBare} → ${R.quarry.chipTool} kg(기대 +${qKg.toFixed(4)}) · hp ${R.quarry.hp0} → ${R.quarry.hpTool}` : `hp ${R.quarry.hp0} → ${R.quarry.hpTool}`);
   ok(R.bush.hpBare !== R.bush.hp0, '★맨손 덤불 — 된다(맨손 = 줍기 · 따기 · 덤불)', `hp ${R.bush.hp0} → ${R.bush.hpBare}`);
   ok(ON.forest.found, '[상황] 나무 곁 잔가지 줍는 자리가 있다');
   if (ON.forest.found) ok((ON.forest.inv.twig || 0) === 1 && ON.forest.treeHp[0] === ON.forest.treeHp[1], '★★숲에서 맨손 E — 나무가 아니라 잔가지를 줍는다(나무 hp 그대로)', `${JSON.stringify(ON.forest.inv)} · 나무 ${ON.forest.treeHp.join('→')}`);
   ok(ON.rockSide.found, '[상황] 지형만으론 주울 게 없는 바위 곁 자리가 있다(덤불 · 나무 60px 밖)');
-  if (ON.rockSide.found) ok((ON.rockSide.inv.pebble || 0) === 1 && ON.rockSide.rockHp[0] === ON.rockSide.rockHp[1], '★★바위 곁 맨손 E — 바위는 그대로 · 그 곁 자갈 하나를 줍는다(줍기 ③′ · 첫 급조 도구 재료가 끊기지 않는다)', `${JSON.stringify(ON.rockSide.inv)} · 바위 ${ON.rockSide.rockHp.join('→')} · ${ON.rockSide.text}`);
+  if (ON.rockSide.found) ok((ON.rockSide.inv.pebble || 0) === 1 && ON.rockSide.rockHp[0] === ON.rockSide.rockHp[1] && !(ON.rockSide.chip > 0), '★★바위 곁 맨손 E — 바위는 그대로 · 그 곁 자갈 하나를 줍는다(줍기 ③′ · 첫 급조 도구 재료가 끊기지 않는다)', `${JSON.stringify(ON.rockSide.inv)} · 바위 ${ON.rockSide.rockHp.join('→')} · ${ON.rockSide.text}`);
   const A = ON.attack;
   ok(A.bare.hp === 40 && /조잡한 돌칼이 있어야 싸울 수 있습니다/.test(A.bare.text || ''), '★★맨손 공격 — 짐승 hp 그대로 · 이유 한 줄', `${A.type} 40 → ${A.bare.hp} · ${A.bare.text}`);
   ok(A.blade.made && A.blade.hp === 40 - Math.round(A.blade.base * A.blade.mult), '★★조잡한 돌칼을 들면 친다 — 피해 = 맨손 × 배수(그대로)', `40 → ${A.blade.hp} · ${A.blade.base} × ${A.blade.mult}`);
@@ -234,14 +243,14 @@ if (ON && OFF) {
 
   console.log('\n③ 끔 — 종전(맨손으로 다 된다 · 자명 통과 금지 대조)');
   ok(Q.chop.hpBare !== Q.chop.hp0 && !Q.chop.bareText, '★★[자명 통과 금지] 끔 — 맨손 벌목이 된다(종전)', `hp ${Q.chop.hp0} → ${Q.chop.hpBare}`);
-  ok(Q.quarry.hpBare !== Q.quarry.hp0, '끔 — 맨손 채석이 된다(종전)', `hp ${Q.quarry.hp0} → ${Q.quarry.hpBare}`);
+  ok(Q.quarry.hpBare !== Q.quarry.hp0 || (Q.quarry.rock1146 && Q.quarry.chipBare > 0), '끔 — 맨손 채석이 된다(종전 · T1146 켬이면 hp 대신 깎인 kg)', `hp ${Q.quarry.hp0} → ${Q.quarry.hpBare} · 깎인 ${Q.quarry.chipBare} kg`);
   ok(OFF.attack.bare.hp === 40 - OFF.attack.blade.base, '★★[자명 통과 금지] 끔 — 맨손 공격이 맨손 피해로 친다(종전)', `40 → ${OFF.attack.bare.hp}`);
   ok(!/활이 있어야/.test(OFF.ranged.text || '') && (!OFF.ranged.arrows || OFF.ranged.arrows[1] === OFF.ranged.arrows[0] + 1), '끔 — 빈손 화살이 나간다(종전 · 관대하게 허용)', JSON.stringify(OFF.ranged.arrows));
   if (OFF.fish.found) ok(OFF.fish.bare.fish === true, '★[자명 통과 금지] 끔 — 맨손 낚시가 던져진다(종전)', OFF.fish.bare.text);
   if (OFF.forest.found) ok(OFF.forest.treeHp[1] < OFF.forest.treeHp[0] && !(OFF.forest.inv.twig > 0 && !OFF.forest.inv.wood),
     '★★[자명 통과 금지] 끔 — 같은 자리 맨손 E 는 그 나무를 벤다(나무가 손 닿는 곳에 있다 — 켬의 잔가지 줍기가 건너뛴 결과다)', `나무 ${OFF.forest.treeHp.join('→')} · ${JSON.stringify(OFF.forest.inv)}`);
-  if (OFF.rockSide.found) ok(OFF.rockSide.rockHp[1] !== OFF.rockSide.rockHp[0] && !(OFF.rockSide.inv.pebble > 0),
-    '★★[자명 통과 금지] 끔 — 같은 자리 맨손 E 는 바위를 캔다(자갈 줍기 ③′ 는 켬 판에만)', `바위 ${OFF.rockSide.rockHp.join('→')} · ${JSON.stringify(OFF.rockSide.inv)}`);
+  if (OFF.rockSide.found) ok((OFF.rockSide.rockHp[1] !== OFF.rockSide.rockHp[0] || OFF.rockSide.chip > 0) && !(OFF.rockSide.inv.pebble > 0),
+    '★★[자명 통과 금지] 끔 — 같은 자리 맨손 E 는 바위를 캔다(자갈 줍기 ③′ 는 켬 판에만)', `바위 ${OFF.rockSide.rockHp.join('→')} · 깎인 ${OFF.rockSide.chip} kg · ${JSON.stringify(OFF.rockSide.inv)}`);
   ok(!OFF.rod, '끔 — 막대 낚싯대 레시피가 없다(제작 목록 종전 그대로)');
 }
 console.log(`\n=== T1065: 통과 ${pass} · 실패 ${fail} ===`);

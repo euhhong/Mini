@@ -41,6 +41,10 @@
 //   종전 손은 소스가 사라질 때까지(상한 14타) 쳤다 — 켬 판에서는 쓸 데 없는 돌을 짐 상한 넘게 지고 걷는다. 사람은 「지금 할 일」의 "지금 돌 n개"가
 //   찬 그 타에 멈춘다 ⇒ `gatherRes(r, want)` 는 짐이 `want`({품목: 수} — 모자란 재료 · 칸이 말한 만들 것의 레시피)를 채우면 멈춘다.
 //   끔 판은 전리품이 부서질 때만 나오므로 멈추는 타가 종전과 같다(쓸 데 있는 셈 한 번이 타마다 붙을 뿐).
+// ★[T1146 2026-11-04] 바위 한 타가 돌 한 개가 안 되는 세계(서버 `T1146_STONE_RULE` 켬 — 한 타 kg = 도구 배수 × 금 간 돌 한 타 kg)에선
+//   서버가 칠 때마다 "바위 깎는 중 x/4kg · 남은 돌 n" 을 말한다 — 사람은 그 말을 보고 계속 친다. ⇒ `gatherRes` 는 그 말을 한 번이라도 들으면
+//   14타 상한 대신 "말도 짐도 없이 14타"에 멈춘다(모자란 것을 모르는 손은 짐이 하나 들면 멈춘다 · 손의 돌괭이가 닳아 없어지면 가방의 다음 것을 든다).
+//   그 말을 들은 바위는 짐이 안 늘었어도 못 가는 바위로 치지 않는다(깎인 몫이 바위 장부에 남아 다음 돌괭이가 잇는다). 끔 판은 그 말이 안 와 종전 차례 그대로다.
 //
 // 실행: node scripts/e2e-first30.js --season spring|summer|winter --start day|night [--cap 30] [--out /tmp/t511/x.json]
 //          [--chief] [--quest-fixture] [--warm-db <초>] [--vid <n>] [--econ-days <n>] [--no-align] [--headed]
@@ -627,22 +631,37 @@ async function equipFor(t) {
   if (want && s.eq !== want.id) { await send({ type: 'equip', toolItemId: want.id }); await sleep(250); }
 }
 const wantMet = (inv, want) => !!want && Object.keys(want).length > 0 && Object.entries(want).every(([k, v]) => (inv[k] || 0) >= v);   // ★[T1126] 모자란 것이 다 찼나
+// ★[T1146] 바위를 깎기만 한 타 — 그 타 뒤 서버가 "바위 깎는 중 x/4kg · 남은 돌 n" · "바위 — 돌 n개 떼어 냄 …"을 말했나(공지 기록 `__t511Log` · 읽기만). 사람은 이 말을 보고 계속 친다.
+const chipSaid = (t0) => ev((t) => (window.__t511Log || []).some((n) => n.t >= t && /^바위 (깎는 중|— 돌)/.test(n.x)), t0).catch(() => false);
 async function gatherRes(r, want) {   // ★[T1126] want = {품목: 수} — 짐이 채우면 그 타에 멈춘다(없으면 종전 — 소스가 사라질 때까지 · 14타)
   const w = await walkTo(standAround(r.x, r.y, STAND).filter((g) => !blockedCell(g.x, g.y)), 10);
   if (!w.ok) { unreach.add(r.id); return { ok: false, reason: w.reason }; }
   await equipFor(r.t);
   const inv0 = (await state()).inv;
-  let n = 0;
-  for (; n < 14 && !timeUp(); n++) {
+  //   ★[T1146] chip = 깎인 kg 말을 들은 타 수 · stall = 짐도 그 말도 없이 친 타 — 그 말이 한 번이라도 오면 14타 상한 대신 "말도 짐도 없이 14타"에 멈춘다
+  //     (한 타에 돌 한 개가 안 되는 세계 · 끔 판은 그 말이 안 와 종전 14타 그대로). 모자란 것을 모르는 손(want 없음)은 짐이 하나 들면 멈춘다.
+  let n = 0, chip = 0, stall = 0, last = inv0;
+  for (; (chip ? stall < 14 : n < 14) && !timeUp(); n++) {
+    const t0 = await ev(() => Date.now());
     await send({ type: 'gather', resId: r.id });   // ★우클릭 메뉴가 보내는 그 한 줄(T90 지목) — 1초 간격도 메뉴 반복과 같다
     await sleep(1000);
     if (!(await hasRes(r.id))) { await sleep(150); break; }
-    if (want && wantMet((await state()).inv, want)) break;   // ★[T1126] 칠 때마다 손에 드는 돌 — 찼으면 멈춘다(사람이 칸의 "지금 돌 n개"를 보고 멈추는 그 타)
+    const s = (want || chip) ? await state() : null;
+    if (want && wantMet(s.inv, want)) break;   // ★[T1126] 칠 때마다 손에 드는 돌 — 찼으면 멈춘다(사람이 칸의 "지금 돌 n개"를 보고 멈추는 그 타)
+    const said = await chipSaid(t0);
+    if (said) chip++;
+    if (chip) {
+      const s1 = s || await state();
+      const got = Object.keys(diffInv(last, s1.inv)).length > 0; last = s1.inv;
+      stall = (said || got) ? 0 : stall + 1;
+      if (!want && Object.keys(diffInv(inv0, s1.inv)).length) break;
+      if (!s1.eq) await equipFor(r.t);   // 손의 돌괭이가 닳아 없어졌다 — 가방에 남은 것을 든다(사람이 하는 그 한 번 · 없으면 그대로)
+    }
   }
   const d = diffInv(inv0, (await state()).inv);
-  if (!Object.keys(d).length) unreach.add(r.id);
+  if (!Object.keys(d).length && !chip) unreach.add(r.id);   // ★[T1146] 깎인 kg 말을 들은 바위는 못 가는 바위가 아니다(깎인 몫이 그 바위 장부에 남는다 — 다음 돌괭이로 잇는다)
   noteGains(d, r.t);
-  return { ok: true, d, hits: n + 1 };
+  return { ok: true, d, hits: n + 1, chip };
 }
 async function craft(type, recipe, check) {
   await send({ type, recipe });
@@ -856,7 +875,7 @@ async function fetchOne(item, want) {   // ★[T1126] want — 칸이 말한 만
   if (o.r) {
     const t0 = Date.now();
     const g = await gatherRes(o.r, want);
-    R.legs.push({ t: tSec(), kind: 'gather', item, res: o.r.t, ok: g.ok, d: g.d || null, reason: g.reason || null, sec: +((Date.now() - t0) / 1000).toFixed(1) });
+    R.legs.push({ t: tSec(), kind: 'gather', item, res: o.r.t, ok: g.ok, d: g.d || null, reason: g.reason || null, hits: g.hits || 0, chip: g.chip || 0, sec: +((Date.now() - t0) / 1000).toFixed(1) });   // ★[T1146] 친 타 수 · 깎인 kg 말을 들은 타(읽기만 · 표가 센다)
     return true;
   }
   if (src.forage === 'fiber') return goReeds(99);
@@ -900,7 +919,7 @@ async function fetchMissing(need) {   // need = {item: n} — 모자란 것 중 
   if (best.r) {
     const t0 = Date.now();
     const g = await gatherRes(best.r, { [best.it]: need[best.it] });   // ★[T1126] 이 소스에서 따는 그 품목이 모자란 만큼만
-    R.legs.push({ t: tSec(), kind: 'gather', item: best.it, res: best.r.t, ok: g.ok, d: g.d || null, reason: g.reason || null, sec: +((Date.now() - t0) / 1000).toFixed(1) });
+    R.legs.push({ t: tSec(), kind: 'gather', item: best.it, res: best.r.t, ok: g.ok, d: g.d || null, reason: g.reason || null, hits: g.hits || 0, chip: g.chip || 0, sec: +((Date.now() - t0) / 1000).toFixed(1) });   // ★[T1146] 친 타 수 · 깎인 kg 말을 들은 타(읽기만)
     return true;
   }
   if (SRC[best.it].forage === 'fiber') return goReeds(need.fiber || 99);

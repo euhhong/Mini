@@ -595,9 +595,16 @@ console.log('\n⑨ 다광종 선광 E2E (실서버 mineOreCell → trySortOre)')
     const stray = oreKg.filter(([k]) => !(k in want));
     ok(stray.length === 0, `  표기 밖 광종 누설 0 ${stray.length ? '(' + stray.map(([k, v]) => k + ' ' + v.toFixed(1)).join(',') + ')' : ''}`);
     // ★③ 선광이 질량을 보존하는가 — 은은 소수 덩이라 이월(oreCarry)로 남는다
+    //   ★[T1146 ②] 맥석은 이제 버리지 않고 돌(4 kg) · 자갈(0.6 kg) · 그 자리 부스러기로 남는다 — 광석 셈(덩이 × CHUNK_KG)에서 빼고 따로 잰다(끔 판엔 두 칸이 안 생긴다).
+    const W = require(path.join(__dirname, '..', 'server', 'weights.js'));
+    const gStone = sorted.stone || 0, gPeb = sorted.pebble || 0; delete sorted.stone; delete sorted.pebble;
     const backKg = Object.entries(sorted).reduce((a, [k, v]) => a + v * S.CHUNK_KG, 0)
       + Object.entries(p.oreCarry || {}).reduce((a, [k, v]) => a + (k === 'stone' ? 0 : v), 0);
     ok(Math.abs(backKg - totOre) / totOre < 0.01, `  선광 질량 보존 — 장부 ${totOre.toFixed(1)}kg → 산출+이월 ${backKg.toFixed(1)}kg`);
+    if (H.T1146_STONE_RULE) {
+      const crumb = H.t1146Stat().crumbKg, back = gStone * W.kgOf('stone') + gPeb * W.kgOf('pebble') + crumb;
+      ok(gangue > 0 && Math.abs(back - gangue) < 1e-3, `  ★[T1146] 맥석 질량 보존 — 맥석 ${gangue.toFixed(1)}kg → 돌 ${gStone} · 자갈 ${gPeb} · 부스러기 ${crumb.toFixed(2)}kg = ${back.toFixed(1)}kg`);
+    } else ok(gStone === 0 && gPeb === 0, '  [T1146 끔] 맥석은 폐석(짐에 돌 · 자갈 0 — 종전)');
     // ★④ 은이 실제로 손에 잡히는가(고대 은의 출처는 방연석이다 — 은 단독 광맥은 폐지됐다)
     ok((sorted.silver || 0) > 0, `  ★은이 방연석에서 나온다 — ${sorted.silver || 0}덩이 (은 단독 광맥 폐지의 대체 경로)`);
   }

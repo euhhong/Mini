@@ -41,7 +41,7 @@ const SPECS = {
     inDoor: 'm.hp = v;', personDoor: 'p.hp = next;',
     others: {
       'if (!(r.hp > 0) || r.hp > r.maxHp) r.hp = r.maxHp;': 1,             // 자원 — 다시 자란 그루(T340 · 재생)
-      'r.hp -= 1;': 1,                                                     // 자원 — NPC 채집
+      'r.hp -= _dmg;': 1,                                                  // 자원 — NPC 채집(★[T1146] 한 타 배수 1 · 바위면 그 타에 떨어지는 hp 점 — 종전 `r.hp -= 1;`)
       'best.hp -= dmg;': 1,                                                // 자원 — 사람 채집(tryGather)
       'best.data.hp = Math.min(maxHp, (best.data.hp || 0) + 25);': 1,      // 건물 — 고치기
       'bestWall.data.hp = (bestWall.data.hp ?? maxHp) - atk;': 1,          // 벽 — 부수기
