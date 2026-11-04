@@ -8,6 +8,8 @@
 //   ③ 그 뒤 글(보고 · 인계 · 지시 · main 커밋 글 · 가지 끝 커밋 글)이 "T### 회부 n" 을 닫는 말과 같이 부르면 닫힘 후보로 단다.
 //   닫힘은 **글자 증거가 있을 때만**이다 — 증거가 없으면 열림(T438 규약 · 판정 0).
 //   node scripts/t903-referral-census.js [--from 2026-10-09] [--to 2026-10-23] [--json <out>] [--md <out>]
+//   ★[T1150] --hoebu --cards 910-1149 [--from 2026-10-24] — 원천을 보고 회부 절 대신 `인계/회부.md` 의 카드 블록(`## T### (날) — …`)으로 쓴다.
+//     블록 하나 = 회부 절 하나(번호 항목 · 같은 카드 블록이 둘이면 뒤 블록이 이긴다 — 고쳐 다시 적은 판) · 뒤 글에 창 안 main 보고를 더한다(가지 0 — main 만 닫는다).
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -15,19 +17,33 @@ const { execFileSync } = require('child_process');
 const ROOT = path.join(__dirname, '..');
 const A = process.argv.slice(2);
 const opt = (k, d) => { const i = A.indexOf('--' + k); return i >= 0 ? A[i + 1] : d; };
-const FROM = opt('from', '2026-10-09'), TO = opt('to', '2026-10-23');
+const HOEBU = A.includes('--hoebu');   // [T1150]
+const CARDS = (opt('cards', '0-99999')).split('-').map(Number);
+const FROM = opt('from', HOEBU ? '2026-10-24' : '2026-10-09'), TO = opt('to', HOEBU ? '2099-12-31' : '2026-10-23');
 const git = (...a) => execFileSync('git', ['-c', 'core.quotepath=off', ...a], { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 28 });
 
 // ── ① 창 안 보고 ─────────────────────────────────────────────────────────────
 const RE_REP = /^T(\d+)_(\d{4}-\d{2}-\d{2})(?:_[^/]*)?\.md$/;
 const docs = [];   // { id, card, date, src, text }
-for (const f of fs.readdirSync(path.join(ROOT, '보고')).sort()) {
+if (HOEBU) {   // [T1150] 회부.md 카드 블록 — 같은 카드가 둘이면 뒤 블록(고쳐 다시 적은 판)
+  const L = fs.readFileSync(path.join(ROOT, '인계', '회부.md'), 'utf8').split('\n');
+  const by = new Map(); let cur = null;
+  const flush = () => { if (cur && cur.card >= CARDS[0] && cur.card <= CARDS[1]) by.set(cur.card, cur); cur = null; };
+  for (let i = 0; i < L.length; i++) {
+    if (L[i].startsWith('## ')) { flush(); const m = L[i].match(/^## T(\d+)\s*\((\d{4}-\d{2}-\d{2})\)/); if (m) cur = { card: +m[1], date: m[2], line: i + 1, head: L[i], body: [] }; continue; }
+    if (cur) cur.body.push(L[i]);
+  }
+  flush();
+  for (const b of [...by.values()].sort((x, y) => x.card - y.card))
+    docs.push({ id: `인계/회부.md:${b.line}`, card: b.card, date: b.date, src: 'main', head: b.head, text: '## 회부\n' + b.body.join('\n') });
+}
+for (const f of (HOEBU ? [] : fs.readdirSync(path.join(ROOT, '보고')).sort())) {
   const m = f.match(RE_REP); if (!m) continue;
   docs.push({ id: '보고/' + f, card: +m[1], date: m[2], src: 'main', text: fs.readFileSync(path.join(ROOT, '보고', f), 'utf8') });
 }
 // 미착지 가지 — 창 안에 움직인 `origin/batch/*` 가 main 에 없는 보고를 더한다(가지 이름을 단다)
 const onMain = new Set(docs.map((d) => d.id));
-const branches = git('for-each-ref', '--format=%(refname:short) %(committerdate:short)', 'refs/remotes/origin/batch').trim().split('\n')
+const branches = HOEBU ? [] : git('for-each-ref', '--format=%(refname:short) %(committerdate:short)', 'refs/remotes/origin/batch').trim().split('\n')
   .map((l) => l.split(' ')).filter(([, d]) => d >= FROM).map(([b]) => b).sort();
 const brTips = [];
 for (const b of branches) {
@@ -109,7 +125,8 @@ function classify(it, secHead) {
 // ── ③ 뒤 글의 부름 — "T### 회부 n" · "T### §n" 근처에 닫는 말이 있나 ───────────────────
 const refDocs = [];   // { id, card, date, text }
 for (const d of docs) refDocs.push(d);
-for (const f of fs.readdirSync(path.join(ROOT, '보고'))) { const m = f.match(RE_REP); if (m && m[2] < FROM) continue; }
+for (const f of fs.readdirSync(path.join(ROOT, '보고'))) { const m = f.match(RE_REP); if (m && m[2] < FROM) continue;
+  if (HOEBU && m) refDocs.push({ id: '보고/' + f, card: +m[1], date: m[2], text: fs.readFileSync(path.join(ROOT, '보고', f), 'utf8') }); }   // [T1150] 창 안 main 보고 = 뒤 글
 for (const dir of ['인계', '지시']) for (const f of fs.readdirSync(path.join(ROOT, dir))) {
   if (!f.endsWith('.md')) continue;
   const m = f.match(/T(\d+)/);
@@ -148,7 +165,7 @@ for (const l of fs.readFileSync(path.join(ROOT, '지시', '_태스크보드_v1.m
 // ── 묶기 ─────────────────────────────────────────────────────────────────────
 const rows = [];
 for (const d of docs) {
-  if (d.date < FROM || d.date > TO) continue;
+  if (!HOEBU && (d.date < FROM || d.date > TO)) continue;
   if (d.card === 903) continue;   // 이 표 자신(머리에 "판정 대기" 가 들어 다음 판에 제 표를 다시 먹지 않게)
   for (const s of sections(d.text)) for (const it of items(s)) {
     const c = classify(it, s.head);
