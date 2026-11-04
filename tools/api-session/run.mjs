@@ -26,9 +26,15 @@ const REPO_URL = 'https://github.com/simjaemin1/Mini.git';
 const argv = process.argv.slice(2);
 const flag = (k, d) => { const a = argv.find((x) => x === `--${k}` || x.startsWith(`--${k}=`)); if (!a) return d; return a.includes('=') ? a.split('=').slice(1).join('=') : true; };
 const words = argv.filter((x) => !x.startsWith('--'));
-const cardArg = words.find((x) => /^T\d+$/i.test(x));
-const card = cardArg ? cardArg.toUpperCase() : 'API';
-const FREE = cardArg ? '' : words.join(' ').trim();      // 카드 번호가 아니면 = 재민이 말로 시킨 일
+const RESUME = !!flag('resume', false);                  // 지난 대화 이어서(같은 대화 · 같은 가지)
+const STATE = path.join(BASE, '지난대화.json');
+let last = null;
+try { last = JSON.parse(fs.readFileSync(STATE, 'utf8')); } catch { /* 없음 */ }
+if (RESUME && !(last && last.session && fs.existsSync(last.wt || ''))) { console.log('✗ 이어 갈 지난 대화가 없습니다 — 새로 시작하십시오.'); process.exit(5); }
+const cardArg = RESUME ? '' : words.find((x) => /^T\d+$/i.test(x));
+const card = RESUME ? last.card : (cardArg ? cardArg.toUpperCase() : 'API');
+const FREE = cardArg ? '' : words.join(' ').trim();      // 카드 번호가 아니면 = 재민이 말로 시킨 일 (이어서면 = 이어서 할 말)
+const IS_FREE = RESUME ? !!last.free : !cardArg;
 const MODEL = String(flag('model', 'opus'));
 const BUDGET = Number(flag('budget', 15));
 const CYCLE_CAP = Number(flag('cap', 100));
@@ -39,7 +45,7 @@ const ONCE = !!flag('once', false);                      // 끝나고 이어서 
 const NO_SANDBOX = !!flag('no-sandbox', false);
 const EXTRA = flag('note', '');                           // 카드에 덧붙일 한 줄(선택)
 
-if (!cardArg && !FREE) { console.log('쓰는 법: node run.mjs T1150 [--model=opus|sonnet] [--budget=15] [--dry] [--once] [--no-sandbox] [--note="…"]\n      또는: node run.mjs "말로 시킬 일"'); process.exit(1); }
+if (!RESUME && !cardArg && !FREE) { console.log('쓰는 법: node run.mjs T1150 [--model=opus|sonnet] [--budget=15] [--dry] [--once] [--no-sandbox] [--note="…"]\n      또는: node run.mjs "말로 시킬 일"\n      또는: node run.mjs --resume ["이어서 할 말"]'); process.exit(1); }
 
 // ── 비밀 가리기 ────────────────────────────────────────
 let PAT = '';
@@ -106,12 +112,13 @@ if (!fs.existsSync(path.join(REPO, '.git'))) {
   git(['config', 'user.email', 'api-session@mini.local']);
 }
 git(['fetch', '-q', authUrl(), '+refs/heads/main:refs/remotes/origin/main']);
-const baseHash = git(['rev-parse', 'origin/main']).out;
+const baseHash = RESUME ? last.base : git(['rev-parse', 'origin/main']).out;
 console.log(`· main = ${baseHash.slice(0, 8)}`);
 
 // ── 3. 카드 ────────────────────────────────────────────
 let cardText = '';
-if (cardArg) {
+if (RESUME) console.log(`· 지난 대화 이어서 — ${last.card === 'API' ? '말로 시킨 일' : '카드 ' + last.card} · 가지 ${last.branch}`);
+else if (cardArg) {
   const r = git(['show', `origin/main:지시/지시_${card}.md`], { ok: true });
   cardText = r.code === 0 ? r.out : '';
   if (!cardText) { const p = path.join(MINI, '지시', `지시_${card}.md`); if (fs.existsSync(p)) cardText = fs.readFileSync(p, 'utf8'); }
@@ -124,35 +131,49 @@ const d = new Date();
 const mmdd = String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
 const hhmm = String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0');
 const slug = cardArg ? card.toLowerCase() : `free-${hhmm}`;
-let branch = `batch/api-${slug}-${mmdd}`;
-const remoteHas = (b) => sh('git', ['ls-remote', '--heads', authUrl(), b], { cwd: REPO }).out.length > 0;
-const localHas = (b) => git(['rev-parse', '--verify', '-q', `refs/heads/${b}`], { ok: true }).code === 0;
-for (let n = 2; remoteHas(branch) || localHas(branch); n++) branch = `batch/api-${slug}-${mmdd}-${n}`;
-const WT = path.join(BASE, 'wt', branch.replace(/\//g, '_'));
-git(['worktree', 'add', '-q', '-b', branch, WT, 'origin/main']);
-console.log(`· 가지 ${branch} · 작업 폴더 ${WT}`);
-if (!DRY) {
-  console.log('· npm ci …');
-  sh('npm', [fs.existsSync(path.join(WT, 'package-lock.json')) ? 'ci' : 'install', '--no-audit', '--no-fund', '--loglevel=error'], { cwd: WT });
+const ask = (q) => new Promise((res) => { const rl = readline.createInterface({ input: process.stdin, output: process.stdout }); rl.question(q, (a) => { rl.close(); res(a); }); });
+let branch, WT;
+if (RESUME) { branch = last.branch; WT = last.wt; }
+else {
+  // 지난 대화가 고친 것 없이 끝났으면 그 워크트리는 여기서 치운다(이어서 할 일이 새로 생겼으니)
+  if (last && last.wt && fs.existsSync(last.wt) && !last.pushed) {
+    const dirty = sh('git', ['status', '--porcelain'], { cwd: last.wt, ok: true }).out;
+    const ah = Number(sh('git', ['rev-list', '--count', `${last.base}..HEAD`], { cwd: last.wt, ok: true }).out || 0);
+    if (!dirty && ah === 0) { git(['worktree', 'remove', '--force', last.wt], { ok: true }); git(['branch', '-D', last.branch], { ok: true }); }
+  }
+  branch = `batch/api-${slug}-${mmdd}`;
+  const remoteHas = (b) => sh('git', ['ls-remote', '--heads', authUrl(), b], { cwd: REPO }).out.length > 0;
+  const localHas = (b) => git(['rev-parse', '--verify', '-q', `refs/heads/${b}`], { ok: true }).code === 0;
+  for (let n = 2; remoteHas(branch) || localHas(branch); n++) branch = `batch/api-${slug}-${mmdd}-${n}`;
+  WT = path.join(BASE, 'wt', branch.replace(/\//g, '_'));
+  git(['worktree', 'add', '-q', '-b', branch, WT, 'origin/main']);
+  console.log(`· 가지 ${branch} · 작업 폴더 ${WT}`);
+  if (!DRY) {
+    console.log('· npm ci …');
+    sh('npm', [fs.existsSync(path.join(WT, 'package-lock.json')) ? 'ci' : 'install', '--no-audit', '--no-fund', '--loglevel=error'], { cwd: WT });
+  }
 }
 
 // ── 5. 프롬프트 ────────────────────────────────────────
 const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const RULES = `
-너는 미니(레포 durango-mini · 한국 청동기 오픈월드 경제 시뮬) 작업 세션 **S-API** 다. 재민이 터미널에서 보고 있을 수도, 자리를 비웠을 수도 있다 — 일하는 도중엔 묻지 말고 스스로 판단해 끝까지 하고, 끝에 짧게 한국어로 답한다(재민이 이어서 말할 수 있다).${FREE ? '\n- 이번 일은 카드가 아니라 **재민이 말로 시킨 일**이다. 설계 결정 · 캐논을 바꾸는 판정이면 하지 말고 끝 답에 질문으로 남겨라. 묻기만 한 것이면 파일을 고치지 말고 답만 해라.' : ''}
+너는 미니(레포 durango-mini · 한국 청동기 오픈월드 경제 시뮬) 작업 세션 **S-API** 다. 재민이 터미널에서 보고 있을 수도, 자리를 비웠을 수도 있다 — 일하는 도중엔 묻지 말고 스스로 판단해 끝까지 하고, 끝에 짧게 한국어로 답한다(재민이 이어서 말할 수 있다).${IS_FREE ? '\n- 이번 일은 카드가 아니라 **재민이 말로 시킨 일**이다. 설계 결정 · 캐논을 바꾸는 판정이면 하지 말고 끝 답에 질문으로 남겨라. 묻기만 한 것이면 파일을 고치지 말고 답만 해라.' : ''}
 - 작업 폴더 = ${WT} · 가지 \`${branch}\` · 베이스 \`${baseHash.slice(0, 7)}\`(main). 카드에 적힌 가지 이름 대신 **이 가지**를 쓴다.
 - 순서는 레포 \`지시/README.md\` 의 "세션 쪽 순서"와 같다. 단 클론 · pull · push 는 러너가 한다 — **너는 git push 를 하지 않는다**(막혀 있다). 커밋만 한다.
 - 먼저 읽기: \`인계/공통.md\` §0~§2 · 카드가 가리키는 영역 인계 · \`tail -n 12 인계/족보.md\`.
 - 커밋 제목에 카드가 정한 태그(\`[승인 대기 · ${card}]\`)를 넣는다. 일하는 중간중간 커밋해라 — 예산($${BUDGET})이 다 되면 그 자리에서 끊긴다.
-- 파일을 고쳤으면 끝에 \`보고/${cardArg ? card + '_' + today : 'API_' + today + '_' + hhmm}.md\` 를 쓴다(머리 15줄 = \`지시/_보고머리_템플릿.md\` 네 칸 — 가지 해시는 마지막 커밋 해시). 판정이 필요한 것은 하지 말고 보고에 질문으로 남긴다.
+- 파일을 고쳤으면 끝에 \`보고/${!IS_FREE ? card + '_' + today : 'API_' + today + '_' + hhmm}.md\` 를 쓴다(머리 15줄 = \`지시/_보고머리_템플릿.md\` 네 칸 — 가지 해시는 마지막 커밋 해시). 판정이 필요한 것은 하지 말고 보고에 질문으로 남긴다.
 - 금지: 서버 접속(ssh · scp) · 배포 · force · \`durango-mini\` 폴더 · 비밀 파일(PAT · 키 · 서버 비밀) · "듀랑고" 라는 낱말. 가드가 막으면 다른 길로 가라.
 - 맥 경로: 그림은 \`${path.join(MINI, '산그림', card)}/\` 에 써도 된다 · \`${path.join(MINI, '지시')}\` · \`${path.join(MINI, '_3d_in')}\` 는 읽기만. 임시 파일은 \`${path.join(BASE, 'tmp')}\`.
 - 언어: 한국어. 정확성이 속도보다 우선.`.trim();
-const prompt = FREE ? `재민이 말로 시킨 일:\n\n${FREE}` : `카드 ${card} 를 한다.${EXTRA ? `\n\n덧붙임(재민 · PM): ${EXTRA}` : ''}\n\n----- 카드 전문 -----\n${cardText}`;
+let prompt = RESUME ? FREE : IS_FREE ? `재민이 말로 시킨 일:\n\n${FREE}` : `카드 ${card} 를 한다.${EXTRA ? `\n\n덧붙임(재민 · PM): ${EXTRA}` : ''}\n\n----- 카드 전문 -----\n${cardText}`;
+
+if (RESUME && !prompt) prompt = (await ask('이어서 할 말: ')).trim();
+if (RESUME && !prompt) { console.log('· 할 말이 없어 끝냅니다.'); process.exit(0); }
 
 if (DRY) {
   console.log('\n===== (드라이런) 덧붙는 규칙 =====\n' + RULES + '\n\n===== 첫 메시지 =====\n' + prompt.slice(0, 1500));
-  git(['worktree', 'remove', '--force', WT], { ok: true }); git(['branch', '-D', branch], { ok: true });
+  if (!RESUME) { git(['worktree', 'remove', '--force', WT], { ok: true }); git(['branch', '-D', branch], { ok: true }); }
   console.log('\n✓ 드라이런 끝 — API 는 부르지 않았습니다(워크트리 · 가지 치움).');
   process.exit(0);
 }
@@ -233,8 +254,7 @@ async function runTurn(text, resume, budgetLeft) {
 }
 
 const result = { subtype: 'unknown', cost: 0, turns: 0, text: '' };
-let next = prompt, session = '';
-const ask = (q) => new Promise((res) => { const rl = readline.createInterface({ input: process.stdin, output: process.stdout }); rl.question(q, (a) => { rl.close(); res(a); }); });
+let next = prompt, session = RESUME ? last.session : '';
 while (next) {
   const left = BUDGET - result.cost;
   if (left < 0.5) { console.log(`· 이 세션 상한 $${BUDGET} 를 다 썼습니다.`); break; }
@@ -255,12 +275,13 @@ if (git(['status', '--porcelain'], { cwd: WT }).out) {
 const ahead = Number(git(['rev-list', '--count', 'origin/main..HEAD'], { cwd: WT }).out);
 const head = git(['rev-parse', 'HEAD'], { cwd: WT }).out;
 let pushed = '안 밂(커밋 0)';
-if (ahead === 0) { git(['worktree', 'remove', '--force', WT], { ok: true }); git(['branch', '-D', branch], { ok: true }); pushed += ' · 빈 워크트리 · 가지 치움'; }
 if (ahead > 0) {
   const r = sh('git', ['push', authUrl(), `HEAD:refs/heads/${branch}`], { cwd: WT, ok: true });
   pushed = r.code === 0 ? `밂 ${branch} = ${head.slice(0, 8)}` : `✗ 푸시 실패(번들로 남김) — ${path.join(BASE, '결과', branch.replace(/\//g, '_') + '.bundle')}`;
   if (r.code !== 0) git(['bundle', 'create', path.join(BASE, '결과', branch.replace(/\//g, '_') + '.bundle'), `origin/main..${branch}`], { ok: true });
 }
+
+fs.writeFileSync(STATE, JSON.stringify({ session, branch, wt: WT, card, free: IS_FREE, base: baseHash, pushed: ahead > 0 || !!(last && RESUME && last.pushed), t: new Date().toISOString() }, null, 1));
 
 // ── 8. 장부 · 결과 ─────────────────────────────────────
 if (!fs.existsSync(LEDGER)) fs.writeFileSync(LEDGER, '시각\t카드\t가지\t모델\t달러\t결과\t커밋수\n');
@@ -274,4 +295,5 @@ const summary = [
 ].join('\n');
 fs.writeFileSync(path.join(BASE, '결과', branch.replace(/\//g, '_') + '.md'), summary + '\n');
 console.log('\n' + summary.split('\n').slice(0, 5).join('\n'));
-console.log(ahead > 0 ? `\n✓ 끝. PM 에게 "${branch}" 만 말하면 됩니다(착지 때 가지를 다 훑습니다).` : '\n✓ 끝. 고친 파일이 없어 가지는 만들지 않았습니다.');
+console.log('· 이 대화는 기억됩니다 — 다음에 「이어서」(node run.mjs --resume)로 같은 대화를 이어 갈 수 있습니다.');
+console.log(ahead > 0 ? `\n✓ 끝. PM 에게 "${branch}" 만 말하면 됩니다(착지 때 가지를 다 훑습니다).` : '\n✓ 끝. 고친 파일이 없어 가지는 밀지 않았습니다.');
