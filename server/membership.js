@@ -43,6 +43,13 @@ const CFG = {
   //   새 수가 아니라 같은 종류의 창을 같은 크기로 쓴 것이다(둘 다 "길드 표를 얼마나 자주 다시 묻나").
   //   ★[T769 · T779] 지금 이 창을 쓰는 것은 길드 촌장(`leader_id`) 캐시 하나다(길드 곳간 잠금은 걷었다).
   GRAN_TTL_MS: _num('MEMBER_GRAN_TTL_MS', 60000),
+  // ★[T1137] 탈퇴 · 추방 뒤 다시 드는 데 기다리는 실시간(ms) — 카드가 준 1시간(★재민 11-03 · 손잡이 아님). 하네스는 시계(`Date.now`)를 당겨 잰다.
+  REJOIN_MS: 3600000,
+  // ★[T1137] 거래소 수수료율(물건으로 · 낼 개수에 곱해 올림 · 그 마을 곳간 몫) — 손잡이 둘. **기본 0**(수수료 없음 = 종전 바이트):
+  //   카드 "수는 손으로 박지 말고 판 셋을 재서 보고" — 판 셋 표는 보고(`scripts/t1137-fee-table.js`) · 고르는 것은 PM.
+  //   `T1137_FEE_MEMBER` = 인정 구성원의 율(없으면 `T1137_FEE` 와 같다 = 할인 0).
+  FEE: Math.max(0, _num('T1137_FEE', 0)),
+  FEE_MEMBER: Math.max(0, _num('T1137_FEE_MEMBER', _num('T1137_FEE', 0))),
 };
 
 // ★★[T769 2026-10-15 · 재민 판정] *"기부는 가능해. 마음대로 빼는 건 안 돼. 그러니까 거래와 기부를 따로 둬야 하고, 관리자만 뺄 수 있어."*
@@ -57,8 +64,34 @@ const CFG = {
 //   손잡이가 이제 가르는 것 = ⓑ 기부(`/기부` 명령 · 거래소 패널의 기부 품목 칸 · 존의 회관 관리자 게이트 · 기부 문 · 기부 말).
 const T769 = process.env.T769_DONATE !== '0';
 
+// ★★[T1137 2026-11-04 · ★재민 11-03 · 족보 732 · 733] **가입 · 탈퇴는 언제든 · 인정 구성원.**
+//   손잡이 `T1137_MEMBER_OPEN` — 켬 기본 후보(`'0'` 만 끔 · 끔 = 종전 소속 문 — 기여 12 + 촌장 권함 + `/소속`).
+//   ⓐ `/가입` — 그 마을 가까이(게시판 · 거래소와 같은 근접 게이트) · 촌장이 반기는 말 한 줄 · 문턱 없이 곧 소속(`_seat` 한 줄 · 사본 0).
+//      초대제 마을(T785 `joinMode` 'invite')은 종전대로 부름(`/초대` → `/수락`)만.
+//   ⓑ 탈퇴 · 추방 = **다시 들기 1시간(실시간)** — 몸 칸 `memberCool`(다시 들 수 있는 때 · epoch ms · `serializeBody` 끝 칸 · 있을 때만 — 없으면 종전 바이트).
+//      어느 마을이든 · 드는 문 전부(`/가입` · `/소속` · `/수락` · 첫 의뢰 권함 · 길드원 앉히기)가 같은 술어(`coolLeft`)를 묻는다 · 세운 사람(창설)은 문이 아니라 행위라 안 묻는다.
+//   ⓒ **인정 구성원** = 그 마을 사람이고 + 기여(온보딩 계량기 하나 · `contribOf`) ≥ `N_MEMBER`(12 그대로) — 또는 그 마을 촌장. 탈퇴해도 기여는 남는다(다시 들면 곧 인정).
+//      쓰이는 자리 둘: 영토 안 개인 사유지(존 `tryClaim` — 새로 · 넓히기) · 거래소 수수료 할인(`feeRateOf`).
+const T1137 = process.env.T1137_MEMBER_OPEN !== '0';
 let H = null;
 function init(host) { H = host || {}; return true; }
+function _now() { return (H && typeof H.now === 'function') ? H.now() : Date.now(); }
+/** 다시 들 수 있을 때까지 남은 ms(0 = 지금 들 수 있다) — 켬에서만 선다(끔 = 늘 0 · 종전 문). */
+function coolLeft(player) {
+  if (!T1137 || !player) return 0;
+  const t = Number(player.memberCool);
+  if (!Number.isFinite(t) || t <= 0) return 0;
+  return Math.max(0, t - _now());
+}
+/** 남은 시간을 사람이 읽는 말로(분 · 올림). */
+function coolText(ms) {
+  const m = Math.max(1, Math.ceil(ms / 60000));
+  return m >= 60 ? `${Math.floor(m / 60)}시간${m % 60 ? ` ${m % 60}분` : ''}` : `${m}분`;
+}
+function _coolErr(player) {
+  const left = coolLeft(player);
+  return left > 0 ? `마을을 떠난 지 얼마 되지 않았습니다. ${coolText(left)} 뒤에 다시 들 수 있습니다.` : null;
+}
 function ready() { return !!H; }
 function _day() { return (H && typeof H.gameDay === 'function') ? (H.gameDay() | 0) : 0; }
 function _send(player, text) { try { if (H && H.send && player && player.ws) H.send(player.ws, { type: 'notice', text }); } catch (e) {} }
@@ -117,6 +150,7 @@ function _seat(player, v) {
 function accept(player, vid) {
   if (!ready() || !player) return { ok: false, err: '아직 준비가 되지 않았습니다.' };
   if (memberOf(player)) return { ok: false, err: '이미 다른 마을 사람입니다. 먼저 "/탈퇴"라고 적으십시오.' };
+  const _ce = _coolErr(player); if (_ce) return { ok: false, err: _ce };   // ★[T1137] 다시 들기 1시간(끔 = 늘 null)
   const v = (vid == null) ? player._memberOfferVid : (vid | 0);
   if (v == null) return { ok: false, err: '촌장이 아직 마을 사람이 되라고 권하지 않았습니다.' };
   const k = contribOf(player.playerId);
@@ -150,6 +184,7 @@ function accept(player, vid) {
 function seatGuildMember(player) {
   if (!ready() || !player || !player.tribeId) return null;
   if (memberOf(player)) return null;                       // 이미 어딘가의 사람 — 안 건드린다(위 ⚠)
+  if (coolLeft(player) > 0) return null;                    // ★[T1137] 다시 들기 1시간 — 배경 앉히기도 같은 술어(끔 = 늘 0)
   const V = H.SimVillages;
   const list = (V && V.playerVillages) ? V.playerVillages() : null;
   if (!list || !list.length) return null;
@@ -169,6 +204,7 @@ function seatGuildMember(player) {
 function seatByInvite(player, vid) {
   if (!ready() || !player || vid == null) return { ok: false, err: '아직 준비가 되지 않았습니다.' };
   if (memberOf(player)) return { ok: false, err: '이미 다른 마을 사람입니다.' };
+  const _ce = _coolErr(player); if (_ce) return { ok: false, err: _ce };   // ★[T1137] 다시 들기 1시간(끔 = 늘 null)
   _seat(player, vid | 0);
   player._memberOfferVid = null;
   return { ok: true, member: player.member };
@@ -186,6 +222,7 @@ function leave(player, why) {
   if (!m) return { ok: false, err: '속한 마을이 없습니다.' };
   player.member = null;
   player._memberOfferVid = null;
+  if (T1137) player.memberCool = _now() + CFG.REJOIN_MS;   // ★[T1137] 탈퇴 · 추방 = 다시 들기 1시간(몸 칸 — 재접속 · 넘기에 따라간다)
   return { ok: true, was: m, contrib: contribOf(player.playerId), why: why || 'self' };
 }
 // ★추방 — **촌장이 한다**. 최소 조건만: 그 마을 사람이어야 하고, 쫓는 쪽이 그 마을 사람이어야 한다.
@@ -197,6 +234,47 @@ function expel(byPlayer, targetPlayer) {
   const r = leave(targetPlayer, 'expel');
   if (r.ok) _send(targetPlayer, `🧓 ${mine.name || ''} 촌장 — 자네는 이제 우리 마을 사람이 아닐세.`);
   return r;
+}
+
+// ── ★[T1137] 가입 — 그 마을 가까이에서 · 문턱 없이 ─────────────────────────────────
+//   근접 = 브리핑 · 게시판 · 거래소 · 꺼내기와 **같은 게이트**(`villageWithdrawGate` · 260px) · 어느 마을인가 = 앞에 선 마을(`_memberNearVid`) · 없으면 가장 가까운 마을.
+function _nearVil(player, vid) {
+  const V = H && H.SimVillages;
+  if (!V || !V.villageWithdrawGate) return { err: '마을을 찾지 못했습니다.' };
+  if (vid != null) return V.villageWithdrawGate(vid | 0, player.x, player.y);
+  const list = (V.clientVillages && V.clientVillages()) || [];
+  let best = null;
+  for (const c of list) { const g = V.villageWithdrawGate(c.id | 0, player.x, player.y); if (!g.err) { const d = Math.hypot((g.vil.ccx | 0) * 32 - player.x, (g.vil.ccy | 0) * 32 - player.y); if (!best || d < best.d) best = { g, d }; } }
+  return best ? best.g : { err: '마을에서 너무 멉니다. 들고 싶은 마을 가까이 가십시오.' };
+}
+function join(player, vid) {
+  if (!T1137) return { ok: false, err: '아직 준비가 되지 않았습니다.' };
+  if (!ready() || !player) return { ok: false, err: '아직 준비가 되지 않았습니다.' };
+  const m = memberOf(player);
+  if (m) return { ok: false, err: `이미 ${m.name || '다른 마을'} 사람입니다. 옮기려면 먼저 "/탈퇴"라고 적으십시오.` };
+  const _ce = _coolErr(player); if (_ce) return { ok: false, err: _ce };
+  const g = _nearVil(player, vid);
+  if (g.err) return { ok: false, err: g.err };
+  const v = g.vil.dbId | 0;
+  //   초대제 마을(T785)은 부름으로만 — 종전 `/소속` 막음과 같은 말
+  if (VillageKin.ON && typeof VillageKin.joinModeOfVid === 'function' && VillageKin.joinModeOfVid(v) === 'invite') {
+    return { ok: false, err: `${g.vil.name || ''}은(는) 부름을 받아야 들 수 있습니다. 마을 사람에게 "/초대"를 청하십시오.` };
+  }
+  _seat(player, v);
+  player._memberOfferVid = null; player._t1086Offer = null;
+  return { ok: true, member: player.member, contrib: contribOf(player.playerId), recognized: isRecognized(player, v) };
+}
+/** ★[T1137] 인정 구성원 — 그 마을 사람 + 기여 ≥ `N_MEMBER`(계량기 하나) · 또는 그 마을 촌장. 끔 = 늘 거짓(쓰는 자리가 다 켬 갈래). */
+function isRecognized(player, vid) {
+  if (!T1137 || !player || vid == null || !isMemberHere(player, vid)) return false;
+  if (contribOf(player.playerId) >= CFG.N_MEMBER) return true;
+  try { const vil = H && H.SimVillages && H.SimVillages.villageByDbId ? H.SimVillages.villageByDbId(vid | 0) : null; if (vil && VillageKin.ON && VillageKin.isChief(player, vil)) return true; } catch (e) {}
+  return false;
+}
+/** ★[T1137] 이 사람이 이 마을 거래소에서 낼 수수료율 — 인정 구성원 = `FEE_MEMBER` · 그 밖 = `FEE`(가입만으로는 할인 0). */
+function feeRateOf(player, vid) {
+  if (!T1137) return 0;
+  return isRecognized(player, vid) ? CFG.FEE_MEMBER : CFG.FEE;
 }
 
 // ── 인출 — 곳간에서 꺼낸다 ───────────────────────────────────────────────────
@@ -371,9 +449,16 @@ function handleChat(player, text) {
   if (!t.startsWith('/')) return false;
   const [cmd, ...rest] = t.split(/\s+/);
   const near = (player._memberNearVid != null) ? player._memberNearVid : null;
+  //   ★[T1137] `/가입` — 그 마을 가까이에서 · 문턱 없이(켬에서만 명령 · 끔 = 종전처럼 말로 흘러간다)
+  if (cmd === '/가입' && T1137) { _joinSay(player, near); return true; }
   if (cmd === '/소속') {
     const m = memberOf(player);
-    if (m) { _send(player, `🏘️ ${m.name || '마을'} 사람이 된 지 ${_day() - (m.since | 0)}일째입니다. 지금까지 쌓은 기여는 ${contribOf(player.playerId)}입니다.`); return true; }
+    if (m) {
+      const vr = T1137 ? (isRecognized(player, m.vid) ? ' 인정 구성원입니다.' : ` 구성원으로 인정되기까지 부탁 ${Math.max(0, CFG.N_MEMBER - contribOf(player.playerId))}건이 남았습니다.`) : '';
+      _send(player, `🏘️ ${m.name || '마을'} 사람이 된 지 ${_day() - (m.since | 0)}일째입니다. 지금까지 쌓은 기여는 ${contribOf(player.playerId)}입니다.${vr}`); return true;
+    }
+    //   ★[T1137] 켬 — 권함이 없으면 `/가입` 과 같은 문(문턱 없이 앞에 선 마을)
+    if (T1137 && player._memberOfferVid == null) { _joinSay(player, near); return true; }
     const r = accept(player, null);
     if (!r.ok) { _send(player, `🏘️ ${r.err}`); return true; }
     //   ★[T769 · T779] 곳간은 촌장만 꺼낸다 — 마을 사람에게 가던 "곳간을 열어 두겠네("/인출")" 말은 걷었다.
@@ -382,7 +467,8 @@ function handleChat(player, text) {
   }
   if (cmd === '/탈퇴') {
     const r = leave(player, 'self');
-    _send(player, r.ok ? `🏘️ ${r.was.name || '마을'}을 떠났습니다. 쌓은 기여 ${r.contrib}은 그대로 남습니다.` : `🏘️ ${r.err}`);
+    _send(player, r.ok ? `🏘️ ${r.was.name || '마을'}을 떠났습니다. 쌓은 기여 ${r.contrib}은 그대로 남습니다.`
+      + (T1137 ? ` 다시 들려면 ${coolText(CFG.REJOIN_MS)}을 기다려야 합니다. 영토 안에 잡아 둔 내 땅은 그대로 내 것입니다.` : '') : `🏘️ ${r.err}`);
     return true;
   }
   if (cmd === '/추방') {
@@ -450,6 +536,15 @@ function handleChat(player, text) {
   }
   return false;
 }
+// ★[T1137] 가입 말 — 촌장이 반기는 한 줄 · 인정이면 얻는 것 한 줄
+function _joinSay(player, near) {
+  const r = join(player, near);
+  if (!r.ok) { _send(player, `🏘️ ${r.err}`); return r; }
+  const left = Math.max(0, CFG.N_MEMBER - (r.contrib | 0));
+  _send(player, `🧓 ${r.member.name || ''} 촌장 — 잘 왔네. 오늘부터 자네는 우리 마을 사람일세.`
+    + (r.recognized ? ' 이미 인정 구성원입니다. 거래소 할인과 영토 안 집터가 열렸습니다.' : ` 마을 부탁을 ${left}건 더 채우면 구성원으로 인정됩니다(거래소 할인 · 영토 안 집터).`));
+  return r;
+}
 // ★[T769] 채팅 꺼내기 — 촌장 판정 뒤 결과를 말한다(실물 · 뒷정리는 같은 정본 · 같은 `afterWithdraw`). 판정이 그 자리에서 서면 동기 · central 을 물으면 그 뒤.
 function _chiefWithdrawSay(player, vid, res, qty) {
   const say = (r) => {
@@ -473,6 +568,12 @@ function publicState(player, vil) {
     offer: (!m && player._memberOfferVid != null) ? (player._memberOfferVid | 0) : null,
     chief: vil ? chiefCached(player, vil) : false,
   };
+  if (T1137) {   // ★[T1137] 켬에서만 칸(끔 = 종전 바이트)
+    out.open = true;
+    out.recognized = m ? isRecognized(player, m.vid) : false;
+    out.coolMs = coolLeft(player);
+    if (vil) { out.fee = feeRateOf(player, vil.dbId | 0); out.feeBase = CFG.FEE; out.feeMember = CFG.FEE_MEMBER; }
+  }
   if (T769) {
     const V = H && H.SimVillages;
     out.donate = Object.keys((V && V.playerVillageDepositMap) ? V.playerVillageDepositMap() : {});
@@ -510,6 +611,7 @@ function firstJoinChat(player, text) {
   if (!T1086 || !ready() || !player) return false;
   if (String(text || '').trim().split(/\s+/)[0] !== '/소속') return false;
   if (memberOf(player)) return false;                                     // 이미 마을 사람 — 종전 문이 형편을 되읊는다
+  if (coolLeft(player) > 0) return false;                                 // ★[T1137] 다시 들기 1시간 — 종전 문(`/소속`)이 남은 시간을 말한다
   const v = player._memberOfferVid;
   if (v == null || player._t1086Offer !== (v | 0)) return false;          // 첫 의뢰 권함이 아니면 종전 문(K-2)
   if (contribOf(player.playerId) >= CFG.N_MEMBER) return false;           // 종전 문턱을 넘었으면 종전 문이 받는다(같은 결과 · 종전 말)
@@ -537,4 +639,5 @@ module.exports = {
   resolveRes, resKo,   // ★[T159] 품목 해석 · ★[T779] 길드 곳간 잠금 둘(`granaryOpen` · `granaryBust`)은 걷었다
   T769, withdrawChief, chiefCheck, chiefCached, resolveItem,   // ★[T769] 기부 · 촌장 꺼내기
   T1086, offerFirst, firstJoinChat, joinOf,   // ★[T1086] 첫 의뢰 = 마을 사람 권함 — 권함 자리 · 받아들이는 문 · 칸이 읽는 형편
+  T1137, join, isRecognized, feeRateOf, coolLeft, coolText,   // ★[T1137] 가입 · 인정 구성원 · 수수료율 · 다시 들기 1시간
 };

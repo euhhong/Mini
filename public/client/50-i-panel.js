@@ -1152,6 +1152,9 @@ function itemKo(k) {
       }
       h += `<div class="tr-line">한 개당 ${trQuote.ratio}${trQuote.avgRatio && Math.abs(trQuote.avgRatio - trQuote.ratio) > 1e-4
         ? ` · 이 물량 평균 <b>${trQuote.avgRatio}</b>(많이 낼수록 값이 나빠집니다)` : ''}</div>`;
+      // ★[T1137] 수수료 — 서버가 낸 낱개 그대로(물건 · 그 마을 곳간 몫 · 올림). 칸이 없으면(율 0 · 끔) 줄도 없다.
+      if (trQuote.fee > 0) h += `<div class="tr-line">수수료 ${gk} <b>${trQuote.fee}</b> — 마을 곳간에 들어갑니다<span class="bd-dim"> (${Math.round(trQuote.feeRate * 1000) / 10}% · 올림 · 모두 ${trQuote.giveTotal}개를 냅니다)</span></div>`;
+      if (trQuote.feeShort) h += `<div class="tr-warn">${trQuote.feeShort}</div>`;
       // ★상한 경고는 **낼 양 축의 말**이다 — 받을 양 축에선 위 `wantCapped` 가 그 자리를 맡는다.
       if (!wantAxis && trQuote.why) h += `<div class="tr-warn">${trQuote.why}</div>`;   // ★[T988] 실행이 거절할 판 — 실행과 같은 말(칸이 없으면 아래 종전 줄)
       else if (!wantAxis && trQuote.capped) h += `<div class="tr-warn">마을이 내줄 수 있는 것은 ${trQuote.cap}개까지라 ${trQuote.giveUsed != null ? trQuote.giveUsed : trQuote.maxGive}개만 받습니다.</div>`;   // ★[T807] 켬 = 실행이 실제로 받을 낱개(`giveUsed`) · 끔 = 칸 없음 = 종전
@@ -1171,7 +1174,7 @@ function itemKo(k) {
     } else h += '<div class="tr-line">…</div>';
     // ★[T69 · 캐논 §3 순서] 낼 것 → 받을 것 → **받을 개수** → 내야 할 양. 그래서 받을 개수가 앞이다.
     //   종전 "낼 개수"도 남긴다 — kg 물건(로트)은 낼 양으로 묻는 게 맞다.
-    const _canGo = trGive && trTake && trQuote && trQuote.ok
+    const _canGo = trGive && trTake && trQuote && trQuote.ok && !trQuote.feeShort   // ★[T1137] 수수료까지 못 내면 단추를 안 연다(실행도 같은 말로 막는다)
       && (trAxis === 'want' ? (trQuote.giveNeeded > 0) : (trQuote.take > 0));
     h += `<div class="tr-qty"><span class="bd-dim">받을 개수</span>`
       + `<input id="trWant" type="number" min="0" value="${trWant}"></div>`;

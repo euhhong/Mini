@@ -120,7 +120,7 @@ async function waitHttp(url, tries = 900) {
   });
   const snap = async (n) => { const f = path.join(SHOTS, n + '.png'); await page.screenshot({ path: f }); shots.push(f); return f; };
 
-  await page.goto(`http://localhost:${CPORT}/`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`http://localhost:${CPORT}/?T1070_VILLAGE_VIEW=0`, { waitUntil: 'domcontentloaded' });   // ★[T1137] 마을 화면이 켬 기본이 됐다 — 이 하네스는 Shift+G 의 **게시판 판**(끔 갈래 · `47-s-board.js`)을 잰다
   await sleep(2500);
   // ★[T84] 로비 버튼은 글자가 아니라 **id**(`#enter`) 로 집는다 — 라벨이 바뀌어도 안 죽는다.
   const enterBtn = await page.$('#enter');

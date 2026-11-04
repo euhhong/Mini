@@ -257,7 +257,7 @@ function handleChat(player, text) {
       vid = pick;
     }
     const r = (H.Membership && H.Membership.seatByInvite) ? H.Membership.seatByInvite(player, vid) : { ok: false };
-    if (!r || !r.ok) { _send(player, '지금은 들지 못했습니다. 잠시 뒤 다시 해 보십시오.', 'guild'); return true; }
+    if (!r || !r.ok) { _send(player, (r && r.err && H.Membership.T1137) ? r.err : '지금은 들지 못했습니다. 잠시 뒤 다시 해 보십시오.', 'guild'); return true; }   // ★[T1137] 켬 = 막은 까닭(다시 들기 남은 시간)을 그대로
     const more = ids.length - 1;
     player._kinCall = null;
     _send(player, `${(_vil(vid) || {}).name || ''}에 들었습니다.${more > 0 ? ` 다른 부름 ${more}건은 지웠습니다.` : ''}`, 'guild');

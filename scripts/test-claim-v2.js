@@ -53,6 +53,12 @@ const LABV = (tribeId) => 8000 + (tribeId | 0);
 function join(p, tribeId) {   // 그 땅의 무리에 든다 — 끔 = 길드(`tribeId`) · 켬 = 그 땅의 랩 마을 사람(몸 `member`)
   p.tribeId = tribeId;
   if (KIN) p.member = { vid: LABV(tribeId), zone: 'hanbando' };
+  //   ★[T1137] 켬 — 영토 안 개인 사유지는 **인정 구성원**만(기여 ≥ `MEMBER_N` · 계량기 = 온보딩 정본 하나). 이 하네스는 T45 땅 규칙(인접 · 겹침 · 승계)을 재므로
+  //     드는 사람을 인정 구성원으로 세운다(그 문 자체는 `test-member-open` 이 잰다).
+  if (KIN && H.Membership && H.Membership.T1137) {
+    const Onb = require(path.join(ROOT, 'server', 'onboarding.js'));
+    const st = Onb.stateOf(p.playerId); st.contrib = Math.max(st.contrib | 0, H.Membership.CFG.N_MEMBER); Onb.__probe.save(p.playerId, st);
+  }
 }
 
 function mkPlayer(name, inv) {

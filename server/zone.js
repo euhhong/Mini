@@ -1468,6 +1468,7 @@ function serializeBody(p) {
     vital: { hp: p.hp, maxHp: p.maxHp, isDown: !!p.isDown, downedAt: p.downedAt || 0 },
   };
   if (T927_BODY_VER) o.sv = +p._saveVer || 0;   // ★[T927] 몸 버전(위) — 맨 끝 칸(끔 = 칸 없음 · 종전 바이트)
+  if (Number(p.memberCool) > 0) o.memberCool = +p.memberCool;   // ★[T1137] 다시 들 수 있는 때(epoch ms · 탈퇴 · 추방 뒤에만 선다 — 없으면 종전 바이트)
   return o;
 }
 // 복원 — 옛 형식(`{axe: 3}`)까지 여기서 흡수한다. 반환값의 키는 `serializeBody` 와 같다.
@@ -1495,6 +1496,7 @@ function parseBody(raw, opts) {
   if (o.member && typeof o.member === 'object' && o.member.vid != null) out.member = o.member;   // ★[T11] 소속
   if (opts && opts.vitals && o.vital && typeof o.vital === 'object') out.vital = o.vital;
   if (Number.isFinite(o.sv)) out.sv = o.sv;   // ★[T927] 몸 버전 — 없으면(옛 행 · 끔 존) 칸도 없다
+  if (Number.isFinite(o.memberCool) && o.memberCool > 0) out.memberCool = o.memberCool;   // ★[T1137] 다시 들기 시각
   // 14.53: 옛 tools (object 또는 number 형식) → 새 toolItems list 변환
   if (Array.isArray(o.toolItems)) {
     out.toolItems = o.toolItems;
@@ -1505,7 +1507,7 @@ function parseBody(raw, opts) {
     for (const [tn, val] of Object.entries(o)) {
       if (['hotkey1', 'toolItems', 'equipped', 'equipment', 'equipSlots', 'craftSkill', 'craftLog',
            'oreLedger', 'oreCarry', 'fishStats', 'body', 'kgLedger', 'lots', 'vital',
-           'lastSeenDay', 'member', 'sv'].includes(tn)) continue;   // ★[T11] 'member' 추가 — 옛 도구 형식으로 오독되면 안 된다
+           'lastSeenDay', 'member', 'sv', 'memberCool'].includes(tn)) continue;   // ★[T11] 'member' 추가 — 옛 도구 형식으로 오독되면 안 된다
       const mx = TOOL_MAX_DURABILITY[tn] || 100;
       let d = mx;
       if (typeof val === 'number' && val > 0) d = mx;
@@ -1567,6 +1569,7 @@ function _bodyInto(p, B, equipped) {
   p.isDown = !!(V && V.isDown);
   p.downedAt = (V && V.downedAt) || 0;
   if (T927_BODY_VER) p._saveVer = +B.sv || 0;   // ★[T927] 몸 버전 — 이 몸의 다음 저장은 이 차례 위에서 센다(끔 = 칸 없음)
+  if (B.memberCool) p.memberCool = B.memberCool;   // ★[T1137] 다시 들기 시각 — 몸에 실려 왔을 때만(없으면 칸도 없다)
   return p;
 }
 
@@ -7467,9 +7470,7 @@ function handlePlayerInput(player, raw) {
     metrics.chats++;
     // ★[T11] 마을 소속 명령 — `/소속` `/탈퇴` `/추방 <이름>` `/인출 [수량] [재화]`.
     //   **새 클라 조건 0**: 채팅은 이미 있다. 명령은 말이 아니므로 방송하지 않는다.
-    if (VillageKin.ON && VillageKin.handleChat(player, text)) { Onboarding.pushState(player); return; }   // ★[T1086] 마을 문이 소속을 바꿨을 수 있다(`/수락` · `/탈퇴`) — 칸에 가입 형편을 다시(끔 = 무동작) · ★[T785] 켬 — `/촌장` `/곳간 열기|잠금` `/소개` `/길드 초대제|공개` `/초대` `/수락` `/전쟁` `/종전` · 촌장 자리 지킴(`/탈퇴` `/추방`)
-    if (Membership.firstJoinChat(player, text)) return;   // ★[T1086] 첫 의뢰 권함에 `/소속` — 문턱 12 대신 시작 마을 빈터 권리(촌장 말 한 통 · 칸 형편 같이 · 끔 = 늘 거짓)
-    if (Membership.handleChat(player, text)) { Onboarding.pushState(player); return; }   // ★[T1086] 소속 명령 뒤 칸에 가입 형편을 다시(끔 = 무동작)
+    if (_t1137Chat(player, text)) return;   // ★[T1137] 마을 명령 셋(마을 문 · 첫 의뢰 권함 · 소속) — 줄은 아래 함수 하나(하네스가 같은 문을 부른다)
     if (Newcomers.handleChat(player, text)) return;   // ★[T19] `/이방인` — 새 클라 조건 0
     if (Friends.handleChat(player, text)) return;     // ★[T115] `/친구` — 새 패널 0 · 새 클라 조건 0
     if (Guild.handleChat(player, text)) return;       // ★[T128] `/초대` `/수락` `/길드` `/소개`
@@ -7547,11 +7548,11 @@ function handlePlayerInput(player, raw) {
   else if (msg.type === 'village_trade_exec') tryVillageTradeExec(player, msg.vid, msg.give, msg.take, msg.qty, msg.want, msg.numeraire);  // ★[거래소] 교환(T69 받을 양)
   else if (msg.type === 'village_trade_quote') {                                                            // ★[거래소] 견적(확정 전 표시)
     if (SimVillages.villageTradeQuote) {
-      const q = SimVillages.villageTradeQuote(msg.vid | 0, player.x, player.y, msg.give, msg.take, msg.qty, _unitsOfFor(player), { want: msg.want, inventory: player.inventory });   // ★[T835] 낼 사람 인벤(견적이 실행과 같은 개체를 고르게 — 손잡이 끔이면 안 읽힌다)
+      const q = SimVillages.villageTradeQuote(msg.vid | 0, player.x, player.y, msg.give, msg.take, msg.qty, _unitsOfFor(player), { want: msg.want, inventory: player.inventory, feeRate: Membership.feeRateOf(player, msg.vid | 0) });   // ★[T1137] 수수료율(인정 구성원 할인 · 끔 · 율 0 = 칸 없음)   // ★[T835] 낼 사람 인벤(견적이 실행과 같은 개체를 고르게 — 손잡이 끔이면 안 읽힌다)
       send(player.ws, { type: 'village_trade_quote', quote: q, vid: msg.vid | 0 });
     }
   }
-  else if (msg.type === 'village_view') VillageView.open(player, msg.vid, msg.numeraire);   // ★[T1072] 마을 화면 열기(열린 채 다시 = 기준 품목 바꾸기)
+  else if (msg.type === 'village_view') { if (Membership.T1137 && msg.vid != null) player._memberNearVid = msg.vid | 0; VillageView.open(player, msg.vid, msg.numeraire); }   // ★[T1072] 마을 화면 열기(열린 채 다시 = 기준 품목 바꾸기) · ★[T1137] 켬 = 화면의 「가입」이 어느 마을인지(거래소 · 브리핑이 적는 그 자리 · 근접 게이트는 문이 다시 잰다)
   else if (msg.type === 'village_view_close') VillageView.close(player);                 // ★[T1072] 닫기
   // ★★[테스트 전용 · 기본 OFF] E2E 하네스가 재료를 채운다. `E2E_GIVE=1` 일 때만 **분기 자체가 존재**한다 —
   //   기본 부팅에서는 이 메시지가 아무 일도 안 한다(라이브에 새 능력이 생기지 않는다).
@@ -7621,6 +7622,12 @@ function handlePlayerInput(player, raw) {
     const vil = SimVillages.villageByDbId && SimVillages.villageByDbId(msg.vid | 0);
     if (vil && vil.econ) { vil.econ.founder = player.playerId; if (vil._kin) vil._kin = Object.assign({}, vil._kin, { chief: player.playerId }); }
     send(player.ws, { type: 'notice', text: vil ? `시험: ${vil.name} 촌장이 되었습니다.` : '시험: 그런 마을이 없습니다.' });
+  }
+  else if (E2E_GIVE && msg.type === '__e2e_contrib') {
+    // ★[T1137] 테스트 전용(E2E_GIVE=1 일 때만 분기 존재) — 기여 계량기(온보딩 정본 하나)를 그 수로 세운다(부탁 12건 사슬은 이 판 밖 · 판 꾸밈 · 사진 하네스 `t1137-shots`).
+    const s = Onboarding.stateOf(player.playerId); s.contrib = Math.max(0, msg.n | 0); Onboarding.__probe.save(player.playerId, s);
+    VillageView.poke(player);
+    send(player.ws, { type: 'notice', text: `시험: 기여 ${s.contrib}` });
   }
   else if (E2E_GIVE && msg.type === '__e2e_village_deed') {
     // ★[T50] 테스트 전용 — 세계의 "일" 픽스처(econ `_weather` 를 세운다 · 사건은 장부가 스스로 낸다)
@@ -11181,6 +11188,16 @@ function tryClaim(player, kind = 'personal') {
   const _onbLot = Onboarding.vacantLotAllows(player, cx + SZ / 2, cy + SZ / 2);
   if (kind === 'personal' && !_onbLot && VillageKin.ON) {   // ★[T786 C12] 켬 — 개인 사유지는 **내 마을 땅** 안에만(종전 "내 길드 영토")
     if (!_kinMyLand(player, cx + SZ / 2, cy + SZ / 2)) { send(player.ws, { type: 'notice', text: '개인 사유지는 내 마을 땅 안에만 설치 가능 (마을 사람이 되거나 임시 사유지 T 사용)' }); return; }
+    //   ★★[T1137] 켬 — 영토 안 집터(새로 · 넓히기)는 **인정 구성원**만(가입만으로는 안 된다 · 탈퇴해도 잡아 둔 땅은 그대로 — 이 문은 새로 잡는 것만 막는다).
+    //     영토 밖 들판 빈터(온보딩 빈터 권리 `_onbLot`)는 위 갈래 밖이라 종전 그대로다(첫 30분 움집 흐름 무변).
+    if (Membership.T1137) {
+      const _mv = _kinVilOf(player);
+      if (!(_mv && Membership.isRecognized(player, _mv.dbId | 0))) {
+        const _left = Math.max(0, Membership.CFG.N_MEMBER - Membership.contribOf(player.playerId));
+        send(player.ws, { type: 'notice', text: `🏠 영토 안 집터는 구성원으로 인정된 사람만 잡을 수 있습니다. 마을 부탁을 ${_left}건 더 채우십시오.` });
+        return;
+      }
+    }
   } else
   if (kind === 'personal' && !_onbLot) {
     if (!player.tribeId) {
@@ -12155,6 +12172,13 @@ function _jobProgress(job, now) {
 // ★★[T786 2026-10-18 · 길드 = 마을 ⓑ ② 권한 · T785 손잡이 `T785_VILLAGE_ONLY` 안(새 손잡이 0)] 권한 술어 **둘**로 접는다 —
 //   **마을 사람** = 몸 `member` 가 이 마을(`VillageKin.memberVil` · 존 안) · **촌장** = 마을 칸 하나(`VillageKin.isChief` · NPC 마을 = 촌장 몸).
 //   길드 사유지(`claims kind='guild'`)는 **마을 땅**(그 마을 영토 `villageOfCell` — `_terrSet` 정본)으로 읽는다. 끔이면 아래 `_kin*` 를 아무도 안 부른다(main 바이트).
+// ★[T1137] 마을 명령 문 — 채팅 갈래의 종전 세 줄 그대로(차례 · 말 무변) + 마을 화면이 열려 있으면 바뀐 칸을 곧바로(가입 · 탈퇴 단추가 그 자리에서 바뀐다).
+function _t1137Chat(player, text) {
+  if (VillageKin.ON && VillageKin.handleChat(player, text)) { Onboarding.pushState(player); if (Membership.T1137) VillageView.poke(player); return true; }   // ★[T1086] 마을 문이 소속을 바꿨을 수 있다(`/수락` · `/탈퇴`) — 칸에 가입 형편을 다시(끔 = 무동작) · ★[T785] 켬 — `/촌장` `/곳간 열기|잠금` `/소개` `/길드 초대제|공개` `/초대` `/수락` `/전쟁` `/종전` · 촌장 자리 지킴(`/탈퇴` `/추방`)
+  if (Membership.firstJoinChat(player, text)) { if (Membership.T1137) VillageView.poke(player); return true; }   // ★[T1086] 첫 의뢰 권함에 `/소속` — 문턱 12 대신 시작 마을 빈터 권리(촌장 말 한 통 · 칸 형편 같이 · 끔 = 늘 거짓)
+  if (Membership.handleChat(player, text)) { Onboarding.pushState(player); if (Membership.T1137) VillageView.poke(player); return true; }   // ★[T1086] 소속 명령 뒤 칸에 가입 형편을 다시(끔 = 무동작)
+  return false;
+}
 function _kinVilOf(player) { return VillageKin.ON ? VillageKin.memberVil(player) : null; }
 function _kinSameVil(a, b) { const va = _kinVilOf(a), vb = _kinVilOf(b); return !!(va && vb && (va.dbId | 0) === (vb.dbId | 0)); }   // 같은 마을 사람
 function _kinIsMemberOf(player, vid) { const v = _kinVilOf(player); return !!(v && vid != null && (v.dbId | 0) === (vid | 0)); }
@@ -12986,7 +13010,7 @@ function tryVillageTradeExec(player, vid, giveRes, takeRes, qty, want, numeraire
   const _uo = _unitsOfFor(player);
   const _d732 = _t732DoorBegin(player, null);   // ★[T732] 곳간 문(끄면 null)
   let r = null, _g732 = null;
-  try { r = SimVillages.villageTradeExec(vid | 0, player.x, player.y, player.inventory, giveRes, takeRes, qty, _uo, want); }
+  try { r = SimVillages.villageTradeExec(vid | 0, player.x, player.y, player.inventory, giveRes, takeRes, qty, _uo, want, Membership.feeRateOf(player, vid | 0)); }   // ★[T1137] 수수료율
   finally { _g732 = _t732DoorEnd(_d732, player, !!(r && !r.err), _d732 && SimVillages.villageByDbId ? SimVillages.villageByDbId(vid | 0) : null, _uo); }   // ★[T732] 낸 것 · 받은 것의 로트(실패 · 던짐이면 장부도 되돌림)
   if (r.err) { send(player.ws, { type: 'notice', text: `🏪 ${r.err}` }); return; }
   // ★내준 개체를 장부에서 **실제로 뺀다** — 위 환산은 `peekKg`(보기)였다. 안 빼면 무게가 안 준다.
@@ -12997,7 +13021,9 @@ function tryVillageTradeExec(player, vid, giveRes, takeRes, qty, want, numeraire
   sendInventory(player);
   const gave = Object.entries(r.gaveItems || {}).map(([k, q]) => `${ITEM_LABEL_SERVER[k] || k} ${q}`).join(' · ');
   send(player.ws, { type: 'notice', text: `🏪 ${r.name} 거래소에서 ${gave}을(를) 내고 ${ITEM_LABEL_SERVER[r.tookItem] || r.tookItem} ${r.take}을(를) 받았습니다.`
-    + (r.capped ? ` 마을 재고가 모자라 ${r.wanted}개 가운데 ${r.give}개만 받았습니다.` : '') + (_g732 ? _t732GotLine(player, _g732) : '') });
+    + (r.capped ? ` 마을 재고가 모자라 ${r.wanted}개 가운데 ${r.give}개만 받았습니다.` : '')
+    + (r.fee > 0 ? ` 그 가운데 ${r.fee}개는 수수료로 ${r.name} 곳간에 들어갔습니다.` : '')   // ★[T1137] 수수료(물건 · 마을 곳간)
+    + (_g732 ? _t732GotLine(player, _g732) : '') });
   // ★시세표를 **다시 보내 준다** — 방금 내 거래가 시세를 움직였을 수 있고, 그걸 보는 게 이 배치의 요점이다.
   try {
     const b = SimVillages.villageTradeBoard(vid | 0, player.x, player.y, player.inventory, numeraire);   // ★[T69] 되보내는 표도 **같은 기준**이라야 한다
@@ -13214,6 +13240,7 @@ function __testBind() {
       // ★[T769] 기부 · 촌장 꺼내기 하네스(`test-donate` · 회관 넣기는 아래 T725 줄의 `tryVillageDeposit`)
     T732_MOMENT, GL, _t732DoorBegin, _t732DoorEnd, _t732Wrap, _afterWithdraw, tryVillageWithdraw, tryVillageDeliver, Membership, doSellIronRelic,   // ★[T732] 곳간 문(test-granary-age · test-moment-lot · 읽기·부르기만)
     T725_HALL, tryVillageDeposit, tryVillageTradeExec,   // ★[T725 ①] 회관 넣기 문(test-hall-units · 읽기·부르기만)
+    tryClaim, handleChatLine: (player, text) => _t1137Chat(player, text),   // ★[T1137] 집터 문 · 채팅 명령 문(test-member-open · 부르기만)
     // ★[부패·보존 배치 2026-08-31] 하네스가 잡을 손잡이들
     Spoil, doPreserve, preserveMenuPayload, _spoiledGuardItems, _spoiledGuardRes, _gameDayAt, __e2eFreezeZoneDay,
     // ★[작물 층 2026-08-31]
