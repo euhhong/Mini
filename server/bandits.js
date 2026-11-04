@@ -279,6 +279,11 @@ function walkToVillage(vil, people, day, why, accept, dest) {   // dest = 호스
 //     ⓑ 장마당 대기 짐 — `_t707` 이 찍힌(정산 전) 캐러밴 · 도착(`to`)이 이 마을 · `giveRes` 가 식량류 → `_t707.give`(정산 때 이 마을 곳간에 든다)
 //   끔이면 `_t766Held` 는 한 번도 안 불린다(조건 맨 끝 단락 평가) · 셈(`stats.t766Held`)도 안 선다 = main 바이트.
 const T766_INCOMING = typeof process !== 'undefined' && !!process.env && process.env.T766_DISSOLVE_INCOMING === '1';
+// ★★[T1143 2026-11-04 · ★재민 11-04 "해체 없도록 하자" · 족보 740] **NPC 마을은 해체 없음** — 손잡이 `T1143_NO_DISSOLVE`(켬 기본 · `=0` 만 끔 = 종전 바이트).
+//   켬: 해체 문(아래 `daily` ① — 순감 5 · 곳간 3일치 미만 · 잔존 ≤ 13)을 **NPC 마을(`econ.founder` 없음 — 정본 `village-kin.js` `_isPlayer` 의 거울)** 은 안 탄다.
+//     사람 마을(길드 · 창설자)은 종전 그대로 탄다(이 카드 밖). 근거: T1141 반사실 판 — 해체 문을 닫으면 해체된 9마을이 다 800날까지 산다(1 ~ 24명 골짜기 뒤).
+//   절망 이탈 문(② · 같은 `daily`)은 손대지 않는다 — 그 문은 `n > BDT_GMIN`(3) 일 때만 1명씩 떠나 마을을 0 으로 못 만든다(문턱 글자가 이미 "마지막 사람들은 안 떠난다").
+const T1143_NO_DISSOLVE = !(typeof process !== 'undefined' && !!process.env && process.env.T1143_NO_DISSOLVE === '0');
 const T766_FOOD = { food: 1, fish: 1, meat: 1, cooked_food: 1 };   // 곳간 잣대(`daily` 의 fe)와 같은 넷
 function incomingFood(world, e) {   // 이 econ 마을로 오는 식량(위 두 칸 · 읽기만)
   let a = 0;
@@ -734,7 +739,7 @@ function daily(day) { // 하루 1회(villages econ 틱 직후): 위기 추적→
       else if (n > e._bdtLastN) e._bdtFall = Math.max(0, (e._bdtFall || 0) - 2); // 회복 시 두 배 차감
     }
     e._bdtLastN = n;
-    if (day >= _open && !e._banditized && (e._bdtFall || 0) >= BDT_DIS_FALL && fe < n * BDT_DIS_FOOD
+    if (day >= _open && !e._banditized && !(T1143_NO_DISSOLVE && !e.founder) && (e._bdtFall || 0) >= BDT_DIS_FALL && fe < n * BDT_DIS_FOOD
         && n >= BDT_GMIN && n <= Math.max(4, Math.min(20, (e._bdtPeak || n) * 0.55)) // 죽어가는 미끄럼+곳간 바닥+잔존 소수 = 해체
         && !(T766_INCOMING && _t766Held(host.world, vil, fe, n, day))) {   // ★[T766] 켬만 — 오는 식량이 문턱을 채우면 보류(끔 = 이 칸 무평가)
       const size = Math.min(n, Math.max(BDT_GMIN, Math.min(BDT_GMAX, Math.round(n * BDT_CONV))));
@@ -1602,7 +1607,7 @@ function _dayRun(day) {
   }
 }
 
-module.exports = { init, onGameTick, dayTick, t986: () => ({ on: T986_BANDIT_DAY, lastDay: S.lastDay }), clientCamps, stats: () => S.stats, incomingFood, t766On: () => T766_INCOMING, armsHeld, ARMS_RES, lotsBoot, gangs: () => S.GANGS,
+module.exports = { init, onGameTick, dayTick, t986: () => ({ on: T986_BANDIT_DAY, lastDay: S.lastDay }), clientCamps, stats: () => S.stats, incomingFood, t766On: () => T766_INCOMING, t1143On: () => T1143_NO_DISSOLVE, armsHeld, ARMS_RES, lotsBoot, gangs: () => S.GANGS,
   t765: () => ({ on: T577_WALK, road: S.WALK.length, rows: (S.t765Rows || []).map((r) => Object.assign({}, r)) }),   // ★[T765] 길 위 장부 증인(관측 자 `t765-obs` · 하네스)
   walkToVillage,   // ★[T1080 · T1108] 걷기 문 하나(해체 남은 사람 · T1079 해산 몸 · T1075 불행 이탈)
   t1080: () => ({ on: _t1080On(), road: S.WALK.length, dead: S.stats.t1080Dead || 0, reroute: S.stats.t1080Reroute || 0, roadDays: S.stats.t1080RoadDays || 0,
