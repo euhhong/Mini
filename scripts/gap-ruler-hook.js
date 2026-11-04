@@ -45,7 +45,9 @@ Ev.createLedger = function () {
       }
       D.rows.push([d, V.map((v) => (v.npcs || []).length), V.map((v) => r2(E1.totalFoodEquivalent(v) || 0)),
         V.map((v) => (v.lastStats && Number.isFinite(v.lastStats.happiness) ? +v.lastStats.happiness.toFixed(3) : null)),
-        V.map((v) => (v._banditized ? 1 : 0))]);
+        V.map((v) => (v._banditized ? 1 : 0)),
+        V.map((v) => (v.lastStats && Number.isFinite(v.lastStats.happinessGoods) ? +v.lastStats.happinessGoods.toFixed(3) : null))]);   // ★[T1134] 좋은 것(목표 행복 판만 · 끔 판은 null — 끔 판의 행복 = 좋은 것)
+      D.end = { emig: V.map((v) => v._emigTot || 0), dead: V.map((v) => v._deadTot || 0), refuseMuster: (world._warStats && world._warStats.refuseMuster) || 0 };   // ★[T1134] 끝 날 셈(날마다 덮어쓴다 — 마지막 날 값이 남는다)
     } catch (e) { console.error('[gap-ruler-hook] 관측 실패:', e.message); }
     return r;
   };

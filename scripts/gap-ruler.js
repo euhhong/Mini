@@ -130,7 +130,7 @@ function run(mode) {
 }
 (async () => {
   console.log(`\n=== 격차 자(T1101) — ${DAYS}날 · 시드 ${SEEDS} · 대조 판 + 충격 판 · ${DIR} ===`);
-  await Promise.all([run('base'), run('shock')]);
+  await Promise.all(A.includes('--no-shock') ? [run('base')] : [run('base'), run('shock')]);   // ★[T1134] `--no-shock` = 대조 판만
   table(load(DIR), OUTJ);
   console.log(`\n판 자료: ${DIR}  (표만 다시: node scripts/gap-ruler.js --table ${DIR})`);
 })().catch((e) => { console.error(e); process.exit(1); });
