@@ -1173,3 +1173,44 @@ guarantee). A future launch must use a NEW output directory and account for
 initialization/OS temporary-memory headroom as well as checkpoint saves. The
 failed attempt remains private evidence. No automatic retry is running and
 the experiment has not demonstrated whether more training improves timbre.
+
+### Actual fresh continuation completed, 2026-11-05
+
+After the user said to proceed while retaining the source material, ACE and
+all trained states, free disk was rechecked at about 23.5 GB and again at
+22.4 GB before launch. No file cleanup or system-process intervention was
+performed. The original runner and exporter were unchanged, with all 19
+targeted synthetic tests passing. A fresh private experiment was used; the
+failed November 1 attempt remains intact.
+
+The actual run completed all 3,000 additional updates to global 6,000 in
+1,467.894 seconds, with no resource stop. The same 42-window baseline and two
+raw baseline waveforms reproduced the global 3,000 parent. Two generator
+snapshots and the 611,757,604-byte full training state were saved. Producer
+checks verified ZIP CRC, typed numeric/RNG/sampler roundtrip and equality of
+the final generator with the full state. Final observed free disk was
+14,142,500,864 bytes; resource observations are not peak measurements.
+
+On the same adaptive development evaluation, mean logmel L1 changed from
+0.616610 to 0.502754 on 27 fit windows, and from 1.219125 to 1.099851 on 15
+previously inspected heldout windows. This is not a blind test or proof of
+convergence or better daegeum identity. In fact the source-fixed controlled
+spectral-shape distances increased from 0.241977 to 0.278174 on deep vibrato
+and from 0.430382 to 0.440060 on Arirang. The numerical evidence is mixed; do
+not label this an improved-timbre model.
+
+The existing exporter completed in 6.702 seconds with no model load, producing
+same-source original/old-global3000/new-global6000 comparisons for both fixed
+4.8-second passages. All six AACs use 48 kHz stereo display encoding and
+measure -24.0 LUFS except old Arirang at -24.1 LUFS. Both neural outputs receive
+the same supplied reference-RMS controller; the original receives only static
+listening gain. This is not learned breath/envelope generation or a new score.
+The old Arirang comparator is byte-identical to previous 054/066, explicitly
+labelled old; the two new raw outputs are different from their old baselines.
+
+Private auditions 068-070 are Arirang original/old/new, and 071-073 are deep
+vibrato original/old/new. Models, raw arrays, source recordings, private
+reports and listening copies remain outside Git. No source PCM mixing, new
+installation, public weights, source upload, ACE deletion or game/default
+change occurred. Source credit remains:
+국악기 음원 제공 — 국립국악원 (공공누리 제1유형).
