@@ -61,7 +61,7 @@ const TAIL = `
 // ── [T646 탐침 · 계측기가 박았다 · 제품엔 없다] ──────────────────────────────
 var _A6;
 function _A6reset() {
-  _A6 = Object.assign(_A6 || {}, { probe: 0, n: 0, tot: 0, seg: {}, sub: {}, subN: {}, popN: 0,
+  _A6 = Object.assign(_A6 || {}, { probe: 0, n: 0, tot: 0, seg: {}, sub: {}, subN: {}, popN: 0, tk: [], tq: null,   // ★[T1140] tk = 틱 본문 ms(조각 안) → tq 분위(p50 · p95 · p99 · 최대)
     hq: { dec: { n: 0, same: 0, gated: 0, msSame: 0, msDiff: 0, cause: { a: 0, b: 0, c: 0 } }, life: { n: 0, same: 0, msSame: 0, msDiff: 0, cause: { a: 0, b: 0, c: 0 } }, follow: { n: 0, same: 0, msSame: 0, msDiff: 0, cause: { a: 0, b: 0, c: 0 } } },
     runs: { dec: {}, life: {}, follow: {} },
     ast: { near: [0, 0], beeline: [0, 0], straight: [0, 0], cooldown: [0, 0], fail: [0, 0], found: [0, 0], inside: 0, outside: 0, outLab: {}, why: {}, walked: {} } });
@@ -77,8 +77,9 @@ let _A6vil = null, _A6vilAt = 0;
 function _A6start() { _A6t0 = _A6prev = _a6t(); }
 function _A6m(k) { const t = _a6t(); _A6.seg[k] = (_A6.seg[k] || 0) + (t - _A6prev); _A6prev = t; }
 function _A6end() {
-  const t = _a6t(); _A6.tot += t - _A6t0; _A6.n++; _A6.popN += npcs.size;
+  const t = _a6t(); _A6.tot += t - _A6t0; _A6.n++; _A6.popN += npcs.size; _A6.tk.push(t - _A6t0);
   if (_A6.n >= _A6EVERY) {
+    { const a = _A6.tk.sort((x, y) => x - y), q = (p) => a.length ? +a[Math.min(a.length - 1, Math.floor(a.length * p))].toFixed(3) : null; _A6.tq = { n: a.length, p50: q(0.5), p95: q(0.95), p99: q(0.99), max: a.length ? +a[a.length - 1].toFixed(3) : null }; _A6.tk = undefined; }   // ★[T1140] 틱 p99(구간 시계 머리 ~ 꼬리 · /perf 는 p95 까지)
     try { console.log('[T646] ' + JSON.stringify(Object.assign({ phase: +worldPhase(Date.now()).toFixed(4) }, _A6))); } catch (e) {}
     if (_A6OUT) { try { const o = {}; for (const [k, m] of _A6dest) { const a = []; for (const [c, s] of m) a.push(s.size); o[k] = a; } require('fs').writeFileSync(_A6OUT, JSON.stringify(o)); } catch (e) {} }
     _A6reset();
@@ -605,7 +606,9 @@ function table() {
     if (!A.n) continue;
     const pop = A.popN / A.n, us = (ms) => +(ms / A.n * 1000 / pop).toFixed(3);
     const p50s = w.slices.map((s) => s.p50).filter((x) => x != null), p95s = w.slices.map((s) => s.p95).filter((x) => x != null);
-    const r = { conf: j.conf, tag: j.tag, probe: j.probe, W: w.W, pop: Math.round(pop), ticks: A.n, step: A.step || null, stepBr: A.stepBr || null, tickP50: R.median(p50s), tickP95: R.median(p95s), totUs: us(A.tot),
+    const tqs = []; for (const sl of w.slices) for (const x of sl.ana) if (x.tq) tqs.push(x.tq);   // ★[T1140] 조각마다 틱 본문 분위(구간 시계)
+    const r = { conf: j.conf, tag: j.tag, probe: j.probe, ref: j.ref || null, W: w.W, pop: Math.round(pop), ticks: A.n, step: A.step || null, stepBr: A.stepBr || null, tickP50: R.median(p50s), tickP95: R.median(p95s), totUs: us(A.tot),
+      tq: tqs.length ? { n: tqs.length, p50: R.median(tqs.map((x) => x.p50)), p95: R.median(tqs.map((x) => x.p95)), p99: R.median(tqs.map((x) => x.p99)), max: Math.max(...tqs.map((x) => x.max)) } : null,
       segUs: Object.fromEntries(Object.entries(A.seg).map(([k, v]) => [k, us(v)])), segSumUs: us(Object.values(A.seg).reduce((s, v) => s + v, 0)),
       subUs: Object.fromEntries(Object.entries(A.sub).map(([k, v]) => [k, us(v)])), subN: Object.fromEntries(Object.entries(A.subN).map(([k, v]) => [k, +(v / A.n).toFixed(1)])),
       hq: Object.fromEntries(Object.entries(A.hq).map(([k, h]) => [k, { n: h.n, sameRate: +(h.same / Math.max(1, h.n)).toFixed(3), gatedRate: +(h.gated / Math.max(1, h.n)).toFixed(3), sameUs: us(h.msSame), diffUs: us(h.msDiff),
@@ -615,8 +618,10 @@ function table() {
     if (j.lines && j.lines.file && fs.existsSync(j.lines.file)) {
       const lo = Math.min(...w.slices.map((x) => x.mt0 || Infinity)), hi = Math.max(...w.slices.map((x) => x.mt1 || 0));
       const C = fs.readFileSync(j.lines.file, 'utf8').trim().split('\n').map((x) => { try { return JSON.parse(x); } catch (e) { return null; } }).filter((x) => x && x.t0 >= lo && x.t1 <= hi);
-      const T = { chunks: C.length, tot: 0, dec: 0, ns: 0, nsSelf: 0, self: {}, call: {}, dF: {}, dL: {}, c2: {} };
+      const T = { chunks: C.length, tot: 0, dec: 0, ns: 0, nsSelf: 0, self: {}, call: {}, dF: {}, dL: {}, c2: {}, inc: {}, rq: {} };
       for (const c of C) { T.tot += c.tot; T.dec += c.dec; T.ns += c.ns; T.nsSelf += c.nsSelf; for (const [k, v] of Object.entries(c.self)) T.self[k] = (T.self[k] || 0) + v; for (const [k, v] of Object.entries(c.call)) T.call[k] = (T.call[k] || 0) + v;
+        for (const [k, v] of Object.entries(c.incl || {})) T.inc[k] = (T.inc[k] || 0) + v;   // ★[T1140] 함수 포함 표본(npcStep 아래)
+        for (const [k, v] of Object.entries(c.reqBy || {})) T.rq[k] = (T.rq[k] || 0) + v;   // ★[T1140] 걸음 안 require() 를 부른 함수
         //   [T791 ①-b] 부른 함수 안쪽(자기 줄 · 두 층 사슬) — 표본기 판에 있을 때만
         for (const [f, o] of Object.entries(c.deep || {})) for (const [ln, v] of Object.entries(o)) { T.dF[f] = (T.dF[f] || 0) + v; T.dL[f + ' #' + ln] = (T.dL[f + ' #' + ln] || 0) + v; }
         for (const [k, v] of Object.entries(c.call2 || {})) T.c2[k] = (T.c2[k] || 0) + v; }
@@ -627,7 +632,7 @@ function table() {
       const selfTop = Object.entries(T.self).sort((x, y) => y[1] - x[1]).slice(0, 15).map(([ln, n]) => [+ln, n, u(n)]);
       const top = (o, n) => Object.entries(o).sort((x, y) => y[1] - x[1]).slice(0, n).map(([k, v]) => [k, v, u(v)]);
       r.lines = { chunks: T.chunks, samples: T.tot, decSamples: T.dec, stepSamples: T.ns, decUs, stepUs: +stepUs.toFixed(3), selfUs: u(T.nsSelf), groups: G, calls: calls.slice(0, 20), selfTop,
-        deepFn: top(T.dF, 20), deepTop: top(T.dL, 25), call2: top(T.c2, 15) };
+        deepFn: top(T.dF, 20), deepTop: top(T.dL, 25), call2: top(T.c2, 15), incl: top(T.inc, 400), reqBy: top(T.rq, 15), selfAll: Object.entries(T.self).map(([ln, n]) => [+ln, n, u(n)]) };
     }
     out.runs.push(r);
   }

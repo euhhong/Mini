@@ -1,0 +1,45 @@
+# T1140 게이트 — 2026-11-04 · 가지 batch/us-again-1104 · 2882e982(제품 손) · 켬 = T1140_HOT_ORDER=1 T1140_LIFE_REQ=1 T1140_STUCK_INLINE=1
+
+## 서버 기준선 계측/서버기준선_2026-11-03b.json --plan 1020:400,7:60,42:60 --par 3
+### 끔(작업본 기본)
+=== 서버 판 기준선 견주기 — 1020:400일 · 7:60일 · 42:60일 · 집 행위 끔 · 동시 3 · 교역로 캐시 /tmp/durango-route-cache · 판 /tmp/sbc-i9gUAd ===
+  ○ 시드 1020: 날 지문 400일 같음 · 판 JSON · 여덟 수 같음(인구 2402)
+  ○ 시드 7: 날 지문 60일 같음 (짧은 판 — 앞 날만)
+  ○ 시드 42: 날 지문 60일 같음 (짧은 판 — 앞 날만)
+=== 같음 3/3 · 판 480초 ===
+rc=0 479s
+### 켬(셋 다)
+=== 서버 판 기준선 견주기 — 1020:400일 · 7:60일 · 42:60일 · 집 행위 끔 · 동시 3 · 교역로 캐시 /tmp/durango-route-cache · 판 /tmp/sbc-5qSUQl ===
+  ○ 시드 1020: 날 지문 400일 같음 · 판 JSON · 여덟 수 같음(인구 2402)
+  ○ 시드 7: 날 지문 60일 같음 (짧은 판 — 앞 날만)
+  ○ 시드 42: 날 지문 60일 같음 (짧은 판 — 앞 날만)
+=== 같음 3/3 · 판 373초 ===
+rc=0 373s
+
+## 랩 t17-metrics 800날 · 끔 ↔ 켬 cmp
+t17 1020 같음
+t17 7 같음
+t17 42 같음
+  인구(시드 1020 · 7 · 42) 4,684 · 5,963 · 5,760 = 랩 정본(족보 728)
+
+## 하네스(끔 = 기본 · ON = 셋 다 켬)
+test-body-fields rc=1 0s === 7 통과 / 3 실패 ===
+test-chunk-gates rc=0 10s === 결과: 28 PASS / 0 FAIL ===
+test-coll-grid rc=0 14s === 결과: 20 PASS / 0 FAIL ===
+test-farm-act rc=0 9s === 결과: 78 PASS / 0 FAIL ===
+test-fish-act rc=0 0s === 결과: 86 PASS / 0 FAIL ===
+test-lon-day rc=0 1s === 22건 중 PASS 22 · FAIL 0 ===
+test-dusk-stamp rc=0 1s === 결과: 21 PASS / 0 FAIL ===
+test-fell-loot rc=0 3s === 결과: 31 PASS / 0 FAIL ===
+test-harness-lint rc=0 28s === 69건 중 PASS 69 · FAIL 0 ===
+t1140-witness rc=0 3s === 8 통과 / 0 실패 ===
+t791-witness rc=0 5s === 14 통과 / 0 실패 ===
+ON test-move-soa rc=0 93s === 결과: 286 PASS / 0 FAIL ===
+ON test-farm-act rc=0 8s === 결과: 78 PASS / 0 FAIL ===
+ON test-fish-act rc=0 1s === 결과: 86 PASS / 0 FAIL ===
+ON test-chunk-gates rc=0 10s === 결과: 28 PASS / 0 FAIL ===
+ON test-coll-grid rc=0 14s === 결과: 20 PASS / 0 FAIL ===
+test-move-soa(끔 · 17:07 같은 제품 글자) 286 PASS / 0 FAIL · test-headless-parity PASS
+
+## ④ 바닥 자 scripts/t1140-floor.js 615 3000 (8MB 훑기 · ns/몸 [식음 · 찬])
+[["ⓐ 몸 객체(T806 켬 리터럴)",87.6,46.7],["ⓑ 차례 리터럴(T1140_HOT_ORDER)",87.3,54.9],["ⓒ 열(타입 배열 · 슬롯)",38.7,33.1]]

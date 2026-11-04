@@ -10554,7 +10554,7 @@ function _t325Scan(vil, day) {
 const T627_TRIP_DAY = process.env.T627_TRIP_DAY === '1';
 function _tripDayMs() {   // 하루 몫을 셀 때의 하루 길이(ms) — 끔 = 판 시계 · 켬 = 정본 운영 하루
   if (!T627_TRIP_DAY) return state.dayMs || 0;
-  const W = require('./zone-config').WORLD;                          // 정본 게임일(이 파일의 다른 자리처럼 그 자리에서 읽는다 · require 캐시)
+  const W = (T1140_LIFE_REQ ? _zc720() : require('./zone-config')).WORLD;   // 정본 게임일(이 파일의 다른 자리처럼 그 자리에서 읽는다 · require 캐시) · ★[T1140 ③-나] 켬 = 같은 모듈 객체(`_zc720` 칸)
   return (W && W.dayLengthMs) || state.dayMs || 0;
 }
 function _t341TripsPerDay(vil, distPx, unitsPerTree) {
@@ -14928,7 +14928,17 @@ function __e2eDayFreeze(on) {
 //
 // ★결손 → econ 환산은 `sustain.js` 정본 계수 그대로다(`Fishing.stockToEcon`). 사본 금지.
 //   모든 셀이 만땅이면 결손 0 → 값이 **씨딩 때와 정확히 같다** = 헤드리스 기준선 불변.
-function _fishingMod() { try { return require('./fishing'); } catch (e) { return null; } }
+// ★★[T1140 ③-나 2026-11-04 · 손잡이 `T1140_LIFE_REQ`(기본 끔 · `'1'` 만 켬 · 끔 = 종전 글자)] **생활 층 안 `require()` 를 한 번만** — T791 회부 3(결정 부름 안 생활 층)의 한 손.
+//   T1140 ① 표본: 걸음(`npcStep`) 안 표본의 ≈1 % 가 노드 모듈 적재기(`require` · `Module._load`)였다 — 결정마다 생활 층 함수가 이미 실린 모듈을 다시 `require` 한다
+//   (`_fishingMod` — 어부 물가 · 바다 손 · 어장 · `_tripDayMs` — 하루 몫 · `zone-config`). `require` 는 실린 모듈이면 **같은 객체**를 돌려준다(캐시) ⇒
+//   켬이면 처음 받은 객체를 모듈 칸에 둔다(`_zc720` · `_lifeVL` · `_seaTbl` 과 같은 꼴 · 실패면 종전처럼 `null`). 같은 객체 · 같은 답 · 세계 무접촉.
+//   ★T1140 ③ 판: `require()` 줄 낮 0.028 → 0 · 밤 0.010 → 0 µs/사람(표본 사슬) — 켬 기본 후보(PM).
+const T1140_LIFE_REQ = process.env.T1140_LIFE_REQ === '1';
+let _t1140Fish;   // undefined = 아직 · null = 실패(종전도 늘 실패 — 같은 파일 · 같은 판)
+function _fishingMod() {
+  if (T1140_LIFE_REQ) { if (_t1140Fish === undefined) { try { _t1140Fish = require('./fishing'); } catch (e) { _t1140Fish = null; } } return _t1140Fish; }
+  try { return require('./fishing'); } catch (e) { return null; }
+}
 // ★[T574] 존 특산 프로필 + 경계 혼용 띠 정본 — 민물 몸의 종 뽑기가 부른다(손잡이 `T574_REGION` · 끄면 안 부른다)
 let _rgMod = undefined;
 function _regionMod() { if (_rgMod === undefined) { try { _rgMod = require('./region-profiles'); } catch (e) { _rgMod = null; } } return _rgMod; }
