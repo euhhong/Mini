@@ -13,6 +13,8 @@
 //
 // 실행: node scripts/test-cand-walk.js
 'use strict';
+// ★[T1147] 판 꾸밈 — ⑨ 는 T1075 불행 이탈 걷기 문(가짜 호스트 · 행복 칸 없음)을 잰다. T1134 가 켬 기본이 되어 '더 행복한 곳만' 문이 서므로 이 판은 그것을 끈다(단언 무변 · T1147 받는 곳은 test-t1147-emig-pick).
+process.env.T1134_HAPPY_TARGET = process.env.T1134_HAPPY_TARGET || '0';
 const path = require('path');
 const fs = require('fs');
 const { execFileSync } = require('child_process');

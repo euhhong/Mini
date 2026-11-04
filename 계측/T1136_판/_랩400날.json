@@ -1,0 +1,75 @@
+{
+ "card": "T1136",
+ "ruler": "t17 랩 자 400날",
+ "arms": {
+  "off_w0": [
+   {
+    "seed": "1020",
+    "pop": 2602,
+    "empty": 0,
+    "famine": 371,
+    "legs": 2852
+   },
+   {
+    "seed": "7",
+    "pop": 3075,
+    "empty": 0,
+    "famine": 111,
+    "legs": 2641
+   },
+   {
+    "seed": "42",
+    "pop": 2825,
+    "empty": 0,
+    "famine": 166,
+    "legs": 2616
+   }
+  ],
+  "on_w0": [
+   {
+    "seed": "1020",
+    "pop": 2078,
+    "empty": 0,
+    "famine": 325,
+    "legs": 2690
+   },
+   {
+    "seed": "7",
+    "pop": 2179,
+    "empty": 0,
+    "famine": 314,
+    "legs": 2808
+   },
+   {
+    "seed": "42",
+    "pop": 2458,
+    "empty": 0,
+    "famine": 306,
+    "legs": 2812
+   }
+  ],
+  "on_w1": [
+   {
+    "seed": "1020",
+    "pop": 2544,
+    "empty": 0,
+    "famine": 197,
+    "legs": 10286
+   },
+   {
+    "seed": "7",
+    "pop": 2688,
+    "empty": 0,
+    "famine": 191,
+    "legs": 10538
+   },
+   {
+    "seed": "42",
+    "pop": 2684,
+    "empty": 0,
+    "famine": 288,
+    "legs": 11016
+   }
+  ]
+ }
+}

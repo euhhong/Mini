@@ -533,7 +533,7 @@ function _opDefEstPack(force) { return Math.max(8, Math.min(14, WAR_SIEGE_PACK *
 // ═══════════════════════════════════════════════════════════════════════════
 // 한 사람을 econ 에서 빼는 자리(사망) — 사본 0.
 // ★[T1134] 겪은 일 — 마을 칸 `_t1134E` 에 한 몫(손잡이 `T1134_HAPPY_TARGET` 끔 = 무동작 · econ 이 반감기 30날로 줄인다)
-function _t1134On() { return typeof process !== 'undefined' && !!process.env && process.env.T1134_HAPPY_TARGET === '1'; }
+function _t1134On() { return !(typeof process !== 'undefined' && !!process.env && process.env.T1134_HAPPY_TARGET === '0'); }   // ★[T1147] 켬 기본(econ 과 같은 글자)
 function _t1134Ev(e, amt) { if (e && amt > 0 && _t1134On()) e._t1134E = (e._t1134E || 0) + amt; }
 function _warRemoveNpc(e, npc) {
   if (!e || !e.npcs || !npc) return false;

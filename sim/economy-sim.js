@@ -1244,9 +1244,11 @@ function _t1075Starved(v, n) {
 //     같은 조건이면 출발값과 무관하게 같은 값으로 간다(test-happy-converge).
 //   효과: 출생 항 그대로(h 를 읽는다) · 불행은 죽이지 않는다(T1075 ④ — 출생을 먼저 깎는다) · **h < 0.25 일 때만** 남는 몫이 이탈 압력(더 행복한 이웃이 받을 때만 걷는다).
 //   T1075 와 같이 켜면 T1134 가 이긴다(목표 · 계단 · 이탈 문턱).
-const T1134_HAPPY_TARGET = (typeof process !== 'undefined' && process.env && process.env.T1134_HAPPY_TARGET === '1');
+//   ★★[T1147 · ★재민 11-04 ㄱ] **켬 기본**(`!== '0'` · 되돌림 `T1134_HAPPY_TARGET=0` = 종전 바이트) · c 기본 0.00741(T1134 §5 권고 — 끈 판 마을별 '좋은 것 ÷ 인구' 25%) · env `T1134_C` 로 바꾼다.
+const T1134_HAPPY_TARGET = !(typeof process !== 'undefined' && process.env && process.env.T1134_HAPPY_TARGET === '0');
+const T1134_C_DEFAULT = 0.00741;   // ★재민 11-04 판정(T1134 보고 §5)
 const T1134_EMIG_H = 0.25;   // ★재민 11-03 카드(이주 문턱)
-function t1134C() { const x = (typeof process !== 'undefined' && process.env) ? parseFloat(process.env.T1134_C) : NaN; return Number.isFinite(x) && x > 0 ? x : 0; }
+function t1134C() { const x = (typeof process !== 'undefined' && process.env) ? parseFloat(process.env.T1134_C) : NaN; return Number.isFinite(x) && x >= 0 ? x : T1134_C_DEFAULT; }   // ★[T1147] 미설정 = 0.00741 · `T1134_C=0` = 인구 항 없음
 function t1134Half() { const x = (typeof process !== 'undefined' && process.env) ? parseFloat(process.env.T1134_HALF) : NaN; return Number.isFinite(x) && x > 0 ? x : HAPPY_EQ_HALF_DAYS; }
 //   하루 한 걸음 — 좋은 것 G · 인구 N · 오늘 굶주림 몫 hungerShare(0~1) → { target, h }. 마을 칸 둘(`_t1134E` · `_H`)만 쓴다(하네스가 이 함수를 그대로 부른다).
 function t1134Step(v, G, N, hungerShare) {
@@ -6347,7 +6349,7 @@ module.exports = {
   t1113On, t1113Unhappy, t1113Happy, t1113LowMul, t1113IsFood, T1113_HAPPY_MID,   // ★[T1113] 행복 낮을 때 효과 셋 — war-core · 서버 · 하네스가 같은 술어를 읽는다(사본 0)   // ★[T1085] 촌장 지정 — 서버 동사 `assign_job` 이 부른다(규칙 사본 0)
   _autoSwitchJobForTest: autoSwitchJob, _switchNPCJobForTest: switchNPCJob,   // ★[T1085] 하네스가 자율 전환 그 함수를 부른다(시험 이름 · 사본 0)
   T1075_HAPPY_EQ, HAPPY_EQ_HALF_DAYS,
-  T1134_HAPPY_TARGET, T1134_EMIG_H, t1134C, t1134Half, t1134Step,   // ★[T1134] 목표 행복 — 하네스 · 호스트가 같은 함수를 읽는다   // ★[T1075] 행복 평형 손잡이 · 반감기(평형 함수는 `sim/equilibrium.js` 하나 — T1076 과 같이 쓴다)
+  T1134_HAPPY_TARGET, T1134_EMIG_H, T1134_C_DEFAULT, t1134C, t1134Half, t1134Step,   // ★[T1134] 목표 행복 — 하네스 · 호스트가 같은 함수를 읽는다   // ★[T1075] 행복 평형 손잡이 · 반감기(평형 함수는 `sim/equilibrium.js` 하나 — T1076 과 같이 쓴다)
   foodDebtOf, T1074_FOOD_DEBT,   // ★[T1074] 식량 빚 읽는 함수 하나(T1075 가 읽는다)
   __t1074: { _fdEaters, _fdNeed, _fdSettle, _fdDeathIdx, FD_ADAPT_MAX, FD_ADAPT_DOWN_DAYS, FD_ADAPT_UP_DAYS, FD_DEATH_DAYS, FD_REPAY_MAX, T1117_FD_EVID },   // 하네스 훅(test-t1074-food-debt)
   T860_ON, CATCH_FROM, PRESERVE_FROM, _preserveSurplus, _t860Begin, _t860Dry, T877_ON, _t860Unit, PRESERVED_FOODS, PRESERVE_YIELD, PRESERVE_FOOD_FACTOR, FORAGE_FOOD_FACTOR,   // ★[T860] 잡은 날 말리기 — 손잡이 · 잡은 칸 표(하네스가 spoil 정본과 대조한다 · 사본 0) · 갈무리 한 걸음

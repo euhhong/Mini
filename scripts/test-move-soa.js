@@ -1791,7 +1791,7 @@ console.log('\n⑱ T474 — 캐러밴 시계 = 몸 걸음에서 유도(손잡이
   const { WORLD } = require(path.join(ROOT, 'server', 'zone-config'));
   const E = fs.readFileSync(path.join(ROOT, 'sim', 'economy-sim-v2.js'), 'utf8');
   const EC = codeOnly(E);
-  const declM = E.match(/const T474_CARAVAN_WALK = (\(typeof process !== 'undefined' && process\.env && process\.env\.T474_CARAVAN_WALK === '1'\));/);
+  const declM = E.match(/const T474_CARAVAN_WALK = (\(typeof process !== 'undefined' && process\.env && process\.env\.T474_CARAVAN_WALK !== '0'\));/);   // ★[PM land1045] 켬 기본(재민 11-04)
   //   ★[T489] 시계 한 줄이 셋째 갈래(짐 진 몸)를 품으며 세 줄이 됐다 — 끝은 `: NPC_SPEED;`(끔 갈래) 글자로 자른다.
   const i0 = E.indexOf('const T474_CARAVAN_WALK = '), i1 = E.indexOf('const CARAVAN_DAY_SPEED = T474_CARAVAN_WALK');
   const i2 = i1 > 0 ? E.indexOf(': NPC_SPEED;', i1) : -1;
@@ -1806,17 +1806,22 @@ console.log('\n⑱ T474 — 캐러밴 시계 = 몸 걸음에서 유도(손잡이
   {
     const envOf = new Function('process', 'return ' + (declM ? declM[1] : 'null') + ';');
     const r = [undefined, '', '0', '1', 'true', 'on'].map((e) => envOf({ env: e === undefined ? {} : { T474_CARAVAN_WALK: e } }));
-    ok(JSON.stringify(r) === JSON.stringify([false, false, false, true, false, false]),
-       '⑱-a 켜는 것은 **`1` 한 글자**뿐 — 없음·빈칸·`0`·`true`·`on` 은 끔(미설정 = 끔 = 종전)', r.join(' · '));
+    ok(JSON.stringify(r) === JSON.stringify([true, true, false, true, true, true]),
+       '⑱-a ★[PM land1045 · 재민 11-04 켬 기본] 끄는 것은 **`0` 한 글자**뿐 — 없음·빈칸·`1`·`true`·`on` 은 켬', r.join(' · '));
   }
   // ⓑ 끔 = 종전 글자(옛 꼴 복원)
   const OLD = (dist) => Math.max(1, Math.round(dist / 500));
   const sample = [0, 1, 249.999, 250, 250.0001, 499.5, 500, 749.9999, 750, 750.0001, 1249.5, 1250, 3599.99, 3600, 7199.99, 7200, 10799.99, 10800, 12220, 30000];
   for (let i = 0; i < 20000; i++) sample.push(rnd() * 13000);
-  let offSame = 0; for (const d of sample) if (V2.travelDaysForDistance(d) === OLD(d)) offSame++;
-  ok(process.env.T474_CARAVAN_WALK === undefined && V2.CARAVAN_DAY_SPEED === V2.NPC_SPEED && V2.NPC_SPEED === 500 && offSame === sample.length,
-     '⑱-b 끔(이 프로세스 · env 없음) = 종전 `max(1, round(d / 500))` 와 **같은 답**(표본 전수) · 시계 = `NPC_SPEED` 그 수',
-     `${offSame}/${sample.length} · 시계 ${V2.CARAVAN_DAY_SPEED}`);
+  //   ★[PM land1045] 켬 기본 — 끔 판은 자식(`T474_CARAVAN_WALK=0`)이 잰다(아래 offKid) · 이 프로세스는 켬이다.
+  const offCode = `console.log = () => {};\nconst V2 = require(${JSON.stringify(path.join(ROOT, 'sim', 'economy-sim-v2'))});\n` +
+    `const S = JSON.parse(require('fs').readFileSync(0, 'utf8')); let same = 0; for (const d of S) if (V2.travelDaysForDistance(d) === Math.max(1, Math.round(d / 500))) same++;\n` +
+    `process.stdout.write(JSON.stringify({ c: V2.CARAVAN_DAY_SPEED, npc: V2.NPC_SPEED, same, n: S.length }));`;
+  const offKid = JSON.parse(execFileSync(process.execPath, ['-e', offCode], { input: JSON.stringify(sample), env: Object.assign({}, process.env, { T474_CARAVAN_WALK: '0' }) }).toString());
+  const offSame = offKid.same;
+  ok(offKid.c === offKid.npc && offKid.npc === 500 && offSame === sample.length,
+     '⑱-b 끔(`T474_CARAVAN_WALK=0` 자식) = 종전 `max(1, round(d / 500))` 와 **같은 답**(표본 전수) · 시계 = `NPC_SPEED` 그 수',
+     `${offSame}/${sample.length} · 시계 ${offKid.c}`);
   // ⓒ 유도
   const want = MM.DEFAULTS.baseSpeed * (WORLD.dayLengthMs / 1000) * V2.ECON_PER_CELL / WORLD.tileSize;
   const w = V2.caravanWalkPerDay();
@@ -1861,7 +1866,8 @@ console.log('\n⑱ T474 — 캐러밴 시계 = 몸 걸음에서 유도(손잡이
   //   끔(이 프로세스)에선 캐러밴만 옛 동기 수(500)에 남아 소문(7,200)과 갈리고, T474 를 켜면 둘이 **같은 몸 시계**에 선다(켜기 조건 ① 이 풀렸다).
   //   종전 거울(`T489_RUMOR_SPLIT=0`)은 ⑲-e 가 잰다.
   let rumOff = 0; for (const d of sample) if (Rumor.travelDaysOf(d) === V2.travelDaysForDistance(d)) rumOff++;
-  ok(rumOff < sample.length && kid.rum === 0,
+  //   ★[PM land1045] 이 프로세스가 켬 기본이 됐다 — 이 프로세스도 소문 = 캐러밴(rumOff = 전수) · 켬 자식도 같다.
+  ok(rumOff === sample.length && kid.rum === 0,
      '⑱-g [T496] 소문 = 몸(T489 기본 켬) — 끔(이 프로세스)에선 소문 ≠ 캐러밴(캐러밴만 옛 500 · #82) · T474 켬 자식에선 소문 = 캐러밴(**둘 다 몸** — 켜기 조건 ① 이 풀렸다 · 시계 하나)',
      `끔 같은 날 ${rumOff}/${sample.length} · 켬 어긋남 ${kid.rum}/${kid.n}`);
   // ⓗ 번들 — process 가 없는 곳(랩)
@@ -1874,10 +1880,10 @@ console.log('\n⑱ T474 — 캐러밴 시계 = 몸 걸음에서 유도(손잡이
       vm.createContext(box); vm.runInContext(B, box, { timeout: 20000 });
       const EE = box.EconEngine;
       try { EE.caravanWalkPerDay(); } catch (e) { threw = String(e && e.message || e); }
-      bOk = !!EE && EE.CARAVAN_DAY_SPEED === 500 && EE.travelDaysForDistance(2600) === OLD(2600);
+      bOk = !!EE && EE.CARAVAN_DAY_SPEED === 7200 && EE.travelDaysForDistance(2600) === Math.max(1, Math.round(2600 / 7200));   // ★[PM land1045] 번들도 켬(빈 env shim · move-model 실음)
     } catch (e) { err = String(e && e.message || e); }
-    ok(B.includes(knobBlk) && bOk && /^\[T474\]/.test(threw) && process.env.T474_CARAVAN_WALK === undefined,
-       '⑱-h 번들(랩): 같은 글자 · process 없는 곳에선 **구조적으로 끔**(시계 500) · 유도 함수는 소리 내 던진다(move-model 표가 번들에 없다 — 켤 때 같이 싣는다)',
+    ok(B.includes(knobBlk) && bOk && !threw && process.env.T474_CARAVAN_WALK === undefined,
+       '⑱-h 번들(랩): 같은 글자 · ★[PM land1045] 빈 env shim = 켬(시계 7,200) · 몸 정본(move-model)을 번들이 싣는다 — 유도 함수가 서버와 같은 수',
        err || `시계 ${bOk ? 500 : '?'} · ${threw.slice(0, 40)}`);
   }
   // ⓘ 미끼
@@ -2148,8 +2154,8 @@ console.log('\n⑲ T489 → T496 — 소문 분리 기본 켬(`T489_RUMOR_SPLIT`
   // ⓑ 기본
   const walk = V2.caravanWalkPerDay();
   ok(process.env.T489_RUMOR_SPLIT === undefined && process.env.T496_CARAVAN_REST === undefined && V2.T489_RUMOR_SPLIT === true && V2.T496_CARAVAN_REST === false
-     && Rumor.CFG.SPEED === walk && V2.rumorDaySpeed() === walk && V2.CARAVAN_DAY_SPEED === V2.NPC_SPEED,
-     '⑲-b 기본(이 프로세스 · env 없음) = 소문 분리 **켬** — 소문 시계 = 몸(econ `rumorDaySpeed()` 7,200) · 캐러밴 = `NPC_SPEED`(T474 끔 · T496 끔)',
+     && Rumor.CFG.SPEED === walk && V2.rumorDaySpeed() === walk && V2.CARAVAN_DAY_SPEED === walk,
+     '⑲-b 기본(이 프로세스 · env 없음) = 소문 분리 **켬** — 소문 시계 = 몸(econ `rumorDaySpeed()` 7,200) · ★[PM land1045] 캐러밴도 몸(T474 켬 기본 · T496 끔) — 시계 하나',
      `소문 ${Rumor.CFG.SPEED} · 캐러밴 ${V2.CARAVAN_DAY_SPEED}`);
   // ⓒ
   const bodyMs = MM.DEFAULTS.baseSpeed / WORLD.tileSize, P = V2.T468_PORTER;
@@ -2171,12 +2177,12 @@ console.log('\n⑲ T489 → T496 — 소문 분리 기본 켬(`T489_RUMOR_SPLIT`
     `const S = [300, 1400, 2799, 3600, 4200, 4999, 7200, 9000]; process.stdout.write(JSON.stringify({ car: V2.CARAVAN_DAY_SPEED, rum: R.CFG.SPEED,\n` +
     `  days: S.map((d) => V2.travelDaysForDistance(d)), rdays: S.map((d) => R.travelDaysOf(d)) }));`;
   const kid = (env) => JSON.parse(execFileSync(process.execPath, ['-e', kidCode], { env: Object.assign({}, process.env, env) }).toString());
-  const k0 = kid({ T489_RUMOR_SPLIT: '0' }), kW = kid({ T474_CARAVAN_WALK: '1' }), kW0 = kid({ T474_CARAVAN_WALK: '1', T489_RUMOR_SPLIT: '0' }),
-        kRest = kid({ T474_CARAVAN_WALK: '1', T496_CARAVAN_REST: '1' }), kRest1 = kid({ T496_CARAVAN_REST: '1' }),
+  const k0 = kid({ T489_RUMOR_SPLIT: '0', T474_CARAVAN_WALK: '0' }), kW = kid({ T474_CARAVAN_WALK: '1' }), kW0 = kid({ T474_CARAVAN_WALK: '1', T489_RUMOR_SPLIT: '0' }),
+        kRest = kid({ T474_CARAVAN_WALK: '1', T496_CARAVAN_REST: '1' }), kRest1 = kid({ T496_CARAVAN_REST: '1', T474_CARAVAN_WALK: '0' }),
         kDay = kid({ T474_CARAVAN_WALK: '1', T489_RUMOR_SPLIT: 'day' }), kS = kid({ RUMOR_SPEED: '1234' });
   const S = [300, 1400, 2799, 3600, 4200, 4999, 7200, 9000], dOf = (sp) => S.map((d) => Math.max(1, Math.round(d / sp)));
   ok(k0.car === 500 && k0.rum === 500 && JSON.stringify(k0.rdays) === JSON.stringify(k0.days),
-     '⑲-e `T489_RUMOR_SPLIT=0` — 종전: 소문 500 거울 = 캐러밴 500(소문 날 = 캐러밴 날 · 되돌림 한 글자)', `캐러밴 ${k0.car} · 소문 ${k0.rum}`);
+     '⑲-e `T489_RUMOR_SPLIT=0` + `T474_CARAVAN_WALK=0` — 종전: 소문 500 거울 = 캐러밴 500(소문 날 = 캐러밴 날 · ★[PM land1045] 되돌림 두 글자)', `캐러밴 ${k0.car} · 소문 ${k0.rum}`);
   ok(kW.car === walk && kW.rum === walk && JSON.stringify(kW.rdays) === JSON.stringify(kW.days) && kW0.car === walk && kW0.rum === 500,
      '⑲-e T474 켬 — 캐러밴 = 몸 7,200(**T474 무변**) · 소문 = 몸(시계 하나 — 켜기 조건 ① 이 풀렸다) · `=0` 과 같이 켜면 T474 보고의 그 세계(소문 500)',
      `T474 캐러밴 ${kW.car} · 소문 ${kW.rum} · T474+=0 소문 ${kW0.rum}`);
@@ -2197,12 +2203,13 @@ console.log('\n⑲ T489 → T496 — 소문 분리 기본 켬(`T489_RUMOR_SPLIT`
       bs = { t489: EE.T489_RUMOR_SPLIT, t496: EE.T496_CARAVAN_REST, car: EE.CARAVAN_DAY_SPEED };
     } catch (e) { err = String(e && e.message || e); }
     const callers = (codeOnly(B).match(/rumorDaySpeed\(/g) || []).length;   // 정의 `function rumorDaySpeed(` 하나뿐이어야 한다
-    ok(!!bs && bs.t489 === true && bs.t496 === false && bs.car === 500 && callers === 1 && /^\[T474\]/.test(threw),
-       '⑲-f 번들(랩): 빈 env shim 이라 T489 는 기본(켬)으로 읽히지만 **읽는 곳 0**(`rumorDaySpeed(` 는 정의 하나 · 소문은 번들에 없다) · 부르면 소리 내 던진다 · T496 끔 · 캐러밴 500',
+    ok(!!bs && bs.t489 === true && bs.t496 === false && bs.car === 7200 && callers === 1 && !threw,
+       '⑲-f 번들(랩): 빈 env shim 이라 T489 는 기본(켬)으로 읽히지만 **읽는 곳 0**(`rumorDaySpeed(` 는 정의 하나 · 소문은 번들에 없다) · ★[PM land1045] 몸 정본을 실어 부르면 7,200 · T496 끔 · 캐러밴 7,200(T474 켬 기본)',
        err || `${JSON.stringify(bs)} · 부르는 곳 ${callers - 1} · ${threw.slice(0, 30)}`);
   }
   // ⓖ 미끼
-  let apart = 0; for (const d of S) if (Rumor.travelDaysOf(d) !== V2.travelDaysForDistance(d)) apart++;
+  const kOff = kid({ T474_CARAVAN_WALK: '0' });   // ★[PM land1045] 기본이 켬이 됐다 — '소문 ≠ 캐러밴'은 T474 끔 자식에서 잰다
+  let apart = 0; for (let i = 0; i < S.length; i++) if (kOff.rdays[i] !== kOff.days[i]) apart++;
   ok(JSON.stringify(kRest.days) !== JSON.stringify(kW.days) && apart > 0 && JSON.stringify(k0.rdays) === JSON.stringify(k0.days),
      '★⑲ 자명 통과 금지 — T474+T496 날은 T474 만과 **갈리고**(하루 비가 실제로 곱해졌다) · 기본 프로세스에선 소문 날 ≠ 캐러밴 날(실제로 뗐다) · `=0` 자식에선 같다(되돌림이 실제로 거울이다)',
      `T474+T496 ${kRest.days.join(',')} ↔ T474 ${kW.days.join(',')} · 기본 소문≠캐러밴 ${apart}/${S.length}`);
