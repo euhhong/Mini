@@ -10399,6 +10399,34 @@ const JOB_RES = { lumberjack: ['tree'], miner: ['rock', 'ore'], get forager() { 
 const T325_R = 16;
 // ★[T1107] 나무 재생 속도 배수 — 정본은 `chunk.js REGROW.REGROW_K`(env 를 읽는 자리 하나). 여기는 그 값을 묻기만 한다.
 const _t1107K = () => { try { return require('./chunk').REGROW.REGROW_K(); } catch (e) { return 0; } };
+// ★★★[T1135 ③ 2026-11-04] **삭정이 · 고사목 줍기** — 손잡이 `T1135_FUEL_EQ`(econ 정본 · 끔 기본 · 끔 = 이 절이 한 줄도 안 돈다).
+//   숲 바닥에 떨어지는 죽은 가지 · 쓰러진 나무를 줍는다(산 나무는 안 벤다). 수는 T717 출처 그대로(새 수 0):
+//     가는 가지 낙엽 — 계방산 신갈나무 우점림 총 낙엽 6,593 kg/ha/년의 가지 8.7%(Lee et al. 2006 J. Ecol. Field Biol. 29(6))
+//     + 굵은 고사목 유입 — 점봉산 신갈나무림 1,200 kg/ha/년(Yoon et al. 2011 J. Ecol. Field Biol. 34(1) · 낮은 쪽 — 광릉 4,810 은 노령림 · 보고 T1135 표에 범위)
+//   ⓐ 떨어지는 자리 = 나무꾼 고리(`_t398Cells` — 벌목과 같은 걸어서 닿는 칸) 중 **빽빽한 숲 칸**(숲 배수 > `chunk.FOREST_MIN_COV` — 숲 그리드가 나무를 심는 문턱 · 1칸 = 1 m²).
+//      숲 칸 없는 마을은 0 이다. 고리가 옮겨 간 날(키가 바뀐 날)에만 다시 센다.
+//   ⓑ 하루 떨어지는 단 = 숲 칸 × (가지 + 고사목) ÷ 10,000 m²/ha ÷ 1단 kg ÷ 한 해 날 × (지금 선 그루 ÷ 교란 전 그루 — 벤 숲은 덜 떨어뜨린다 · T341 `N` · `K`).
+//      줍지 않은 몫은 숲 바닥에 남는다(`vil._t1135Dead` · 썩는 수는 출처를 안 찾았다 — 안 썩힌다 · 보고 회부).
+//   ⓒ 줍기 = 헤드리스 하루의 **채집꾼 명부**(채집 몸 문 — 나무꾼 절 뒤 · 채집 절 앞) · 걸음 한도(`_t491BodyDay` × 명부) · 같은 수요 문(`woodDemandLeft`) · 같은 곳간 입구(`woodToGranary`).
+//      ⚠몸(관측 마을 · 플레이어) 쪽 줍기는 아직 없다 — 숲 바닥 개체를 세계에 세우는 일은 보고 회부(헤드리스 판에서만 돈다).
+const T1135_DEAD_KG_HA_YR = 6593 * 0.087 + 1200;
+function _t1135On() { return !!_lifeEcon().T1135_FUEL_EQ; }
+//   숲 칸 수는 `_t325Scan` 이 고리를 잰 날(키가 바뀐 날) 같은 셀 목록으로 센다(고리를 부르는 자리는 그 함수 하나 — T398 규약).
+function _t1135DenseCount(xy) {
+  const ta = state.ta; let n = 0;
+  const FMIN = require('./chunk').FOREST_MIN_COV;
+  if (ta && ta.forestMult) for (let i = 0; i < xy.length; i += 2) { const x = xy[i], y = xy[i + 1]; if (x < 0 || y < 0) continue; if (ta.forestMult(x, y) > FMIN) n++; }
+  return n;
+}
+function _t1135DenseArea(vil) { return (vil._t1135A && vil._t1135A.n) || 0; }
+function _t1135DeadAccrue(vil, S) {
+  const a = _t1135DenseArea(vil), kg = _woodKg();
+  let yd = 365; try { yd = require('./events').yearDaysOf() || 365; } catch (e) { yd = 365; }
+  const live = (S && S.K > 0) ? Math.min(1, (S.N | 0) / S.K) : 0;
+  const inflow = (a > 0 && kg > 0) ? a * T1135_DEAD_KG_HA_YR / 10000 / kg / yd * live : 0;
+  vil._t1135Dead = +((vil._t1135Dead || 0) + inflow).toFixed(6);
+  return inflow;
+}
 // ★★★[T398 2026-09-26 · PM 판정 ① · 재민 거부권] **나무꾼의 숲은 영토 밖이다.**
 //   마을은 제 영토를 개간해 밭·집을 놓고(T378 — 마을 안엔 숲이 없다) 나무는 영토 **밖** 숲에서 벤다.
 //   그런데 종전 네모(회관 ±`T325_R`)는 **거의 전부 영토 안**이었다 — 마을별 중앙값 99.2% ⇒ 개간 뒤 켜면
@@ -10507,6 +10535,7 @@ function _t325Scan(vil, day) {
       if (a && a.length) { N += a.length; trees.push({ cx: tx, cy: ty, x: tx * SZ + SZ / 2, y: ty * SZ + SZ / 2, n: a.length }); }
     }
     if (_needK) { vil._t341K = K; vil._t341WBar = wN > 0 ? wSum / wN : 0; vil._t341KAt = C.key; }
+    if (_needK && _t1135On()) vil._t1135A = { key: C.key, n: _t1135DenseCount(xy) };   // ★[T1135 ③] 같은 고리의 빽빽한 숲 칸(삭정이가 떨어지는 자리 · 켬만)
   }
   vil._t325Trees = { day, list: trees, N, K: vil._t341K || 0, wBar: vil._t341WBar || 0 };
   if (vil.econ) vil.econ._t325Cells = trees.length;   // ★게이트의 입력("갈 자리가 있나" — T341 이후 분모가 아니다)
@@ -13546,6 +13575,33 @@ function* _lifeDailySteps(vil) {   // 게임일 경계: 크루·클레임 재대
       vil._t325Dbg.back = back;
       vil._t341Back = (vil._t341Back || 0) + back;
     }
+  }
+  // ★★[T1135 ③] **삭정이 줍기 — 채집꾼이 숲 칸을 걸으며 줍는다**(위 `_t1135DeadAccrue` 머리말 · 켬만 · 끔 = 이 절이 한 줄도 안 돈다).
+  //   명부 = 그날 채집꾼(채집 절과 같은 한 칸 — `_t561Crew(vil, 'forager')` 또는 econ 수 · 관측 마을은 몸 명부라 0) · 걸음 한도 = 한 몸의 하루 단(`_t491BodyDay` — 숲 칸까지 가장 가까운 나무 셀 거리) × 명부 ·
+  //   문 = 나무꾼과 같은 수요 문(`woodDemandLeft` — 나무꾼이 그날 넣은 몫이 이미 빠져 있다) · 입구 = 같은 곳간 입구(`woodToGranary`). 산 나무는 안 벤다.
+  if (vil.econ && _lifeEcon().T325_WOOD_ACT && _t1135On() && _lifeEcon().woodActOn(vil.econ)) {
+    const _S = vil._t325Trees || {}, _tr = _S.list || [];
+    const _in = _t1135DeadAccrue(vil, _S);
+    const _fl = T561_ROSTER_BODY ? _t561Crew(vil, 'forager') : null;
+    const _fgE = _fl ? _fl.length : ((vil.econ.counts && vil.econ.counts.forager) || 0);
+    const _fg = _t449S ? 0 : _fgE;
+    const D = vil._t1135Dbg = { a: _t1135DenseArea(vil), in: +_in.toFixed(4), fg: _fg, cap: 0, got: 0, pool: 0 };
+    if (_fg > 0 && (vil._t1135Dead || 0) > 0 && _tr.length) {
+      let _bd = Infinity;
+      const _cx0 = vil.ccx * SZ + SZ / 2, _cy0 = vil.ccy * SZ + SZ / 2;
+      for (const t of _tr) { const dd = (t.x - _cx0) * (t.x - _cx0) + (t.y - _cy0) * (t.y - _cy0); if (dd < _bd) _bd = dd; }
+      const _cap = _t491BodyDay(vil, Math.sqrt(_bd)) * _fg;
+      const _left = _lifeEcon().woodDemandLeft(vil.econ);
+      const _take = Math.min(vil._t1135Dead, _left === Infinity ? vil._t1135Dead : _left, _cap);
+      D.cap = _cap;
+      if (_take > 0) {
+        const _g = _lifeEcon().woodToGranary(vil.econ, _take) || 0;
+        vil._t1135Dead = +Math.max(0, vil._t1135Dead - _g).toFixed(6);
+        vil.econ._t1135Got = +((vil.econ._t1135Got || 0) + _g).toFixed(6);   // 누계(계측 칸 · 회계 아님)
+        D.got = +_g.toFixed(4);
+      }
+    }
+    D.pool = +(vil._t1135Dead || 0).toFixed(4);
   }
   // ★★[T347 2026-09-22] **채집도 같은 하루다** — 나무꾼 절(위)과 **같은 순서**다:
   //     세고 → 손을 비우고(곳간) → 걸음이 허락한 만큼 따고 → 재생이 돈다.

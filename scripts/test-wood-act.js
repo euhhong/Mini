@@ -67,8 +67,10 @@ console.log('\n② 사본 0 — 몸통은 하나, 정본은 남의 것');
   //   ★[T374] 수요 문도 **몸통 하나**여야 한다 — 품목마다 `D` 를 읽는 자리만 갈린다.
   ok(/function actDemandLeft\(v, D, todayKey, held\)/.test(C) && /function actDemandCap\(v, units, D, todayKey\)/.test(C),
     '② ★★[T374] 그날 수요 판정이 **한 몸통**이다(`actDemandLeft`/`actDemandCap` · 손에 든 것은 인자 하나)');
-  ok(/function woodDemandLeft\(v, held\) \{ return actDemandLeft\(v, \(v && v\._woodOutLast\) \|\| 0, '_t325InflowToday', held\); \}/.test(C),
-    '② ★[T374] 나무의 `D` 는 **정본 관측 칸**이다(`_woodOutLast` — 새 수 0)');
+  //   ★[T1135] 분자는 한 함수(`woodShareD`)가 낸다 — 끔 = `_woodOutLast`(종전 글자) · 켬(`T1135_FUEL_EQ`) = 그날 땔감 수요(`_t1135Need`). 문은 그대로 하나다.
+  ok(/function woodShareD\(v\) \{ return \(v && \(T1135_FUEL_EQ \? v\._t1135Need : v\._woodOutLast\)\) \|\| 0; \}/.test(C)
+     && /function woodDemandLeft\(v, held\) \{ return actDemandLeft\(v, woodShareD\(v\), '_t325InflowToday', held\); \}/.test(C),
+    '② ★[T374] 나무의 `D` 는 **정본 관측 칸**이다(`_woodOutLast` — 새 수 0 · ★[T1135] 켬 판만 땔감 수요)');
   //   ★[T374] 관측 나무꾼도 **같은 한 줄**로 퇴근한다(채집꾼과 한 자리 · T325 갈래 **앞**) — 손에 든 목재까지 센다.
   ok(/job === 'lumberjack' && E\.woodActOn\(vil\.econ\)\) return !\(E\.woodDemandLeft\(vil\.econ, _t374Held\(vil, _T374_WOOD\)\) > 0\);/.test(VC)
     && VC.indexOf("if (_t374Done(vil, job)) { _lifeGoHome(npc, '휴식'); return true; }") > 0
@@ -97,7 +99,10 @@ console.log("\n③ ⓒ 이중 0 — 켠 마을에서 `addProduce('wood')` 가 �
   ok(gate.length === 1, '③ 산출 한 줄이 그 자리 하나다', `${gate.length}줄`);
   // ★[T751 · T635 `a6e7b1e3` 10-04 · T717 회부 7] 그 한 줄의 몸이 블록이 됐다(`{ if (T635_SEA_SPECIES …) … else addProduce(…); }`) —
   //   나무꾼 절 바로 뒤가 그 블록이고 종전 산출 줄은 그 `else` 다. 꼴 그대로 문다(느슨하게 풀지 않는다).
-  ok(/&& !\(npc\.currentJob === 'lumberjack' && woodActOn\(v\)\)\) \{ if \(T635_SEA_SPECIES && npc\.currentJob === 'fisher' && v\.land && v\.land\.seaMix\) _t635SeaProduce\(addProduce, v\.land\.seaMix, baseAmt\); else addProduce\(jdef\.output, baseAmt\); \}/.test(C.replace(/\s+/g, ' ')),
+  //   ★[T1135] 문 이름이 `woodFormulaOff` 다 — 끔 = `woodActOn` 그대로(아래 정의 글자를 문다) · 켬 = 나무 칸 0 마을도 걷어낸다.
+  ok(/function woodFormulaOff\(v\) \{ return woodActOn\(v\) \|\| !!\(T1135_FUEL_EQ && T325_WOOD_ACT && v && v\._t325Cells === 0\); \}/.test(C),
+    '③ ★[T1135] 걷어내는 문 = `woodActOn` ∨ (켬 ∧ 나무 칸 0) — 끔 = 종전 문');
+  ok(/&& !\(npc\.currentJob === 'lumberjack' && woodFormulaOff\(v\)\)\) \{ if \(T635_SEA_SPECIES && npc\.currentJob === 'fisher' && v\.land && v\.land\.seaMix\) _t635SeaProduce\(addProduce, v\.land\.seaMix, baseAmt\); else addProduce\(jdef\.output, baseAmt\); \}/.test(C.replace(/\s+/g, ' ')),
     '③ ★★★그 한 줄이 **나무꾼을 걷어낸다**(T100 4판·T312 가 쓴 그 문법)');
   ok(!/addProduce\('wood'/.test(C), "③ ★`addProduce('wood')` 를 **직접 부르는 자리가 없다**(산출은 위 한 줄뿐)");
   ok(/byproduct: \{ resin: 0\.08, bark: 0\.10, acorn: 0\.06 \}/.test(SRC),

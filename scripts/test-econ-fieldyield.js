@@ -64,7 +64,8 @@ const codeOf = (src) => src.split('\n').map((l) => l.replace(/\/\/.*$/, '')).joi
 // ★[T751 · T635 `a6e7b1e3` 10-04] 대체 게이트 셋째 절 **뒤의 몸** — 종전 `) addProduce(jdef.output, baseAmt);` 한 줄이
 //   `) { if (T635_SEA_SPECIES … seaMix) _t635SeaProduce(…); else addProduce(jdef.output, baseAmt); }` 로 나뉘었다.
 //   느슨하게 풀지 않는다: 셋째 절 · 바다 갈래 · `else` 종전 줄 · 닫는 괄호를 **각각 그 꼴로** 문다(주석 뺀 판에서도 같은 꼴).
-const T635_GATE_BODY = /&& !\(npc\.currentJob === 'lumberjack' && woodActOn\(v\)\)\) \{[ \t]*\n\s*if \(T635_SEA_SPECIES && npc\.currentJob === 'fisher' && v\.land && v\.land\.seaMix\) _t635SeaProduce\(addProduce, v\.land\.seaMix, baseAmt\);[^\n]*\n\s*else addProduce\(jdef\.output, baseAmt\);[ \t]*\n\s*\}/;
+//   ★[T1135] 나무꾼 절의 문 이름은 `woodFormulaOff`(끔 = `woodActOn` 그대로 · 정의 글자는 test-wood-act ③ 이 문다)
+const T635_GATE_BODY = /&& !\(npc\.currentJob === 'lumberjack' && woodFormulaOff\(v\)\)\) \{[ \t]*\n\s*if \(T635_SEA_SPECIES && npc\.currentJob === 'fisher' && v\.land && v\.land\.seaMix\) _t635SeaProduce\(addProduce, v\.land\.seaMix, baseAmt\);[^\n]*\n\s*else addProduce\(jdef\.output, baseAmt\);[ \t]*\n\s*\}/;
 
 console.log('\n=== 밭이 곳간에 닿는다 (ECON 수술 2-b · T100 4판) ===');
 console.log(`  손잡이: T100_FIELD_YIELD=${ON ? '켬' : '끔'}${MUT ? '  ⚠변조 사본 ' + MUT : ''}`);
@@ -261,7 +262,7 @@ if (!process.env.T100_CHILD) {
     //   ★[T751 · T635] 게이트 뒤 몸이 블록이 됐다 — 변조는 **게이트 셋을 걷어내고 블록은 그대로** 남긴다(바다 갈래 포함 · 두 번 넣는 판 그대로).
     const _GATE2 = "      if (!(T100_FIELD_YIELD && npc.currentJob === 'farmer')\n"
                  + "       && !(npc.currentJob === 'fisher' && fishActOn(v))\n"
-                 + "       && !(npc.currentJob === 'lumberjack' && woodActOn(v))) {\n";
+                 + "       && !(npc.currentJob === 'lumberjack' && woodFormulaOff(v))) {\n";   // ★[T1135] 문 이름
     const mutSrc3 = SRC.replace(_GATE2,
       '      {   // 하네스 변조본 — 대체를 걷어내 **두 번** 넣는다\n');
     ok(mutSrc3 !== SRC, '⑦ [T183] 두 번 넣기의 변조 지점(대체 게이트)이 소스에 **실재한다**');
@@ -606,8 +607,8 @@ console.log('\n⑱ 볏짚 — 밭 수확이 **아궁이 밑변**(`_grainToday`)�
     '⑱ ★★★비우는 줄이 **읽는 줄 뒤**에 있다 — 그래서 생활층(틱 **뒤**)이 적은 값이 다음 틱까지 **산다**',
     reads[0] && resets[0] ? `읽기 :${reads[0][0]} < 리셋 :${resets[0][0]}` : '—');
   // ★[T240] 식의 **두 항이 그대로**고, 이월을 끈 가지는 종전 `min` 그대로다(비트 동일의 뿌리).
-  ok(/const _strawCap = N \* FIREWOOD_PC;/.test(C) && /const _strawRaw = \(v\._grainToday \|\| 0\) \* STRAW_FUEL_PER_FOOD;/.test(C),
-    '⑱ 볏짚 두 항이 그대로다 — 상한 `N × FIREWOOD_PC` · 원량 `오늘 곡식 × STRAW_FUEL_PER_FOOD`');
+  ok(/const _strawCap = N \* _firewoodPC\(\);/.test(C) && /const _firewoodPC = \(\) => \(T1135_FUEL_EQ \? FIREWOOD_PC_SRC : FIREWOOD_PC\);/.test(C) && /const _strawRaw = \(v\._grainToday \|\| 0\) \* STRAW_FUEL_PER_FOOD;/.test(C),
+    '⑱ 볏짚 두 항이 그대로다 — 상한 `N × FIREWOOD_PC`(★[T1135] 1인 땔감 함수 — 끔 = 그 상수) · 원량 `오늘 곡식 × STRAW_FUEL_PER_FOOD`');
   ok(/: Math\.min\(_strawCap, _strawRaw\);/.test(C),
     '⑱ ★이월을 끈 가지는 **종전 식 그대로** `min(상한, 원량)` 이다(T240 비트 동일의 뿌리)');
   // ★T193 의 `dailyProduction` 과 **정확히 갈리는 지점**: 그쪽은 리셋이 틱 **머리**라 생활층 쓰기가 죽는다.
@@ -757,7 +758,7 @@ console.log('\n㉑ 짚만 이월 — 곡식 경로 무접촉 · 상한 그대로
     '㉑ ★★`_t100Credit`(T227 의 그 몸통)이 **한 줄도 안 바뀌었다** — 곡식은 여전히 즉시다');
 
   // ★상한은 종전 그대로 · 새 수 0 · 끄면 종전 가지가 남아 있다
-  ok(/const _strawCap = N \* FIREWOOD_PC;/.test(C), '㉑ 상한은 **종전 그대로** `N × FIREWOOD_PC`(새 수 0)');
+  ok(/const _strawCap = N \* _firewoodPC\(\);/.test(C) && /const _firewoodPC = \(\) => \(T1135_FUEL_EQ \? FIREWOOD_PC_SRC : FIREWOOD_PC\);/.test(C), '㉑ 상한은 **종전 그대로** `N × FIREWOOD_PC`(새 수 0 · ★[T1135] 끔 = 그 상수 · 켬 = 고증 d)');
   ok(/const _strawRaw = \(v\._grainToday \|\| 0\) \* STRAW_FUEL_PER_FOOD;/.test(C),
     '㉑ 원량도 **종전 그대로** `_grainToday × STRAW_FUEL_PER_FOOD`(같은 축 — 목재 열량 당량)');
   ok(/: Math\.min\(_strawCap, _strawRaw\);/.test(C), '㉑ ★끄면 **종전 산수**(`min(상한, 원량)`) 그대로다 — 비트 동일의 뿌리');
