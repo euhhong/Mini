@@ -23,7 +23,12 @@ if (process.env.T577_SEED) {
       return { pid, x:p.x, y:p.y, homeM:Math.hypot(p.x-hx,p.y-hy)/SZ,
         inventory:{...p.inventory}, pack:p._warPackOf };
     });
-    return { day:state.world.day, war:w.id, atk:w.atk.name, def:w.def.name,
+    const end=body && body._t1089 && body._t1089.end;
+    const lead=body && body.retGroup && body.retGroup.commander;
+    return { target:end ? {x:end.x,y:end.y}:null, leader:lead ? {x:lead.x,y:lead.y}:null,
+      targetDistanceM:end && lead ? Math.hypot(end.x/SZ-lead.x,end.y/SZ-lead.y):null,
+      returnDone:body && body._t1089 ? body._t1089.done:null,
+      day:state.world.day, war:w.id, atk:w.atk.name, def:w.def.name,
       phase:w.phase, bodyPhase:body && body.phase, prog:body && body.prog, len:body && body.len,
       storage:{...w.atk.econ.storage}, book:w._rationBook && JSON.parse(JSON.stringify(w._rationBook)), rows };
   }

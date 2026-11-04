@@ -12,6 +12,10 @@ for (const seed of [1020,7,42]) {
   const lay=x.events.filter(e=>e.stage==='body-laydown');
   rows.push({seed,collect:collect.length,loaded:loaded.length,
     beforeProgressEnd:loaded.filter(e=>e.before.prog!=null && e.before.prog<e.before.len).length,
+    targetMeasured:loaded.filter(e=>Number.isFinite(e.before.targetDistanceM)).length,
+    targetZero:loaded.filter(e=>e.before.targetDistanceM===0).length,
+    targetNonzero:loaded.filter(e=>e.before.targetDistanceM>0).length,
+    targetMax:Math.max(0,...loaded.map(e=>e.before.targetDistanceM||0)),
     bodyLay:lay.length,bodyPositive:lay.filter(e=>e.result>0).length,
     bodyBack:lay.reduce((s,e)=>s+(e.result||0),0),
     collectedItems:loaded.reduce((o,e)=>{for(const[k,v]of Object.entries(e.result))o[k]=(o[k]||0)+v;return o;},{}),
