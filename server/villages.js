@@ -9135,6 +9135,7 @@ function __p3Bind(mock) {
     _t476Decide, _t476DenVil,   // ★[T476] 토벌 결단 · 소굴 어댑터 — 하네스가 운영과 같은 결단을 부른다
     _warRationLayDownBody, _warBagDrop, _t476DenRefresh, _t476DenSync,   // ★[T748] 켬 전용 일곱 길 — 하네스(`test-moment-lot` ⑨~)가 **이 함수들**을 그대로 부른다(사본 0)
     _t312Deliver, _t347Deliver, _t544PackPut, _t544PackIn, _t368Hold, _t368Deliver,
+    _t1168WriteAmmo,   // ★[T1168 K5] 방어 편 몸의 탄을 전쟁에 적는다(하네스 `test-t1168-sortie-ammo` 가 그대로 부른다)
     _warRationEat, _warRationCollect, _warRationLoad, _t906Day,   // ★[T906 → T1168 걷음] 남은 몸 굶주림 하루(T1080 길 위 하루가 쓴다 · 하네스가 그대로 부른다)
       // ★[T423] 짐이 먹는다 — 하네스가 **이 함수들**을 war-core 에 건다(운영과 같은 두 훅)   // ★[T329] 위협 T·현장 반경 — 하네스가 **이 함수들**을 그대로 부른다(사본 0)
   };
