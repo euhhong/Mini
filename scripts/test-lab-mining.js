@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// @regress   ← 통합 러너가 이 표를 보고 자기 목록을 만든다(scripts/run-regress.sh · 표 없으면 안 돈다) · ★[T830 2026-10-21] 칠하기 끔(T799) 뒤 다시 넣음 — T1170: 기본 세계 120날 · 상한은 `TIMEOUT_OF` 7,200초
+// @regress   ← 통합 러너가 이 표를 보고 자기 목록을 만든다(scripts/run-regress.sh · 표 없으면 안 돈다) · ★[T830 2026-10-21] 칠하기 끔(T799) 뒤 다시 넣음 — T1170: 기본 세계 90날 · 상한은 `TIMEOUT_OF` 7,200초
 // === 11차 채광 재설계 — 랩 헤드리스 검증 하네스 ===
 //
 // 검증 항목(전부 실측 — 주장하려면 여기서 돌아야 한다):
@@ -11,7 +11,7 @@
 //   ⑤ land.ore 연동: oFrac 하락에 따라 econ.land.ore 가 base×(0.4+0.6·oFrac) 로 따라간다(바닥 0.4)
 //   ⑥ 광부 정원 되먹임: land.ore 하락 → jobCapacity.miner 하락
 //   ⑦ pageerror·console error 0
-//   [과거 끔 세계의 창 기록 — T1170 기본 세계 120날은 아래 실행 결과로 확인]
+//   [과거 끔 세계의 창 기록 — T1170 기본 세계 90날은 아래 실행 결과로 확인]
 //   ⚠[T684 ← T660 회부 ②] ③④ 는 **창 길이에 기댄다** — 이 씨(7)·시계에선 첫 광부가 41~50일에 선다(T660: 40일 0 → 50일 1) · `RUN_DAYS` 를 그보다 짧게 주면(종전 `RUN_DAYS=8` 판들) 광부 0 이라 ③④ 가 빨갛다 — 제품이 아니라 창이다.
 //   ⚠[T684 ← T660 회부 ③ · ★T830 2026-10-21 지금 판 실측으로 고침] ③ "2인 1조" 는 기본 판(60일 · dt 16.667 · T707 끔 세계)에서 **광부 2명 · 점유 셀 1개 · 셀당 분포 {"2":1} · 같은 조 1/1** — 짝 규칙을 한 조로 잰다(T799 판 넷 실측 같음 · 40일 광부 0 → 50일 2).
 //     (종전 이 줄: "광부 1명 · 셀 1개 · 0/0 이라 짝 규칙을 안 잰다" — T684 때 판. `③ⓜ` 미끼는 그대로 자가 살아 있음을 보인다 · 미끼 판 0/1)
@@ -34,7 +34,7 @@ const LAB_QS = process.env.LAB_QS != null ? process.env.LAB_QS : '';
 const LAB = (process.env.LAB_URL || ('file://' + (process.env.LAB_FILE || path.resolve(__dirname, '..', 'lab', '전쟁실험실.html')))) + (LAB_QS ? '?' + LAB_QS : '');
 const SPEED = parseInt(process.env.SPEED || '119', 10);
 const NVIL = 3, POP = parseInt(process.env.POP || '40', 10), SEED = 7;
-const RUN_DAYS = parseInt(process.env.RUN_DAYS || '120', 10);
+const RUN_DAYS = parseInt(process.env.RUN_DAYS || '90', 10);
 
 const INIT = LC.init;
 
