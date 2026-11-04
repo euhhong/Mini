@@ -2,7 +2,7 @@
 // (@regress 없음 — 러너 밖 · T1144 헛물음 셈 곁 자 · 제품 무변)
 // === scripts/t1144-count.js — 돌고 있는 존(`T1144_LIFE_EVENT=1 T1144_COUNT=1`)의 헛물음 셈을 창마다 떠 둔다 ==========================
 //   존의 `/lifedbg` 가 셈 갈래일 때만 내는 `totals.t1144`(밭 칸 · 던짐 종 · 낱값 누계)를 `--every` 초마다 phase 와 함께 적는다.
-//   t646 판(`run inf <tag> --seg` · 존 4011 · 비밀 t646)과 같이 띄우면 그 판의 낮 · 밤 창(phase 0.10 ~ · 0.72 ~)의 셈을 phase 로 가른다.
+//   t646 판(`run inf <tag> --seg` · 존 4011 · 비밀 t646)과 같이 띄우면 그 판의 낮 · 밤 창(phase 0.10 ~ 0.23 · 0.72 ~ 0.85)의 셈을 phase 로 가른다(+ 낮 전체 0 ~ 0.70).
 //   표: 창마다 누계 차 — 밭 칸: 물음 · 칸 물음 · 지난 답 그대로(사건 없음) · 다시 잰 칸(그중 같은 답) / 던짐: 던짐 · 지난 종 / 낱값: 부름 · 지난 값.
 //   헛물음 몫(끔 = 종전) = (지난 답 그대로 + 다시 잰 칸 중 같은 답) ÷ 칸 물음 · 켬 뒤 남은 헛물음 = 다시 잰 칸 중 같은 답 ÷ 칸 물음.
 // 실행: node scripts/t1144-count.js <out.jsonl> [--port 4011] [--secret t646] [--every 15] [--until-s 1500]
@@ -12,8 +12,9 @@ const fs = require('fs');
 const arg = (k, d) => { const i = process.argv.indexOf(k); return i >= 0 ? process.argv[i + 1] : d; };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 if (process.argv[2] === '--table') {
-  const L = fs.readFileSync(process.argv[3], 'utf8').split('\n').filter(Boolean).map((x) => JSON.parse(x)).filter((x) => x.t1144);
-  const W = [['day', 0.10, 0.62], ['night', 0.72, 0.97]];
+  const L0 = fs.readFileSync(process.argv[3], 'utf8').split('\n').filter(Boolean).map((x) => JSON.parse(x)).filter((x) => x.t1144);
+  const i0 = L0.findIndex((x) => x.phase < 0.5), L = i0 < 0 ? [] : L0.slice(i0);   // 첫 새벽 뒤만(t646 판은 하루 경계 150 초 앞에서 뜬다 — 그 앞 밤 꼬리는 뺀다)
+  const W = [['day', 0.10, 0.23], ['night', 0.72, 0.85], ['dayAll', 0.0, 0.70]];   // t646 낮 · 밤 창(조각 6 × 30 초 ≈ phase 0.125) · 낮 전체(곁 셈)
   const out = {};
   for (const [w, lo, hi] of W) {
     const xs = L.filter((x) => x.phase >= lo && x.phase <= hi); if (xs.length < 2) { out[w] = null; continue; }

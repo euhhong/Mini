@@ -4,7 +4,7 @@
 //     밭 칸(`_lifeNextFarmCell`) · 어부 던짐(`_t340Try`) · 종 뽑기(`freshfish.pick`) · 낱값(`_t1128HandUnits` + `econUnitsOf` 중 큰 쪽 — 같은 사슬이라 더하지 않는다) · `require()`
 //   팔 = tag 머리 글자(A 끔 · B `T1144_LIFE_EVENT=1` · C B + `T1140_LIFE_REQ=1`) — 팔마다 판 중앙 · 범위.
 //   대조 보정 = npcStep ÷ 대조(손 안 댄 구간 합 — T1140 자) × A 팔 대조 중앙(= A 팔 상자로 옮겨 적은 값).
-// 실행: T646_DIR=<판 폴더> node scripts/t1144-sum.js [out.json] [out.txt] [out.md]
+// 실행: T646_DIR=<판 폴더> [T1144_ARMS=A,B] node scripts/t1144-sum.js [out.json] [out.txt] [out.md]
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -52,7 +52,7 @@ function md(armList) {
   t += '| 생활 층 대조 보정(A 상자) | ' + armList.map((a) => `${(A(a, 'day') || {}).lifeCorr} | ${(A(a, 'night') || {}).lifeCorr}`).join(' | ') + ' |\n';
   return t;
 }
-out.md = md(['A', 'B', 'C'].filter((a) => armRows.some((x) => x.arm === a)));
+out.md = md((process.env.T1144_ARMS || 'A,B,C').split(',').filter((a) => armRows.some((x) => x.arm === a)));   // 표에 실을 팔(기본 셋 다)
 if (process.argv[4]) fs.writeFileSync(process.argv[4], out.md);
 if (process.argv[2]) fs.writeFileSync(process.argv[2], JSON.stringify(out, null, 1));
 if (process.argv[3]) fs.writeFileSync(process.argv[3], txt);
