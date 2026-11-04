@@ -46,8 +46,9 @@ ok(on.offA === true && on.offU === false && on.offC === true && onNoAct.offA ===
   const S = fs.readFileSync(path.join(ROOT, 'sim', 'economy-sim.js'), 'utf8');
   ok(/function woodToGranary\(v, units\) \{[\s\S]{0,120}actDemandCap\(v, units, woodShareD\(v\), '_t325InflowToday'\)/.test(S), '② 곳간 입구도 같은 분자(`woodShareD`)');
   ok(/const fuelNeed = N \* _firewoodPC\(\) \* \(1 \+ FUEL_COLD_W/.test(S) && /if \(T1135_FUEL_EQ\) v\._t1135Need = fuelNeed;/.test(S), '② 틱이 그날 `fuelNeed` 를 남긴다(1인 수요 = `_firewoodPC()`)');
-  const uses = (S.match(/\bFIREWOOD_PC\b(?!_SRC)/g) || []).length, fn = (S.match(/_firewoodPC\(\)/g) || []).length;
-  ok(fn === 6 && /const _firewoodPC = \(\) => \(T1135_FUEL_EQ \? FIREWOOD_PC_SRC : FIREWOOD_PC\);/.test(S), '④ 1인 땔감을 읽는 네 줄(부름 여섯)이 한 함수(`_firewoodPC`)', `함수 ${fn} · 상수 글자 ${uses}`);
+  const SC = S.split('\n').map((l) => l.replace(/\/\/.*$/, '')).join('\n');   // 주석 뺀 판(부름만 센다)
+  const uses = (SC.match(/\bFIREWOOD_PC\b(?!_SRC)/g) || []).length, fn = (SC.match(/_firewoodPC\(\)/g) || []).length;
+  ok(fn === 6 && /const need = N \* _firewoodPC\(\) \* \(H \+ FUEL_COLD_W \* \(A\.cs \|\| 0\)\);/.test(S) && /const _firewoodPC = \(\) => \(T1135_FUEL_EQ \? FIREWOOD_PC_SRC : FIREWOOD_PC\);/.test(S), '④ 1인 땔감을 읽는 자리가 한 함수(`_firewoodPC` — 주석 뺀 부름: T1135 네 줄 다섯 + ★[T1148] 추위 빚 하나)', `함수 ${fn} · 상수 글자 ${uses}`);
 }
 // ── ④ 고증 d ──
 {
