@@ -19,6 +19,8 @@
 //   도축·econ 연결(사냥 산출은 econ 추상이 담당), 도적 접점.
 // =============================================================================
 'use strict';
+const _B1155 = require('./body-cols'); // T1155 authoritative writes; OFF keeps the original expression.
+
 
 // ═══ [A] 어댑터 — 랩 전역 심볼 (값은 마을실험실.html 원본과 동일) ═══
 const L_WALK = 2, L_MINDAY = 1440;                    // 랩 4254: 걷기 2m/유닛 · 하루 1440분
@@ -737,7 +739,7 @@ function tick(now) {
     if (pr.state !== 'work' || !pr._real) continue;
     try { _hunterBrain(pr, S, 1 / H.TICK_HZ); } catch (e) { if (!S._hbErr) { S._hbErr = 1; console.error('[wildlife] 사냥꾼 두뇌 오류:', e.message); } }
     const rp = pr._real;
-    if (pr._hgo) { rp.behavior = 'wander'; rp.targetX = pr._hgx * 32 + 16; rp.targetY = pr._hgy * 32 + 16; rp.gatherTarget = null; pr._hgo = 0; }
+    if (pr._hgo) { (_B1155.ON ? _B1155.set(rp,"behavior",'wander') : (rp.behavior = 'wander')); (_B1155.ON ? _B1155.set(rp,"targetX",pr._hgx * 32 + 16) : (rp.targetX = pr._hgx * 32 + 16)); (_B1155.ON ? _B1155.set(rp,"targetY",pr._hgy * 32 + 16) : (rp.targetY = pr._hgy * 32 + 16)); rp.gatherTarget = null; pr._hgo = 0; }
     rp._huntSpd = pr._hold ? 0.02 : (pr.sneak ? 0.5 : ((pr.action === '추적' || pr.action === '회수') ? 2 : 1.25));
     if (pr.action && rp._lifeAct !== pr.action) { rp._lifeAct = pr.action; rp._lifeActAt = Date.now(); }   // ★[액션 라벨 가시화] 잠행·추적·조준·도살 등 실행층 라벨 → 본체(zone AOI가 클라 전송)
   }
@@ -791,7 +793,7 @@ function tick(now) {
     const dxp = lm.px - (lm._sx !== undefined ? lm._sx : lm.px), dyp = lm.py - (lm._sy !== undefined ? lm._sy : lm.py);
     lm._sx = lm.px; lm._sy = lm.py;
     const rl = Math.hypot(dxp, dyp), rSpd = rl * H.TICK_HZ;
-    sh.vx = rl > 1e-9 ? (dxp / rl) * rSpd * 32 : 0; sh.vy = rl > 1e-9 ? (dyp / rl) * rSpd * 32 : 0;   // px/s(클라 facing)
+    (_B1155.ON ? _B1155.set(sh,"vx",rl > 1e-9 ? (dxp / rl) * rSpd * 32 : 0) : (sh.vx = rl > 1e-9 ? (dxp / rl) * rSpd * 32 : 0)); (_B1155.ON ? _B1155.set(sh,"vy",rl > 1e-9 ? (dyp / rl) * rSpd * 32 : 0) : (sh.vy = rl > 1e-9 ? (dyp / rl) * rSpd * 32 : 0));   // px/s(클라 facing)
     H.setMobHp(sh, Math.max(1, Math.round(lm.hp * HP_SCALE)), 'wild'); lm._lsh = sh.hp;   // ★[T954] 존 몹 hp 는 존의 짐승 HP 문으로(조용한 낱말 · 하한 1 은 이 식 그대로)
     H.chunkManager.updateMobChunk(sh);
     liveSet.add(lm);

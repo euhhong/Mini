@@ -41,6 +41,8 @@
 //   BANDIT_FIXTURE=dissolve — 첫 데일리에 최빈곤 마을 해체 조건 강제(곳간 소거 — /tmp DB 전용).
 // =============================================================================
 'use strict';
+const _B1155 = require('./body-cols'); // T1155 authoritative writes; OFF keeps the original expression.
+
 
 const ENABLED = process.env.ENABLE_BANDITS !== '0'; // 기본 켜짐. '0'만 완전 no-op.
 
@@ -248,8 +250,7 @@ function walkToVillage(vil, people, day, why, accept, dest) {   // dest = 호스
     for (const npc of moved) if (e.counts && npc && npc.currentJob) e.counts[npc.currentJob] = Math.max(0, (e.counts[npc.currentJob] || 0) - 1);
     const L = S.host.t765Depart(vil, best, moved.length);
     const PK = life && S.host.t1080Pack ? S.host.t1080Pack(vil, moved.length) : null;   // ★[T1080] 제 짐(그 곳간 먹을 것을 고르게 · 25kg 까지)
-    for (let i = 0; i < moved.length; i++) S.WALK.push(Object.assign({ npc: moved[i], from: vil.dbId, to: best.dbId, d0: day, len: L.len, ppd: L.ppd, pid: L.pids[i] != null ? L.pids[i] : null },
-      unhappy ? { t1075: 1 } : {}, _walkLife(day, best.dbId, PK ? PK.bags[i] : null, why)));
+    for (let i = 0; i < moved.length; i++) S.WALK.push(Object.assign({ npc: moved[i], from: vil.dbId, to: best.dbId, d0: day, len: L.len, ppd: L.ppd, pid: L.pids[i] != null ? L.pids[i] : null }, unhappy ? { t1075: 1 } : {}, _walkLife(day, best.dbId, PK ? PK.bags[i] : null, why)));
     if (unhappy) {   // ★[T1075] 해체 셈(`t577Walk` · `t765Rows`)과 따로 센다
       S.stats.t1075Leave = (S.stats.t1075Leave || 0) + moved.length;
       log(day, `${vil.name} 불행 이탈 ${moved.length}명 → ${best.name}(${Math.round(bd)}셀) [T1075] — 몸 ${L.pids.length} · 길 ${Math.round(L.len / SZ)}셀 · 길 위 장부`);
@@ -970,7 +971,7 @@ function syncBodies(boot, adopt) {
         });
       } catch (_) { break; }
       if (!p) break;
-      p.simJob = 'bandit';   // 클라 이모지·구분(마을 simJob 경로 재사용 — npcPids 밖이라 마을 로직 무접촉)
+      (_B1155.ON ? _B1155.set(p,"simJob",'bandit') : (p.simJob = 'bandit'));   // 클라 이모지·구분(마을 simJob 경로 재사용 — npcPids 밖이라 마을 로직 무접촉)
       if (S.host.bodySh) p._sh = S.host.bodySh(`bandit_${g.id}_${p.pid}`);   // ★[T841] 몸 주사위 신원 = 판 씨 + (단 · 몸 번호) — T822 켬에서만(끔 = 호스트가 null · 이 줄 0)
       pids.push(p.pid);
       if (T1078_ALL) { p._bdtGid = g.id; p._t1078Fed = g.food > 0 ? 1 : 0; }   // ★[T1078] 이 몸은 이 단 사람(죽으면 n −1 · 일과 문)
@@ -1174,8 +1175,7 @@ function _t1079Home(pid, npc, cell) {   // 가장 가까운 산 마을로 — �
   let L = null;
   if (p) { p._bdtGid = undefined; L = H.t1079Home ? H.t1079Home(p, to) : null; if (!L) { despawnBody(pid); _t1079St().lost++; return false; } }
   else L = H.t1079Len ? H.t1079Len({ cx, cy }, to) : { len: 0, ppd: 0 };
-  S.WALK.push(Object.assign({ npc: npc || null, from: null, to: to.dbId, d0: H.world.day, len: L.len, ppd: L.ppd, pid: p ? pid : null, t1079: 1 },
-    _walkLife(H.world.day, to.dbId, null, 't1079')));   // ★[T1108] 걷기 문 하나 — 길 위 하루가 해체 남은 사람과 같다(제 짐 = 빈 짐 · 더미는 그 자리에 남는다 — T1079 문 4 ⓑ)
+  S.WALK.push(Object.assign({ npc: npc || null, from: null, to: to.dbId, d0: H.world.day, len: L.len, ppd: L.ppd, pid: p ? pid : null, t1079: 1 }, _walkLife(H.world.day, to.dbId, null, 't1079')));   // ★[T1108] 걷기 문 하나 — 길 위 하루가 해체 남은 사람과 같다(제 짐 = 빈 짐 · 더미는 그 자리에 남는다 — T1079 문 4 ⓑ)
   _t1079St().out++;
   return true;
 }

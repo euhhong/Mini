@@ -57,8 +57,8 @@ const Wildlife = require('./wildlife'); // §4-4 동물 AI 블록(마을실험�
 const BC = require('./body-cols');
 const _B1155 = BC; // T1155 write boundary, after the clock origin block
 const T1145_XY_COLS = BC.ON, _xyC = BC.C;
-function _xyX(p) { const s = p._t1145S; return s >= 0 ? _xyC.X[s] : p.x; }   // 열(칸이 없는 몸 = 사람 · 돌려준 몸은 몸 칸)
-function _xyY(p) { const s = p._t1145S; return s >= 0 ? _xyC.Y[s] : p.y; }
+function _xyX(p) { const s = BC.slot(p); return s >= 0 ? _xyC.X[s] : p.x; }   // 열(칸이 없는 몸 = 사람 · 돌려준 몸은 몸 칸)
+function _xyY(p) { const s = BC.slot(p); return s >= 0 ? _xyC.Y[s] : p.y; }
 // ★★[2026-08-26 재민 확정] `ENABLE_WILDLIFE=0` 의 뜻 = **적대 개체 전부 OFF**.
 //   왜 의미를 넓혔나: 종전엔 이 플래그가 `wildlife.js`(§4-4 생태 블록)만 껐고
 //   **레거시 `mobs`(늑대·자칼 무리)는 그대로 살아 있었다.** 그래서 `ENABLE_WILDLIFE=0` 으로
@@ -691,7 +691,7 @@ function _t495PickAt(cellX, cellY, order, want, worth) {
   }
   if (!(n > 0)) return { took, n: 0, emptied: 0, seedKey: k };
   const prev = pickedSeeds.get(k) || {};
-  const next = (_B1155.ON ? _B1155.assignObject : Object.assign)({}, prev);
+  const next = Object.assign({}, prev);
   for (const h of Object.keys(took)) next[h] = (next[h] || 0) + took[h];
   pickedSeeds.set(k, next);
   try { db.upsertPickedSeed(k, JSON.stringify(next)); } catch (e) {}
@@ -1116,7 +1116,7 @@ function _farDrain(player) {
   }
   if (q.length) { player._farT = setTimeout(() => _farDrain(player), 16); return; }
   player._farQ = null; player._farT = null;
-  send(player.ws, (_B1155.ON ? _B1155.assignObject : Object.assign)({ type: 'far_trees_done' }, farTreesStat()));
+  send(player.ws, Object.assign({ type: 'far_trees_done' }, farTreesStat()));
 }
 // ★클라가 **요청 반경을 보낸다**(줌·큰지도 배율이 그 값을 정한다 — 회부: 상한은 재민).
 function _farRequest(player, msg) {
@@ -1483,7 +1483,7 @@ function serializeBody(p) {
   };
   if (T927_BODY_VER) o.sv = +p._saveVer || 0;   // ★[T927] 몸 버전(위) — 맨 끝 칸(끔 = 칸 없음 · 종전 바이트)
   if (Number(p.memberCool) > 0) o.memberCool = +p.memberCool;   // ★[T1137] 다시 들 수 있는 때(epoch ms · 탈퇴 · 추방 뒤에만 선다 — 없으면 종전 바이트)
-  if (p.feeOwe && typeof p.feeOwe === 'object' && Object.keys(p.feeOwe).length) o.feeOwe = (_B1155.ON ? _B1155.assignObject : Object.assign)({}, p.feeOwe);   // ★[T1151] 수수료 끝수 장부(마을 id → 끝수 · 있을 때만)
+  if (p.feeOwe && typeof p.feeOwe === 'object' && Object.keys(p.feeOwe).length) o.feeOwe = Object.assign({}, p.feeOwe);   // ★[T1151] 수수료 끝수 장부(마을 id → 끝수 · 있을 때만)
   return o;
 }
 // 복원 — 옛 형식(`{axe: 3}`)까지 여기서 흡수한다. 반환값의 키는 `serializeBody` 와 같다.
@@ -1734,7 +1734,7 @@ function _t916Send(playerId, patch) {
 async function _t916Resend(row) {
   let patch = null; try { patch = JSON.parse(row.patch); } catch (e) { patch = null; }
   if (!patch) { try { db.saveQueueDel(row.player_id, row.seq); } catch (e) {} return 'other'; }
-  const body = row.base != null ? (_B1155.ON ? _B1155.assignObject : Object.assign)({}, patch, { if_tools_sha: row.base }) : patch;
+  const body = row.base != null ? Object.assign({}, patch, { if_tools_sha: row.base }) : patch;
   let res;
   _savesInFlight++;
   try { res = await central.updatePlayer(row.player_id, body); }
@@ -1791,7 +1791,7 @@ async function _t940BeforeLoad(acct) {
   try {
     const r = await postJSON(z.host, z.port, '/flush_player', { player_id: acct.player_id });
     const row = await central.getPlayer(acct.player_id);
-    if (row) { (_B1155.ON ? _B1155.assignObject : Object.assign)(acct, row); _t940.stat.reread++; }
+    if (row) { Object.assign(acct, row); _t940.stat.reread++; }
     console.log(`[${ZONE_ID}] ★[T940] ${from} 에서 막 온 접속 — 그 존의 마지막 저장을 기다린 뒤 행을 다시 읽었다 (${acct.player_id} · 그 존에 붙어 있던 몸 ${(r && r.live) || 0})`);
   } catch (e) {
     _t940.stat.fail++;
@@ -1958,8 +1958,8 @@ const _t678PH = require('perf_hooks').performance, _t678Now = () => _t678PH.now(
 function _t678Perf(reset) {
   if (!_t678G) return null;
   const q = (a, p) => { if (!a.length) return null; const s = a.slice().sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(s.length * p))]; };
-  const o = (_B1155.ON ? _B1155.assignObject : Object.assign)({ mode: T678_GATES }, _t678G.stats(), { q: (_B1155.ON ? _B1155.assignObject : Object.assign)({}, _t678Q),
-    v: (_B1155.ON ? _B1155.assignObject : Object.assign)({}, _t678V, { diffs: _t678V.diffs.slice(), ratios: undefined, walkA: undefined, walkRatios: _t678V.walkRatios.slice(), gOnlyLen: _t678V.gOnlyLen.slice(), diffP50: q(_t678V.diffs, 0.5), diffP95: q(_t678V.diffs, 0.95), ratioP50: q(_t678V.ratios, 0.5), ratioP95: q(_t678V.ratios, 0.95), walkRatioP50: q(_t678V.walkRatios, 0.5), walkRatioP95: q(_t678V.walkRatios, 0.95), nDiff: _t678V.diffs.length,
+  const o = Object.assign({ mode: T678_GATES }, _t678G.stats(), { q: Object.assign({}, _t678Q),
+    v: Object.assign({}, _t678V, { diffs: _t678V.diffs.slice(), ratios: undefined, walkA: undefined, walkRatios: _t678V.walkRatios.slice(), gOnlyLen: _t678V.gOnlyLen.slice(), diffP50: q(_t678V.diffs, 0.5), diffP95: q(_t678V.diffs, 0.95), ratioP50: q(_t678V.ratios, 0.5), ratioP95: q(_t678V.ratios, 0.95), walkRatioP50: q(_t678V.walkRatios, 0.5), walkRatioP95: q(_t678V.walkRatios, 0.95), nDiff: _t678V.diffs.length,
       walkRatiosOld: _t678V.walkRatiosOld.slice(), gOnlyLenOld: _t678V.gOnlyLenOld.slice(), walkRatioOldP95: q(_t678V.walkRatiosOld, 0.95), samples: _t678V.samples.slice() }),
     warm: _t678WarmOut() });   // ★[T679] 회랑 길 견줌(종전 내려가기 길과 같은 쌍) · 그림 표본 · 짓는 틱
   if (reset) { for (const k of Object.keys(_t678Q)) _t678Q[k] = 0; for (const k of Object.keys(_t678V)) _t678V[k] = Array.isArray(_t678V[k]) ? [] : 0; }
@@ -1978,10 +1978,10 @@ function walkPerf(reset) {
     if (T672_WALK_CUT) { o.ww.t672 = { treeHit: _wwTC.hit, treeMiss: _wwTC.miss, treeBad: _wwTC.treeBad, still: _wwTC.still, stillBad: _wwTC.stillBad, k: _wwTC.k };   // ★[T672] 관측
       if (reset) { _wwTC.hit = 0; _wwTC.miss = 0; _wwTC.treeBad = 0; _wwTC.still = 0; _wwTC.stillBad = 0; } }
     if (reset) { _wwStat.ticks = 0; _wwStat.steps = 0; _wwStat.bad = 0; _wwStat.badTicks = 0; _wwStat.gateBad = 0; _wwStat.sample.length = 0; } }   // ★[T461]
-  if (T774_ACTIVE_COL) o.t774 = (_B1155.ON ? _B1155.assignObject : Object.assign)({}, _t774Stat);   // ★[T774] 열에서 읽은 수 · 술어로 간 수
-  if (T676_STAMP || T676_VERIFY) { o.t676 = (_B1155.ON ? _B1155.assignObject : Object.assign)({ mode: T676_STAMP ? 'on' : 'verify' }, _t676Stat); if (reset) { _t676Stat.ipaN = 0; _t676Stat.ipaBad = 0; _t676Stat.pvN = 0; _t676Stat.pvBad = 0; } }   // ★[T676] 견줌 셈
+  if (T774_ACTIVE_COL) o.t774 = Object.assign({}, _t774Stat);   // ★[T774] 열에서 읽은 수 · 술어로 간 수
+  if (T676_STAMP || T676_VERIFY) { o.t676 = Object.assign({ mode: T676_STAMP ? 'on' : 'verify' }, _t676Stat); if (reset) { _t676Stat.ipaN = 0; _t676Stat.ipaBad = 0; _t676Stat.pvN = 0; _t676Stat.pvBad = 0; } }   // ★[T676] 견줌 셈
   if (_t678o) o.t678 = _t678o;   // ★[T1138] 부팅 미리 굽기(청크 수 · 걸린 ms · 다 굽기 전 칸 A*)
-  if (_t678o) o.t678.t1138 = (_B1155.ON ? _B1155.assignObject : Object.assign)({}, _t1138);   // ★[T678] 문 그래프 관측(끔이면 칸 없음)
+  if (_t678o) o.t678.t1138 = Object.assign({}, _t1138);   // ★[T678] 문 그래프 관측(끔이면 칸 없음)
   if (reset) { _walk.steps = 0; _walk.ej = 0; _walk.ejQ = 0; _walk.ejFail = 0; _walk.terrQ = 0; _walk.waterQ = 0; _walk.wallQ = 0; _walk.cut = 0; _walk.ejPids.clear(); }
   return o;
 }
@@ -2211,7 +2211,7 @@ const _BM_CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-He
 function _t585Http(req, res) {
   const w = (!ZONE.isOcean && _streamOn()) ? Streams.wireOf(ZONE_ID) : null;
   if (!w) { res.writeHead(404, _BM_CORS); res.end(); return; }
-  res.writeHead(200, (_B1155.ON ? _B1155.assignObject : Object.assign)({}, _BM_CORS, { 'Content-Type': 'application/octet-stream', 'Content-Encoding': 'gzip', 'Cache-Control': 'public, max-age=3600', 'X-Streams-Ver': w.ver,
+  res.writeHead(200, Object.assign({}, _BM_CORS, { 'Content-Type': 'application/octet-stream', 'Content-Encoding': 'gzip', 'Cache-Control': 'public, max-age=3600', 'X-Streams-Ver': w.ver,
     'Access-Control-Expose-Headers': 'X-Streams-Ver' }));
   res.end(w.gz);
 }
@@ -2228,7 +2228,7 @@ function _t565Http(req, res) {
     if (!t) {
       const now = Date.now();   // ★새로 굽는 조각은 초당 20장까지(조각 하나 = 4,096셀 · 메모가 식었으면 ~16ms ⇒ 최악 초당 0.3초)
       if (now - _bm.tileWin > 1000) { _bm.tileWin = now; _bm.tileWinN = 0; }
-      if (++_bm.tileWinN > 20) { res.writeHead(429, (_B1155.ON ? _B1155.assignObject : Object.assign)({ 'Retry-After': '1' }, _BM_CORS)); res.end(); return; }
+      if (++_bm.tileWinN > 20) { res.writeHead(429, Object.assign({ 'Retry-After': '1' }, _BM_CORS)); res.end(); return; }
       const q0 = _walk.waterQ, t0 = Date.now();
       const tb = BigmapBake.bakeTile(_BM_Q, _WT_W, _WT_H, +m[1], +m[2], BigmapBake.TILE);
       _walk.waterQ = q0;
@@ -2239,22 +2239,22 @@ function _t565Http(req, res) {
       _bm.tiles.set(key, t);
     }
     _bm.tileServed++;
-    res.writeHead(200, (_B1155.ON ? _B1155.assignObject : Object.assign)({ 'Content-Type': 'image/png', 'X-Bigmap-Ver': _bm.ver || '', 'X-Bigmap-Step': '1',
+    res.writeHead(200, Object.assign({ 'Content-Type': 'image/png', 'X-Bigmap-Ver': _bm.ver || '', 'X-Bigmap-Step': '1',
       'X-Bigmap-Tile': BigmapBake.TILE + ',' + key, 'X-Bigmap-Cells': cells }, _BM_CORS));
     res.end(t.buf);
     return;
   }
   if (!_bm.png) {
     const b = _bm.bake;
-    res.writeHead(503, (_B1155.ON ? _B1155.assignObject : Object.assign)({ 'Content-Type': 'application/json', 'Retry-After': '2' }, _BM_CORS));
+    res.writeHead(503, Object.assign({ 'Content-Type': 'application/json', 'Retry-After': '2' }, _BM_CORS));
     res.end(JSON.stringify({ baking: !!b, rows: b ? b.rowsDone() : 0, of: b ? b.bh : 0 }));
     return;
   }
   const etag = '"' + _bm.ver + '"';
-  const H = (_B1155.ON ? _B1155.assignObject : Object.assign)({ ETag: etag, 'X-Bigmap-Ver': _bm.ver, 'X-Bigmap-Step': String(BigmapBake.STEP), 'X-Bigmap-Cells': cells }, _BM_CORS);
+  const H = Object.assign({ ETag: etag, 'X-Bigmap-Ver': _bm.ver, 'X-Bigmap-Step': String(BigmapBake.STEP), 'X-Bigmap-Cells': cells }, _BM_CORS);
   if (req.headers['if-none-match'] === etag) { res.writeHead(304, H); res.end(); return; }
   _bm.served++;
-  res.writeHead(200, (_B1155.ON ? _B1155.assignObject : Object.assign)({ 'Content-Type': 'image/png', 'Content-Length': _bm.png.length }, H));
+  res.writeHead(200, Object.assign({ 'Content-Type': 'image/png', 'Content-Length': _bm.png.length }, H));
   res.end(_bm.png);
 }
 function bigmapStat() {
@@ -2964,7 +2964,7 @@ const FOOD_EFFECTS = {
 //   여태 이 표에 없어 "먹을 수 없는 아이템"이었다(T636 회부 ③). 효과는 **날고기 줄 그대로**(날 살 · 갈증 0 · HP −3 — 새 수 0) ·
 //   포만은 아래 열량 유도 한 줄이 `kcal.js` 의 meat_game 줄(USDA 사슴 날것 1,200kcal/kg)에서 채운다.
 //   곳간·거래 값은 안 바뀐다 — meat_game 은 곳간 넣기 표(`villages.PV_DEPOSIT_MAP`)에 줄이 없다(넣기·거래·게시판이 이 품목을 안 다룬다).
-if (dropKgOn()) FOOD_EFFECTS.meat_game = (_B1155.ON ? _B1155.assignObject : Object.assign)({}, FOOD_EFFECTS.meat_raw);
+if (dropKgOn()) FOOD_EFFECTS.meat_game = Object.assign({}, FOOD_EFFECTS.meat_raw);
 // ★★[부패·보존 배치 2026-08-31] **보존식 4종** — 목록은 `spoil.PRESERVED_ITEMS` 가 정본이고
 //   여기서는 **효과만** 붙인다(품목 이름을 두 벌로 적지 않는다).
 //   ★값의 근거: 보존은 **수분을 빼는 일**이다. 같은 무게에 열량이 몰리므로 단위당 회복이 크지만,
@@ -2986,7 +2986,7 @@ const PRESERVED_EFFECTS = {
 for (const [k, v] of Object.entries(require('./tidal').driedEffects())) PRESERVED_EFFECTS[k] = v;
 // ★★[T1128 · 손잡이 `T1128_KCAL_TIDY` 켬 기본 · `=0` = 이 줄 무동작] 어종별 건어물 · 생선 절임 — 효과는 **그 가공의 줄 그대로**(말린 것 = 건어물 · 절인 것 = 절임 · 새 수 0).
 //   포만은 아래 열량 유도 한 줄이 채운다(넣은 그 종 한 마리의 열량 — `kcal.js` §3 · `fish-preserve.js`).
-{ const _FP = require('./fish-preserve'); if (_FP.ON) for (const [k, it] of Object.entries(_FP.items())) if (!PRESERVED_EFFECTS[k]) PRESERVED_EFFECTS[k] = (_B1155.ON ? _B1155.assignObject : Object.assign)({}, PRESERVED_EFFECTS[it.kind === 'dry' ? 'dried_fish' : 'pickled_veg']); }
+{ const _FP = require('./fish-preserve'); if (_FP.ON) for (const [k, it] of Object.entries(_FP.items())) if (!PRESERVED_EFFECTS[k]) PRESERVED_EFFECTS[k] = Object.assign({}, PRESERVED_EFFECTS[it.kind === 'dry' ? 'dried_fish' : 'pickled_veg']); }
 for (const k of Object.keys(Spoil.PRESERVED_ITEMS)) {
   if (PRESERVED_EFFECTS[k]) FOOD_EFFECTS[k] = PRESERVED_EFFECTS[k];
 }
@@ -3096,7 +3096,7 @@ function _t1120Cfg() {
     const types = [...new Set([...Object.keys(RECIPES), ...Object.keys(TOOL_EFFECTS)])];
     for (const [k, N] of Object.entries(T1065_NEED)) {
       if (!N.make || !RECIPES[N.make]) continue;
-      verbs[k] = (_B1155.ON ? _B1155.assignObject : Object.assign)({ ok: types.filter((t) => N.ok(t)), make: N.make, act: N.act }, N.slot ? { slot: N.slot } : {}, N.hint ? { hint: N.hint } : {});
+      verbs[k] = Object.assign({ ok: types.filter((t) => N.ok(t)), make: N.make, act: N.act }, N.slot ? { slot: N.slot } : {}, N.hint ? { hint: N.hint } : {});
     }
     const lootKeys = (t) => { try { return Object.keys(lootOfResource({ type: t, x: 0, y: 0 }) || {}); } catch (e) { return []; } };
     const resTypes = Object.keys(ItemLabel.RESOURCE_VERBS);
@@ -4761,7 +4761,7 @@ function _t1155FollowSlot(s, speedMult) {
   else { const wp = P[_xyC.pathIndex[s]]; wx = wp.x; wy = wp.y; }
   const dx = wx - _xyC.X[s], dy = wy - _xyC.Y[s];
   if (_t671Lt(dx, dy, 10)) {
-    BC.setAt(s, 'pathIndex', _xyC.pathIndex[s] + 1);
+    let nextIndex = _xyC.pathIndex[s]; nextIndex++; BC.setAt(s, 'pathIndex', nextIndex);
     if (_xyC.pathIndex[s] >= (M ? _xyC._t791Pn[s] : P.length)) {
       BC.setAt(s, 'vx', 0); BC.setAt(s, 'vy', 0); return true;
     }
@@ -4844,7 +4844,7 @@ if (T1140_STUCK_INLINE) detectStuck = _t1140Detect;   // ★[T1140 ③-다] 켬 
 // ★[T1145] 켬 — `detectStuck` · `_t670Stuck` 과 같은 식 · 같은 차례 · 같은 쓰기에서 몸 x · y 만 열에서 읽는다(머리에서 한 번 — 몸 칸 읽기는 부작용 0 · 이 함수 안에 x · y 쓰기 0).
 //   `detectStuck` 글자 무변(바인딩 되묶기 한 줄 · T1140 ③-다 와 같은 꼴) · T1140 ③-다 켬이면 그쪽이 먼저(이 줄 무동작).
 function _t1145Stuck(npc, now, x, y) { const S = npc._stuckPos; if (S) { S.x = x; S.y = y; S.at = now; } else (_B1155.ON ? _B1155.set(npc,"_stuckPos",{ x, y, at: now }) : (npc._stuckPos = { x, y, at: now })); }
-function _t1145Detect(npc, now) {
+function _t1155DetectObject(npc, now) {
   const x = _xyX(npc), y = _xyY(npc);
   if (npc.targetX != null && npc.targetY != null
       && (!npc.path || npc.pathIndex >= (npc.path === npc._t791P ? npc._t791Pn : npc.path.length))
@@ -4867,6 +4867,30 @@ function _t1145Detect(npc, now) {
     return true;
   }
   return false;
+}
+function _t1155StuckSlot(s, now, x, y) {
+  const S = _xyC._stuckPos[s];
+  if (S) { S.x = x; S.y = y; S.at = now; }
+  else BC.setAt(s, '_stuckPos', {x, y, at:now});
+}
+function _t1155DetectSlot(s, now) {
+  const x = _xyC.X[s], y = _xyC.Y[s], P = _xyC.path[s];
+  if (_xyC.targetX[s] != null && _xyC.targetY[s] != null
+      && (!P || _xyC.pathIndex[s] >= (P === _xyC._t791P[s] ? _xyC._t791Pn[s] : P.length))
+      && _t671Lt(x - _xyC.targetX[s], y - _xyC.targetY[s], 12)) {
+    _t1155StuckSlot(s, now, x, y); BC.setAt(s, '_stuckN', 0); return false;
+  }
+  const S = _xyC._stuckPos[s];
+  if (!S) { BC.setAt(s, '_stuckPos', {x, y, at:now}); return false; }
+  if (_t671Gt(x - S.x, y - S.y, 5)) {
+    _t1155StuckSlot(s, now, x, y); BC.setAt(s, '_stuckN', 0); return false;
+  }
+  if (now - S.at > 1500) { _t1155StuckSlot(s, now, x, y); return true; }
+  return false;
+}
+function _t1145Detect(npc, now) {
+  const s = BC.slot(npc);
+  return s >= 0 ? _t1155DetectSlot(s, now) : _t1155DetectObject(npc, now);
 }
 if (T1145_XY_COLS && !T1140_STUCK_INLINE) detectStuck = _t1145Detect;
 // stuck 해소: path·target 비우고 짧은 wander 방향 + 다음 decide 트리거
@@ -6133,7 +6157,7 @@ const server = http.createServer((req, res) => {
       farm: (() => { try { return SimVillages.farmPerf ? SimVillages.farmPerf() : null; } catch (e) { return null; } })(),   // ★[T368] 농부 관측(끔이면 null)
       xzone: (() => { try { return SimVillages.xzonePerf ? SimVillages.xzonePerf() : null; } catch (e) { return null; } })(),   // ★[T533] 존 경계 관측(팔 끔이면 null)
       vein: { saves: _oreSaveN, npcSaves: _oreSaveNpc, cells: minedCells.size, batch: _vein ? _vein.stats() : null, digest: _vein ? _veinDigest() : null },   // ★[T735] 광맥 장부 쓰기 문 · 모아 쓰기(켬만)
-      tick: (_B1155.ON ? _B1155.assignObject : Object.assign)({}, _tick, { ms: _tickMsStats(_rst), on: TICK_DEBT_ON, dtMax: DT_MAX, debtMax: TICK_DEBT_MAX,
+      tick: Object.assign({}, _tick, { ms: _tickMsStats(_rst), on: TICK_DEBT_ON, dtMax: DT_MAX, debtMax: TICK_DEBT_MAX,
         lagPct: _tick.wall > 0 ? +(100 * (_tick.wall - _tick.sim) / _tick.wall).toFixed(3) : null }) }));
     return;
   }
@@ -6226,7 +6250,7 @@ const server = http.createServer((req, res) => {
           kind: c.kind || null, state: c.state || 'active', heldBy: c.heldBy || null,
           cx: Math.floor(c.x / BUILDING_SIZE), cy: Math.floor(c.y / BUILDING_SIZE),
           cells: Array.isArray(c.cells) ? c.cells.length : 1 });
-        res.end(JSON.stringify((_B1155.ON ? _B1155.assignObject : Object.assign)({ zone: ZONE_ID, claims: list }, Claims.debug(), extra || {})));
+        res.end(JSON.stringify(Object.assign({ zone: ZONE_ID, claims: list }, Claims.debug(), extra || {})));
       } catch (e) { res.end(JSON.stringify({ err: e.message })); }
     };
     if (req.url.indexOf('scan=1') >= 0) { Claims.scanAbsence().then((r) => _done({ scan: r })).catch((e) => _done({ scanErr: e.message })); return; }
@@ -6276,7 +6300,7 @@ const server = http.createServer((req, res) => {
     if (!VillageKin.ON && /(?:^|[?&])warm=1(?:&|$)/.test(req.url)) { try { Guild.introMap(); } catch (e) {} }
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
     //   ★[T785] 켬 — 길드 = 마을 ⇒ 이 창은 **마을 칸**을 낸다(촌장 · 곳간 문 · 가입 문 · 소개 · 전쟁 · 이행 표지 · 새 문 0) · 끔 = 종전 글자.
-    res.end(JSON.stringify(VillageKin.ON ? (_B1155.ON ? _B1155.assignObject : Object.assign)({ zone: ZONE_ID }, VillageKin.snapshot()) : Guild.debug()));
+    res.end(JSON.stringify(VillageKin.ON ? Object.assign({ zone: ZONE_ID }, VillageKin.snapshot()) : Guild.debug()));
     return;
   }
   // ★[T19] 이방인 받기 상태 읽기 전용 JSON — 하네스 관측창(`/claimdbg` 와 같은 규약).
@@ -6310,7 +6334,7 @@ const server = http.createServer((req, res) => {
   if (req.url && req.url.startsWith('/welcomedbg') && req.method === 'GET') {
     if (!InternalDoor.isInternal(req)) return InternalDoor.denyOutside(res);   // ★[T225] 관측창은 안 문
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
-    const _out = (extra) => { try { res.end(JSON.stringify((_B1155.ON ? _B1155.assignObject : Object.assign)({ zone: ZONE_ID }, Newcomers.debug(), extra || {}))); }
+    const _out = (extra) => { try { res.end(JSON.stringify(Object.assign({ zone: ZONE_ID }, Newcomers.debug(), extra || {}))); }
                               catch (e) { res.end(JSON.stringify({ err: e.message })); } };
     if (req.url.indexOf('scan=1') >= 0) { Newcomers.scan().then((r) => _out({ scan: r })).catch((e) => _out({ scanErr: e.message })); return; }
     _out();
@@ -6363,10 +6387,10 @@ const server = http.createServer((req, res) => {
           if (p.path && p.path.length) { const w = p.path[Math.min(p.pathIndex | 0, p.path.length - 1)]; r.wp = [Math.round(w.x), Math.round(w.y)]; }
           if (astar && p.targetX != null) {
             const o = { floor: fl, isBlockedFn: isBlockedByWall, isWaterFn: isTerrainBlockedLocal, searchRadiusCells: _pfRadius(true) };
-            const a1 = pfFindPath(p.x, p.y, p.targetX, p.targetY, (_B1155.ON ? _B1155.assignObject : Object.assign)({ maxCells: 1500 }, o));
-            const a2 = pfFindPath(p.x, p.y, p.targetX, p.targetY, (_B1155.ON ? _B1155.assignObject : Object.assign)({ maxCells: Infinity }, o));
+            const a1 = pfFindPath(p.x, p.y, p.targetX, p.targetY, Object.assign({ maxCells: 1500 }, o));
+            const a2 = pfFindPath(p.x, p.y, p.targetX, p.targetY, Object.assign({ maxCells: Infinity }, o));
             r.astar = { b1500: a1 ? a1.length : null, inf: a2 ? a2.length : null };
-            if (p.npcHomeX != null) { const a3 = pfFindPath(p.x, p.y, p.npcHomeX, p.npcHomeY, (_B1155.ON ? _B1155.assignObject : Object.assign)({ maxCells: 1500 }, o)); r.astar.home = a3 ? a3.length : null; }
+            if (p.npcHomeX != null) { const a3 = pfFindPath(p.x, p.y, p.npcHomeX, p.npcHomeY, Object.assign({ maxCells: 1500 }, o)); r.astar.home = a3 ? a3.length : null; }
           }
         }
         out.push(r);
@@ -6861,7 +6885,7 @@ async function _acceptConnection(ws, req, C) {
       ditches: ditchPayload(),         // ★[11차 T3 환호] 도랑 셀 flat [cx,cy,...] — 마을 소유 사물(부팅 후 불변)이라 welcome 1회
       buildings: activeChunkBuildings(),
       rooms: Rooms.allRooms().map(Rooms.wireRoom),   // ★[배치 18 ①] 방은 서버가 판정한다 — 클라는 받아 쓰기만(사본 방지)
-      worldClock: (_B1155.ON ? _B1155.assignObject : Object.assign)({
+      worldClock: Object.assign({
         epoch: WORLD.worldEpoch,
         dayLengthMs: WORLD.dayLengthMs,
         dayPhaseRatio: WORLD.dayPhaseRatio,
@@ -7496,7 +7520,7 @@ async function _acceptConnection(ws, req, C) {
             // 14.42-a — home 위치 (클라가 부활 옵션 UI 등에 사용)
             homeZone: player._homeZone || null,
             homeX: player._homeX, homeY: player._homeY },
-    worldClock: (_B1155.ON ? _B1155.assignObject : Object.assign)({
+    worldClock: Object.assign({
       epoch: WORLD.worldEpoch,
       dayLengthMs: WORLD.dayLengthMs,
       dayPhaseRatio: WORLD.dayPhaseRatio,
@@ -7832,7 +7856,7 @@ function handlePlayerInput(player, raw) {
   else if (E2E_GIVE && msg.type === '__e2e_chief') {
     // ★[T1085] 테스트 전용 — 이 사람을 그 마을 창설자(= 촌장 판정의 표지)로 세운다(마을 세우기 흐름은 이 카드 밖 · 판 꾸밈).
     const vil = SimVillages.villageByDbId && SimVillages.villageByDbId(msg.vid | 0);
-    if (vil && vil.econ) { vil.econ.founder = player.playerId; if (vil._kin) vil._kin = (_B1155.ON ? _B1155.assignObject : Object.assign)({}, vil._kin, { chief: player.playerId }); }
+    if (vil && vil.econ) { vil.econ.founder = player.playerId; if (vil._kin) vil._kin = Object.assign({}, vil._kin, { chief: player.playerId }); }
     send(player.ws, { type: 'notice', text: vil ? `시험: ${vil.name} 촌장이 되었습니다.` : '시험: 그런 마을이 없습니다.' });
   }
   else if (E2E_GIVE && msg.type === '__e2e_contrib') {
@@ -8452,7 +8476,7 @@ function doEat(player, item, amount, who) {
   if (item === 'medicinal_herb' || item === 'herb') Body.onHerb(target, Date.now());
   sendInventory(player);
   // ★몸의 값은 **받는 사람** 화면으로 간다(자기 자신을 먹였으면 종전과 같은 한 통이다).
-  send(player.ws, { type: 'gauges', hunger: Math.round(player.hunger), thirst: Math.round(player.thirst), body: Body.selfPayload(player), carry: (_B1155.ON ? _B1155.assignObject : Object.assign)(Carry.payload(player), { combined: moveMultOf(player) }), ate: (target === player ? 'self' : 'fed') });   // ★[T305] `ate` 한 낱말 — **먹었다는 사실 자체**를 말한다. 종전엔 소리 층이 허기 상승으로 짐작했고(T292-b) 배가 꽉 차면 안 올라 무음이었다
+  send(player.ws, { type: 'gauges', hunger: Math.round(player.hunger), thirst: Math.round(player.thirst), body: Body.selfPayload(player), carry: Object.assign(Carry.payload(player), { combined: moveMultOf(player) }), ate: (target === player ? 'self' : 'fed') });   // ★[T305] `ate` 한 낱말 — **먹었다는 사실 자체**를 말한다. 종전엔 소리 층이 허기 상승으로 짐작했고(T292-b) 배가 꽉 차면 안 올라 무음이었다
   if (target !== player) send(target.ws, { type: 'gauges', hunger: Math.round(target.hunger), thirst: Math.round(target.thirst), body: Body.selfPayload(target) });
   // ★[부패] 화면이 **왜 덜 찼는지**를 말한다 — 안 말하면 "회복량이 이상하다"로만 보인다
   //   (거래소 배치의 교훈: 계측기가 속은 자리에서 플레이어도 똑같이 속는다).
@@ -8513,7 +8537,7 @@ function doCook(player, recipeName) {
   //   수령은 시설 대기열의 `items`·`lotItems` 갈래(`doCraftCollect` — 보존 가공과 같은 길 · 로트 취득일 = 완성일).
   //   열량 = `kcal.js` §2(재료 열량 × 1.12) · 무게 = 날것 kg × USDA 조리 수율(`weights.js` ← `game-meat.js`). 끄면 이런 줄이 없다.
   if (recipe.item) {
-    const _prod = (_B1155.ON ? _B1155.assignObject : Object.assign)({}, recipe.produces);
+    const _prod = Object.assign({}, recipe.produces);
     const _lot = {}; for (const [k, n] of Object.entries(_prod)) if (Lots.isLot(k)) _lot[k] = n;
     // ★[T705] 상한 몫으로 익힌 것은 **상한 채로** 태어난다(독소가 남는다) — 그 몫은 `lotSpoiled` 로 따로 적어 수령 때 상한 로트로 꽂는다.
     const _lotSp = {};
@@ -8838,7 +8862,7 @@ function _promoteWelcome(player, pid, flag, ws, have) {
   const S = T1125_LEAN_PROMOTE ? _t1125Sig() : null, H = (ws && ws._t1125Has) || {}, C = (have && typeof have === 'object') ? have : {};
   const skipHt = !!(S && (H.ht === S.ht || C.ht === S.ht)), skipTb = !!(S && (H.tb === S.tb || C.tb === S.tb));
   if (S && ws) ws._t1125Has = { ht: S.ht, tb: S.tb };   // 이 welcome 뒤엔 그 소켓이 둘 다 가졌다(실었거나 · 이미 가졌거나)
-  return (_B1155.ON ? _B1155.assignObject : Object.assign)({ type: 'welcome' }, flag, {
+  return Object.assign({ type: 'welcome' }, flag, {
     pid,
     zone: zonePublicMeta(),
   }, skipHt ? null : { hardcodedTerrain: getHardcodedTerrainForZone() }, S ? { sig: S } : null, {
@@ -8863,7 +8887,7 @@ function _promoteWelcome(player, pid, flag, ws, have) {
             floor: player.floor || 0,
             homeZone: player._homeZone || null,
             homeX: player._homeX, homeY: player._homeY },
-    worldClock: (_B1155.ON ? _B1155.assignObject : Object.assign)({
+    worldClock: Object.assign({
       epoch: WORLD.worldEpoch, dayLengthMs: WORLD.dayLengthMs,
       dayPhaseRatio: WORLD.dayPhaseRatio, serverNow: Date.now(),
     }, T720_LON_DAY ? { lonDay: 1, worldWidth: WORLD.worldWidth, sunrise: SUNRISE_FRAC } : null),   // ★[T720]
@@ -9210,7 +9234,7 @@ function doCraftEquipment(player, itemType, material, rawMix) {
   //   골라 쓰는 주재료와 달리 `extra` 는 **늘 같이 든다**. 없으면 여기서 거절한다.
   //   ⚠거절만 하면 화면이 거짓말한다(버튼이 켜져 있다) ⇒ `_facilityRecipes` 의 `cost` 와
   //     클라의 게이팅에도 같은 곁재료를 실어 보낸다. 세 자리가 **같은 `extra` 하나**를 읽는다.
-  const _eqCost = (_B1155.ON ? _B1155.assignObject : Object.assign)({}, recipe.extra || {}, { [material]: (recipe.extra || {})[material] ? ((recipe.extra[material] || 0) + recipe.qty) : recipe.qty });
+  const _eqCost = Object.assign({}, recipe.extra || {}, { [material]: (recipe.extra || {})[material] ? ((recipe.extra[material] || 0) + recipe.qty) : recipe.qty });
   for (const [k, n] of Object.entries(_eqCost)) {
     if ((player.inventory[k] || 0) < n) { send(player.ws, { type: 'notice', text: `재료 부족: ${ITEM_LABEL_SERVER[k] || k} ${n} 필요 (보유 ${Math.floor(player.inventory[k] || 0)})` }); return; }
   }
@@ -9510,7 +9534,7 @@ function loopDelayStats(reset) {
 const _perfRing = [];
 function perfMark(kind, ms, extra) {
   if (!(ms >= 0)) return;
-  _perfRing.push((_B1155.ON ? _B1155.assignObject : Object.assign)({ t: Date.now(), kind, ms: Math.round(ms * 100) / 100 }, extra || {}));
+  _perfRing.push(Object.assign({ t: Date.now(), kind, ms: Math.round(ms * 100) / 100 }, extra || {}));
   if (_perfRing.length > 400) _perfRing.splice(0, _perfRing.length - 400);
 }
 // ★★[T486 2026-09-28] **pong 에 서버 시각 둘 + 최근 루프 p95** — 손잡이 `T486_PONG_SPLIT`(기본 **끔** · 끔 = pong 바이트 동일).
@@ -9662,7 +9686,7 @@ function weatherFor(p, now) {
     try { const _n = now || Date.now(), _d = gameDayT(_n), h = require('./weather').hintOf(day, bodyNight(_n), 0, _d.t, localPhase(ZONE.worldOffsetX + p.x, _n));
       if (h) _wl = { cold: h.cold, ko: h.ko, emo: h.emo, tempC: h.tempC }; } catch (e) { _wl = null; }
   }
-  return (_B1155.ON ? _B1155.assignObject : Object.assign)({}, w, _wl, { shelter: sh, cut, insC: +insC.toFixed(2),
+  return Object.assign({}, w, _wl, { shelter: sh, cut, insC: +insC.toFixed(2),
     wind: +Wind.seasonWind(day).toFixed(3), exp: wexp, precip, wet: +wet.toFixed(4), cover }, T526_VILLAGE_INDOOR ? { indoor: isIndoorAt(p) } : null);
 }
 // ★★[천장 해제 2026-08-31] 그 자리의 고도(km) — econ 기온 감률(−6.5℃/km)의 입력.
@@ -10225,7 +10249,7 @@ function tryFishStrike(player) {
   // ★[T609 ②] 싸움 단계(손잡이 a·b 켬만 — `fightMs` 가 있을 때) — 걸었다 · 끌어올린다. 그 시간이 지나면 `_fishPoll` 이 손에 들린다
   //   (그 사이 줄을 거두면 놓친다 — `fish_reel`). 끔이면 이 갈래를 안 타고 아래 그대로(같은 순서 · 같은 줄).
   if (f.fightMs > 0) {
-    player._fish = (_B1155.ON ? _B1155.assignObject : Object.assign)({}, f, { state: 'fight', landAt: now + f.fightMs });
+    player._fish = Object.assign({}, f, { state: 'fight', landAt: now + f.fightMs });
     send(player.ws, { type: 'fish_state', state: 'fight', x: f.x, y: f.y, landAt: player._fish.landAt, srvNow: now });
     send(player.ws, { type: 'notice', text: `🎣 걸렸습니다. ${(f.fightMs / 1000).toFixed(1)}초 동안 끌어올립니다.` });
     return;
@@ -10647,7 +10671,7 @@ function _facilityRecipes(player, kind, b) {   // ★[T1118] `b` = 그 시설(�
       .map(([k, n]) => ({ item: k, ko: ITEM_LABEL_SERVER[k] || k, need: n, have: Math.floor(inv[k] || 0) }));
     const costKo = {};
     for (const k of Object.keys(r.cost || {})) costKo[k] = ITEM_LABEL_SERVER[k] || k;
-    rows.push((_B1155.ON ? _B1155.assignObject : Object.assign)({}, r, { can: missing.length === 0, missing, costKo }));
+    rows.push(Object.assign({}, r, { can: missing.length === 0, missing, costKo }));
   };
   if (kind === 'cook') {
     for (const [id, r] of Object.entries(COOK_RECIPES)) push({ id, label: r.label, kind, cost: r.cost });
@@ -10669,7 +10693,7 @@ function _facilityRecipes(player, kind, b) {   // ★[T1118] `b` = 그 시설(�
       // ★[T12 지게] 곁재료는 **주재료와 같은 `cost` 에** 들어간다 ⇒ `can`·`missing`·버튼 게이팅이
       //   한 자리에서 맞는다(여기서 빼면 눌러 보고 서버에 거절당한다 = 화면이 게이트인 척한 것).
       push({ id: t, label: r.label, kind, skill: r.skill, lvl, options, extra: r.extra || null,
-             cost: (_B1155.ON ? _B1155.assignObject : Object.assign)({}, r.extra || {}, best ? { [best.material]: r.qty + ((r.extra || {})[best.material] || 0) } : {}), cast: !!r.cast });
+             cost: Object.assign({}, r.extra || {}, best ? { [best.material]: r.qty + ((r.extra || {})[best.material] || 0) } : {}), cast: !!r.cast });
     }
   }
   // ★★[부패·보존 배치 2026-08-31] **보존 가공을 그 시설의 창에 얹는다 — 새 패널 0.**
@@ -10684,7 +10708,7 @@ function _facilityRecipes(player, kind, b) {   // ★[T1118] `b` = 그 시설(�
       const have = Math.floor(Lots.sum(player, r.from));
       const off = Spoil.peekOffer(r.from, Lots.of(player, r.from), Math.max(1, have), today);
       const _pvRow = { id, label: r.label, kind: 'preserve', preserve: true,
-             cost: (_B1155.ON ? _B1155.assignObject : Object.assign)({ [r.from]: 1 }, r.needs),
+             cost: Object.assign({ [r.from]: 1 }, r.needs),
              from: r.from, out: r.out, outKo: Spoil.PRESERVED_ITEMS[r.out].ko,
              days: r.days, shelfDays: Spoil.shelfOf(r.out),
              fresh: have > 0 ? off.fresh : null,
@@ -11612,7 +11636,7 @@ function _instTake(player, gi) {
   const inst = gi && gi.inst;
   if (!inst) return null;
   const kind = gi.instKind || ((inst.durMax != null || inst.attrs) ? 'equip' : 'tool');
-  const copy = (_B1155.ON ? _B1155.assignObject : Object.assign)({}, inst);
+  const copy = Object.assign({}, inst);
   if (kind === 'equip') { copy.id = genEquipId(); (player.equipment = player.equipment || []).push(copy); }
   else { copy.id = genToolId(); (player.toolItems = player.toolItems || []).push(copy); }
   return { kind, inst: copy };
@@ -11629,7 +11653,7 @@ function _spawnGroundItems(player, item, parcels, lotRecs) {
     while (left > 1e-9 && _q.length) {
       const r = _q[0], take = Math.min(left, +r.n || 0);
       if (take <= 1e-9) { _q.shift(); continue; }
-      got.push((_B1155.ON ? _B1155.assignObject : Object.assign)({}, r, { n: +take.toFixed(6) }));
+      got.push(Object.assign({}, r, { n: +take.toFixed(6) }));
       r.n = +(r.n - take).toFixed(6); left -= take;
       if (r.n <= 1e-9) _q.shift();
     }
@@ -11648,7 +11672,7 @@ function _spawnGroundItems(player, item, parcels, lotRecs) {
     if (_lr) {
       // 바닥의 자리 배율을 찍는다 — 실내 바닥이면 완충이 걸린다(움집 안이 여름에 서늘한 그 이유).
       const _pf = Spoil.placeFields(_placeKeyOfGround(player.x, player.y, player.floor));
-      gi.lots = _lr.map((r) => (_B1155.ON ? _B1155.assignObject : Object.assign)({}, r, { m: _pf.m, w: _pf.w, t: T732_MOMENT ? r.t : _gd }));   // ★[T732] 정산 순간 그대로(날로 덮으면 그날 몫을 두 번 센다)
+      gi.lots = _lr.map((r) => Object.assign({}, r, { m: _pf.m, w: _pf.w, t: T732_MOMENT ? r.t : _gd }));   // ★[T732] 정산 순간 그대로(날로 덮으면 그날 몫을 두 번 센다)
     }
     // ★★[T102 ①] 개체는 **참조 그대로** 싣는다 — 필드를 베끼지 않는다.
     if (pc.inst) { gi.inst = pc.inst; gi.instKind = pc.instKind || 'tool'; gi.tool = _giTool(gi); }
@@ -12967,7 +12991,7 @@ function _t732DoorBegin(player, giveItems) {
 }
 function _t732Cut(recs, n) {   // 미리 본 레코드(오래된 것부터)에서 앞 n 개 몫
   const out = []; let left = n;
-  for (const r of (recs || [])) { if (left <= 1e-9) break; const t = Math.min(left, +r.n || 0); if (t > 1e-9) { out.push((_B1155.ON ? _B1155.assignObject : Object.assign)({}, r, { n: +t.toFixed(6) })); left -= t; } }
+  for (const r of (recs || [])) { if (left <= 1e-9) break; const t = Math.min(left, +r.n || 0); if (t > 1e-9) { out.push(Object.assign({}, r, { n: +t.toFixed(6) })); left -= t; } }
   return out;
 }
 function _t732DoorEnd(ctx, player, ok, vil, unitsOf) {
@@ -13157,8 +13181,8 @@ function _t1085Members(player, vid, r) {
     if (Membership.chiefCached(player, g.vil) !== true) return;
     const R = SimVillages.assignRoster(g.vil);
     if (!R) return;
-    r.members = { rows: R.rows.map((x) => (_B1155.ON ? _B1155.assignObject : Object.assign)(x, { jobKo: JOB_KR_NPC[x.job] || x.job })),
-      jobs: R.jobs.map((x) => (_B1155.ON ? _B1155.assignObject : Object.assign)(x, { ko: JOB_KR_NPC[x.job] || x.job })), cooldown: R.cooldown };
+    r.members = { rows: R.rows.map((x) => Object.assign(x, { jobKo: JOB_KR_NPC[x.job] || x.job })),
+      jobs: R.jobs.map((x) => Object.assign(x, { ko: JOB_KR_NPC[x.job] || x.job })), cooldown: R.cooldown };
   } catch (e) {}
 }
 // ★★[T18 2026-09-01] 연대기 — 마을 연표. 게이트·권한은 게시판과 **완전히 같다**(같은 마을, 같은 술어).
@@ -13445,8 +13469,8 @@ function __testBind() {
     T1032_NPC_KILL, T1025_EV_CORPSE,   // ★[T1032] 같은 하네스가 판을 읽는다(내보내기만)
     T1065_TOOL_GATE, _t1065Gate, t1065Stat: _t1065Stat, PLAYER_ATTACK_DAMAGE, arrows,   // ★[T1065] 도구 문 하네스(`test-t1065-tool-gate` · 내보내기만)
     T1120_NEXT_TOOL, _t1120Cfg, tryHutStart,   // ★[T1120] 다음 막힘 하네스(`test-t1120-next-tool` — 거절 알림 `need` · welcome 표 · 움집 터파기 문 · 내보내기만)
-    T1126_ROCK_YIELD, T1126_ROCK_HP0, _t1126Rho, _t1126RockStones, _t1126HitYield, _t1126Give, t1126Stat: () => (_B1155.ON ? _B1155.assignObject : Object.assign)({}, _t1126Stat),   // ★[T1126] 바위 하나에서 돌 여러 개 하네스(`test-t1126-rock-yield` — 내보내기만)
-    T1146_STONE_RULE, T1146_ROCK, T1146_K_BED, _t1146Cut, _t1146Gangue, t1146Chip: (id) => _t1146Chip.get(id) || 0, t1146Stat: () => (_B1155.ON ? _B1155.assignObject : Object.assign)({}, _t1146Stat),   // ★[T1146] 돌 규칙 하나 하네스(`test-t1146-stone-rule` — 내보내기만)
+    T1126_ROCK_YIELD, T1126_ROCK_HP0, _t1126Rho, _t1126RockStones, _t1126HitYield, _t1126Give, t1126Stat: () => Object.assign({}, _t1126Stat),   // ★[T1126] 바위 하나에서 돌 여러 개 하네스(`test-t1126-rock-yield` — 내보내기만)
+    T1146_STONE_RULE, T1146_ROCK, T1146_K_BED, _t1146Cut, _t1146Gangue, t1146Chip: (id) => _t1146Chip.get(id) || 0, t1146Stat: () => Object.assign({}, _t1146Stat),   // ★[T1146] 돌 규칙 하나 하네스(`test-t1146-stone-rule` — 내보내기만)
     // ── ★[T636] 사체 드롭 kg E2E(test-drop-kg.js) ── 실서버 spawnCorpse/butcherCorpse 를 그대로 쓴다(읽기·부르기만)
     spawnCorpse, butcherCorpse, corpses, t1025Corpse: _t1025Corpse,   // ★[T1025] 사체 장부 미룸 셈(탐침이 읽는다)
     // ── 조업 진척 계약 E2E(2026-08-02e ⑤) ── 시간은 벽시계라 하네스가 job.until 을 당겨 검증한다
@@ -13686,7 +13710,7 @@ function tryChestPut(player, buildingId, item, amount) {
   const _pk = _placeKeyOfBuilding(b);
   const _pf = Spoil.placeFields(_pk);
   const _lotRecs = Lots.isLot(item)
-    ? Lots.moveOut(player, item, amount, player.inventory, zoneGameDay(), 0).map((r) => (_B1155.ON ? _B1155.assignObject : Object.assign)({}, r, { m: _pf.m, w: _pf.w, t: T732_MOMENT ? r.t : zoneGameDay() }))   // ★[T732] 정산 순간 그대로
+    ? Lots.moveOut(player, item, amount, player.inventory, zoneGameDay(), 0).map((r) => Object.assign({}, r, { m: _pf.m, w: _pf.w, t: T732_MOMENT ? r.t : zoneGameDay() }))   // ★[T732] 정산 순간 그대로
     : null;
   const _took = consumeItem(player, item, amount);
   b.data = b.data || {};
@@ -13811,7 +13835,7 @@ async function tryChestTake(player, buildingId, item, amount) {
       const r = _cls[0];
       const take = Math.min(left, +r.n || 0);
       if (take <= 1e-9) { _cls.shift(); continue; }
-      moved.push((_B1155.ON ? _B1155.assignObject : Object.assign)({}, r, { n: +take.toFixed(6) }));
+      moved.push(Object.assign({}, r, { n: +take.toFixed(6) }));
       r.n = +(r.n - take).toFixed(6); left -= take;
       if (r.n <= 1e-9) _cls.shift();
     }
@@ -14518,10 +14542,10 @@ function wakeCellOf(spot) {
   if (k !== 'guild' && k !== 'personal' && k !== 'temporary') return spot;   // 사유지가 아니면 종전 그대로
   const rpx = Math.max(Number(spot.cw) || 0, Number(spot.ch) || 0) / 2;
   const d = _hutDoorNear(spot.x, spot.y, rpx);
-  if (d) return (_B1155.ON ? _B1155.assignObject : Object.assign)({}, spot, { x: d.x, y: d.y, cellKind: 'door' });
+  if (d) return Object.assign({}, spot, { x: d.x, y: d.y, cellKind: 'door' });
   const c = _standCellNear(spot.x, spot.y, _BLOCKED_STAND);
-  if (c) return (_B1155.ON ? _B1155.assignObject : Object.assign)({}, spot, { x: c.x, y: c.y, cellKind: 'near' });
-  return (_B1155.ON ? _B1155.assignObject : Object.assign)({}, spot, { cellKind: 'center' });
+  if (c) return Object.assign({}, spot, { x: c.x, y: c.y, cellKind: 'near' });
+  return Object.assign({}, spot, { cellKind: 'center' });
 }
 
 // ★★[T43 2026-09-02 재민 확정 · §12] **"고르는 부활"은 없어졌다 — 이건 이제 "포기"다.**
@@ -16471,7 +16495,7 @@ setInterval(() => {
         weather: weatherFor(p, now),
         // ★[무게 배치] 소지 무게·용량·과적 배율. **클라 예측이 같은 수를 써야** 러버밴딩이 안 난다 —
         //   그래서 `combined`(신체×과적, 바닥 적용)를 실어 보내고 클라는 그걸 쓴다.
-        carry: (_B1155.ON ? _B1155.assignObject : Object.assign)(Carry.payload(p), { combined: moveMultOf(p) }),
+        carry: Object.assign(Carry.payload(p), { combined: moveMultOf(p) }),
         // ★★[T147 2026-09-07] 따라가는 벗의 **지금 자리** — 갱신은 여기 하나다(새 타이머 0).
         //   자리가 여기인 이유: 초당 하나 나가는 self 전용 메시지가 **이미 있다**. 알림에 얹으면
         //   `window.__notices` 규약이 초당 한 줄씩 더러워지고(28개 하네스가 그 배열을 읽는다),
@@ -17009,9 +17033,9 @@ async function fireHandoff(player, targetZoneId, newX, newY) {
     return _t564HandoffFail(player, targetZoneId, target, e);
   }
   //   ★[T564] 받는 존의 규약 판 — 다르면 넘기지 않는다(토큰은 받는 쪽이 이미 409 로 버렸다 · 여기는 받는 쪽이 T564 판인데 판만 다른 드문 창)
-  if (_prep && _prep.proto != null && +_prep.proto !== HANDOFF_PROTO) return _t564HandoffFail(player, targetZoneId, target, (_B1155.ON ? _B1155.assignObject : Object.assign)(new Error('proto'), { status: 409, body: _prep }));
+  if (_prep && _prep.proto != null && +_prep.proto !== HANDOFF_PROTO) return _t564HandoffFail(player, targetZoneId, target, Object.assign(new Error('proto'), { status: 409, body: _prep }));
   if (_prep && _prep.proto == null && !_t564Warned.has('out:' + targetZoneId)) { _t564Warned.add('out:' + targetZoneId); console.warn(`[${ZONE_ID}] · handoff_prepare → ${targetZoneId} 규약 판 모름(상대가 T564 전 판) · 넘기는 종전대로`); }
-  send(player.ws, (_B1155.ON ? _B1155.assignObject : Object.assign)({ type: 'handoff', targetZone: targetZoneId, token }, T1092_HANDOFF_BACK ? { back: HANDOFF_TOKEN_MS } : null));   // ★[T1092] 켬 = 못 붙으면 돌려놓는다는 약속(클라 기다림 시한)
+  send(player.ws, Object.assign({ type: 'handoff', targetZone: targetZoneId, token }, T1092_HANDOFF_BACK ? { back: HANDOFF_TOKEN_MS } : null));   // ★[T1092] 켬 = 못 붙으면 돌려놓는다는 약속(클라 기다림 시한)
   console.log(`[${ZONE_ID}] ⇒ handoff ${player.name} (${player.pid}) → ${targetZoneId} token=${token.slice(0,8)}`);
 
   // ACK 대기 — 도착하면 즉시 정리. 못 받으면 3초 후 fallback 정리.
@@ -17127,7 +17151,7 @@ function postJSON(host, port, path, data) {
       //   ★★[T245] 존↔존도 **안 문**을 두드린다 — 열쇠는 여기 한 자리에서 붙인다(사본 0 · `central-client` 와 같은 문법).
       //     ⚠비밀이 안 잡혀 있으면 헤더가 안 붙고, 받는 쪽은 **사설 주소 폴백**으로 판정한다(T217 조건 그대로).
       //       같은 호스트의 컨테이너끼리면 그대로 돌고, **호스트가 갈리면 `CENTRAL_SECRET` 이 양쪽에 있어야 한다**(회부).
-      headers: (_B1155.ON ? _B1155.assignObject : Object.assign)({ 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }, InternalDoor.SECRET_SET ? { [InternalDoor.HEADER]: process.env.CENTRAL_SECRET } : {}),
+      headers: Object.assign({ 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }, InternalDoor.SECRET_SET ? { [InternalDoor.HEADER]: process.env.CENTRAL_SECRET } : {}),
     }, (res) => {
       let buf = '';
       res.on('data', (chunk) => buf += chunk);
