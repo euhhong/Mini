@@ -617,7 +617,7 @@ function table() {
     //   ★[T791] 걸음 몸통 표본(--lines) — 창 안 토막만 모아 몸통 줄 묶음 · 부른 함수 몫을 µs 로(결정 문 µs/사람 × npcStep 몫 × 그 칸 몫)
     if (j.lines && j.lines.file && fs.existsSync(j.lines.file)) {
       const lo = Math.min(...w.slices.map((x) => x.mt0 || Infinity)), hi = Math.max(...w.slices.map((x) => x.mt1 || 0));
-      const C = fs.readFileSync(j.lines.file, 'utf8').trim().split('\n').map((x) => { try { return JSON.parse(x); } catch (e) { return null; } }).filter((x) => x && x.t0 >= lo && x.t1 <= hi);
+      const C = fs.readFileSync(j.lines.file, 'utf8').trim().split('\n').map((x) => { try { return JSON.parse(x); } catch (e) { return null; } }).filter((x) => x && x.t0 + (x.off || 0) >= lo && x.t1 + (x.off || 0) <= hi);   // ★[T1155] 토막에 `off`(표본기 ↔ hrtime 차 — macOS 는 잠든 만큼 갈린다)가 있으면 그만큼 옮겨 견준다(없으면 종전 그대로)
       const T = { chunks: C.length, tot: 0, dec: 0, ns: 0, nsSelf: 0, self: {}, call: {}, dF: {}, dL: {}, c2: {}, inc: {}, rq: {} };
       for (const c of C) { T.tot += c.tot; T.dec += c.dec; T.ns += c.ns; T.nsSelf += c.nsSelf; for (const [k, v] of Object.entries(c.self)) T.self[k] = (T.self[k] || 0) + v; for (const [k, v] of Object.entries(c.call)) T.call[k] = (T.call[k] || 0) + v;
         for (const [k, v] of Object.entries(c.incl || {})) T.inc[k] = (T.inc[k] || 0) + v;   // ★[T1140] 함수 포함 표본(npcStep 아래)

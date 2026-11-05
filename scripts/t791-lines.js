@@ -48,7 +48,7 @@ if (process.env.T791_LINES && require('worker_threads').isMainThread) {
   let busy = false;
   async function cycle() {
     if (busy) return; busy = true;
-    try { const r = await post('Profiler.stop'); fs.appendFileSync(OUT, JSON.stringify(analyze(r.profile)) + '\n'); await post('Profiler.start'); }
+    try { const r = await post('Profiler.stop'); const h1 = Number(process.hrtime.bigint() / 1000n); const o = analyze(r.profile); o.h1 = h1; o.off = h1 - o.t1; fs.appendFileSync(OUT, JSON.stringify(o) + '\n'); await post('Profiler.start'); }   // ★[T1155] 표본기 시각(잠든 동안 멈춤 · macOS) ↔ 러너 단조 시각(hrtime) 차 `off` — 창 고르기는 t0 + off
     catch (e) { try { fs.appendFileSync(OUT, JSON.stringify({ err: String(e && e.message) }) + '\n'); } catch (e2) {} }
     busy = false;
   }
