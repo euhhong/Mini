@@ -18,7 +18,7 @@
   },
   "purpose": "집N의 몸∞ 두 갈래는 같은3개 도적 읽기 관찰을 함께 프리로드하여 상한1 판의 몸 부족과 몸∞의 실제 몸 수를 구분한다. 전쟁/집N5판 모두 시작 전에 관찰기만 갱신했다.",
   "productChanges": false,
-  "sourceProductHead": "26e14142b5e14a5c8a11503ff0b2f927a8b95627",
+  "sourceProductHead": "c2bec2b4adaa17eb39c8eed723d169efc8ab0d59",
   "sha256": {
     "scripts/t1159-observe.js": "69980c324b4474b7667b23ce2018c9ed7ea2daa06adfe6932046873575ed304e",
     "scripts/t1078-observe.js": "b98007890c071ceb6ad697b6222c0c0dedb1bc7ef711784bcb32c5316fa9b122",
@@ -32,5 +32,7 @@
     "home-off",
     "home-on"
   ],
-  "additionalBanditObservation": "T1078_BANDIT_ALL=1인 home-off/home-on만 같은3개 읽기 관찰을 부른다."
+  "additionalBanditObservation": "T1078_BANDIT_ALL=1인 home-off/home-on만 같은3개 읽기 관찰을 부른다.",
+  "previousProductHead": "26e14142b5e14a5c8a11503ff0b2f927a8b95627",
+  "noteAfterStaleRouteFix": "Observer byte hashes unchanged; host path-selection fix is a separate product commit."
 }

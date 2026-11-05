@@ -2216,7 +2216,8 @@
             }
           }
         },
-        "requiresSurrenderRerun": false
+        "requiresSurrenderRerun": false,
+        "requiresStaleRerun": true
       },
       "T1041_WAR_BODY": {
         "sourceHead": "a05c2ebae621075ba5fda4fac22a45cf49bc08a6",
@@ -7995,7 +7996,8 @@
             }
           }
         },
-        "requiresSurrenderRerun": false
+        "requiresSurrenderRerun": false,
+        "requiresStaleRerun": true
       }
     },
     "beforeSurrenderFix": {
@@ -8903,9 +8905,1235 @@
         "server800Cost": null,
         "labs": {}
       }
+    },
+    "beforeStaleRouteFix": {
+      "T790_NO_SNAP": {
+        "sourceHead": "c58cd674",
+        "versusControl": {
+          "1020": {
+            "sameDailyFingerprint": false,
+            "firstDifference": {
+              "day": 367,
+              "econDay": 367,
+              "villages": [
+                "임업6"
+              ]
+            },
+            "warSame": true
+          },
+          "7": {
+            "sameDailyFingerprint": true,
+            "firstDifference": null,
+            "warSame": true
+          },
+          "42": {
+            "sameDailyFingerprint": true,
+            "firstDifference": null,
+            "warSame": true
+          }
+        },
+        "plan": {
+          "cost": {
+            "tag": "T790_NO_SNAP-plan",
+            "args": [
+              "scripts/server-baseline-check.js",
+              "계측/서버기준선_2026-11-04c.json",
+              "--plan",
+              "1020:400,7:60,42:60",
+              "--par",
+              "3"
+            ],
+            "env": {
+              "T790_NO_SNAP": "1",
+              "T1041_WAR_BODY": "0",
+              "T811_ARMS_BODY": "0",
+              "T449_BODY_DAY": "0",
+              "T491_BATCH_FROM_BODY": "0",
+              "T561_ROSTER_BODY": "0",
+              "T502_ODDS_REAL": "0",
+              "T815_DRAFT_FAMINE": "0",
+              "T941_BATTLE_DAY": "0",
+              "T627_TRIP_DAY": "0",
+              "T1078_BANDIT_ALL": "0",
+              "T1079_BANDIT_CAMP": "0",
+              "T1104_BANDIT_WALK": "0",
+              "T1159_HOME_N": "0",
+              "T1076_ARMY_MORALE": "1",
+              "T466_LOOT_ACT": "1",
+              "T826_LOOT_BODY": "1",
+              "T1168_SORTIE_AMMO": "1"
+            },
+            "exit": 1,
+            "wallSec": 360.03,
+            "cpuUs": 461255458
+          },
+          "seeds": [
+            {
+              "seed": 1020,
+              "days": 400,
+              "population": 3413,
+              "empty": 0,
+              "dissolved": 0,
+              "deadTot": 520,
+              "starvationDeaths": 371,
+              "bodyExit": {
+                "died": {
+                  "starve": 362,
+                  "old": 0
+                },
+                "walk": {
+                  "bandit": 0,
+                  "desert": 0,
+                  "move": 369
+                },
+                "other": {
+                  "expedition": 0,
+                  "road": 0,
+                  "unknown": 0
+                },
+                "rot": 0,
+                "arrive": 0,
+                "straight": 0,
+                "lost": 0,
+                "vanish": 0,
+                "noted": 628,
+                "trimmed": 628,
+                "lying": 362,
+                "walking": 7
+              },
+              "bandit": {
+                "conv": 0,
+                "exo": 1,
+                "starve": 6,
+                "disband": 2,
+                "denForm": 5,
+                "loot": 107,
+                "peak": 3
+              },
+              "war": {
+                "decl": 3,
+                "battle": 0,
+                "atkWin": 0,
+                "defWin": 0,
+                "cas": 0,
+                "captured": 0,
+                "siege": 0,
+                "assault": 3,
+                "sortie": 0,
+                "withdraw": 0,
+                "surrender": 0,
+                "walkover": 0,
+                "tribute": 0,
+                "loot": 0
+              },
+              "eight": {
+                "pop": 3413,
+                "dead": 0,
+                "ever": 51,
+                "weapQ": 230,
+                "expand": 646,
+                "board": 2158,
+                "toolQ": 2976.7,
+                "preserve": 0,
+                "grain": 6456
+              },
+              "payloadSha256": "ab9248875bd5316b47a096736ed3e3f1007dc90ac68c2a4cc6795a0dd4e5bc40"
+            },
+            {
+              "seed": 7,
+              "days": 60,
+              "population": 1802,
+              "empty": 0,
+              "dissolved": 0,
+              "deadTot": 0,
+              "starvationDeaths": 0,
+              "bodyExit": {
+                "died": {
+                  "starve": 0,
+                  "old": 0
+                },
+                "walk": {
+                  "bandit": 0,
+                  "desert": 0,
+                  "move": 0
+                },
+                "other": {
+                  "expedition": 0,
+                  "road": 0,
+                  "unknown": 0
+                },
+                "rot": 0,
+                "arrive": 0,
+                "straight": 0,
+                "lost": 0,
+                "vanish": 0,
+                "noted": 2,
+                "trimmed": 2,
+                "lying": 0,
+                "walking": 0
+              },
+              "bandit": {
+                "conv": 0,
+                "exo": 0,
+                "starve": 0,
+                "disband": 0,
+                "denForm": 3,
+                "loot": 2,
+                "peak": 3
+              },
+              "war": {
+                "decl": 0,
+                "battle": 0,
+                "atkWin": 0,
+                "defWin": 0,
+                "cas": 0,
+                "captured": 0,
+                "siege": 0,
+                "assault": 0,
+                "sortie": 0,
+                "withdraw": 0,
+                "surrender": 0,
+                "walkover": 0,
+                "tribute": 0,
+                "loot": 0
+              },
+              "eight": {
+                "pop": 1802,
+                "dead": 0,
+                "ever": 51,
+                "weapQ": 62,
+                "expand": 0,
+                "board": 397,
+                "toolQ": 2540.5,
+                "preserve": 0,
+                "grain": 7326.3
+              },
+              "payloadSha256": "fbbc3b2fe8a4ced163d19ac1c18a58a8b621d99ab36a0ed97a8056ec5531c9ba"
+            },
+            {
+              "seed": 42,
+              "days": 60,
+              "population": 1834,
+              "empty": 0,
+              "dissolved": 0,
+              "deadTot": 0,
+              "starvationDeaths": 0,
+              "bodyExit": {
+                "died": {
+                  "starve": 0,
+                  "old": 0
+                },
+                "walk": {
+                  "bandit": 0,
+                  "desert": 0,
+                  "move": 0
+                },
+                "other": {
+                  "expedition": 0,
+                  "road": 0,
+                  "unknown": 0
+                },
+                "rot": 0,
+                "arrive": 0,
+                "straight": 0,
+                "lost": 0,
+                "vanish": 0,
+                "noted": 4,
+                "trimmed": 4,
+                "lying": 0,
+                "walking": 0
+              },
+              "bandit": {
+                "conv": 0,
+                "exo": 0,
+                "starve": 0,
+                "disband": 0,
+                "denForm": 3,
+                "loot": 4,
+                "peak": 3
+              },
+              "war": {
+                "decl": 0,
+                "battle": 0,
+                "atkWin": 0,
+                "defWin": 0,
+                "cas": 0,
+                "captured": 0,
+                "siege": 0,
+                "assault": 0,
+                "sortie": 0,
+                "withdraw": 0,
+                "surrender": 0,
+                "walkover": 0,
+                "tribute": 0,
+                "loot": 0
+              },
+              "eight": {
+                "pop": 1834,
+                "dead": 0,
+                "ever": 51,
+                "weapQ": 70,
+                "expand": 0,
+                "board": 391,
+                "toolQ": 2584.2,
+                "preserve": 0,
+                "grain": 6893.8
+              },
+              "payloadSha256": "efb49e6af51eb46bb9c945f81f0b4768141505feb727feb0002070b08c4bc411"
+            }
+          ],
+          "check": {
+            "base": "계측/서버기준선_2026-11-04c.json",
+            "plan": {
+              "7": 60,
+              "42": 60,
+              "1020": 400
+            },
+            "seeds": [
+              1020,
+              7,
+              42
+            ],
+            "sec": 360,
+            "per": {
+              "7": {
+                "seed": 7,
+                "code": 0,
+                "sec": 75
+              },
+              "42": {
+                "seed": 42,
+                "code": 0,
+                "sec": 74
+              },
+              "1020": {
+                "seed": 1020,
+                "code": 0,
+                "sec": 360
+              }
+            },
+            "res": {
+              "7": {
+                "same": true,
+                "days": 60
+              },
+              "42": {
+                "same": true,
+                "days": 60
+              },
+              "1020": {
+                "same": false,
+                "day": 367,
+                "diffs": [
+                  "어촌2[st(곳간)]",
+                  "임업6[st(곳간)·pp(인구·주민)·tr(금고)]"
+                ]
+              }
+            }
+          }
+        },
+        "server800": {
+          "seed": 1020,
+          "days": 800,
+          "population": 5421,
+          "empty": 0,
+          "dissolved": 0,
+          "deadTot": 906,
+          "starvationDeaths": 420,
+          "bodyExit": {
+            "died": {
+              "starve": 796,
+              "old": 0
+            },
+            "walk": {
+              "bandit": 0,
+              "desert": 0,
+              "move": 797
+            },
+            "other": {
+              "expedition": 0,
+              "road": 0,
+              "unknown": 0
+            },
+            "rot": 0,
+            "arrive": 0,
+            "straight": 0,
+            "lost": 0,
+            "vanish": 0,
+            "noted": 1061,
+            "trimmed": 1061,
+            "lying": 796,
+            "walking": 1
+          },
+          "bandit": {
+            "conv": 0,
+            "exo": 8,
+            "starve": 7,
+            "disband": 20,
+            "denForm": 21,
+            "loot": 150,
+            "peak": 3
+          },
+          "war": null,
+          "eight": {
+            "pop": 5421,
+            "dead": 0,
+            "ever": 51,
+            "weapQ": 499,
+            "expand": 2538,
+            "board": 3962,
+            "toolQ": 6520.8,
+            "preserve": 0,
+            "grain": 20010.6
+          },
+          "payloadSha256": "0829d5021b261e7249918eafe5982369af58d69a44800281ca01d2c540e82817"
+        },
+        "server800Cost": {
+          "tag": "T790_NO_SNAP-server800",
+          "args": [
+            "scripts/t577-server-run.js",
+            "800",
+            "1020"
+          ],
+          "env": {
+            "T790_NO_SNAP": "1",
+            "T1041_WAR_BODY": "0",
+            "T811_ARMS_BODY": "0",
+            "T449_BODY_DAY": "0",
+            "T491_BATCH_FROM_BODY": "0",
+            "T561_ROSTER_BODY": "0",
+            "T502_ODDS_REAL": "0",
+            "T815_DRAFT_FAMINE": "0",
+            "T941_BATTLE_DAY": "0",
+            "T627_TRIP_DAY": "0",
+            "T1078_BANDIT_ALL": "0",
+            "T1079_BANDIT_CAMP": "0",
+            "T1104_BANDIT_WALK": "0",
+            "T1159_HOME_N": "0",
+            "T1076_ARMY_MORALE": "1",
+            "T466_LOOT_ACT": "1",
+            "T826_LOOT_BODY": "1",
+            "T1168_SORTIE_AMMO": "1",
+            "T400_BUILD_ACT": "0",
+            "VILLAGE_CARAVAN_MAX": "0",
+            "T577_DIR": "/tmp/t1183-suite-results/T790_NO_SNAP/server800",
+            "T577_PAR": "1",
+            "T577_TAG": "T790_NO_SNAP"
+          },
+          "exit": 0,
+          "wallSec": 738.651,
+          "cpuUs": 629988786
+        },
+        "labs": {
+          "1020": {
+            "data": {
+              "population": 6436,
+              "empty": 0,
+              "starvationDeaths": 2,
+              "base": {
+                "pop": 6436,
+                "dead": 0,
+                "ever": 51,
+                "weapQ": 920,
+                "expand": 5259,
+                "trades": 5000
+              },
+              "payloadSha256": "3ebfc005af1e4dc689d38faf477abe978ce220900773d0a81e86328baad63661",
+              "sameAsT1168ReferenceExceptObserver": true,
+              "referencePayloadSha256": "fea3a42f4c22ec864429eaeef05b478b14a160820edfbed5ebcaa3664cd12a2a"
+            },
+            "cost": {
+              "tag": "T790_NO_SNAP-lab-1020",
+              "args": [
+                "scripts/t17-metrics.js",
+                "800",
+                "1020"
+              ],
+              "env": {
+                "T790_NO_SNAP": "1",
+                "T1041_WAR_BODY": "0",
+                "T811_ARMS_BODY": "0",
+                "T449_BODY_DAY": "0",
+                "T491_BATCH_FROM_BODY": "0",
+                "T561_ROSTER_BODY": "0",
+                "T502_ODDS_REAL": "0",
+                "T815_DRAFT_FAMINE": "0",
+                "T941_BATTLE_DAY": "0",
+                "T627_TRIP_DAY": "0",
+                "T1078_BANDIT_ALL": "0",
+                "T1079_BANDIT_CAMP": "0",
+                "T1104_BANDIT_WALK": "0",
+                "T1159_HOME_N": "0",
+                "T1076_ARMY_MORALE": "1",
+                "T466_LOOT_ACT": "1",
+                "T826_LOOT_BODY": "1",
+                "T1168_SORTIE_AMMO": "1",
+                "T17_JSON": "/tmp/t1183-suite-results/T790_NO_SNAP/lab-1020.json",
+                "LAB_SEEDCACHE": "/tmp/t1183-suite-results/T790_NO_SNAP/lab-1020.seedcache.json",
+                "DB_PATH": "/tmp/t1183-suite-results/T790_NO_SNAP/lab-1020.db"
+              },
+              "exit": 0,
+              "wallSec": 211.663,
+              "cpuUs": 230621687
+            }
+          },
+          "7": {
+            "data": {
+              "population": 6008,
+              "empty": 0,
+              "starvationDeaths": 86,
+              "base": {
+                "pop": 6008,
+                "dead": 0,
+                "ever": 51,
+                "weapQ": 984,
+                "expand": 3442,
+                "trades": 5000
+              },
+              "payloadSha256": "ef45a36f6a232243adf9fb8d60ad373c4f29698ba93197ca7738df0227d4da96",
+              "sameAsT1168ReferenceExceptObserver": true,
+              "referencePayloadSha256": "40f8d02cea912c2856ad87b1a5033503e9bdbc45543f467211aa7d40aeb86448"
+            },
+            "cost": {
+              "tag": "T790_NO_SNAP-lab-7",
+              "args": [
+                "scripts/t17-metrics.js",
+                "800",
+                "7"
+              ],
+              "env": {
+                "T790_NO_SNAP": "1",
+                "T1041_WAR_BODY": "0",
+                "T811_ARMS_BODY": "0",
+                "T449_BODY_DAY": "0",
+                "T491_BATCH_FROM_BODY": "0",
+                "T561_ROSTER_BODY": "0",
+                "T502_ODDS_REAL": "0",
+                "T815_DRAFT_FAMINE": "0",
+                "T941_BATTLE_DAY": "0",
+                "T627_TRIP_DAY": "0",
+                "T1078_BANDIT_ALL": "0",
+                "T1079_BANDIT_CAMP": "0",
+                "T1104_BANDIT_WALK": "0",
+                "T1159_HOME_N": "0",
+                "T1076_ARMY_MORALE": "1",
+                "T466_LOOT_ACT": "1",
+                "T826_LOOT_BODY": "1",
+                "T1168_SORTIE_AMMO": "1",
+                "T17_JSON": "/tmp/t1183-suite-results/T790_NO_SNAP/lab-7.json",
+                "LAB_SEEDCACHE": "/tmp/t1183-suite-results/T790_NO_SNAP/lab-7.seedcache.json",
+                "DB_PATH": "/tmp/t1183-suite-results/T790_NO_SNAP/lab-7.db"
+              },
+              "exit": 0,
+              "wallSec": 205.545,
+              "cpuUs": 226206555
+            }
+          },
+          "42": {
+            "data": {
+              "population": 6299,
+              "empty": 0,
+              "starvationDeaths": 73,
+              "base": {
+                "pop": 6299,
+                "dead": 0,
+                "ever": 51,
+                "weapQ": 1287,
+                "expand": 4699,
+                "trades": 5000
+              },
+              "payloadSha256": "3848ca037367600dcc5595ce46c82e9c0ee363b4174bd68e53a6c960e01caeda",
+              "sameAsT1168ReferenceExceptObserver": true,
+              "referencePayloadSha256": "13ba389e05410ee91651c4186a73ba78455af7cfd2bf1c0b673b95d7e8eade62"
+            },
+            "cost": {
+              "tag": "T790_NO_SNAP-lab-42",
+              "args": [
+                "scripts/t17-metrics.js",
+                "800",
+                "42"
+              ],
+              "env": {
+                "T790_NO_SNAP": "1",
+                "T1041_WAR_BODY": "0",
+                "T811_ARMS_BODY": "0",
+                "T449_BODY_DAY": "0",
+                "T491_BATCH_FROM_BODY": "0",
+                "T561_ROSTER_BODY": "0",
+                "T502_ODDS_REAL": "0",
+                "T815_DRAFT_FAMINE": "0",
+                "T941_BATTLE_DAY": "0",
+                "T627_TRIP_DAY": "0",
+                "T1078_BANDIT_ALL": "0",
+                "T1079_BANDIT_CAMP": "0",
+                "T1104_BANDIT_WALK": "0",
+                "T1159_HOME_N": "0",
+                "T1076_ARMY_MORALE": "1",
+                "T466_LOOT_ACT": "1",
+                "T826_LOOT_BODY": "1",
+                "T1168_SORTIE_AMMO": "1",
+                "T17_JSON": "/tmp/t1183-suite-results/T790_NO_SNAP/lab-42.json",
+                "LAB_SEEDCACHE": "/tmp/t1183-suite-results/T790_NO_SNAP/lab-42.seedcache.json",
+                "DB_PATH": "/tmp/t1183-suite-results/T790_NO_SNAP/lab-42.db"
+              },
+              "exit": 0,
+              "wallSec": 210.658,
+              "cpuUs": 232322710
+            }
+          }
+        },
+        "requiresSurrenderRerun": false
+      },
+      "all": {
+        "sourceHead": "a05c2ebae621075ba5fda4fac22a45cf49bc08a6",
+        "versusControl": {
+          "1020": {
+            "sameDailyFingerprint": false,
+            "firstDifference": {
+              "day": 131,
+              "econDay": 131,
+              "villages": [
+                "농촌6"
+              ]
+            },
+            "warSame": false
+          },
+          "7": {
+            "sameDailyFingerprint": true,
+            "firstDifference": null,
+            "warSame": true
+          },
+          "42": {
+            "sameDailyFingerprint": true,
+            "firstDifference": null,
+            "warSame": true
+          }
+        },
+        "plan": {
+          "cost": {
+            "tag": "all-plan",
+            "limitSec": 7200,
+            "args": [
+              "scripts/server-baseline-check.js",
+              "계측/서버기준선_2026-11-04c.json",
+              "--plan",
+              "1020:400,7:60,42:60",
+              "--par",
+              "1"
+            ],
+            "env": {
+              "T790_NO_SNAP": "1",
+              "T1041_WAR_BODY": "1",
+              "T811_ARMS_BODY": "1",
+              "T449_BODY_DAY": "1",
+              "T491_BATCH_FROM_BODY": "1",
+              "T561_ROSTER_BODY": "1",
+              "T502_ODDS_REAL": "1",
+              "T815_DRAFT_FAMINE": "1",
+              "T941_BATTLE_DAY": "1",
+              "T627_TRIP_DAY": "1",
+              "T1078_BANDIT_ALL": "0",
+              "T1079_BANDIT_CAMP": "0",
+              "T1104_BANDIT_WALK": "0",
+              "T1159_HOME_N": "0",
+              "T1076_ARMY_MORALE": "1",
+              "T466_LOOT_ACT": "1",
+              "T826_LOOT_BODY": "1",
+              "T1168_SORTIE_AMMO": "1",
+              "T577_PORT_BASE": "52000"
+            },
+            "exit": 1,
+            "wallSec": 1206.142,
+            "cpuUs": 891602706
+          },
+          "seeds": [
+            {
+              "seed": 1020,
+              "days": 400,
+              "population": 3508,
+              "empty": 0,
+              "dissolved": 0,
+              "deadTot": 1033,
+              "starvationDeaths": 448,
+              "bodyExit": {
+                "died": {
+                  "starve": 0,
+                  "old": 4
+                },
+                "walk": {
+                  "bandit": 0,
+                  "desert": 0,
+                  "move": 547
+                },
+                "other": {
+                  "expedition": 0,
+                  "road": 0,
+                  "unknown": 176
+                },
+                "rot": 0,
+                "arrive": 16,
+                "straight": 0,
+                "lost": 0,
+                "vanish": 0,
+                "noted": 1098,
+                "trimmed": 1094,
+                "lying": 4,
+                "walking": 161
+              },
+              "bandit": {
+                "conv": 0,
+                "exo": 1,
+                "starve": 16,
+                "disband": 5,
+                "denForm": 7,
+                "loot": 64,
+                "peak": 3
+              },
+              "war": {
+                "decl": 2,
+                "battle": 0,
+                "atkWin": 0,
+                "defWin": 0,
+                "cas": 11,
+                "captured": 0,
+                "siege": 2,
+                "assault": 2,
+                "sortie": 1,
+                "withdraw": 0,
+                "surrender": 2,
+                "walkover": 0,
+                "tribute": 0,
+                "loot": 0
+              },
+              "eight": {
+                "pop": 3508,
+                "dead": 0,
+                "ever": 51,
+                "weapQ": 232,
+                "expand": 918,
+                "board": 2252,
+                "toolQ": 3149.8,
+                "preserve": 0,
+                "grain": 8523.6
+              },
+              "payloadSha256": "18aecf906f7305951cad308b8fec5dc778b6c7703828a714d4b7da7d17bbbeef"
+            },
+            {
+              "seed": 7,
+              "days": 60,
+              "population": 1802,
+              "empty": 0,
+              "dissolved": 0,
+              "deadTot": 0,
+              "starvationDeaths": 0,
+              "bodyExit": {
+                "died": {
+                  "starve": 0,
+                  "old": 0
+                },
+                "walk": {
+                  "bandit": 0,
+                  "desert": 0,
+                  "move": 0
+                },
+                "other": {
+                  "expedition": 0,
+                  "road": 0,
+                  "unknown": 0
+                },
+                "rot": 0,
+                "arrive": 0,
+                "straight": 0,
+                "lost": 0,
+                "vanish": 0,
+                "noted": 2,
+                "trimmed": 2,
+                "lying": 0,
+                "walking": 0
+              },
+              "bandit": {
+                "conv": 0,
+                "exo": 0,
+                "starve": 0,
+                "disband": 0,
+                "denForm": 3,
+                "loot": 2,
+                "peak": 3
+              },
+              "war": {
+                "decl": 0,
+                "battle": 0,
+                "atkWin": 0,
+                "defWin": 0,
+                "cas": 0,
+                "captured": 0,
+                "siege": 0,
+                "assault": 0,
+                "sortie": 0,
+                "withdraw": 0,
+                "surrender": 0,
+                "walkover": 0,
+                "tribute": 0,
+                "loot": 0
+              },
+              "eight": {
+                "pop": 1802,
+                "dead": 0,
+                "ever": 51,
+                "weapQ": 62,
+                "expand": 0,
+                "board": 397,
+                "toolQ": 2540.5,
+                "preserve": 0,
+                "grain": 7326.3
+              },
+              "payloadSha256": "9d8d16fa9a5ba1d2421632043568c8555fd1ba0b9f440c2ecb9f019e7ab78267"
+            },
+            {
+              "seed": 42,
+              "days": 60,
+              "population": 1834,
+              "empty": 0,
+              "dissolved": 0,
+              "deadTot": 0,
+              "starvationDeaths": 0,
+              "bodyExit": {
+                "died": {
+                  "starve": 0,
+                  "old": 0
+                },
+                "walk": {
+                  "bandit": 0,
+                  "desert": 0,
+                  "move": 0
+                },
+                "other": {
+                  "expedition": 0,
+                  "road": 0,
+                  "unknown": 0
+                },
+                "rot": 0,
+                "arrive": 0,
+                "straight": 0,
+                "lost": 0,
+                "vanish": 0,
+                "noted": 4,
+                "trimmed": 4,
+                "lying": 0,
+                "walking": 0
+              },
+              "bandit": {
+                "conv": 0,
+                "exo": 0,
+                "starve": 0,
+                "disband": 0,
+                "denForm": 3,
+                "loot": 4,
+                "peak": 3
+              },
+              "war": {
+                "decl": 0,
+                "battle": 0,
+                "atkWin": 0,
+                "defWin": 0,
+                "cas": 0,
+                "captured": 0,
+                "siege": 0,
+                "assault": 0,
+                "sortie": 0,
+                "withdraw": 0,
+                "surrender": 0,
+                "walkover": 0,
+                "tribute": 0,
+                "loot": 0
+              },
+              "eight": {
+                "pop": 1834,
+                "dead": 0,
+                "ever": 51,
+                "weapQ": 70,
+                "expand": 0,
+                "board": 391,
+                "toolQ": 2584.2,
+                "preserve": 0,
+                "grain": 6893.8
+              },
+              "payloadSha256": "8e426c272aee6fe57d39ad8f5288fe4015fe18c0b8aa2b890c55922ccaec0bff"
+            }
+          ],
+          "check": {
+            "base": "계측/서버기준선_2026-11-04c.json",
+            "plan": {
+              "7": 60,
+              "42": 60,
+              "1020": 400
+            },
+            "seeds": [
+              1020,
+              7,
+              42
+            ],
+            "sec": 1206,
+            "per": {
+              "7": {
+                "seed": 7,
+                "code": 0,
+                "sec": 79
+              },
+              "42": {
+                "seed": 42,
+                "code": 0,
+                "sec": 79
+              },
+              "1020": {
+                "seed": 1020,
+                "code": 0,
+                "sec": 1048
+              }
+            },
+            "res": {
+              "7": {
+                "same": true,
+                "days": 60
+              },
+              "42": {
+                "same": true,
+                "days": 60
+              },
+              "1020": {
+                "same": false,
+                "day": 131,
+                "diffs": [
+                  "농촌6[st(곳간)·pp(인구·주민)·hs(주거·확장·해체)·tr(금고)]"
+                ]
+              }
+            }
+          }
+        },
+        "server800": {
+          "seed": 1020,
+          "days": 800,
+          "population": 5562,
+          "empty": 0,
+          "dissolved": 0,
+          "deadTot": 1980,
+          "starvationDeaths": 486,
+          "bodyExit": {
+            "died": {
+              "starve": 0,
+              "old": 69
+            },
+            "walk": {
+              "bandit": 0,
+              "desert": 1,
+              "move": 1635
+            },
+            "other": {
+              "expedition": 0,
+              "road": 1,
+              "unknown": 5332
+            },
+            "rot": 0,
+            "arrive": 4133,
+            "straight": 4,
+            "lost": 0,
+            "vanish": 0,
+            "noted": 2228,
+            "trimmed": 2157,
+            "lying": 69,
+            "walking": 1202
+          },
+          "bandit": {
+            "conv": 0,
+            "exo": 18,
+            "starve": 25,
+            "disband": 13,
+            "denForm": 15,
+            "loot": 238,
+            "peak": 3
+          },
+          "war": null,
+          "eight": {
+            "pop": 5562,
+            "dead": 0,
+            "ever": 51,
+            "weapQ": 606,
+            "expand": 3030,
+            "board": 4010,
+            "toolQ": 6995,
+            "preserve": 0,
+            "grain": 26322
+          },
+          "payloadSha256": "72d58c4258e0552faef2e5ed384edc512c71c248cd190754d09b6549730f7eb3"
+        },
+        "server800Cost": {
+          "tag": "all-server800",
+          "limitSec": 7200,
+          "args": [
+            "scripts/t577-server-run.js",
+            "800",
+            "1020"
+          ],
+          "env": {
+            "T790_NO_SNAP": "1",
+            "T1041_WAR_BODY": "1",
+            "T811_ARMS_BODY": "1",
+            "T449_BODY_DAY": "1",
+            "T491_BATCH_FROM_BODY": "1",
+            "T561_ROSTER_BODY": "1",
+            "T502_ODDS_REAL": "1",
+            "T815_DRAFT_FAMINE": "1",
+            "T941_BATTLE_DAY": "1",
+            "T627_TRIP_DAY": "1",
+            "T1078_BANDIT_ALL": "0",
+            "T1079_BANDIT_CAMP": "0",
+            "T1104_BANDIT_WALK": "0",
+            "T1159_HOME_N": "0",
+            "T1076_ARMY_MORALE": "1",
+            "T466_LOOT_ACT": "1",
+            "T826_LOOT_BODY": "1",
+            "T1168_SORTIE_AMMO": "1",
+            "T577_PORT_BASE": "52000",
+            "T400_BUILD_ACT": "0",
+            "VILLAGE_CARAVAN_MAX": "0",
+            "T577_DIR": "/tmp/t1183-surrender-results/all/server800",
+            "T577_PAR": "1",
+            "T577_TAG": "all"
+          },
+          "exit": 0,
+          "wallSec": 5849.241,
+          "cpuUs": 3856917997
+        },
+        "labs": {
+          "1020": {
+            "data": {
+              "population": 6436,
+              "empty": 0,
+              "starvationDeaths": 2,
+              "base": {
+                "pop": 6436,
+                "dead": 0,
+                "ever": 51,
+                "weapQ": 920,
+                "expand": 5259,
+                "trades": 5000
+              },
+              "payloadSha256": "3ebfc005af1e4dc689d38faf477abe978ce220900773d0a81e86328baad63661",
+              "sameAsT1168ReferenceExceptObserver": true,
+              "referencePayloadSha256": "fea3a42f4c22ec864429eaeef05b478b14a160820edfbed5ebcaa3664cd12a2a"
+            },
+            "cost": {
+              "tag": "all-lab-1020",
+              "limitSec": 7200,
+              "args": [
+                "scripts/t17-metrics.js",
+                "800",
+                "1020"
+              ],
+              "env": {
+                "T790_NO_SNAP": "1",
+                "T1041_WAR_BODY": "1",
+                "T811_ARMS_BODY": "1",
+                "T449_BODY_DAY": "1",
+                "T491_BATCH_FROM_BODY": "1",
+                "T561_ROSTER_BODY": "1",
+                "T502_ODDS_REAL": "1",
+                "T815_DRAFT_FAMINE": "1",
+                "T941_BATTLE_DAY": "1",
+                "T627_TRIP_DAY": "1",
+                "T1078_BANDIT_ALL": "0",
+                "T1079_BANDIT_CAMP": "0",
+                "T1104_BANDIT_WALK": "0",
+                "T1159_HOME_N": "0",
+                "T1076_ARMY_MORALE": "1",
+                "T466_LOOT_ACT": "1",
+                "T826_LOOT_BODY": "1",
+                "T1168_SORTIE_AMMO": "1",
+                "T577_PORT_BASE": "52000",
+                "T17_JSON": "/tmp/t1183-surrender-results/all/lab-1020.json",
+                "LAB_SEEDCACHE": "/tmp/t1183-surrender-results/all/lab-1020.seedcache.json",
+                "DB_PATH": "/tmp/t1183-surrender-results/all/lab-1020.db"
+              },
+              "exit": 0,
+              "wallSec": 300.165,
+              "cpuUs": 265080499
+            }
+          },
+          "7": {
+            "data": {
+              "population": 6008,
+              "empty": 0,
+              "starvationDeaths": 86,
+              "base": {
+                "pop": 6008,
+                "dead": 0,
+                "ever": 51,
+                "weapQ": 984,
+                "expand": 3442,
+                "trades": 5000
+              },
+              "payloadSha256": "ef45a36f6a232243adf9fb8d60ad373c4f29698ba93197ca7738df0227d4da96",
+              "sameAsT1168ReferenceExceptObserver": true,
+              "referencePayloadSha256": "40f8d02cea912c2856ad87b1a5033503e9bdbc45543f467211aa7d40aeb86448"
+            },
+            "cost": {
+              "tag": "all-lab-7",
+              "limitSec": 7200,
+              "args": [
+                "scripts/t17-metrics.js",
+                "800",
+                "7"
+              ],
+              "env": {
+                "T790_NO_SNAP": "1",
+                "T1041_WAR_BODY": "1",
+                "T811_ARMS_BODY": "1",
+                "T449_BODY_DAY": "1",
+                "T491_BATCH_FROM_BODY": "1",
+                "T561_ROSTER_BODY": "1",
+                "T502_ODDS_REAL": "1",
+                "T815_DRAFT_FAMINE": "1",
+                "T941_BATTLE_DAY": "1",
+                "T627_TRIP_DAY": "1",
+                "T1078_BANDIT_ALL": "0",
+                "T1079_BANDIT_CAMP": "0",
+                "T1104_BANDIT_WALK": "0",
+                "T1159_HOME_N": "0",
+                "T1076_ARMY_MORALE": "1",
+                "T466_LOOT_ACT": "1",
+                "T826_LOOT_BODY": "1",
+                "T1168_SORTIE_AMMO": "1",
+                "T577_PORT_BASE": "52000",
+                "T17_JSON": "/tmp/t1183-surrender-results/all/lab-7.json",
+                "LAB_SEEDCACHE": "/tmp/t1183-surrender-results/all/lab-7.seedcache.json",
+                "DB_PATH": "/tmp/t1183-surrender-results/all/lab-7.db"
+              },
+              "exit": 0,
+              "wallSec": 289.605,
+              "cpuUs": 253876495
+            }
+          },
+          "42": {
+            "data": {
+              "population": 6299,
+              "empty": 0,
+              "starvationDeaths": 73,
+              "base": {
+                "pop": 6299,
+                "dead": 0,
+                "ever": 51,
+                "weapQ": 1287,
+                "expand": 4699,
+                "trades": 5000
+              },
+              "payloadSha256": "3848ca037367600dcc5595ce46c82e9c0ee363b4174bd68e53a6c960e01caeda",
+              "sameAsT1168ReferenceExceptObserver": true,
+              "referencePayloadSha256": "13ba389e05410ee91651c4186a73ba78455af7cfd2bf1c0b673b95d7e8eade62"
+            },
+            "cost": {
+              "tag": "all-lab-42",
+              "limitSec": 7200,
+              "args": [
+                "scripts/t17-metrics.js",
+                "800",
+                "42"
+              ],
+              "env": {
+                "T790_NO_SNAP": "1",
+                "T1041_WAR_BODY": "1",
+                "T811_ARMS_BODY": "1",
+                "T449_BODY_DAY": "1",
+                "T491_BATCH_FROM_BODY": "1",
+                "T561_ROSTER_BODY": "1",
+                "T502_ODDS_REAL": "1",
+                "T815_DRAFT_FAMINE": "1",
+                "T941_BATTLE_DAY": "1",
+                "T627_TRIP_DAY": "1",
+                "T1078_BANDIT_ALL": "0",
+                "T1079_BANDIT_CAMP": "0",
+                "T1104_BANDIT_WALK": "0",
+                "T1159_HOME_N": "0",
+                "T1076_ARMY_MORALE": "1",
+                "T466_LOOT_ACT": "1",
+                "T826_LOOT_BODY": "1",
+                "T1168_SORTIE_AMMO": "1",
+                "T577_PORT_BASE": "52000",
+                "T17_JSON": "/tmp/t1183-surrender-results/all/lab-42.json",
+                "LAB_SEEDCACHE": "/tmp/t1183-surrender-results/all/lab-42.seedcache.json",
+                "DB_PATH": "/tmp/t1183-surrender-results/all/lab-42.db"
+              },
+              "exit": 0,
+              "wallSec": 297.663,
+              "cpuUs": 262978960
+            }
+          }
+        },
+        "requiresSurrenderRerun": false
+      }
+    },
+    "staleRouteCorrection": {
+      "head": "c2bec2b4adaa17eb39c8eed723d169efc8ab0d59",
+      "files": null,
+      "runs": [],
+      "executionPhases": null,
+      "completedPlans": {}
     }
   },
   "followup": {
+    "node": null,
+    "head": null,
+    "source": null,
+    "status": null,
+    "abandonedRuns": [],
+    "homeObserverAdapter": {
+      "version": 3,
+      "previousAdapter": {
+        "version": 2,
+        "purpose": "T1159 읽기 전용 관찰 보완. endPop은 마지막 각 마을 틱의 혼합 합 대신 실제 종료 시 세계 명부 합을 읽는다. 각 econ 날에는 마을별 틱 직후 인구 합·관찰된/기대 마을 수를 별도로 기록해 부분 날을 구분한다.",
+        "sourceProductHead": "26e14142b5e14a5c8a11503ff0b2f927a8b95627",
+        "beforeSha256": "31092b373dd163c671baf0dce053eea738f5ab4a9139319cfba3d0a13227e550",
+        "afterSha256": "257f70a3742ea1ead9d7c43471d241a22f5bc6e5e3f5c3237cdbb7f5fa1b0828",
+        "productChanges": false,
+        "appliesTo": [
+          "war-rollback",
+          "war-ten-off",
+          "war-ten-on",
+          "home-off",
+          "home-on"
+        ],
+        "note": "해당5판 시작 전 관찰기만 갱신. 이미 완료/실행 중인 다른 판은 이 관찰기를 프리로드하지 않는다. econEndPopulation은 각 마을 econ 틱 직후 합이며 하루 끝 전쟁 정산까지 지난 전체 인구와 구분한다."
+      },
+      "purpose": "집N의 몸∞ 두 갈래는 같은3개 도적 읽기 관찰을 함께 프리로드하여 상한1 판의 몸 부족과 몸∞의 실제 몸 수를 구분한다. 전쟁/집N5판 모두 시작 전에 관찰기만 갱신했다.",
+      "productChanges": false,
+      "sourceProductHead": "c2bec2b4adaa17eb39c8eed723d169efc8ab0d59",
+      "sha256": {
+        "scripts/t1159-observe.js": "69980c324b4474b7667b23ce2018c9ed7ea2daa06adfe6932046873575ed304e",
+        "scripts/t1078-observe.js": "b98007890c071ceb6ad697b6222c0c0dedb1bc7ef711784bcb32c5316fa9b122",
+        "scripts/t1079-observe.js": "a9358771f3e8ed237a8be5b76dc973ef05230f386d9afb6e0d2c4dc2a7770103",
+        "scripts/t1104-observe.js": "1486713e256cc6f10f0e52b4c949a72e93758775468006c32e0e89246e6b0ebe"
+      },
+      "appliesTo": [
+        "war-rollback",
+        "war-ten-off",
+        "war-ten-on",
+        "home-off",
+        "home-on"
+      ],
+      "additionalBanditObservation": "T1078_BANDIT_ALL=1인 home-off/home-on만 같은3개 읽기 관찰을 부른다.",
+      "previousProductHead": "26e14142b5e14a5c8a11503ff0b2f927a8b95627",
+      "noteAfterStaleRouteFix": "Observer byte hashes unchanged; host path-selection fix is a separate product commit."
+    },
+    "executionNote": null,
+    "overlapNote": "막힌 옛 길점 보완 이후 독립 T1183 두 조합 실행기와 후속27 실행기를 함께 실행한다. 실행기별 최대3명령, 합계 최대6명령(4코어), 초기 rollback plan의 시드3과 T1183 두plan도 겹쳤다. CPU/벽시계 비용은 이 실행 조건의 실측이며 운영FPS/직렬 성능 개선율이 아니다.",
+    "runs": {},
+    "noBanditOwnerGuardEquivalence": {
+      "beforeProductHead": "a05c2eba",
+      "afterProductHead": "26e14142",
+      "sameFlagPlan": null,
+      "server800PayloadByteEqual": null
+    }
+  },
+  "followupBeforeStaleRouteFix": {
     "node": "v22.23.0",
     "head": "26e14142b5e14a5c8a11503ff0b2f927a8b95627",
     "source": {
@@ -8916,6 +10144,18 @@
       "sim/war-core.js": "937b8efa8dfd8eabe0188840305a2655f467dbbd6b1f99215a44c6e2c25b519c",
       "sim/economy-sim.js": "93e7b9860e98e415dad5905d9e810b53bdbbae009c647f03db07bc15efed4249"
     },
+    "status": "superseded-affected-followup-source",
+    "abandonedRuns": [
+      {
+        "tag": "band-walk-server800",
+        "status": "superseded-by-stale-route-fix",
+        "finalResultValid": false,
+        "lastCompletedDay": 722,
+        "lastLoggedPopulation": 4094,
+        "replacementProductHead": "c2bec2b4",
+        "reason": "Actual blocked cached waypoint prevented one soldier mustering; new source fixes selection. No 800-day completion or timeout is claimed."
+      }
+    ],
     "homeObserverAdapter": {
       "version": 3,
       "previousAdapter": {
@@ -8953,7 +10193,7 @@
       "additionalBanditObservation": "T1078_BANDIT_ALL=1인 home-off/home-on만 같은3개 읽기 관찰을 부른다."
     },
     "executionNote": "T1183 all-server800의 격리된 52xxx 포트 1코어와 후속 최대3명령을 4코어에서 함께 실행. 벽시계 비용은 직렬 조건 성능 비교가 아니다.",
-    "overlapNote": "후속 서버3개와 결합800날 서버1개 최대4명령. 결합 서버 종료 뒤 랩3개가 후속3개와 겹친 짧은 구간 최대6명령(4코어). 벽시계 비용은 직렬 성능 지표가 아니다.",
+    "overlapNote": "막힌 옛 길점 보완 이후 독립 T1183 두 조합 실행기와 후속27 실행기를 함께 실행한다. 실행기별 최대3명령, 합계 최대6명령(4코어), 초기 rollback plan의 시드3과 T1183 두plan도 겹쳤다. CPU/벽시계 비용은 이 실행 조건의 실측이며 운영FPS/직렬 성능 개선율이 아니다.",
     "runs": {
       "final-rollback": {
         "cost": {
@@ -14101,28 +15341,24 @@
       "afterServer800Sha256": "c5bc1e1c2af1d56002858e28a0c83a780620abece3794dbb922883e2f9251ac7"
     }
   },
-  "status": "superseded-affected-rows-rerunning",
-  "completedMainCommands": 60,
+  "status": "running",
+  "completedMainCommands": 50,
   "expectedMainCommands": 60,
-  "completedCorrectionCommands": 10,
+  "completedCorrectionCommands": 0,
   "expectedCorrectionCommands": 10,
-  "completedFollowupCommands": 18,
+  "completedFollowupCommands": 0,
   "expectedFollowupCommands": 27,
   "productHeads": {
     "individualUnaffected": "c58cd674",
-    "correctedT1041AndAll": "a05c2eba",
-    "finalValidation": "26e14142"
+    "correctedT1041": "a05c2eba",
+    "beforeStaleRouteFixAll": "a05c2eba",
+    "correctedT790AndAll": "c2bec2b4",
+    "finalValidation": "c2bec2b4"
   },
   "deathCounterContract": {
     "starvationDeaths": "econ _fdDeadTot: 식량 빚 정본 사망",
     "deadTot": "econ 인구 감소 고리 _deadTot, 전쟁·행상·도적 사상 전체 합이 아님"
   },
-  "staleRouteCorrection": {
-    "affectedVariants": [
-      "T790_NO_SNAP",
-      "all"
-    ],
-    "affectedFollowup": "T790 켬인 도적/전쟁/집N 후속. 새 소스로 재측정. T790끔 rollback과 T1041개별 포함 그 밖의 행은 이 조건이 닫힘.",
-    "newFinalResultsAvailable": false
-  }
+  "correctionKind": "stale-route T790_NO_SNAP/all",
+  "completedSurrenderCorrectionCommands": 10
 }
