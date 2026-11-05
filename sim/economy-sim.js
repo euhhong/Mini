@@ -1478,7 +1478,7 @@ function woodSpare(v) {
 //   ① 석공 간석기 한 자루 = 돌 `EQUIP_MAT_QTY.tool` · ② 마제석검 한 자루 = 돌 `EQUIP_MAT_QTY.weapon` ·
 //   ③ 자급 막석기 한 자루 = 조잡한 석기 세 종 평균(econ 재화만 — 자갈·잔가지 · 풀은 econ 재화가 아니다) · 돌 0 ·
 //   ④ 철검의 돌 = 0(작업대 무기는 재료 **한 가지** — 철검에 돌이 안 든다 · 철 수는 이 카드 밖 · 회부).
-const T419_STONE_REAL = process.env.T419_STONE_REAL !== '0';
+const T419_STONE_REAL = process.env.T419_STONE_REAL === '1';   // T1181 유보: 실물 단위 수율 미확인 · 3시드 빈 마을43 · 보고 참조
 let _stoneMod;
 function _stoneUses() { if (_stoneMod === undefined) { try { _stoneMod = require('../server/stone-uses'); } catch (e) { _stoneMod = null; } } return _stoneMod; }
 function stoneRealPer(kind) {   // 한 개당 재료(econ 재화만) — kind: 'tool' | 'stoneSword' | 'crude'
