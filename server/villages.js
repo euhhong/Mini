@@ -6365,7 +6365,7 @@ function _warDraftPids(vil, comp, seed, warId) {
       const gu = { type, pid: p.pid }; WL.bindGroupUnit(gu, p);                  // ★[T284] 좌표 = player 하나
       // ★★[T295 ①] **결속** — 이 pid 가 징발자다. war-core 가 그 사람(econ npc) 하나를 골라 자리를 비운다
       //   (같은 직업 우선 · 동원이 이미 세어 둔 징발자부터). 정본은 pid 다 — 반대 방향은 없다.
-      try { if (state.war && state.war.warDraftBind) state.war.warDraftBind(vil, p.pid, p.simJob, warId); } catch (_) { }
+      try { if (state.war && state.war.warDraftBind) require('./home-population').bindWarBody(p, state.war.warDraftBind(vil, p.pid, p.simJob, warId)); } catch (_) { }
       units.push(gu); pids.push(p.pid);
     }
   }
@@ -7272,6 +7272,7 @@ function _warDespawnPid(pid) {
 // 출정 해제 — _muster/simWar 해제 + npcs.add(AI 복귀) + hp 회복. pid 는 npcPids 유지(syncVillagePop 재수렴).
 function _warReleasePid(pid) {
   const { players, npcs } = state.deps; const p = players.get(pid); if (!p) return;
+  require('./home-population').bindWarBody(p, null);
   // ★[T295 ①] 복귀 — 결속을 풀면 그 사람은 제 직업 자리로 돌아간다(생산 재개).
   try { const vil = (p.simVillageId != null) ? state.byDbId.get(p.simVillageId) : null; if (vil && state.war && state.war.warDraftReleasePid) state.war.warDraftReleasePid(vil, pid); } catch (_) { }
   p._muster = false; p._muType = null; p.simWar = false; p._brout = false; p._bcmd = false; p._bt = undefined; p._bside = undefined;

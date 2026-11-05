@@ -2,7 +2,7 @@
 'use strict';
 const assert = require('assert/strict');
 const {execFileSync} = require('child_process');
-const {homePopulation} = require('../server/home-population');
+const {homePopulation,bindWarBody} = require('../server/home-population');
 let pass=0;
 function check(name, fn) {fn();pass++;console.log('✓ '+name);}
 const players = new Map();
@@ -15,6 +15,23 @@ check('집결 중인 병사·일터 주민·알 수 없는 몸을 빼지 않고 
 check('출정 표지가 남아도 몸이 집에 닿는 날 집 N에 돌아온다',()=>{b.x=10*32;assert.equal(homePopulation(vil,players,32),5);});
 check('영토가 없는 판은 종전 인구를 보존한다',()=>assert.equal(homePopulation({...vil,_terrSet:null},players,32),6));
 check('죽은 몸과 econ 명부에서 이미 빠진 병사·포로를 이중 차감하지 않는다',()=>{body('dead',20,{_muster:1,hp:0});body('captive',20,{_muster:1,simCaptive:1});vil.econ.npcs[2]={_warDraft:1,_warPid:'dead'};assert.equal(homePopulation(vil,players,32),5);});
+check('장부 징발 해제 뒤에도 집 밖의 살아 있는 귀환 몸은 집 N에서 빠진다',()=>{
+  const resident=vil.econ.npcs[1];bindWarBody(b,resident);delete resident._warPid;delete resident._warDraft;b.x=20*32;
+  assert.equal(homePopulation(vil,players,32),4);
+  b.x=10*32;assert.equal(homePopulation(vil,players,32),5);
+  b.x=20*32;vil.econ.npcs[1]={};assert.equal(homePopulation(vil,players,32),5);
+  bindWarBody(b,null);
+});
+check('실제 소집 함수가 주민 결속을 넘기고 실제 귀환 해제가 결속을 푼다',()=>{
+  const V=require('../server/villages'),WL=require('../server/war-live').createWarLive({cellPx:32,pxPerM:32,tickHz:30});
+  const resident={},p={pid:'returner',x:640,y:320,hp:100,maxHp:100,simVillageId:1};
+  const village={_den:true,econ:{npcs:[resident,{}]},npcPids:[p.pid],_terrSet:new Set(['10,10'])};
+  const map=new Map([[p.pid,p]]),npcs=new Set([p.pid]);
+  const H=V.__p3Bind({warLive:WL,deps:{players:map,npcs,setHp:(body,hp)=>{body.hp=hp;}},byDbId:new Map([[1,village]]),war:{warDraftBind:()=>resident}});
+  H._warDraftPids(village,{spear:1},1,1);
+  assert.equal(homePopulation(village,map,32),1);
+  H._warReleasePid(p.pid);assert.equal(homePopulation(village,map,32),2);
+});
 const code=`const E=require('./sim/economy-sim');const v=E.createVillage({initialPop:20,name:'home'});v._world={homePopulation:()=>5};const values=[E.T1159_HOME_N,E.t1159HomeN(v)];v._world.homePopulation=()=>NaN;values.push(E.t1159HomeN(v));delete v._world;values.push(E.t1159HomeN(v));console.log(JSON.stringify(values));`;
 function run(flag){const env={...process.env};if(flag==null)delete env.T1159_HOME_N;else env.T1159_HOME_N=flag;return JSON.parse(execFileSync(process.execPath,['-e',code],{cwd:require('path').join(__dirname,'..'),env,encoding:'utf8'}).trim());}
 check('손잡이 미설정 = 명시적 끔, 켬은 몸 정본 5명, 호스트 없는 랩은 원래 N',()=>{assert.deepEqual(run(),run('0'));const on=run('1');assert.deepEqual(on,[true,5,20,20]);assert.deepEqual(run('0'),[false,20,20,20]);});
