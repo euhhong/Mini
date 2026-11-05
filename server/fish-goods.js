@@ -6,7 +6,8 @@ function bodyKg(id,fallback=0){const f=Fresh.kgOf(id);if(f>0)return f;const row=
 function species(){return require('./fish-preserve').species();}
 function items(){return require('./fish-preserve').items();}
 function isItem(id){return ON&&!!items()[id];}
-function factor(id){return require('./kcal').kcalOf(id)/require('./kcal').DAY_KCAL;}
+const FACTORS=new Map(); // 표준 품목 kg·T59 밀도·하루 열량은 이 프로세스에서 고정, 나이/실제 개체 kg를 캐시하지 않는다.
+function factor(id){if(!FACTORS.has(id)){const K=require('./kcal');FACTORS.set(id,K.kcalOf(id)/K.DAY_KCAL);}return FACTORS.get(id);}
 const SHARE_CACHE=new WeakMap();
 function note(v,id,n){if(!ON||!species().includes(id)||!(n>0))return;const m=v._t1192CatchMix||(v._t1192CatchMix={});m[id]=(m[id]||0)+n;SHARE_CACHE.delete(v);}
 function shares(v){const m=v?._t1192CatchMix||null,c=v&&SHARE_CACHE.get(v);if(c&&c.mix===m)return {...c.value};const o={};let sum=0;for(const id of species()){if(!(m?.[id]>0))continue;const u=m[id]*factor(id);if(u>0){o[id]=u;sum+=u;}}if(sum>0)for(const id in o)o[id]/=sum;if(v)SHARE_CACHE.set(v,{mix:m,value:o});return {...o};}

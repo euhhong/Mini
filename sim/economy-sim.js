@@ -843,7 +843,7 @@ function totalFoodEquivalent(v) {
   }
   // ★[T17 ②] 곳간에 든 보존식도 **식량이다**. 안 세면 갈무리하는 순간 마을 수용력(K)이 내려간다
   //   — 첫 판에서 실제로 그랬다(위 `PRESERVE_FOOD_FACTOR` 주석). 끄면 이 줄은 0 을 더한다.
-  if (T17_PRESERVE) for (const r of PRESERVED_FOODS) total += (v.storage[r] || 0) * preservedFactor(r);
+  if (T17_PRESERVE) for (const r of PRESERVED_FOODS) { const q=v.storage[r]||0;if(q||!T1192_FISH_SPECIES)total+=q*preservedFactor(r); }
   // ★[T73] 곳간의 생곡도 식량이다 — 도정 수율만큼(위 근거 표). 끄면 이 줄은 0 을 더한다.
   if (T73_RAWGRAIN) for (const r of RAW_GRAINS) total += (v.storage[r] || 0) * RAW_GRAIN_FOOD_FACTOR;
   // ★★[T368] 곳간의 작물도 식량이다 — **econ 이 모르는 것만**(위 줄들이 센 생곡은 빼고 · 이중 0). 끈 팔은 `null` ⇒ 0.
@@ -859,7 +859,7 @@ function totalFoodProductionEquivalent(prod, v) {
   // ★[T17 ②] 생산 쪽도 같은 자로 — 갈무리는 **재고를 옮기는 일**이지 생산을 줄이는 일이 아니다.
   //   ⚠원물을 `_cons` 로 빼고 보존식을 `addProduce` 로 넣으므로, 같은 열량이 두 번 세지지 않는다
   //     (하루 생산 버퍼는 순증분만 담는다).
-  if (T17_PRESERVE) for (const r of PRESERVED_FOODS) total += (prod[r] || 0) * preservedFactor(r);
+  if (T17_PRESERVE) for (const r of PRESERVED_FOODS) { const q=prod[r]||0;if(q||!T1192_FISH_SPECIES)total+=q*preservedFactor(r); }
   // ★[T73] 생산 쪽도 같은 자로 — 오늘 거둔 생곡도 식량 생산이다.
   if (T73_RAWGRAIN) for (const r of RAW_GRAINS) total += (prod[r] || 0) * RAW_GRAIN_FOOD_FACTOR;
   // ★★[T368] 생산 쪽도 같은 자로 — 오늘 밭이 낸 작물(장부 다리가 품목별로 적은 것). 둘째 인수(마을)가 없으면 0.
