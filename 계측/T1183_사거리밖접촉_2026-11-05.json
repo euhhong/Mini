@@ -154,5 +154,15 @@
     ]
   },
   "finding": "W24 공격 궁수4명의 melee 표지가 실제 사거리1.2m 밖 약9m에서도 매 걸음 contactT를 갱신한다. T995_CONTACT_REACH/DRY_STANDOFF는 원래 끔 기본 시험 팔로 이번10개 승격 대상 밖이다. 해당 시험 스위치를 몰래 켜 완주시키지 않는다.",
-  "limitations": "벽 양쪽 정체를 실시간 위치로 확인했으나 이 두 스냅샷만으로 전 비용의 비율을 추정하지 않는다. battle-core는 T1168 베이스에서 변경하지 않았다."
+  "limitations": "벽 양쪽 정체를 실시간 위치로 확인했으나 이 두 스냅샷만으로 전 비용의 비율을 추정하지 않는다. battle-core는 T1168 베이스에서 변경하지 않았다.",
+  "runOutcome": {
+    "exit": 0,
+    "days": 800,
+    "wallSec": 5849.241,
+    "population": 5562,
+    "starvationDeaths": 486,
+    "empty": 0,
+    "dissolved": 0,
+    "note": "진단 뒤 실제 판은 상한7200초 안에 정상 종료했다. 정체 관측은 완주 실패 판정이 아니다."
+  }
 }
