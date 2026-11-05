@@ -35,7 +35,12 @@ const _arg = (k, d) => { const i = process.argv.indexOf(k); return i >= 0 ? proc
 const FERT_MODE = _arg('--fert', 'all');
 const FERT_ADD = new Set(String(_arg('--add', '')).split(',').filter(Boolean));
 const NOSCEN = process.argv.includes('--noscen');
-const FERT_CANON = FERT_MODE === 'all' && !FERT_ADD.size;
+// ★[T1178] 밭작물 · 들판 — `--crop wy|w`(작물 물 맞음 · wy = 수확량 × 열량 비 · w = 비 없이 상한) · `--crops id,…`(고증 작물) · `--field ρ`(빈 땅을 들판으로 · 사냥 밴드에서 들판 칸을 숲 ρ 몫으로)
+const CROP_MODE = _arg('--crop', '');
+const CROP_IDS = String(_arg('--crops', 'rice,foxtail_millet,millet,barley,wheat,soybean')).split(',').filter(Boolean);
+const FIELD_RHO = +_arg('--field', 0) || 0;
+const CROP_FLOOR = /^floor:/.test(CROP_MODE) ? +CROP_MODE.slice(6) : null;   // ★[T1178] 판정용 사다리 — 물 항 바닥 g(작물 표에서 유도한 값이 아니다 · 문턱 찾기)
+const FERT_CANON = FERT_MODE === 'all' && !FERT_ADD.size && !CROP_MODE;
 const t0 = Date.now();
 const log = (...a) => process.stderr.write(`[t1153 ${Z} ${((Date.now() - t0) / 1000).toFixed(0)}s] ${a.join(' ')}\n`);
 
@@ -59,6 +64,22 @@ const ta = P.makeTerrainAdapter(T, ZONE, { isTerrainBlockedLocal: (x, y) => !_in
 const L = R('server/livelihood'), S = R('server/sustain'), FERT = R('server/fertility'), VL = R('server/village-layout');
 const ECON = R('sim/economy-sim');
 let STR = null; try { STR = R('server/streams'); } catch (e) { STR = null; }
+// ★[T1178] 작물 물 맞음 — 물 공급 눈금 = zone.js `WATER_SUPPLY_STEPS`(글자에서 읽는다 · 사본 0) · 물충족 = crops.js `waterMult` 정본 · 수확 비 = `yield × kcal`(작물 표)
+const CROPS = R('server/crops');
+const ZSRC = fs.readFileSync(path.join(__dirname, '..', 'server', 'zone.js'), 'utf8');
+const WSTEPS = (() => { const m = ZSRC.match(/const WATER_SUPPLY_STEPS = (\[\[[^;]*\]\]);/); if (!m) throw new Error('WATER_SUPPLY_STEPS 못 읽음'); return JSON.parse(m[1]); })();
+const supplyOf = (dw) => { for (const [lim, sup] of WSTEPS) if (dw <= lim) return sup; return 1; };
+const CROP_ROWS = CROP_IDS.map((id) => { const c = CROPS.get(id); if (!c) throw new Error('작물 없음: ' + id); return { id, ko: c.ko, field: c.field, water: c.water, care: c.care, yk: c.yield * CROPS.kcalOf(id) }; });
+const YK_MAX = Math.max(...CROP_ROWS.map((c) => c.yk));
+for (const c of CROP_ROWS) c.r = CROP_MODE === 'w' ? 1 : c.yk / YK_MAX;
+//   그 칸의 물 항(0~1): 정본 항 e^(−dw/80)(일반 · 논) 과 작물마다 r × waterMult(공급(dw)) 중 가장 큰 것 — 정본보다 작아지는 칸은 없다
+function cropTerm(dw) {
+  const x = Math.exp(-Math.min(dw, 999) / FERT.DECAY); let g = x, best = '정본';
+  if (CROP_FLOOR != null) { if (CROP_FLOOR > g) { g = CROP_FLOOR; best = '바닥'; } return { g, best, dwEff: g > 0 ? -FERT.DECAY * Math.log(g) : 999 }; }
+  const sup = supplyOf(dw);
+  for (const c of CROP_ROWS) { const v = c.r * CROPS.waterMult(c.id, sup); if (v > g + 1e-12) { g = v; best = c.id; } }
+  return { g, best, dwEff: g > 0 ? -FERT.DECAY * Math.log(g) : 999 };
+}
 const isSeaTileLocal = (x, y) => { if (!_inZone(x, y) || !BAND) return false; const tx = Math.floor(x / SZ), ty = Math.floor(y / SZ);
   if (!BAND.has(`${tx}_${ty}`)) return false; try { return !T.isWaterCellLocal(Z, tx * SZ + SZ / 2, ty * SZ + SZ / 2); } catch { return false; } };   // zone.js `isSeaTileLocal` 그 차집합
 
@@ -103,6 +124,8 @@ const FII = new Float64Array((W + 1) * (H + 1));
 for (let y = 0; y < H; y++) { let row = 0; for (let x = 0; x < W; x++) { row += FOR[y * W + x]; FII[(y + 1) * (W + 1) + (x + 1)] = FII[y * (W + 1) + (x + 1)] + row; } }
 const woodyAt = (cx, cy) => { const M = FERT.WOODY_R, x0 = Math.max(0, cx - M), y0 = Math.max(0, cy - M), x1 = Math.min(W - 1, cx + M), y1 = Math.min(H - 1, cy + M);
   if (x1 < x0 || y1 < y0) return 0; const s = FII[(y1 + 1) * (W + 1) + (x1 + 1)] - FII[y0 * (W + 1) + (x1 + 1)] - FII[(y1 + 1) * (W + 1) + x0] + FII[y0 * (W + 1) + x0]; return s / ((2 * M + 1) * (2 * M + 1)); };
+// ★[T1178] 들판 래스터 — 1차 격자에서 축 없는 칸의 G×G 덩이 중 뭍 · 숲 아닌 셀(2차에서 사냥 밴드가 센다)
+const DEN = new Uint8Array(W * H); let DEN_ON = false;
 // 비옥도의 물 근원(갈래)
 const fertSrc = (x, y) => { const i = (x < 0 || y < 0 || x >= W || y >= H) ? -1 : y * W + x; if (i < 0) return false;
   if (WAT[i] && !(FERT_MODE !== 'all' && SEA[i])) return true;
@@ -149,16 +172,20 @@ function nearestWater(cx, cy, maxR, A) {   // villages.js `nearestWaterDist` 와
   }
   return maxR + 1;
 }
-let TERR_N = 2850;   // 아래 §검증에서 51 실영토 중앙값으로 바꾼다
+let TERR_N = 2850;
+let _lastCrop = null;   // ★[T1178] 장의 마지막 칸이 고른 작물(같은 at 호출 직후에 읽는다)   // 아래 §검증에서 51 실영토 중앙값으로 바꾼다
 function fieldVariant(cx, cy, R0, extraWater) {   // ★[T1173] 갈래 장 — 상자 EDT(prepareFert 그 상자) · `fertility.fertAt` 정본 식 + 산록 띠(켤 때만)
   const src = extraWater ? (x, y) => fertSrc(x, y) || extraWater(x, y) : fertSrc;
   const x0 = cx - R0, y0 = cy - R0, x1 = cx + R0, y1 = cy + R0;
   const WD = VL.maskEDT(src, x0, y0, x1, y1), RD = VL.maskEDT(pred.isRock, x0, y0, x1, y1);
   const FOOT = FERT_ADD.has('foot');
   return { at: (x, y) => {
+    _lastCrop = null;
     if (x < x0 || y < y0 || x > x1 || y > y1) return FERT.NEUTRAL;
     const blocked = at(WAT, x, y) === 1 || at(ROCK, x, y) === 1;
-    let f = FERT.fertAt(WD.at(x, y), RD.at(x, y), woodyAt(x, y), blocked);
+    let dw = WD.at(x, y);
+    if (CROP_MODE && !blocked) { const ct = cropTerm(dw); dw = ct.dwEff; _lastCrop = ct.best; } else _lastCrop = null;
+    let f = FERT.fertAt(dw, RD.at(x, y), woodyAt(x, y), blocked);
     if (FOOT && !blocked) { const dr = RD.at(x, y); if (dr >= FERT.ROCK_FULL / 2 && dr <= FERT.ROCK_FULL * 2) f = Math.min(1, f + FERT.W_ROCK); }
     return f; } };
 }
@@ -168,20 +195,21 @@ function fertMean(cx, cy, extraWater) {
   const F = (FERT_CANON && !extraWater) || (FERT_CANON && extraWater) ? FERT.buildField({ isWater: isW, isRock: pred.isRock, isWoody: pred.isForest, maskEDT: VL.maskEDT }, cx - R0, cy - R0, cx + R0, cy + R0)
     : fieldVariant(cx, cy, R0, extraWater);
   const r = Math.sqrt(TERR_N / Math.PI);
-  let s = 0, n = 0, tw = 0;
+  let s = 0, n = 0, tw = 0; const cropN = {};
   for (let dy = -Math.ceil(r); dy <= Math.ceil(r); dy++) for (let dx = -Math.ceil(r); dx <= Math.ceil(r); dx++) {
     if (dx * dx + dy * dy > r * r) continue;
     const x = cx + dx, y = cy + dy;
     if (at(ROCK, x, y)) continue;   // 영토는 바위에 안 선다(원판 근사)
-    n++; s += F.at(x, y); if (at(WAT, x, y) === 1 || (extraWater && extraWater(x, y))) tw++;   // ★[T1173] 경작 몫은 물 칸 전부를 뺀다(바다 칸도 밭이 아니다)
+    n++; s += F.at(x, y); if (CROP_MODE && _lastCrop) cropN[_lastCrop] = (cropN[_lastCrop] || 0) + 1;
+    if (at(WAT, x, y) === 1 || (extraWater && extraWater(x, y))) tw++;   // ★[T1173] 경작 몫은 물 칸 전부를 뺀다(바다 칸도 밭이 아니다)
   }
-  return { fert: n ? Math.max(0.1, Math.min(2.0, +((s / n) * 1.4).toFixed(2))) : 0.1, arable: n ? +((n - tw) / n).toFixed(2) : 1, tn: n };
+  return { fert: n ? Math.max(0.1, Math.min(2.0, +((s / n) * 1.4).toFixed(2))) : 0.1, arable: n ? +((n - tw) / n).toFixed(2) : 1, tn: n, crops: CROP_MODE ? cropN : null };
 }
 function landRaster(cx, cy, add) {
   add = add || {};
   let rk = 0, fo = 0, or = 0, n = 0, hf = 0;
   for (const [dx, dy] of OFF) { const x = cx + dx, y = cy + dy; n++; if (at(ORE, x, y)) or++; if (at(ROCK, x, y)) rk++; else if (at(FOR, x, y) || (add.forest && add.forest(x, y))) fo++; }
-  for (const [dx, dy] of HOFF) { const x = cx + dx, y = cy + dy; if (at(FOR, x, y) || (add.forest && add.forest(x, y))) hf++; }
+  for (const [dx, dy] of HOFF) { const x = cx + dx, y = cy + dy; if (at(FOR, x, y) || (add.forest && add.forest(x, y))) hf++; else if (DEN_ON && at(DEN, x, y)) hf += FIELD_RHO; }
   let rockD = rk / n, forD = fo / n, oreD = or / n + (add.oreShare || 0), huntD = HOFF.length ? hf / HOFF.length : 0;
   const nd = add.water ? Math.min(nearestWater(cx, cy, 140, WAT), add.waterNd != null ? add.waterNd : 999) : nearestWater(cx, cy, 140, WAT);
   const wv = Math.max(0.05, Math.min(1, 1 - nd / 140));
@@ -197,7 +225,7 @@ function landRaster(cx, cy, add) {
     special = Math.max(sp0.obsidian || 0, sp0.jade || 0, sp0.tin || 0);
   }
   return { fertility: fm.fert, arable: fm.arable, water: +(wv * 1.6).toFixed(2), wood: LV.wood, game: LV.game, stone: LV.stone, ore, special,
-    size: Math.max(30, Math.round(TERR_N / 25)), woodSustain: sus.woodSustain, fishSustain: sus.fishSustain, nd, shares: { forD: +forD.toFixed(4), huntD: +huntD.toFixed(4), rockD: +rockD.toFixed(4), oreD: +oreD.toFixed(5) } };
+    size: Math.max(30, Math.round(TERR_N / 25)), woodSustain: sus.woodSustain, fishSustain: sus.fishSustain, nd, crops: fm.crops, shares: { forD: +forD.toFixed(4), huntD: +huntD.toFixed(4), rockD: +rockD.toFixed(4), oreD: +oreD.toFixed(5) } };
 }
 
 // ── 축 판정(econ 정본 조각) ──
@@ -257,9 +285,23 @@ for (let cy = g0; cy < H; cy += GRID) for (let cx = g0; cx < W; cx += GRID) {
   const lp = landRaster(cx, cy);
   const a20 = axes(lp, 20), a40 = axes(lp, 40);
   cells.push({ cx, cy, k: 'l', fe: lp.fertility, nd: lp.nd, lp: { fertility: lp.fertility, arable: lp.arable, water: lp.water, wood: lp.wood, game: lp.game, stone: lp.stone, ore: lp.ore, special: lp.special, nd: lp.nd, fS: lp.fishSustain, wS: lp.woodSustain },
-    o20: a20.out, p20: a20.pass, p40: a40.pass });
+    o20: a20.out, p20: a20.pass, p40: a40.pass, cr: lp.crops });
 }
 log(`격자 ${cells.length}칸 (뭍 ${cells.filter((c) => c.k === 'l').length})`);
+let field1 = null;
+if (FIELD_RHO > 0) {   // ★[T1178] 들판 판 — 1차 빈 칸을 들판으로 · 2차는 같은 판정 그대로(사냥 밴드에 들판 칸 ρ)
+  const e1 = cells.filter((c) => c.k === 'l' && !AX.some((k) => c.p20[k]));
+  const hg = GRID >> 1;
+  for (const c of e1) for (let y = c.cy - hg; y < c.cy + hg; y++) for (let x = c.cx - hg; x < c.cx + hg; x++) {
+    if (x < 0 || y < 0 || x >= W || y >= H) continue; const i = y * W + x; if (!WAT[i] && !ROCK[i] && !FOR[i]) DEN[i] = 1; }
+  let dn = 0; for (let i = 0; i < W * H; i++) dn += DEN[i];
+  field1 = { empty1: e1.length, denCells: dn };
+  DEN_ON = true;
+  for (const c of cells) { if (c.k !== 'l') continue; const lp = landRaster(c.cx, c.cy); const a20 = axes(lp, 20), a40 = axes(lp, 40);
+    Object.assign(c, { cr: lp.crops, fe: lp.fertility, nd: lp.nd, lp: Object.assign(c.lp, { game: lp.game }), o20: a20.out, p20: a20.pass, p40: a40.pass }); }
+  for (const s of sites) { if (!s.lp) continue; const rl = landRaster(s.cx, s.cy); s.raster = rl; s.axes20r = axes(rl, 20); s.axes40r = axes(rl, 40); }
+  log(`들판 2차 — 1차 빈 칸 ${e1.length} · 들판 셀 ${dn}`);
+}
 
 // ── 추가 추정 ①②③(빈 자리만 · 누적) ──
 //   ① 지류: 가장 가까운 물이 d 셀이 되게 1~2셀 내천이 지난다고 본다(그 길이 = 노동권 원판을 가르는 곧은 물줄기 · 폭 2셀) — d ∈ {20, 40}.
@@ -394,11 +436,11 @@ const res = {
   empty: { n20: emptyShare('p20'), n40: emptyShare('p40') }, axisShare: { n20: axisShare('p20'), n40: axisShare('p40') }, regions, scen: scenShare,
   sites: sites.map((s) => ({ name: s.name, type: s.type, cx: s.cx, cy: s.cy, tn: s.tn, seeded: !!s.seeded, skip: !!s.skip,
     lp: s.lp ? { fertility: s.lp.fertility, arable: s.lp.arable, water: s.lp.water, wood: s.lp.wood, game: s.lp.game, stone: s.lp.stone, ore: s.lp.ore, obsidian: s.lp.obsidian, jade: s.lp.jade, tin: s.lp.tin, size: s.lp.size, woodSustain: s.lp.woodSustain, fishSustain: s.lp.fishSustain } : null,
-    raster: s.raster ? { fertility: s.raster.fertility, arable: s.raster.arable, water: s.raster.water, wood: s.raster.wood, game: s.raster.game, ore: s.raster.ore, special: s.raster.special, fS: s.raster.fishSustain, wS: s.raster.woodSustain } : null,
+    raster: s.raster ? { crops: s.raster.crops, game: s.raster.game, fertility: s.raster.fertility, arable: s.raster.arable, water: s.raster.water, wood: s.raster.wood, game: s.raster.game, ore: s.raster.ore, special: s.raster.special, fS: s.raster.fishSustain, wS: s.raster.woodSustain } : null,
     a20: s.axes20 ? AX.filter((k) => s.axes20.pass[k]) : null, a40: s.axes40 ? AX.filter((k) => s.axes40.pass[k]) : null, o20: s.axes20 ? s.axes20.out : null,
     a20r: s.axes20r ? AX.filter((k) => s.axes20r.pass[k]) : null })),
   nbLive, routeCache: routeCache ? { file: routeCache.file, n: routeCache.n, len: routeCache.len } : null, liveNames: live.map((s) => s.name), matLive: matLive.map((r) => r.map((d) => (isFinite(d) ? Math.round(d) : null))),
-  rule, fertMode: FERT_MODE, fertAdd: [...FERT_ADD], fertCanon: FERT_CANON, cellsOut: cells.map((c) => c.k === 'l' ? [c.cx, c.cy, AX.map((k) => (c.p20[k] ? 1 : 0) + (c.p40[k] ? 1 : 0)).join(''), c.fix ? SCEN.map((s) => c.fix[s.id].map((k) => AXL[k]).join('') || '-').join(',') : '', c.fe, c.nd] : [c.cx, c.cy, c.k]),
+  rule, fertMode: FERT_MODE, fertAdd: [...FERT_ADD], fertCanon: FERT_CANON, cropMode: CROP_MODE, crops: CROP_MODE ? CROP_ROWS : null, waterSteps: WSTEPS, fieldRho: FIELD_RHO, field1, cellsOut: cells.map((c) => c.k === 'l' ? [c.cx, c.cy, AX.map((k) => (c.p20[k] ? 1 : 0) + (c.p40[k] ? 1 : 0)).join(''), c.fix ? SCEN.map((s) => c.fix[s.id].map((k) => AXL[k]).join('') || '-').join(',') : '', c.fe, c.nd, c.cr ? (Object.entries(c.cr).sort((a, b) => b[1] - a[1])[0] || [''])[0] : '', +(c.lp.game || 0)] : [c.cx, c.cy, c.k]),
   scenIds: SCEN.map((s) => s.id), sec: Math.round((Date.now() - t0) / 1000),
 };
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
