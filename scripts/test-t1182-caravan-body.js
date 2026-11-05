@@ -64,6 +64,12 @@ for(let i=0;i<12;i++)E.tickWorldV2(bw);
 ok(bw.caravans.some(x=>x.basket),'바구니 시험도 실제 캐러밴이 선다');ok(bw.tradeLog.length===0,'바구니 사건 시계도 몸 없으면 정산하지 않는다');
 S.villages=[];S.world.caravans=[];cb.c._xzHandedBack=true;cb.c._done=true;P.sweep({seen:new Set(),spawned:0,arrived:0,removed:0});
 ok(S.caravanBodies.has(convoy.id),'경계 귀환 기록을 보낸 뒤에도 인수 확인 전까지 실제 몸을 보존한다');
+const pend=new Map([[1,{id:1}],[2,{id:2}]]),calls=[];P.syncPending(pend,c=>{calls.push(c.id);return 'retry';});
+ok(calls.join(',')==='1' && pend.size===2,'첫 경로 retry 뒤 다른 쌍이 공유 경로 작업을 끊지 않는다');P.syncPending(pend,c=>calls.push(c.id));ok(calls.join(',')==='1,1,2' && pend.size===0,'같은 첫 경로가 끝난 뒤 다음 쌍을 처리한다');
+const transfer={id:901,state:'xzone',from:a,to:b},record={id:901,kind:'arrive',toZone:'nippon',giveRes:'wood',giveAmt:2};
+S.world.caravans=[transfer];S.caravanBodies=new Map();S.xzone={track:new Map(),trace:[],st:{sent:0,sentOk:0,crossArrive:0}};
+let registered=false;S.deps.xzonePost=()=>{registered=S.xzone.track.has(901);return new Promise(()=>{});};P.sendXz(record,1,0,true);ok(registered,'출발 인수응답 전 귀환도 기록할 수 있도록 송신 전에 추적 등록');
+const track=S.xzone.track.get(901);track.back={amt:2};P.afterSendXz(record,901,true,null,true,0);ok(S.xzone.track.get(901)===track && track.back.amt===2,'늦은 출발 인수응답은 먼저 온 귀환 기록을 덮지 않는다');
 if(!process.argv.includes('--mutant')) {
  const m=spawnSync(process.execPath,[__filename,'--mutant'],{encoding:'utf8',env:process.env});
  ok(m.status!==0 && /몸이 없으면 시계가 지나도 입금 0/.test(m.stderr),'몸 가드를 뺀 미끼는 실제 입금 검사에서 실패한다');

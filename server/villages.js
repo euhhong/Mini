@@ -4693,8 +4693,14 @@ function _t1182Flush(now) {
   for(const e of events)if(!e.c._done)pending.set(e.c.id,e.c);
   if(!events.length && !pending.size)return;
   const S=_caravanSyncNew();S.seen=new Set(w.caravans.map(c=>c.id));
-  for(const [id,c]of pending){if(c._done || _caravanSyncOne(now,c,S,TB.slice(TICK_SLICE_MS))!=='retry')pending.delete(id);}
+  _t1182SyncPending(pending,c=>_caravanSyncOne(now,c,S,TB.slice(TICK_SLICE_MS)));
   _caravanSyncSweep(S);
+}
+function _t1182SyncPending(pending,step) {
+  for(const [id,c]of pending){
+    if(!c._done && step(c)==='retry')break; // 공유 A* 슬롯은 끝낼 때까지 첫 쌍이 쥔다.
+    pending.delete(id);
+  }
 }
 function _t1182BodyReady(c, leg) {
   const body = state.caravanBodies && state.caravanBodies.get(c.id);
@@ -5242,6 +5248,10 @@ function _xzSend(r, g, tries, walked) {
     body._xzSendWait = { r, g, tries, at: Date.now(), until: body.arriveAt + state.dayMs }; X.st.walkWait++;   // 기다림 상한 = 명목 빠르기로 닿을 시각 + 하루
     return;
   }
+  if(T762_CARAVAN_BODY && r.kind==='arrive' && !X.track.has(r.id)) {
+    const c=(state.world.caravans||[]).find(c=>c.id===r.id && c.state==='xzone' && !c._done);
+    if(c)X.track.set(r.id,{c,res:r.giveRes,amt:r.giveAmt,sentDay:state.world.day});
+  }
   X.st.sent++;
   const payload = { kind: 'caravan', zone: state.zoneId, gday: g, rec: r };
   let pr; try { pr = Promise.resolve(state.deps.xzonePost(r.toZone, payload)); } catch (e) { pr = Promise.reject(e); }
@@ -5260,7 +5270,7 @@ function _xzAfterSend(r, key, ok, why, answered, tries) {
     if (r.kind === 'arrive') {
       X.st.crossArrive++;
       const c = (state.world.caravans || []).find((x) => x.id === r.id && x.state === 'xzone' && !x._done) || null;
-      if (c) X.track.set(r.id, { c, res: r.giveRes, amt: r.giveAmt, sentDay: state.world.day });
+      if (c && (!T762_CARAVAN_BODY || !X.track.has(r.id))) X.track.set(r.id, { c, res: r.giveRes, amt: r.giveAmt, sentDay: state.world.day });
       _xzTrace('out', { id: r.id, to: r.to, toZone: r.toZone, res: r.giveRes, amt: r.giveAmt, res2: r.giveRes2 || null, amt2: r.giveAmt2 || 0, remain: r.remain, at, pt: r.ptHome || null, body: !!body, walked });
     } else {
       X.st.crossReturn++;
@@ -16026,7 +16036,7 @@ module.exports = { t1144Stat: () => Object.assign({ on: T1144_LIFE_EVENT, verify
       get L_WATERGAP() { return L_WATERGAP; },
       get TASKS_PER_FARMER() { return _lifeTasksPerFarmerDay(); },
     },
-    _caravanBodyProbe: { on: T762_CARAVAN_BODY, pack: _t1034Pack, restore: _t1034Apply, ready: _t1182BodyReady, tick: tickCaravanBodies, pts: setBodyPts, walk: _t1182Walk, returnLeg: startReturnLeg, linger: _t707Linger, sweep: _caravanSyncSweep, openMarket: _t707Open },
+    _caravanBodyProbe: { on: T762_CARAVAN_BODY, pack: _t1034Pack, restore: _t1034Apply, ready: _t1182BodyReady, tick: tickCaravanBodies, pts: setBodyPts, walk: _t1182Walk, returnLeg: startReturnLeg, linger: _t707Linger, sweep: _caravanSyncSweep, openMarket: _t707Open, syncPending: _t1182SyncPending, sendXz: _xzSend, afterSendXz: _xzAfterSend },
     _distProbe: {
       compute: (reason, opts) => computeAndInjectDistMatrix(reason, opts),
       gen: (reason, opts) => _distMatrixGen(reason, opts),   // ★[T957] 하네스가 한 양보씩 민다(`test-distmatrix` ⑥)
