@@ -10,6 +10,7 @@ if(process.argv.includes('--mutant')) {
 const V=require('../server/villages'),E=require('../sim/economy-sim-v2'),W=require('../server/zone-config').WORLD;
 const P=V.__labProbe._caravanBodyProbe,S=V.__p3Bind({}).state;
 let n=0;const ok=(v,msg)=>{assert.ok(v,msg);n++;};
+const between=require('./fixture-xzone-counts');ok(between(3,4,4),'송신-수신-ACK 사이 전송 중 한 건을 인과 경계로 센다');ok(!between(3,5,4) && !between(5,4,5),'송신보다 많은 수신·이미 ACK한 수신의 누락은 잡는다');
 ok(P.on===true,'몸 정본 기본 켬');ok(E.T1136_ESCORT_CARRY===true,'호위도 운반 기본 켬');ok(E.T1136_BASKET===false,'바구니는 끔');ok(E.T496_CARAVAN_REST===false,'야영 끔');
 const browser={console:{log:()=>{},warn:()=>{},error:()=>{}}};require('vm').runInNewContext(fs.readFileSync(path.resolve(__dirname,'../sim/economy-engine.browser.js'),'utf8'),browser);ok(browser.EconEngine.T1136_ESCORT_CARRY===true && browser.EconEngine.T1136_BASKET===false,'브라우저 번들도 호위 켬·바구니 끔 기본');
 const w=E.createWorldV2({seed:7,villageCount:2,picker:'rational',infoRange:5000,raidPer100:0});

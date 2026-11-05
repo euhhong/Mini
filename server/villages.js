@@ -4396,16 +4396,20 @@ function spawnCaravanBody(c, now, budgetMs) {
   // ★★[T85] 길을 **예산만큼만** 판다. 다 안 파였으면 이 조각에서는 안 떠나고 `'wait'` 를 돌려준다 —
   //   부른 쪽(`_caravanSyncOne` → `_drainTickJobs`)이 **같은 하루 안의 다음 조각**에 다시 부른다.
   //   ⚠여기서 아직 아무것도 안 만졌다(스폰 전) — 그래서 재진입이 안전하다. 이 줄이 그 계약이다.
-  const rr = getRouteResumable(legA, legB, (budgetMs === undefined) ? TB.slice(TICK_SLICE_MS) : budgetMs);   // ★[T687] 켬 = 이 틱 남은 몫
-  if (!rr.done) { _probe.pathWait++; return 'wait'; }
-  if (!rr.pts) return false;
-  // ★★[T578 ②] 노드 사이를 걷는 길 — 쌍마다 한 번 예산만큼 이어 판다(아직이면 교역로와 같은 `'wait'` 계약 · 아무것도 안 만졌다).
-  const wr = _walkFor(legA, legB, (budgetMs === undefined) ? TB.slice(TICK_SLICE_MS) : budgetMs);   // ★[T687]
-  if (!wr.done) { _probe.pathWait++; return 'wait'; }
-  let pts = wr.pts || rr.pts;
-  if (T762_CARAVAN_BODY && T707_ON && outbound) pts = pts.concat([_t707Yard(toVil)]);
-  const _t707Mk = T707_ON && !outbound && c._mktD === state.world.day && pts && pts.length;   // ★[T707] 장이 선 날 상한이 풀려 도착 마을에서 서는 몸 — 장 끝까지 마당에 선다
-  if (_t707Mk) pts = [_t707Yard(legA)].concat(pts);
+  const saved=T762_CARAVAN_BODY && state._t1034Saved && state._t1034Saved.get(String(c.id));
+  let pts;
+  const _t707Mk = !saved && T707_ON && !outbound && c._mktD === state.world.day;
+  if(saved && saved.act)pts=saved.act.pts.map(q=>({x:q[0],y:q[1]}));
+  else {
+    const rr = getRouteResumable(legA, legB, (budgetMs === undefined) ? TB.slice(TICK_SLICE_MS) : budgetMs);
+    if (!rr.done) { _probe.pathWait++; return 'wait'; }
+    if (!rr.pts) return false;
+    const wr = _walkFor(legA, legB, (budgetMs === undefined) ? TB.slice(TICK_SLICE_MS) : budgetMs);
+    if (!wr.done) { _probe.pathWait++; return 'wait'; }
+    pts = wr.pts || rr.pts;
+    if (T762_CARAVAN_BODY && T707_ON && outbound) pts = pts.concat([_t707Yard(toVil)]);
+    if (_t707Mk) pts = [_t707Yard(legA)].concat(pts);
+  }
   // ★[T533] 상인·호위 몸 세우기를 이름만 올렸다(`_caravanNpcs` — 이웃 존에서 넘어온 몸도 같은 함수 · 부르는 차례 그대로: 상인 → 호위).
   const N = _caravanNpcs(c, legA.ccx * SZ + SZ / 2, legA.ccy * SZ + SZ / 2, `simvil_${fromVil.dbId}`, fromVil.name, fromVil.dbId);
   const p = N.p;
@@ -4429,6 +4433,7 @@ function spawnCaravanBody(c, now, budgetMs) {
   if (T775_RESUME && T661_ON && _t707Mk && Number.isFinite(body.lingerUntil) && body.lingerUntil <= now) { startReturnLeg(body, now); _t775Place(body, c, false, p, now); _probe.t782MktLate = (_probe.t782MktLate || 0) + 1; }
   body._t1182 = T762_CARAVAN_BODY;
   state.caravanBodies.set(c.id, body);
+  if(saved && saved.act)_t1034Apply(body,now);
   console.log(`[${state.zoneId}] 🐂 캐러밴#${c.id} 출발: ${c.from.name}→${c.to.name} ${c.giveRes}×${Math.round(c.giveAmt)} 호위${c.escort}(실체 ${body.escorts.length}) — 경로 ${pts.length}정점 ${Math.round(body.len)}px ${legDays}게임일(econ d${c.departDay}→d${c.arriveDay})`);
   return true;
 }

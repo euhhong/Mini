@@ -34,6 +34,7 @@ const path = require('path');
 const fs = require('fs');
 const net = require('net');
 const { spawn } = require('child_process');
+const receivedBetween = require('./fixture-xzone-counts');
 const FB = require('./fixture-boot');   // 기동 기다리기 정본(사본 0)
 
 const ROOT = path.join(__dirname, '..');
@@ -250,6 +251,13 @@ const dist = (a, b) => (a && b) ? Math.hypot(a.x - b.x, a.y - b.y) : Infinity;
     E = { inN, inH, LN: N.live || {}, LH: H.live || {},
       e1: H.st.crossArrive === N.core.arriveIn, e2: N.core.arriveIn === N.core.returnOut + inN + slotOf(N),
       e3: N.st.crossArrive === H.core.arriveIn, e4: H.core.arriveIn === H.core.returnOut + inH + slotOf(H) };
+    if(BODY){
+      const ha=await perf('hanbando'),na=await perf('nippon');
+      E.hAfter=ha?.core.arriveOut;E.nAfter=na?.core.arriveOut;
+      E.e1=!!ha && receivedBetween(H.st.crossArrive,N.core.arriveIn,ha.core.arriveOut);
+      E.e3=!!ha && !!na && receivedBetween(N.st.crossArrive,ha.core.arriveIn,na.core.arriveOut);
+      E.hReceive=ha?.core.arriveIn;
+    }
     if (E.e1 && E.e2 && E.e3 && E.e4) break;
     await sleep(300);
   }
@@ -275,9 +283,9 @@ const dist = (a, b) => (a && b) ? Math.hypot(a.x - b.x, a.y - b.y) : Infinity;
     dumpZ('hanbando', H); dumpZ('nippon', N);
     console.log(`  · [ⓔ 진단] 칸(지금) 한반도 ${JSON.stringify(H.live)} · 닛폰 ${JSON.stringify(N.live)}`);
   }
-  ok(E.e1, "ⓔ1 한반도가 넘긴 'arrive' = 닛폰이 받은 'arrive'", `${H.st.crossArrive} = ${N.core.arriveIn}`);
+  ok(E.e1, BODY ? "ⓔ1 인과 순서: 앞서 확인된 한반도 인수응답 ≤ 닛폰 수신 ≤ 뒤에 읽은 한반도 송신" : "ⓔ1 한반도 넘김 = 닛폰 수신", BODY ? `${H.st.crossArrive} ≤ ${N.core.arriveIn} ≤ ${E.hAfter}` : `${H.st.crossArrive} = ${N.core.arriveIn}`);
   ok(E.e2, "ⓔ2 ★닛폰이 받은 'arrive' = 돌려보낸 'return' + 지금 닛폰에 있는 것", `${N.core.arriveIn} = ${N.core.returnOut} + 이동 중(캐러밴 ${E.inN} · 줄 ${E.LN.pendArrive | 0} · 인박스 ${E.LN.inboxArrive | 0} · 셀 귀환 ${E.LN.outReturn | 0})`);
-  ok(E.e3, "ⓔ3 닛폰이 넘긴 'arrive' = 한반도가 받은 'arrive'(반대 방향)", `${N.st.crossArrive} = ${H.core.arriveIn}`);
+  ok(E.e3, BODY ? "ⓔ3 인과 순서: 앞서 확인된 닛폰 인수응답 ≤ 한반도 수신 ≤ 뒤에 읽은 닛폰 송신" : "ⓔ3 닛폰 넘김 = 한반도 수신", BODY ? `${N.st.crossArrive} ≤ ${E.hReceive} ≤ ${E.nAfter}` : `${N.st.crossArrive} = ${H.core.arriveIn}`);
   ok(E.e4, "ⓔ4 한반도가 받은 'arrive' = 돌려보낸 'return' + 지금 한반도에 있는 것", `${H.core.arriveIn} = ${H.core.returnOut} + 이동 중(캐러밴 ${E.inH} · 줄 ${E.LH.pendArrive | 0} · 인박스 ${E.LH.inboxArrive | 0} · 셀 귀환 ${E.LH.outReturn | 0})`);
   console.log(`  · [표 · T598 추신] 판 끝 관측 ${PR.n}번(두 존 × 60) — 종전 셈(st.pend) 어긋남 ${PR.oldBad} · 새 셈(세 칸) 어긋남 ${PR.newBad} · 종전 어긋남 때 기록이 인박스에 ${PR.inbox} · 셀 귀환(out)에 ${PR.out} · 줄 값이 늦음(st.pend ≠ 지금 줄) ${PR.pendLate}`);
   ok(H.st.sentFail === 0 && N.st.sentFail === 0 && H.st.bounced === 0 && N.st.bounced === 0, 'ⓔ5 문이 다 받았다(되돌림 0 · 못 보냄 0)', `한반도 ${H.st.sentOk}/${H.st.sent} · 닛폰 ${N.st.sentOk}/${N.st.sent}`);
