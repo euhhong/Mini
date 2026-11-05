@@ -47,8 +47,8 @@ function replay(row) {
   const ctx=BC.createContext(); ctx.sides=JSON.parse(JSON.stringify(row.sides));
   ctx.rng=WL._muRng(row.seed); for(let i=0;i<row.rngAtStart;i++)ctx.rng();
   ctx.units=row.initial.map(it=>{const u={...it.primitive,ctl:false};for(const k of ['x','y','_px','_py','_ox','_oy'])if(u[k]!=null)u[k]-=row.origin;return u;});
-  const out={firstArrow:{},firstContact:null,morale:[]};let t=0;
-  ctx.onArrow=(kind,ar,u)=>{if(kind==='fire'&&out.firstArrow[u.side]==null)out.firstArrow[u.side]=t;};
+  const out={firstArrow:{},firstHit:{},firstContact:null,morale:[]};let t=0;
+  ctx.onArrow=(kind,ar,u)=>{if(kind==='fire'&&out.firstArrow[u.side]==null)out.firstArrow[u.side]=t;if(kind==='hit'&&ar.sh&&out.firstHit[ar.sh.side]==null)out.firstHit[ar.sh.side]=t;};
   for(let tick=1;tick<=300;tick++){
     t=tick/30;BC._trackVel(ctx,1/30);BC._stepBattle(ctx,1/30);
     if(out.firstContact==null&&ctx.units.some(u=>u.st==='shoot'||u.st==='melee'))out.firstContact=t;
@@ -65,11 +65,12 @@ WL.createWarLive = function (...args) {
   api.makeFight = function (...a) {
     const f = make.apply(this, a);
     let calls=0; const rng=f.ctx.rng; f.ctx.rng=()=>{calls++;return rng();};
-    const row = { rngCalls:()=>calls, id: f.w.id, seed: f.seed, firstArrow: {}, firstContact: null, initial: null, morale: [] };
+    const row = { rngCalls:()=>calls, id: f.w.id, seed: f.seed, firstArrow: {}, firstHit: {}, firstContact: null, initial: null, morale: [] };
     rec.fights.push(row); rows.set(f, row);
     const arrow = f.ctx.onArrow;
     f.ctx.onArrow = (kind, ar, u) => {
       if (kind === 'fire' && row.firstArrow[u.side] == null) { row.firstArrow[u.side] = f.t; flush(); }
+      if (kind === 'hit' && ar.sh && row.firstHit[ar.sh.side] == null) { row.firstHit[ar.sh.side] = f.t; flush(); }
       if (arrow) arrow(kind, ar, u);
     };
     return f;
