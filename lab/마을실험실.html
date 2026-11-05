@@ -18338,15 +18338,15 @@ function tickCaravansV2(world, day) {
   // ★★[T525] 이웃 존에서 온 기록 먼저(그 존 캐러밴의 도착 · 이 존 캐러밴의 귀환) — 팔 켬 + 호스트가 꽂았을 때만.
   if (_xzOn(world) && world.xzone.inbox && world.xzone.inbox.length) _xzInbox(world, day);
   if (!world.caravans || !world.caravans.length) return;
-  for (const c of world.caravans) _caravanStepV2(world,c,day,false);
+  for (const c of world.caravans) _caravanStepV2(world,c,day);
   world.caravans = world.caravans.filter(c => !c._done);
 }
 function caravanBodyDue(world,c,leg,clockDue) {
   return typeof world.caravanBodyReady === 'function' ? caravanBodyAllows(world,c,leg) : clockDue;
 }
-function _caravanStepV2(world,c,day,bodyEvent) {
+function _caravanStepV2(world,c,day) {
     if (c._done) return;
-    if (!bodyEvent && world.banditMeet) { _raidMeet(world, c, day); if (c._done) return; }   // ★[T1104] 길 위 만남(호스트 문이 꽂힌 판만 · 끔 = 이 줄 무동작) — 행상이 길에서 죽었으면 그 캐러밴은 여기서 끝
+    if (world.banditMeet) { _raidMeet(world, c, day); if (c._done) return; }   // ★[T1104] 길 위 만남(호스트 문이 꽂힌 판만 · 끔 = 이 줄 무동작) — 행상이 길에서 죽었으면 그 캐러밴은 여기서 끝
     if (c.basket) return;   // ★[T1136] 바구니 캐러밴 — 도착 · 집 도착은 사건 처리기(`basketFlush`)가 몸이 닿은 시각대로 치른다(여기선 위 길 위 만남만 · 끔 = 바구니 없음 = 무동작)
 
     // ★★[T533] 경계 칸에 서는 날(스텁이 목적지) — 몸과 기록이 함께 넘어간다(`_xzCross` 가 없는 캐러밴은 이 갈래를 안 탄다 = 종전).
@@ -18385,21 +18385,6 @@ function _caravanStepV2(world,c,day,bodyEvent) {
     }
 
 }
-// T1182: 몸 틱이 실제 도착을 낸 순간. 정산/귀환 몸통은 하루 문과 하나다.
-function flushCaravanBodies(world,at) {
-  if(typeof world.caravanBodyReady !== 'function')return [];
-  const out=[];
-  for(const c of world.caravans) {
-    if(c.basket || c._done)continue;
-    const phase=c.state,to=c.to;
-    _caravanStepV2(world,c,world.day,true);
-    if(c.state!==phase || c.to!==to || c._done)out.push({c,kind:c._done?'home':c.to!==to?'reroute':'arrive'});
-  }
-  world.caravans=world.caravans.filter(c=>!c._done);
-  return out.concat(basketFlush(world,at,true));
-}
-
-
 // ═══ ★★[T525] 존 경계 넘기 — 몸의 기록 둘('arrive' · 'return') · 전부 팔 켬 + 호스트가 `world.xzone` 을 꽂았을 때만 닿는다 ═══
 //   기록은 호스트가 옮긴다(존 서버 = 안 문 핸드오프 · 자 = 워커 사이 전달). econ 은 `out` 에 쓰고 `inbox` 에서 읽을 뿐이다.
 // 이 존 캐러밴이 경계 칸에 섰다(`_xzCross`) 또는 스텁에 닿았다(T525 뼈대 · `split` 없음) — 몸을 넘긴다.
@@ -19150,7 +19135,7 @@ module.exports = {
   T784_CARGO_AGE, _t784Probe: { F: _t784F, arrive: _t784Arrive },
   T1049_FLOOR_STONE,   // ★[T1049] 돌 바닥 마을은 제 돌을 안 판다(하네스 `test-floor-stone` 가 읽는다)
   T812_CARGO_TEMP, _t812Probe: { exp: _t812Exp },
-  T1136_BASKET, T1136_ESCORT_CARRY, basketFlush, basketBounce, flushCaravanBodies,   // ★[T1136] 바구니 교역 손잡이(끔 기본) · 사건 처리기(서버 호스트가 몸 시계로 부른다 · 헤드리스는 날 머리) · 몸이 막혀 되돌아섬(서버 §5.5b)
+  T1136_BASKET, T1136_ESCORT_CARRY, basketFlush, basketBounce,   // ★[T1136] 바구니 교역 손잡이(끔 기본) · 사건 처리기(서버 호스트가 몸 시계로 부른다 · 헤드리스는 날 머리) · 몸이 막혀 되돌아섬(서버 §5.5b)
   _lowestProducer: lowestProducer,   // ★[T1152] 계측기가 상인 하루 몫을 같은 함수로 잰다(사본 0)
   T1152_MARKET, _t1152Probe: { cal: _t1152Cal, lean: _t1152Lean, rho: _t1152Rho, half: _t1152Half, food: _t1152Food, own: _t1152Own, keepHalf: _t1152KeepHalf, params: _t1152CalParams, tc: _t1152Tc, tcD: _t1152TcD, rvCal: _t1152RvCal, foodPer: _t825FoodPer,
     seasonMult: SEASON_MULT, flags: { cal: T1152_CAL, tc: T1152_TC, pool: T1152_POOL, life: T1152_SRC_LIFE, legacy: T1152_CAL_LEGACY, def30: T1152_DEF30 } },   // ★[T1152] 하네스 · 계측기가 같은 함수를 부른다(사본 0)

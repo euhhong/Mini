@@ -75,12 +75,14 @@ const dist = (a, b) => (a && b) ? Math.hypot(a.x - b.x, a.y - b.y) : Infinity;
   console.log('\n=== 캐러밴이 존을 넘는다 — 두 존 e2e (T533) ===');
   for (const port of [CPORT].concat(ZIDS.map((z) => ZONES[z].port))) if (!await portFree(port)) { ok(false, `포트 ${port} 가 비어 있다(남의 서버를 잴 수 없다)`); process.exit(1); }
   const DDIR = `/tmp/e2e-xzc-${process.pid}`; fs.mkdirSync(DDIR, { recursive: true });
+  const checkpointDir=path.join(DDIR,'checkpoint');fs.mkdirSync(checkpointDir,{recursive:true});
   const c = boot('central', 'central.js', { PORT: String(CPORT), DB_PATH: `${DDIR}/central.db`, PUBLIC_HOST: 'localhost', ENABLED_ZONES: ZIDS.join(',') });
   const cu = await FB.waitUp(c, /central server up on/, { name: 'central' });
   ok(cu.ok, 'ⓔ0 central 기동', cu.ok ? `${cu.ms}ms` : cu.why);
   //   ★팔 `T525_CROSS_ZONE=1` · 마을 켬 · 하루 `XZ_DAYMS` · 캐러밴 몸 상한은 넉넉히(`VILLAGE_CARAVAN_MAX` — 종전 손잡이 · 넘는 캐러밴이 몸을 갖게) · 야생 끔(속도)
   const common = { CENTRAL_URL: `http://localhost:${CPORT}`, ENABLE_VILLAGES: '1', T525_CROSS_ZONE: '1', VILLAGE_DAY_MS: DAYMS, ENABLED_ZONES: ZIDS.join(','),
     VILLAGE_CARAVAN_MAX: '400', ENABLE_WILDLIFE: '0',
+    ...(BODY?{T1182_E2E_STOP_DIR:checkpointDir,NODE_OPTIONS:((process.env.NODE_OPTIONS||'')+' --require '+path.join(ROOT,'scripts/t1182-e2e-checkpoint.js')).trim()}:{}),
     T952_XZ_STAY: process.env.T952_XZ_STAY || '',   // ★[T952] 이 자에 준 그대로(끔 = 빈 값)
     T1030_XZ_MARKET: process.env.T1030_XZ_MARKET || '',   // ★[T1030] 이 자에 준 그대로(끔 = 빈 값)
     //   ★[T1139] 걸음표는 **물은 쌍만** 판다(`server/xzone.js` 손잡이 `T1139_XZ_LAZY` — 서버 기본은 끔 = 전 쌍 한 벌) · `T1139_XZ_LAZY=0` 을 주면 종전(전 쌍)
@@ -305,7 +307,13 @@ const dist = (a, b) => (a && b) ? Math.hypot(a.x - b.x, a.y - b.y) : Infinity;
     const inWin = (x, day) => ON ? (x.mkt != null) : (x.state === 'inbound' && x.xback != null && x.xback > day);
     let tgt = null, Mrow = null, preN = null, preH = null;
     const tK = Date.now();
-    while (!tgt && Date.now() - tK < WAIT_S * 1000) {
+    if(BODY){
+      fs.writeFileSync(path.join(checkpointDir,'arm'),'arm');
+      while(!fs.existsSync(path.join(checkpointDir,'ready.json')) && Date.now()-tK<WAIT_S*1000)await sleep(50);
+      if(fs.existsSync(path.join(checkpointDir,'ready.json'))){const R=JSON.parse(fs.readFileSync(path.join(checkpointDir,'ready.json'),'utf8'));if(R.error)throw new Error(R.error);tgt=R.target;Mrow=R.checkpoint;preN=R.before;}
+      fs.rmSync(path.join(checkpointDir,'arm'),{force:true});
+    }
+    while (!BODY && !tgt && Date.now() - tK < WAIT_S * 1000) {
       const Nn = await perf('nippon');
       if (Nn) for (const x of (Nn.caravans || [])) if (String(x.id).startsWith('xz:hanbando:') && inWin(x, Nn.day)) {
         //   그 캐러밴이 닛폰 DB 메타 행에 같은 창의 꼴로 실렸나(켬 = 정산 전 `_t707` · 끔 = 귀환 구간) — 실린 뒤에 죽인다(실리기 전이면 다음 경계까지 본다)

@@ -4452,7 +4452,7 @@ function _t661ReturnPts(body) {
 }
 function startReturnLeg(body, now) { // 도착 머묾(linger) 종료 → 귀환 출발
   const c = body.c;
-  if (body._t1182 && c._t707) { if(state.tickJobs || state._t731)return; state.econV2.settleMarketsV2(state.world, c); if (c._t707) return; }   // T1182: 장 정산으로 짐을 받은 뒤 귀로를 걷는다.
+  if (body._t1182 && c._t707) return; // 정산은 기존 하루 머리에서 실제 몸을 확인한 뒤 저장 마감과 함께 치른다.   // T1182: 장 정산으로 짐을 받은 뒤 귀로를 걷는다.
   if (body._xz && c && c._xzHome) return _xzStartReturnLeg(body, now);   // ★★[T533] 이웃 존 캐러밴 — 집은 경계 너머다(경계 칸까지 걷는다 · 끔이면 이 줄 무동작)
   if (T661_ON && body._t661 && body._t661.leg === 'inbound') {   // ★[T661] 돌아가는 길은 도착 경계에 장부가 이미 골랐다(`_t661ReturnPts`) — 몸은 그 길을 걷는다
     setBodyPts(body, body._t661.path.pts);
@@ -4685,23 +4685,6 @@ function _t661Vis(body, now) {
 // 30Hz — 모든 실체 캐러밴 전진. 활성 청크(플레이어 시야)만 벽 충돌 판정, 비활성은 경로 보간(dormant 동형).
 //   idle 존 스킵보다 앞(onGameTick 최상단 호출)이라 무인 존에서도 진행 — econ과 이격 없음.
 // T1182: 시계나 장부 L 대신 살아 있는 실제 상인의 구간 끝을 본다.
-function _t1182Flush(now) {
-  if(!T762_CARAVAN_BODY || state.tickJobs || state._t731 || !state.world || !state.econV2)return;
-  const w=state.world,events=state.econV2.flushCaravanBodies(w,w.day+_econDayFrac(now));
-  if(events.length)_t1034Mark('body');
-  const pending=state._t1182Pending || (state._t1182Pending=new Map());
-  for(const e of events)if(!e.c._done)pending.set(e.c.id,e.c);
-  if(!events.length && !pending.size)return;
-  const S=_caravanSyncNew();S.seen=new Set(w.caravans.map(c=>c.id));
-  _t1182SyncPending(pending,c=>_caravanSyncOne(now,c,S,TB.slice(TICK_SLICE_MS)));
-  _caravanSyncSweep(S);
-}
-function _t1182SyncPending(pending,step) {
-  for(const [id,c]of pending){
-    if(!c._done && step(c)==='retry')break; // 공유 A* 슬롯은 끝낼 때까지 첫 쌍이 쥔다.
-    pending.delete(id);
-  }
-}
 function _t1182BodyReady(c, leg) {
   const body = state.caravanBodies && state.caravanBodies.get(c.id);
   const p = body && state.deps.players.get(body.pid);
@@ -8529,7 +8512,7 @@ function onGameTick(now) {
     // Stage 4B: 캐러밴 실체 30Hz 전진 — zone.js idle 존 스킵보다 앞(호출 위치)이라 무인 존에서도 econ과 동행.
     //   도착 임박 가드가 아래 경계 econ 틱보다 먼저 돌아 'econ이 몸을 앞지르는' 순서 역전이 없다.
     if (T1136_ON && !T762_CARAVAN_BODY && state.ready && state.world && !state._t731) { try { _t1136Clock(now); } catch (e) { console.error(`[${state.zoneId}] 🐂 [T1136] 몸 시계 실패:`, e.message); } }   // ★[T1136] 몸 시계 — 몸 틱 바로 앞 · 지금까지 닿은 바구니 사건(몸이 없어도 econ 은 그 시각에 · 마감 중 · 현지 자정 창 안엔 안 부른다 · 끔 = 이 줄 무동작)
-    try { tickCaravanBodies(now); _t1182Flush(now); } catch (e) { console.error(`[${state.zoneId}] 🐂 캐러밴 실체 틱 실패:`, e.message); }
+    try { tickCaravanBodies(now); } catch (e) { console.error(`[${state.zoneId}] 🐂 캐러밴 실체 틱 실패:`, e.message); }
     // ★[T590] 줄어드는 몸 — 누운 몸의 시간 · 걸어 나가는 몸의 걸음(캐러밴 곁 · 같은 마감 정지)
     try { tickBodyExits(now); } catch (e) { console.error(`[${state.zoneId}] 🪦 줄어드는 몸 틱 실패:`, e.message); }
     // P2: 실체 전투 30Hz 스텝 — 캐러밴 직후(설계 위치). 무인 존에서도 진행 중 전투 완주(idle 스킵보다 앞).
@@ -9259,7 +9242,7 @@ function _drainTickJobs(now) {
   { const fd = Date.now() - f0; if (fd > (C.frameMax || 0)) C.frameMax = fd; }
   if (J.length) return;                       // 아직 마감 중 — 다음 프레임에 이어서
   state.tickJobs = null; state.tickCtx = null;
-  if (T762_CARAVAN_BODY) { const at=Date.now(); tickCaravanBodies(at); _t1182Flush(at); }
+  if (T762_CARAVAN_BODY) { const at=Date.now(); tickCaravanBodies(at); }
   // ★먼저 푼다 — 안 그러면 방류된 요청이 도로 큐에 걸린다
   if (_T732_ON) { const G = _t732Gran(); if (G) { try { G.sync(state.world && state.world.villages); } catch (e) { console.error(`[${state.zoneId}] 🧺 [T732] 곳간 장부 맞대기 실패:`, e.message); } G.tickEnd(); } }   // ★[T732] 마감 끝 — 새 칸 감싸기 · 장부 합 = 곳간 값 맞대기(어긋남은 센다)
   if (C.t690) { _t690Closed(C); _drainVillageWaitQ(); return; }   // ★[T690] 위상 조각(생활층만) — 하루 마감 꼬리(`_closeDay` 로그·계측)는 경계 마감만
@@ -16049,7 +16032,7 @@ module.exports = { t1144Stat: () => Object.assign({ on: T1144_LIFE_EVENT, verify
       get L_WATERGAP() { return L_WATERGAP; },
       get TASKS_PER_FARMER() { return _lifeTasksPerFarmerDay(); },
     },
-    _caravanBodyProbe: { on: T762_CARAVAN_BODY, pack: _t1034Pack, restore: _t1034Apply, ready: _t1182BodyReady, tick: tickCaravanBodies, pts: setBodyPts, walk: _t1182Walk, returnLeg: startReturnLeg, linger: _t707Linger, sweep: _caravanSyncSweep, openMarket: _t707Open, syncPending: _t1182SyncPending, sendXz: _xzSend, afterSendXz: _xzAfterSend },
+    _caravanBodyProbe: { on: T762_CARAVAN_BODY, pack: _t1034Pack, restore: _t1034Apply, ready: _t1182BodyReady, tick: tickCaravanBodies, pts: setBodyPts, walk: _t1182Walk, returnLeg: startReturnLeg, linger: _t707Linger, sweep: _caravanSyncSweep, openMarket: _t707Open, sendXz: _xzSend, afterSendXz: _xzAfterSend },
     _distProbe: {
       compute: (reason, opts) => computeAndInjectDistMatrix(reason, opts),
       gen: (reason, opts) => _distMatrixGen(reason, opts),   // ★[T957] 하네스가 한 양보씩 민다(`test-distmatrix` ⑥)

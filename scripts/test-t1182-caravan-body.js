@@ -57,7 +57,7 @@ ok(cb.pts===marketPts && P.ready(convoy,'market'),'머묾은 도착한 왕로 �
 p.x+=10;ok(!P.ready(convoy,'market'),'머묾 상태만으로 실제 마당 밖 몸이 정산할 수 없다');p.x=64;
 cb.c._t707={give:1};S._t731={};S.econV2={settleMarketsV2:()=>{throw new Error('혼합 마감 중 정산');}};
 P.returnLeg(cb,Date.now());ok(cb.phase==='linger' && !!cb.c._t707,'현지 자정 창에서는 몸 틱이 장 정산을 앞당기지 않는다');
-S._t731=null;S.tickJobs=[()=>{}];P.returnLeg(cb,Date.now());ok(!!cb.c._t707,'마감 조각 중에도 장 정산 대기');S.tickJobs=null;S.econV2=E;
+S._t731=null;S.tickJobs=[()=>{}];P.returnLeg(cb,Date.now());ok(!!cb.c._t707,'마감 조각 중에도 장 정산 대기');S.tickJobs=null;P.returnLeg(cb,Date.now());ok(!!cb.c._t707,'마감 밖에서도 정산은 실제 몸을 확인하는 기존 하루 머리를 기다린다');S.econV2=E;
 cb.phase='inbound';delete cb.c._t707;
 const mw={caravans:[{_t707:{give:1}}],caravanBodyReady:()=>false};
 ok(E.settleMarketsV2(mw)===0 && mw.caravans[0]._t707,'장이 끝나지 않은 몸의 정산을 머리 틱이 앞지르지 않는다');
@@ -68,8 +68,6 @@ for(let i=0;i<12;i++)E.tickWorldV2(bw);
 ok(bw.caravans.some(x=>x.basket),'바구니 시험도 실제 캐러밴이 선다');ok(bw.tradeLog.length===0,'바구니 사건 시계도 몸 없으면 정산하지 않는다');
 S.villages=[];S.world.caravans=[];cb.c._xzHandedBack=true;cb.c._done=true;P.sweep({seen:new Set(),spawned:0,arrived:0,removed:0});
 ok(S.caravanBodies.has(convoy.id),'경계 귀환 기록을 보낸 뒤에도 인수 확인 전까지 실제 몸을 보존한다');
-const pend=new Map([[1,{id:1}],[2,{id:2}]]),calls=[];P.syncPending(pend,c=>{calls.push(c.id);return 'retry';});
-ok(calls.join(',')==='1' && pend.size===2,'첫 경로 retry 뒤 다른 쌍이 공유 경로 작업을 끊지 않는다');P.syncPending(pend,c=>calls.push(c.id));ok(calls.join(',')==='1,1,2' && pend.size===0,'같은 첫 경로가 끝난 뒤 다음 쌍을 처리한다');
 const transfer={id:901,state:'xzone',from:a,to:b},record={id:901,kind:'arrive',toZone:'nippon',giveRes:'wood',giveAmt:2};
 S.world.caravans=[transfer];S.caravanBodies=new Map();S.xzone={track:new Map(),trace:[],st:{sent:0,sentOk:0,crossArrive:0,bodyOut:0}};
 S.caravanBodies.set(901,{pid:p.pid,c:transfer,escorts:[]});
