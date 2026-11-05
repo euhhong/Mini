@@ -98,7 +98,8 @@ const T1039_BODY = (() => { const v = typeof process !== 'undefined' && !!proces
 //     ③ 은거지 곁 일과 — 밤은 은거지에서 잠(`취침`) · 아침 창(농부 출근 창 `SCH_FARMW_R` 그 수)엔 단 비축이 그날 끼니를 댔으면 은거지에서 `식사` · 낮은 종전 배회(일터 = 은거지 둘레).
 //        끼니 양은 종전 유지비 줄(`BDT_UPKEEP` × n) 그대로 — 몸은 그 사실을 보일 뿐이다(econ 사본 0 · 호스트 `t1078Life` · 존 `decideNpcBehavior` 문).
 //   새 수 0 · 주사위 새 흐름 0 · econ(sim/) 무접촉.
-const T1078_ALL = typeof process !== 'undefined' && !!process.env && process.env.T1078_BANDIT_ALL === '1';
+// [T1184] 켬 기본 · 세 팔 모두 명시적 =0 으로 되돌린다.
+const T1078_ALL = !(typeof process !== 'undefined' && process.env && process.env.T1078_BANDIT_ALL === '0');
 const T1039_WALK = T1039_BODY === 'walk' || T1078_ALL, T1039_SPAWN = T1039_BODY === 'spawn' && !T1078_ALL;
 // ★★[T1079 2026-11-02 · ★재민 11-02 판정대기 문 4 = ⓑ "은거지에 더미로 남는다" · 문 4-b = PM ㄱ "약탈 전투가 무기를 읽는다"] **은거지 = 실제 시설 · 짐 더미** — 손잡이 `T1079_BANDIT_CAMP`('1' 만 켬 · 끔 = 아래 갈래 줄이 하나도 안 닿는다 = 종전 글자).
 //   ★T1078 켬 위에서만 선다(`T1078_BANDIT_ALL=1` 이 없으면 이 손잡이는 무동작 — 몸 없는 단에 시설만 서지 않게 · 회부).
@@ -113,7 +114,7 @@ const T1039_WALK = T1039_BODY === 'walk' || T1078_ALL, T1039_SPAWN = T1039_BODY 
 //      `t765Join` — 출생 자리를 그 몸이 받는다 · 새 몸 0). 주민 될 사람 기록(econ 항목)은 단이 된 날 econ 에서 빠진 그 항목이다(해체 · 이탈 — `g.npc1079` · 사본 0).
 //   ⑤ econ `_raidScrum` 도적 atk: 호스트 `world.banditArmed`(켬만 설치) = 손에 든 무기 수(`armsHeld`) → 든 사람 atk = 토벌 · 호위 식 `_escAtk` 그대로 · 맨손 = 그 식의 무기 0.
 //   새 수 0 · 주사위 새 흐름 0.
-const T1079_CAMP = T1078_ALL && typeof process !== 'undefined' && !!process.env && process.env.T1079_BANDIT_CAMP === '1';
+const T1079_CAMP = T1078_ALL && !(typeof process !== 'undefined' && process.env && process.env.T1079_BANDIT_CAMP === '0');
 // ★★[T1104 2026-11-03 · ★재민 11-02 "추상 아니지?"] **약탈 · 토벌을 맵 위 사건으로** — 손잡이 `T1104_BANDIT_WALK`('1' 만 켬 · 끔 = 아래 갈래 줄이 하나도 안 닿는다 = 종전 글자).
 //   ★T1078 · T1079 켬 위에서만 선다(`T1078_BANDIT_ALL=1 T1079_BANDIT_CAMP=1` 이 없으면 무동작 — 몸 · 더미가 없는 단에 걸음만 서지 않게).
 //   ① 약탈: 단은 은거지에 있다가 길목 표(`S.pairs` — 그 쌍의 첫 단 = econ 이 고르던 그 단)에 든 캐러밴이 길을 떠나면 그 길에서 은거지에 가장 가까운 정점(길목)으로
@@ -125,7 +126,7 @@ const T1079_CAMP = T1078_ALL && typeof process !== 'undefined' && !!process.env 
 //      닿은 날 단이 은거지에 있으면 종전 식(Lanchester)으로 은거지에서 싸운다(단이 길목에 나가 있으면 돌아올 때까지 은거지에서 기다린다) · 원정 전사는 그 자리에 쓰러진다.
 //      이겨서 단이 무너지면 산 원정 몸이 짐 더미를 싣는다(T466 노획 문 `_warLootLoad` — 몸마다 `CAP_KG`) · 집으로 걸어 와 곳간에 내린다(T423 내려놓기 문 `lootGive`) · 못 실은 것은 더미에 남는다.
 //   새 수 0 · 주사위 새 흐름 0(econ 약탈은 그 판의 `v1.srand` 차례 · 토벌은 종전 `_rb` 그대로).
-const T1104_WALK = T1079_CAMP && typeof process !== 'undefined' && !!process.env && process.env.T1104_BANDIT_WALK === '1';
+const T1104_WALK = T1079_CAMP && !(typeof process !== 'undefined' && process.env && process.env.T1104_BANDIT_WALK === '0');
 const T577_RAMP = process.env.T577_RAMP !== '0';   // ★[T577 추신] 기본 켬
 function _t577Hash(name) { let h = 0; const s = String(name || ''); for (let i = 0; i < s.length; i++) h = (Math.imul(h, 31) + s.charCodeAt(i)) | 0; return h >>> 0; }
 function _bdtOpenDay(vil) {   // 이 마을의 보호기가 끝나는 날(끔이면 모두 BDT_MIN_DAY — 종전) · ★[T984] 이 날부터 그 마을이 해체 · 절망 이탈 문을 탄다(소굴 습격은 이 날과 무관)

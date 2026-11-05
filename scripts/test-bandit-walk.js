@@ -209,9 +209,10 @@ if (SUB) {   // ── 아이 판 — 손잡이는 모듈 적재 때 읽는다(e
 let pass = 0, fail = 0;
 const ok = (c, m, x) => { c ? pass++ : fail++; console.log((c ? '  ✓ ' : '  ✗ ') + m + (x !== undefined && x !== '' ? `  ${x}` : '')); };
 function sub(name, on, bait) {
-  const env = Object.assign({}, process.env, { T1104_SUB: name, BANDIT_MINDAY: '1', T1078_BANDIT_ALL: '1', T1079_BANDIT_CAMP: '1' });
-  delete env.T1104_BANDIT_WALK; delete env.T1039_BANDIT_BODY; delete env.VILLAGE_NPC_CAP; delete env.T1104_BAIT; delete env.BANDIT_FIXTURE; delete env.T476_PUNITIVE; delete env.T521_GANG_ARMS;
-  if (on === 'only') { env.T1104_BANDIT_WALK = '1'; delete env.T1079_BANDIT_CAMP; }
+  const env = Object.assign({}, process.env, { T627_TRIP_DAY: '0', T1104_SUB: name, BANDIT_MINDAY: '1', T1078_BANDIT_ALL: '1', T1079_BANDIT_CAMP: '1' });
+  env.T1104_BANDIT_WALK = '0'; delete env.T1039_BANDIT_BODY; delete env.VILLAGE_NPC_CAP; delete env.T1104_BAIT; delete env.BANDIT_FIXTURE; delete env.T476_PUNITIVE; delete env.T521_GANG_ARMS;
+  if (on === 'only') { env.T1104_BANDIT_WALK = '1'; env.T1079_BANDIT_CAMP = '0'; }
+  else if (on === 'default') delete env.T1104_BANDIT_WALK;
   else if (on) env.T1104_BANDIT_WALK = typeof on === 'string' ? on : '1';
   if (bait) env.T1104_BAIT = bait;
   const o = execFileSync(process.execPath, [__filename], { env, encoding: 'utf8', maxBuffer: 64 << 20 });
@@ -229,7 +230,7 @@ console.log('\n=== T1104 — 약탈 · 토벌 = 맵 위 사건(손잡이 `T1104_
 {
   const code = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8').split('\n').map((l) => l.replace(/\/\/.*$/, '')).join('\n');
   const BD = code('server/bandits.js'), V2 = code('sim/economy-sim-v2.js'), VS = code('server/villages.js');
-  ok(/const T1104_WALK = T1079_CAMP && typeof process !== 'undefined' && !!process\.env && process\.env\.T1104_BANDIT_WALK === '1';/.test(BD), "정적 · 손잡이 하나(`'1'` 만 켬) · T1078 · T1079 켬 위에서만 선다");
+  ok(BD.includes("const T1104_WALK = T1079_CAMP && !(typeof process !== 'undefined' && process.env && process.env.T1104_BANDIT_WALK === '0');"), "정적 · 손잡이 하나(`'1'` 만 켬) · T1078 · T1079 켬 위에서만 선다");
   const num = /[^\w.'"`](?:[2-9]|\d{2,})(?:\.\d+)?(?![\w])/;
   const a = BD.indexOf('function _t1104St('), b = BD.indexOf('function t1104('), blk = BD.slice(a, b).replace(/'[^']*'|`[^`]*`/g, '').replace(/SZ \/ 2/g, '');
   ok(a > 0 && b > a && !num.test(blk), '정적 · T1104 문 덩이(bandits)에 새 수 0(0 · 1 · 반 칸 `SZ / 2` 말고 수 글자 없음)', a > 0 && b > a ? (blk.match(num) || [''])[0] : '덩이 없음');
@@ -290,7 +291,7 @@ ok(RO && RF && MO && MF && SO && SF && WO, '[전제] 일곱 판이 다 돌았다
 // ── 손잡이 그 밖 값 · 홀로 ──
 {
   const z = sub('raid', '0'), strip = (o) => JSON.stringify(Object.assign({}, o, { on: null, A: Object.assign({}, o.A, { perf: null }) }));
-  ok(z && z.on === false && strip(z) === strip(RF), "ⓐ 손잡이 그 밖 값(`'0'`) = 손잡이 없음 — 판 결과 JSON 바이트 같음", `${strip(z).length}B`);
+  ok(z && z.on === false && strip(z) === strip(RF), "ⓐ 명시적 `'0'` = 종전 끔 — 판 결과 JSON 바이트 같음", `${strip(z).length}B`);
   const only = sub('raid', 'only');
   ok(only && only.on === false && !only.meetHook && only.raids.length && only.raids[0].at === 'arrive', 'ⓐ T1079 없이 T1104 만 — 무동작(T1078 · T1079 켬 위에서만 선다)');
 }
@@ -303,5 +304,7 @@ ok(RO && RF && MO && MF && SO && SF && WO, '[전제] 일곱 판이 다 돌았다
   const b3 = sub('sup', true, 'nodraft');
   ok(b3 && !supWalks(b3), 'ⓑ 미끼 `nodraft`(원정 뽑기 문을 뗀다) — ② “원정 몸이 걷는다”가 빨개진다', b3 && b3.A.ev.go ? `몸 ${b3.A.ev.go.pids.length}` : '');
 }
+
+{ const clean = o => JSON.stringify(o, (k,v) => k === 'perf' ? null : v); ok(clean(sub('raid', 'default')) === clean(sub('raid', true)), '[T1184] 미설정 기본 = 명시적 켬(몸·더미·걸음 결과)'); }
 console.log(`\n결과: ${fail ? 'FAIL' : 'PASS'} (${pass} 통과 · ${fail} 실패)`);
 process.exit(fail ? 1 : 0);
