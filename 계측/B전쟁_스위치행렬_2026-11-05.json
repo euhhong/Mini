@@ -7423,7 +7423,7 @@
         "requiresSurrenderRerun": false
       },
       "all": {
-        "sourceHead": "a05c2ebae621075ba5fda4fac22a45cf49bc08a6",
+        "sourceHead": "c2bec2b4adaa17eb39c8eed723d169efc8ab0d59",
         "versusControl": {
           "1020": {
             "sameDailyFingerprint": false,
@@ -7481,8 +7481,8 @@
               "T577_PORT_BASE": "52000"
             },
             "exit": 1,
-            "wallSec": 1206.142,
-            "cpuUs": 891602706
+            "wallSec": 1463.848,
+            "cpuUs": 962263622
           },
           "seeds": [
             {
@@ -7711,22 +7711,22 @@
               7,
               42
             ],
-            "sec": 1206,
+            "sec": 1464,
             "per": {
               "7": {
                 "seed": 7,
                 "code": 0,
-                "sec": 79
+                "sec": 83
               },
               "42": {
                 "seed": 42,
                 "code": 0,
-                "sec": 79
+                "sec": 82
               },
               "1020": {
                 "seed": 1020,
                 "code": 0,
-                "sec": 1048
+                "sec": 1298
               }
             },
             "res": {
@@ -7751,58 +7751,58 @@
         "server800": {
           "seed": 1020,
           "days": 800,
-          "population": 5562,
+          "population": 5442,
           "empty": 0,
           "dissolved": 0,
-          "deadTot": 1980,
+          "deadTot": 2086,
           "starvationDeaths": 486,
           "bodyExit": {
             "died": {
               "starve": 0,
-              "old": 69
+              "old": 155
             },
             "walk": {
               "bandit": 0,
               "desert": 1,
-              "move": 1635
+              "move": 1637
             },
             "other": {
               "expedition": 0,
-              "road": 1,
-              "unknown": 5332
+              "road": 19,
+              "unknown": 4918
             },
             "rot": 0,
-            "arrive": 4133,
-            "straight": 4,
+            "arrive": 3851,
+            "straight": 0,
             "lost": 0,
             "vanish": 0,
-            "noted": 2228,
-            "trimmed": 2157,
-            "lying": 69,
-            "walking": 1202
+            "noted": 2370,
+            "trimmed": 2195,
+            "lying": 155,
+            "walking": 1089
           },
           "bandit": {
             "conv": 0,
-            "exo": 18,
-            "starve": 25,
-            "disband": 13,
-            "denForm": 15,
-            "loot": 238,
+            "exo": 19,
+            "starve": 23,
+            "disband": 12,
+            "denForm": 14,
+            "loot": 271,
             "peak": 3
           },
           "war": null,
           "eight": {
-            "pop": 5562,
+            "pop": 5442,
             "dead": 0,
             "ever": 51,
-            "weapQ": 606,
-            "expand": 3030,
-            "board": 4010,
-            "toolQ": 6995,
+            "weapQ": 697,
+            "expand": 2943,
+            "board": 3951,
+            "toolQ": 7573.2,
             "preserve": 0,
-            "grain": 26322
+            "grain": 28781.9
           },
-          "payloadSha256": "72d58c4258e0552faef2e5ed384edc512c71c248cd190754d09b6549730f7eb3"
+          "payloadSha256": "c633fffbf3bc7bce074011161ba87499b1c15ce2c4bd1ceb629995cb72347d7f"
         },
         "server800Cost": {
           "tag": "all-server800",
@@ -7834,13 +7834,13 @@
             "T577_PORT_BASE": "52000",
             "T400_BUILD_ACT": "0",
             "VILLAGE_CARAVAN_MAX": "0",
-            "T577_DIR": "/tmp/t1183-surrender-results/all/server800",
+            "T577_DIR": "/tmp/t1183-route-results/all/server800",
             "T577_PAR": "1",
             "T577_TAG": "all"
           },
           "exit": 0,
-          "wallSec": 5849.241,
-          "cpuUs": 3856917997
+          "wallSec": 4094.685,
+          "cpuUs": 2677465165
         },
         "labs": {
           "1020": {
@@ -7888,13 +7888,13 @@
                 "T826_LOOT_BODY": "1",
                 "T1168_SORTIE_AMMO": "1",
                 "T577_PORT_BASE": "52000",
-                "T17_JSON": "/tmp/t1183-surrender-results/all/lab-1020.json",
-                "LAB_SEEDCACHE": "/tmp/t1183-surrender-results/all/lab-1020.seedcache.json",
-                "DB_PATH": "/tmp/t1183-surrender-results/all/lab-1020.db"
+                "T17_JSON": "/tmp/t1183-route-results/all/lab-1020.json",
+                "LAB_SEEDCACHE": "/tmp/t1183-route-results/all/lab-1020.seedcache.json",
+                "DB_PATH": "/tmp/t1183-route-results/all/lab-1020.db"
               },
               "exit": 0,
-              "wallSec": 300.165,
-              "cpuUs": 265080499
+              "wallSec": 345.917,
+              "cpuUs": 279271941
             }
           },
           "7": {
@@ -7942,13 +7942,13 @@
                 "T826_LOOT_BODY": "1",
                 "T1168_SORTIE_AMMO": "1",
                 "T577_PORT_BASE": "52000",
-                "T17_JSON": "/tmp/t1183-surrender-results/all/lab-7.json",
-                "LAB_SEEDCACHE": "/tmp/t1183-surrender-results/all/lab-7.seedcache.json",
-                "DB_PATH": "/tmp/t1183-surrender-results/all/lab-7.db"
+                "T17_JSON": "/tmp/t1183-route-results/all/lab-7.json",
+                "LAB_SEEDCACHE": "/tmp/t1183-route-results/all/lab-7.seedcache.json",
+                "DB_PATH": "/tmp/t1183-route-results/all/lab-7.db"
               },
               "exit": 0,
-              "wallSec": 289.605,
-              "cpuUs": 253876495
+              "wallSec": 334.453,
+              "cpuUs": 268559728
             }
           },
           "42": {
@@ -7996,18 +7996,18 @@
                 "T826_LOOT_BODY": "1",
                 "T1168_SORTIE_AMMO": "1",
                 "T577_PORT_BASE": "52000",
-                "T17_JSON": "/tmp/t1183-surrender-results/all/lab-42.json",
-                "LAB_SEEDCACHE": "/tmp/t1183-surrender-results/all/lab-42.seedcache.json",
-                "DB_PATH": "/tmp/t1183-surrender-results/all/lab-42.db"
+                "T17_JSON": "/tmp/t1183-route-results/all/lab-42.json",
+                "LAB_SEEDCACHE": "/tmp/t1183-route-results/all/lab-42.seedcache.json",
+                "DB_PATH": "/tmp/t1183-route-results/all/lab-42.db"
               },
               "exit": 0,
-              "wallSec": 297.663,
-              "cpuUs": 262978960
+              "wallSec": 342.975,
+              "cpuUs": 278780002
             }
           }
         },
-        "requiresSurrenderRerun": false,
-        "requiresStaleRerun": true
+        "requiresStaleRerun": false,
+        "requiresSurrenderRerun": false
       }
     },
     "beforeSurrenderFix": {
@@ -10317,6 +10317,156 @@
           "wallSec": 270.483,
           "cpuUs": 280111412,
           "log": "/tmp/t1183-route-results/T790_NO_SNAP-lab-42.log"
+        },
+        {
+          "tag": "all-server800",
+          "limitSec": 7200,
+          "args": [
+            "scripts/t577-server-run.js",
+            "800",
+            "1020"
+          ],
+          "env": {
+            "T790_NO_SNAP": "1",
+            "T1041_WAR_BODY": "1",
+            "T811_ARMS_BODY": "1",
+            "T449_BODY_DAY": "1",
+            "T491_BATCH_FROM_BODY": "1",
+            "T561_ROSTER_BODY": "1",
+            "T502_ODDS_REAL": "1",
+            "T815_DRAFT_FAMINE": "1",
+            "T941_BATTLE_DAY": "1",
+            "T627_TRIP_DAY": "1",
+            "T1078_BANDIT_ALL": "0",
+            "T1079_BANDIT_CAMP": "0",
+            "T1104_BANDIT_WALK": "0",
+            "T1159_HOME_N": "0",
+            "T1076_ARMY_MORALE": "1",
+            "T466_LOOT_ACT": "1",
+            "T826_LOOT_BODY": "1",
+            "T1168_SORTIE_AMMO": "1",
+            "T577_PORT_BASE": "52000",
+            "T400_BUILD_ACT": "0",
+            "VILLAGE_CARAVAN_MAX": "0",
+            "T577_DIR": "/tmp/t1183-route-results/all/server800",
+            "T577_PAR": "1",
+            "T577_TAG": "all"
+          },
+          "exit": 0,
+          "wallSec": 4094.685,
+          "cpuUs": 2677465165,
+          "log": "/tmp/t1183-route-results/all-server800.log"
+        },
+        {
+          "tag": "all-lab-7",
+          "limitSec": 7200,
+          "args": [
+            "scripts/t17-metrics.js",
+            "800",
+            "7"
+          ],
+          "env": {
+            "T790_NO_SNAP": "1",
+            "T1041_WAR_BODY": "1",
+            "T811_ARMS_BODY": "1",
+            "T449_BODY_DAY": "1",
+            "T491_BATCH_FROM_BODY": "1",
+            "T561_ROSTER_BODY": "1",
+            "T502_ODDS_REAL": "1",
+            "T815_DRAFT_FAMINE": "1",
+            "T941_BATTLE_DAY": "1",
+            "T627_TRIP_DAY": "1",
+            "T1078_BANDIT_ALL": "0",
+            "T1079_BANDIT_CAMP": "0",
+            "T1104_BANDIT_WALK": "0",
+            "T1159_HOME_N": "0",
+            "T1076_ARMY_MORALE": "1",
+            "T466_LOOT_ACT": "1",
+            "T826_LOOT_BODY": "1",
+            "T1168_SORTIE_AMMO": "1",
+            "T577_PORT_BASE": "52000",
+            "T17_JSON": "/tmp/t1183-route-results/all/lab-7.json",
+            "LAB_SEEDCACHE": "/tmp/t1183-route-results/all/lab-7.seedcache.json",
+            "DB_PATH": "/tmp/t1183-route-results/all/lab-7.db"
+          },
+          "exit": 0,
+          "wallSec": 334.453,
+          "cpuUs": 268559728,
+          "log": "/tmp/t1183-route-results/all-lab-7.log"
+        },
+        {
+          "tag": "all-lab-42",
+          "limitSec": 7200,
+          "args": [
+            "scripts/t17-metrics.js",
+            "800",
+            "42"
+          ],
+          "env": {
+            "T790_NO_SNAP": "1",
+            "T1041_WAR_BODY": "1",
+            "T811_ARMS_BODY": "1",
+            "T449_BODY_DAY": "1",
+            "T491_BATCH_FROM_BODY": "1",
+            "T561_ROSTER_BODY": "1",
+            "T502_ODDS_REAL": "1",
+            "T815_DRAFT_FAMINE": "1",
+            "T941_BATTLE_DAY": "1",
+            "T627_TRIP_DAY": "1",
+            "T1078_BANDIT_ALL": "0",
+            "T1079_BANDIT_CAMP": "0",
+            "T1104_BANDIT_WALK": "0",
+            "T1159_HOME_N": "0",
+            "T1076_ARMY_MORALE": "1",
+            "T466_LOOT_ACT": "1",
+            "T826_LOOT_BODY": "1",
+            "T1168_SORTIE_AMMO": "1",
+            "T577_PORT_BASE": "52000",
+            "T17_JSON": "/tmp/t1183-route-results/all/lab-42.json",
+            "LAB_SEEDCACHE": "/tmp/t1183-route-results/all/lab-42.seedcache.json",
+            "DB_PATH": "/tmp/t1183-route-results/all/lab-42.db"
+          },
+          "exit": 0,
+          "wallSec": 342.975,
+          "cpuUs": 278780002,
+          "log": "/tmp/t1183-route-results/all-lab-42.log"
+        },
+        {
+          "tag": "all-lab-1020",
+          "limitSec": 7200,
+          "args": [
+            "scripts/t17-metrics.js",
+            "800",
+            "1020"
+          ],
+          "env": {
+            "T790_NO_SNAP": "1",
+            "T1041_WAR_BODY": "1",
+            "T811_ARMS_BODY": "1",
+            "T449_BODY_DAY": "1",
+            "T491_BATCH_FROM_BODY": "1",
+            "T561_ROSTER_BODY": "1",
+            "T502_ODDS_REAL": "1",
+            "T815_DRAFT_FAMINE": "1",
+            "T941_BATTLE_DAY": "1",
+            "T627_TRIP_DAY": "1",
+            "T1078_BANDIT_ALL": "0",
+            "T1079_BANDIT_CAMP": "0",
+            "T1104_BANDIT_WALK": "0",
+            "T1159_HOME_N": "0",
+            "T1076_ARMY_MORALE": "1",
+            "T466_LOOT_ACT": "1",
+            "T826_LOOT_BODY": "1",
+            "T1168_SORTIE_AMMO": "1",
+            "T577_PORT_BASE": "52000",
+            "T17_JSON": "/tmp/t1183-route-results/all/lab-1020.json",
+            "LAB_SEEDCACHE": "/tmp/t1183-route-results/all/lab-1020.seedcache.json",
+            "DB_PATH": "/tmp/t1183-route-results/all/lab-1020.db"
+          },
+          "exit": 0,
+          "wallSec": 345.917,
+          "cpuUs": 279271941,
+          "log": "/tmp/t1183-route-results/all-lab-1020.log"
         }
       ],
       "executionPhases": [
@@ -10951,7 +11101,8 @@
               "warSame": true
             }
           },
-          "server800EqualExceptIsolatedPortMetadata": true
+          "server800EqualExceptIsolatedPortMetadata": true,
+          "firstT577DailyRowDifference": null
         },
         "all": {
           "plan": {
@@ -10970,6 +11121,19 @@
               "firstDifference": null,
               "warSame": true
             }
+          },
+          "server800EqualExceptIsolatedPortMetadata": false,
+          "firstT577DailyRowDifference": {
+            "day": 543,
+            "observedDailyFields": [
+              {
+                "metric": "population",
+                "villages": [
+                  "농촌4",
+                  "어촌16"
+                ]
+              }
+            ]
           }
         }
       }
@@ -12563,6 +12727,2109 @@
             "sameDailyFingerprint": true,
             "firstDifference": null,
             "warSame": true
+          }
+        }
+      },
+      "band-all-body-server800": {
+        "cost": {
+          "tag": "band-all-body-server800",
+          "limitSec": 7200,
+          "args": [
+            "scripts/t577-server-run.js",
+            "800",
+            "1020"
+          ],
+          "env": {
+            "T790_NO_SNAP": "1",
+            "T1041_WAR_BODY": "1",
+            "T811_ARMS_BODY": "1",
+            "T449_BODY_DAY": "1",
+            "T491_BATCH_FROM_BODY": "1",
+            "T561_ROSTER_BODY": "1",
+            "T502_ODDS_REAL": "1",
+            "T815_DRAFT_FAMINE": "1",
+            "T941_BATTLE_DAY": "1",
+            "T627_TRIP_DAY": "1",
+            "T1076_ARMY_MORALE": "1",
+            "T466_LOOT_ACT": "1",
+            "T826_LOOT_BODY": "1",
+            "T1168_SORTIE_AMMO": "1",
+            "T1078_BANDIT_ALL": "1",
+            "T1079_BANDIT_CAMP": "0",
+            "T1104_BANDIT_WALK": "0",
+            "T1159_HOME_N": "0",
+            "T577_PORT_BASE": "56000",
+            "T400_BUILD_ACT": "0",
+            "VILLAGE_CARAVAN_MAX": "0",
+            "NODE_OPTIONS": "-r /tmp/act-route-code/scripts/t1078-observe.js -r /tmp/act-route-code/scripts/t1079-observe.js -r /tmp/act-route-code/scripts/t1104-observe.js",
+            "T577_DIR": "/tmp/act-route-followup-results/band-all-body/server800",
+            "T577_PAR": "1",
+            "T577_TAG": "band-all-body"
+          },
+          "exit": 0,
+          "wallSec": 2982.61,
+          "cpuUs": 2086905846
+        },
+        "data": {
+          "seed": 1020,
+          "days": 800,
+          "population": 5328,
+          "empty": 0,
+          "dissolved": 0,
+          "deadTot": 2110,
+          "starvationDeaths": 486,
+          "bodyExit": {
+            "died": {
+              "starve": 0,
+              "old": 16,
+              "bandit_starve": 16,
+              "bandit_other": 33
+            },
+            "walk": {
+              "bandit": 0,
+              "desert": 0,
+              "move": 1780
+            },
+            "other": {
+              "expedition": 0,
+              "road": 17,
+              "unknown": 4933
+            },
+            "rot": 0,
+            "arrive": 3802,
+            "straight": 0,
+            "lost": 0,
+            "vanish": 0,
+            "noted": 2402,
+            "trimmed": 2368,
+            "lying": 65,
+            "walking": 1163
+          },
+          "bandit": {
+            "conv": 0,
+            "exo": 23,
+            "starve": 24,
+            "disband": 13,
+            "denForm": 15,
+            "loot": 274,
+            "peak": 3
+          },
+          "war": null,
+          "eight": {
+            "pop": 5328,
+            "dead": 0,
+            "ever": 51,
+            "weapQ": 565,
+            "expand": 3352,
+            "board": 4140,
+            "toolQ": 7353.7,
+            "preserve": 0,
+            "grain": 24820.5
+          },
+          "payloadSha256": "9775e76368da80ea880aead592dc9599c6dad273f6b9c80560bbe04502f9f670"
+        },
+        "banditObserve": {
+          "t1078": {
+            "ver": 1,
+            "knob": {
+              "T1078_BANDIT_ALL": "1",
+              "T1039_BANDIT_BODY": null,
+              "VILLAGE_NPC_CAP": "1",
+              "VILLAGE_DAY_MS": "250"
+            },
+            "days": 800,
+            "lastDay": 800,
+            "body": {
+              "maxBodies": 17,
+              "maxPersons": 34,
+              "sumBodies": 8441,
+              "sumPersons": 13950,
+              "sumGangs": 1698,
+              "maxGangs": 3,
+              "overDays": 0,
+              "overMax": 0,
+              "shortDays": 421,
+              "shortMax": 18,
+              "maxWalkers": 0,
+              "rows": [
+                {
+                  "day": 50,
+                  "gangs": 3,
+                  "persons": 15,
+                  "bodies": 15,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 75,
+                  "gangs": 3,
+                  "persons": 15,
+                  "bodies": 15,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 100,
+                  "gangs": 3,
+                  "persons": 15,
+                  "bodies": 15,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 125,
+                  "gangs": 3,
+                  "persons": 14,
+                  "bodies": 14,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 150,
+                  "gangs": 2,
+                  "persons": 9,
+                  "bodies": 9,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 175,
+                  "gangs": 1,
+                  "persons": 5,
+                  "bodies": 5,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 200,
+                  "gangs": 2,
+                  "persons": 10,
+                  "bodies": 10,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 225,
+                  "gangs": 3,
+                  "persons": 16,
+                  "bodies": 16,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 250,
+                  "gangs": 3,
+                  "persons": 15,
+                  "bodies": 15,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 275,
+                  "gangs": 2,
+                  "persons": 11,
+                  "bodies": 11,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 300,
+                  "gangs": 2,
+                  "persons": 11,
+                  "bodies": 11,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 325,
+                  "gangs": 2,
+                  "persons": 10,
+                  "bodies": 10,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 350,
+                  "gangs": 2,
+                  "persons": 10,
+                  "bodies": 10,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 375,
+                  "gangs": 2,
+                  "persons": 10,
+                  "bodies": 10,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 400,
+                  "gangs": 2,
+                  "persons": 10,
+                  "bodies": 9,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 1
+                },
+                {
+                  "day": 425,
+                  "gangs": 2,
+                  "persons": 14,
+                  "bodies": 9,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 5
+                },
+                {
+                  "day": 450,
+                  "gangs": 3,
+                  "persons": 23,
+                  "bodies": 13,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 10
+                },
+                {
+                  "day": 475,
+                  "gangs": 2,
+                  "persons": 21,
+                  "bodies": 9,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 12
+                },
+                {
+                  "day": 500,
+                  "gangs": 3,
+                  "persons": 28,
+                  "bodies": 14,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 14
+                },
+                {
+                  "day": 525,
+                  "gangs": 3,
+                  "persons": 30,
+                  "bodies": 14,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 16
+                },
+                {
+                  "day": 550,
+                  "gangs": 2,
+                  "persons": 27,
+                  "bodies": 9,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 18
+                },
+                {
+                  "day": 575,
+                  "gangs": 1,
+                  "persons": 22,
+                  "bodies": 5,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 17
+                },
+                {
+                  "day": 600,
+                  "gangs": 1,
+                  "persons": 21,
+                  "bodies": 5,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 16
+                },
+                {
+                  "day": 625,
+                  "gangs": 3,
+                  "persons": 31,
+                  "bodies": 15,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 16
+                },
+                {
+                  "day": 650,
+                  "gangs": 2,
+                  "persons": 26,
+                  "bodies": 11,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 15
+                },
+                {
+                  "day": 675,
+                  "gangs": 3,
+                  "persons": 31,
+                  "bodies": 16,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 15
+                },
+                {
+                  "day": 700,
+                  "gangs": 2,
+                  "persons": 27,
+                  "bodies": 11,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 16
+                },
+                {
+                  "day": 725,
+                  "gangs": 2,
+                  "persons": 28,
+                  "bodies": 11,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 17
+                },
+                {
+                  "day": 750,
+                  "gangs": 2,
+                  "persons": 24,
+                  "bodies": 11,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 13
+                },
+                {
+                  "day": 775,
+                  "gangs": 2,
+                  "persons": 25,
+                  "bodies": 11,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 14
+                },
+                {
+                  "day": 800,
+                  "gangs": 2,
+                  "persons": 25,
+                  "bodies": 11,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 14
+                }
+              ]
+            },
+            "sup": {
+              "n": 0,
+              "kill": 0,
+              "expDead": 0,
+              "rows": []
+            },
+            "perf": {
+              "dayN": 800,
+              "dayMs": 2462.27,
+              "dayMax": 83.93,
+              "lifeN": 0,
+              "lifeMs": 0,
+              "ticks": 82021,
+              "tickMs": 106272.6,
+              "cpuMs": 2083799,
+              "wallMs": 2982382,
+              "t0": 1793904085891
+            },
+            "errs": [],
+            "bstats": {
+              "gangs": 2,
+              "members": 25,
+              "peak": 3,
+              "conv": 0,
+              "exo": 23,
+              "loot": 274,
+              "lootAmt": 16950.63387400007,
+              "sup": 0,
+              "supDead": 0,
+              "starve": 24,
+              "disband": 13,
+              "dens": 3,
+              "denOcc": 2,
+              "denForm": 15,
+              "denClear": 0,
+              "t1078": {
+                "dead": {
+                  "starve": 16,
+                  "other": 33
+                },
+                "out": 15,
+                "join": 0
+              },
+              "t1075Leave": 1773,
+              "t1080RoadDays": 2225,
+              "t765Arrive": 1773
+            },
+            "t1078": {
+              "on": true,
+              "stat": {
+                "dead": {
+                  "starve": 16,
+                  "other": 33
+                },
+                "out": 15,
+                "join": 0
+              },
+              "gangs": [
+                {
+                  "id": 6,
+                  "n": 19,
+                  "food": 3.8298021156587607,
+                  "bodies": 5,
+                  "walkers": 0
+                },
+                {
+                  "id": 11,
+                  "n": 6,
+                  "food": 121.93896803034336,
+                  "bodies": 6,
+                  "walkers": 0
+                }
+              ]
+            },
+            "bodyExit": {
+              "died": {
+                "starve": 0,
+                "old": 16,
+                "bandit_starve": 16,
+                "bandit_other": 33
+              },
+              "walk": {
+                "bandit": 0,
+                "desert": 0,
+                "move": 1780
+              },
+              "other": {
+                "expedition": 0,
+                "road": 17,
+                "unknown": 4933
+              },
+              "rot": 0,
+              "arrive": 3802,
+              "straight": 0,
+              "lost": 0,
+              "vanish": 0,
+              "noted": 2402,
+              "trimmed": 2368,
+              "lying": 65,
+              "walking": 1163
+            },
+            "t1039Stat": {
+              "depart": 0,
+              "bodied": 0,
+              "bodyless": 0,
+              "joined": 0,
+              "capped": 0,
+              "noBody": 0,
+              "left": 0
+            }
+          },
+          "t1079": {
+            "ver": 1,
+            "knob": {
+              "T1078_BANDIT_ALL": "1",
+              "T1079_BANDIT_CAMP": "0",
+              "T521_GANG_ARMS": null,
+              "VILLAGE_NPC_CAP": "1",
+              "VILLAGE_DAY_MS": "250"
+            },
+            "days": 800,
+            "lastDay": 800,
+            "arms": {
+              "inMax": 0,
+              "lostMax": 0,
+              "lostDays": 0,
+              "firstLost": null,
+              "end": {
+                "day": 800,
+                "inn": 0,
+                "live": 0,
+                "left": 0,
+                "carry": 0,
+                "vil": 0,
+                "lost": 0
+              },
+              "gone": []
+            },
+            "camp": {
+              "pilesMax": 0,
+              "leftMax": 0,
+              "foodMax": 0,
+              "kgMax": 0,
+              "rows": []
+            },
+            "scrum": {
+              "calls": 0,
+              "armed": 0,
+              "men": 0
+            },
+            "perf": {
+              "dayN": 800,
+              "dayMs": 2520.42,
+              "dayMax": 83.97
+            },
+            "errs": [],
+            "t1079": {
+              "on": false,
+              "stat": null,
+              "piles": [],
+              "carry": 0,
+              "walk": 0
+            },
+            "armsLoot": 0
+          },
+          "t1104": {
+            "ver": 1,
+            "knob": {
+              "T1078_BANDIT_ALL": "1",
+              "T1079_BANDIT_CAMP": "0",
+              "T1104_BANDIT_WALK": "0",
+              "VILLAGE_NPC_CAP": "1",
+              "VILLAGE_DAY_MS": "250"
+            },
+            "days": 800,
+            "lastDay": 800,
+            "gangDays": {
+              "camp": 1698,
+              "out": 0,
+              "back": 0
+            },
+            "supMax": 0,
+            "rows": [
+              {
+                "day": 100,
+                "gangs": [
+                  [
+                    1,
+                    4,
+                    null
+                  ],
+                  [
+                    2,
+                    5,
+                    null
+                  ],
+                  [
+                    3,
+                    6,
+                    null
+                  ]
+                ],
+                "sups": 0,
+                "stat": null
+              },
+              {
+                "day": 200,
+                "gangs": [
+                  [
+                    2,
+                    5,
+                    null
+                  ],
+                  [
+                    4,
+                    5,
+                    null
+                  ]
+                ],
+                "sups": 0,
+                "stat": null
+              },
+              {
+                "day": 300,
+                "gangs": [
+                  [
+                    4,
+                    5,
+                    null
+                  ],
+                  [
+                    5,
+                    6,
+                    null
+                  ]
+                ],
+                "sups": 0,
+                "stat": null
+              },
+              {
+                "day": 400,
+                "gangs": [
+                  [
+                    6,
+                    6,
+                    null
+                  ],
+                  [
+                    7,
+                    4,
+                    null
+                  ]
+                ],
+                "sups": 0,
+                "stat": null
+              },
+              {
+                "day": 500,
+                "gangs": [
+                  [
+                    6,
+                    19,
+                    null
+                  ],
+                  [
+                    8,
+                    4,
+                    null
+                  ],
+                  [
+                    9,
+                    5,
+                    null
+                  ]
+                ],
+                "sups": 0,
+                "stat": null
+              },
+              {
+                "day": 600,
+                "gangs": [
+                  [
+                    6,
+                    21,
+                    null
+                  ]
+                ],
+                "sups": 0,
+                "stat": null
+              },
+              {
+                "day": 700,
+                "gangs": [
+                  [
+                    6,
+                    21,
+                    null
+                  ],
+                  [
+                    11,
+                    6,
+                    null
+                  ]
+                ],
+                "sups": 0,
+                "stat": null
+              },
+              {
+                "day": 800,
+                "gangs": [
+                  [
+                    6,
+                    19,
+                    null
+                  ],
+                  [
+                    11,
+                    6,
+                    null
+                  ]
+                ],
+                "sups": 0,
+                "stat": null
+              }
+            ],
+            "errs": [],
+            "on": false,
+            "stat": null,
+            "sups": 0
+          }
+        }
+      },
+      "band-all-body-lab-1020": {
+        "cost": {
+          "tag": "band-all-body-lab-1020",
+          "limitSec": 7200,
+          "args": [
+            "scripts/t17-metrics.js",
+            "800",
+            "1020"
+          ],
+          "env": {
+            "T790_NO_SNAP": "1",
+            "T1041_WAR_BODY": "1",
+            "T811_ARMS_BODY": "1",
+            "T449_BODY_DAY": "1",
+            "T491_BATCH_FROM_BODY": "1",
+            "T561_ROSTER_BODY": "1",
+            "T502_ODDS_REAL": "1",
+            "T815_DRAFT_FAMINE": "1",
+            "T941_BATTLE_DAY": "1",
+            "T627_TRIP_DAY": "1",
+            "T1076_ARMY_MORALE": "1",
+            "T466_LOOT_ACT": "1",
+            "T826_LOOT_BODY": "1",
+            "T1168_SORTIE_AMMO": "1",
+            "T1078_BANDIT_ALL": "1",
+            "T1079_BANDIT_CAMP": "0",
+            "T1104_BANDIT_WALK": "0",
+            "T1159_HOME_N": "0",
+            "T577_PORT_BASE": "56000",
+            "T400_BUILD_ACT": "0",
+            "VILLAGE_CARAVAN_MAX": "0",
+            "NODE_OPTIONS": "-r /tmp/act-route-code/scripts/t1078-observe.js -r /tmp/act-route-code/scripts/t1079-observe.js -r /tmp/act-route-code/scripts/t1104-observe.js",
+            "T577_DIR": "/tmp/act-route-followup-results/band-all-body/server800",
+            "T577_PAR": "1",
+            "T577_TAG": "band-all-body",
+            "T17_JSON": "/tmp/act-route-followup-results/band-all-body/lab-1020.json",
+            "LAB_SEEDCACHE": "/tmp/act-route-followup-results/band-all-body/lab-1020.seedcache.json",
+            "DB_PATH": "/tmp/act-route-followup-results/band-all-body/lab-1020.db"
+          },
+          "exit": 0,
+          "wallSec": 219.157,
+          "cpuUs": 241976681
+        },
+        "data": {
+          "population": 6165,
+          "empty": 0,
+          "starvationDeaths": 299,
+          "base": {
+            "pop": 6165,
+            "dead": 0,
+            "ever": 51,
+            "weapQ": 860,
+            "expand": 4734,
+            "trades": 5000
+          },
+          "payloadSha256": "2a8845620e3c40306287e66e17ef4fae5416efe7c7cfa0a19939d252d5c05118",
+          "sameAsT1168ReferenceExceptObserver": false,
+          "referencePayloadSha256": "fea3a42f4c22ec864429eaeef05b478b14a160820edfbed5ebcaa3664cd12a2a"
+        }
+      },
+      "band-all-body-lab-7": {
+        "cost": {
+          "tag": "band-all-body-lab-7",
+          "limitSec": 7200,
+          "args": [
+            "scripts/t17-metrics.js",
+            "800",
+            "7"
+          ],
+          "env": {
+            "T790_NO_SNAP": "1",
+            "T1041_WAR_BODY": "1",
+            "T811_ARMS_BODY": "1",
+            "T449_BODY_DAY": "1",
+            "T491_BATCH_FROM_BODY": "1",
+            "T561_ROSTER_BODY": "1",
+            "T502_ODDS_REAL": "1",
+            "T815_DRAFT_FAMINE": "1",
+            "T941_BATTLE_DAY": "1",
+            "T627_TRIP_DAY": "1",
+            "T1076_ARMY_MORALE": "1",
+            "T466_LOOT_ACT": "1",
+            "T826_LOOT_BODY": "1",
+            "T1168_SORTIE_AMMO": "1",
+            "T1078_BANDIT_ALL": "1",
+            "T1079_BANDIT_CAMP": "0",
+            "T1104_BANDIT_WALK": "0",
+            "T1159_HOME_N": "0",
+            "T577_PORT_BASE": "56000",
+            "T400_BUILD_ACT": "0",
+            "VILLAGE_CARAVAN_MAX": "0",
+            "NODE_OPTIONS": "-r /tmp/act-route-code/scripts/t1078-observe.js -r /tmp/act-route-code/scripts/t1079-observe.js -r /tmp/act-route-code/scripts/t1104-observe.js",
+            "T577_DIR": "/tmp/act-route-followup-results/band-all-body/server800",
+            "T577_PAR": "1",
+            "T577_TAG": "band-all-body",
+            "T17_JSON": "/tmp/act-route-followup-results/band-all-body/lab-7.json",
+            "LAB_SEEDCACHE": "/tmp/act-route-followup-results/band-all-body/lab-7.seedcache.json",
+            "DB_PATH": "/tmp/act-route-followup-results/band-all-body/lab-7.db"
+          },
+          "exit": 0,
+          "wallSec": 216.472,
+          "cpuUs": 239929018
+        },
+        "data": {
+          "population": 6113,
+          "empty": 0,
+          "starvationDeaths": 283,
+          "base": {
+            "pop": 6113,
+            "dead": 0,
+            "ever": 51,
+            "weapQ": 721,
+            "expand": 3727,
+            "trades": 5000
+          },
+          "payloadSha256": "2f19d5d4ae39388a588dbde02433d0e4bdeca4864f5e5cea0fc263b99a8beae2",
+          "sameAsT1168ReferenceExceptObserver": false,
+          "referencePayloadSha256": "40f8d02cea912c2856ad87b1a5033503e9bdbc45543f467211aa7d40aeb86448"
+        }
+      },
+      "band-all-body-lab-42": {
+        "cost": {
+          "tag": "band-all-body-lab-42",
+          "limitSec": 7200,
+          "args": [
+            "scripts/t17-metrics.js",
+            "800",
+            "42"
+          ],
+          "env": {
+            "T790_NO_SNAP": "1",
+            "T1041_WAR_BODY": "1",
+            "T811_ARMS_BODY": "1",
+            "T449_BODY_DAY": "1",
+            "T491_BATCH_FROM_BODY": "1",
+            "T561_ROSTER_BODY": "1",
+            "T502_ODDS_REAL": "1",
+            "T815_DRAFT_FAMINE": "1",
+            "T941_BATTLE_DAY": "1",
+            "T627_TRIP_DAY": "1",
+            "T1076_ARMY_MORALE": "1",
+            "T466_LOOT_ACT": "1",
+            "T826_LOOT_BODY": "1",
+            "T1168_SORTIE_AMMO": "1",
+            "T1078_BANDIT_ALL": "1",
+            "T1079_BANDIT_CAMP": "0",
+            "T1104_BANDIT_WALK": "0",
+            "T1159_HOME_N": "0",
+            "T577_PORT_BASE": "56000",
+            "T400_BUILD_ACT": "0",
+            "VILLAGE_CARAVAN_MAX": "0",
+            "NODE_OPTIONS": "-r /tmp/act-route-code/scripts/t1078-observe.js -r /tmp/act-route-code/scripts/t1079-observe.js -r /tmp/act-route-code/scripts/t1104-observe.js",
+            "T577_DIR": "/tmp/act-route-followup-results/band-all-body/server800",
+            "T577_PAR": "1",
+            "T577_TAG": "band-all-body",
+            "T17_JSON": "/tmp/act-route-followup-results/band-all-body/lab-42.json",
+            "LAB_SEEDCACHE": "/tmp/act-route-followup-results/band-all-body/lab-42.seedcache.json",
+            "DB_PATH": "/tmp/act-route-followup-results/band-all-body/lab-42.db"
+          },
+          "exit": 0,
+          "wallSec": 290.83,
+          "cpuUs": 239907446
+        },
+        "data": {
+          "population": 5959,
+          "empty": 1,
+          "starvationDeaths": 668,
+          "base": {
+            "pop": 5959,
+            "dead": 1,
+            "ever": 51,
+            "weapQ": 707,
+            "expand": 3413,
+            "trades": 5000
+          },
+          "payloadSha256": "9697e638e5935ea161dcf25361d172caf19fa411f31a5e3a4e90435e736ef9e7",
+          "sameAsT1168ReferenceExceptObserver": false,
+          "referencePayloadSha256": "13ba389e05410ee91651c4186a73ba78455af7cfd2bf1c0b673b95d7e8eade62"
+        }
+      },
+      "band-camp-server800": {
+        "cost": {
+          "tag": "band-camp-server800",
+          "limitSec": 7200,
+          "args": [
+            "scripts/t577-server-run.js",
+            "800",
+            "1020"
+          ],
+          "env": {
+            "T790_NO_SNAP": "1",
+            "T1041_WAR_BODY": "1",
+            "T811_ARMS_BODY": "1",
+            "T449_BODY_DAY": "1",
+            "T491_BATCH_FROM_BODY": "1",
+            "T561_ROSTER_BODY": "1",
+            "T502_ODDS_REAL": "1",
+            "T815_DRAFT_FAMINE": "1",
+            "T941_BATTLE_DAY": "1",
+            "T627_TRIP_DAY": "1",
+            "T1076_ARMY_MORALE": "1",
+            "T466_LOOT_ACT": "1",
+            "T826_LOOT_BODY": "1",
+            "T1168_SORTIE_AMMO": "1",
+            "T1078_BANDIT_ALL": "1",
+            "T1079_BANDIT_CAMP": "1",
+            "T1104_BANDIT_WALK": "0",
+            "T1159_HOME_N": "0",
+            "T577_PORT_BASE": "57000",
+            "T400_BUILD_ACT": "0",
+            "VILLAGE_CARAVAN_MAX": "0",
+            "NODE_OPTIONS": "-r /tmp/act-route-code/scripts/t1078-observe.js -r /tmp/act-route-code/scripts/t1079-observe.js -r /tmp/act-route-code/scripts/t1104-observe.js",
+            "T577_DIR": "/tmp/act-route-followup-results/band-camp/server800",
+            "T577_PAR": "1",
+            "T577_TAG": "band-camp"
+          },
+          "exit": 0,
+          "wallSec": 3499.959,
+          "cpuUs": 2280588761
+        },
+        "data": {
+          "seed": 1020,
+          "days": 800,
+          "population": 5585,
+          "empty": 0,
+          "dissolved": 0,
+          "deadTot": 2127,
+          "starvationDeaths": 437,
+          "bodyExit": {
+            "died": {
+              "starve": 0,
+              "old": 3,
+              "bandit_starve": 18,
+              "bandit_other": 54
+            },
+            "walk": {
+              "bandit": 0,
+              "desert": 6,
+              "move": 1880
+            },
+            "other": {
+              "expedition": 0,
+              "road": 0,
+              "unknown": 4446
+            },
+            "rot": 0,
+            "arrive": 3668,
+            "straight": 11,
+            "lost": 0,
+            "vanish": 0,
+            "noted": 2402,
+            "trimmed": 2397,
+            "lying": 75,
+            "walking": 790
+          },
+          "bandit": {
+            "conv": 0,
+            "exo": 19,
+            "starve": 20,
+            "disband": 17,
+            "denForm": 17,
+            "loot": 258,
+            "peak": 3
+          },
+          "war": null,
+          "eight": {
+            "pop": 5585,
+            "dead": 0,
+            "ever": 51,
+            "weapQ": 562,
+            "expand": 3256,
+            "board": 4218,
+            "toolQ": 7067.8,
+            "preserve": 0,
+            "grain": 27843.9
+          },
+          "payloadSha256": "7a2dd06d050a603dfd56b278b476b62cd59cb8afa9d49f0a475463c0d60e5619"
+        },
+        "banditObserve": {
+          "t1078": {
+            "ver": 1,
+            "knob": {
+              "T1078_BANDIT_ALL": "1",
+              "T1039_BANDIT_BODY": null,
+              "VILLAGE_NPC_CAP": "1",
+              "VILLAGE_DAY_MS": "250"
+            },
+            "days": 800,
+            "lastDay": 800,
+            "body": {
+              "maxBodies": 19,
+              "maxPersons": 24,
+              "sumBodies": 8620,
+              "sumPersons": 10320,
+              "sumGangs": 1535,
+              "maxGangs": 3,
+              "overDays": 0,
+              "overMax": 0,
+              "shortDays": 464,
+              "shortMax": 8,
+              "maxWalkers": 3,
+              "rows": [
+                {
+                  "day": 50,
+                  "gangs": 3,
+                  "persons": 15,
+                  "bodies": 15,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 75,
+                  "gangs": 3,
+                  "persons": 15,
+                  "bodies": 15,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 100,
+                  "gangs": 3,
+                  "persons": 15,
+                  "bodies": 15,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 125,
+                  "gangs": 3,
+                  "persons": 14,
+                  "bodies": 14,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 150,
+                  "gangs": 2,
+                  "persons": 11,
+                  "bodies": 11,
+                  "walkers": 2,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 175,
+                  "gangs": 1,
+                  "persons": 7,
+                  "bodies": 7,
+                  "walkers": 2,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 200,
+                  "gangs": 2,
+                  "persons": 12,
+                  "bodies": 12,
+                  "walkers": 2,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 225,
+                  "gangs": 3,
+                  "persons": 18,
+                  "bodies": 18,
+                  "walkers": 2,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 250,
+                  "gangs": 3,
+                  "persons": 14,
+                  "bodies": 14,
+                  "walkers": 2,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 275,
+                  "gangs": 2,
+                  "persons": 13,
+                  "bodies": 11,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 2
+                },
+                {
+                  "day": 300,
+                  "gangs": 2,
+                  "persons": 13,
+                  "bodies": 11,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 2
+                },
+                {
+                  "day": 325,
+                  "gangs": 2,
+                  "persons": 10,
+                  "bodies": 10,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 350,
+                  "gangs": 1,
+                  "persons": 7,
+                  "bodies": 7,
+                  "walkers": 2,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 375,
+                  "gangs": 2,
+                  "persons": 11,
+                  "bodies": 11,
+                  "walkers": 2,
+                  "over": 0,
+                  "short": 0
+                },
+                {
+                  "day": 400,
+                  "gangs": 3,
+                  "persons": 16,
+                  "bodies": 15,
+                  "walkers": 2,
+                  "over": 0,
+                  "short": 1
+                },
+                {
+                  "day": 425,
+                  "gangs": 2,
+                  "persons": 13,
+                  "bodies": 11,
+                  "walkers": 2,
+                  "over": 0,
+                  "short": 2
+                },
+                {
+                  "day": 450,
+                  "gangs": 2,
+                  "persons": 15,
+                  "bodies": 11,
+                  "walkers": 2,
+                  "over": 0,
+                  "short": 4
+                },
+                {
+                  "day": 475,
+                  "gangs": 2,
+                  "persons": 15,
+                  "bodies": 11,
+                  "walkers": 2,
+                  "over": 0,
+                  "short": 4
+                },
+                {
+                  "day": 500,
+                  "gangs": 2,
+                  "persons": 15,
+                  "bodies": 11,
+                  "walkers": 2,
+                  "over": 0,
+                  "short": 4
+                },
+                {
+                  "day": 525,
+                  "gangs": 3,
+                  "persons": 19,
+                  "bodies": 15,
+                  "walkers": 2,
+                  "over": 0,
+                  "short": 4
+                },
+                {
+                  "day": 550,
+                  "gangs": 2,
+                  "persons": 14,
+                  "bodies": 10,
+                  "walkers": 2,
+                  "over": 0,
+                  "short": 4
+                },
+                {
+                  "day": 575,
+                  "gangs": 1,
+                  "persons": 11,
+                  "bodies": 7,
+                  "walkers": 2,
+                  "over": 0,
+                  "short": 4
+                },
+                {
+                  "day": 600,
+                  "gangs": 1,
+                  "persons": 11,
+                  "bodies": 7,
+                  "walkers": 2,
+                  "over": 0,
+                  "short": 4
+                },
+                {
+                  "day": 625,
+                  "gangs": 2,
+                  "persons": 18,
+                  "bodies": 13,
+                  "walkers": 2,
+                  "over": 0,
+                  "short": 5
+                },
+                {
+                  "day": 650,
+                  "gangs": 2,
+                  "persons": 18,
+                  "bodies": 13,
+                  "walkers": 2,
+                  "over": 0,
+                  "short": 5
+                },
+                {
+                  "day": 675,
+                  "gangs": 2,
+                  "persons": 18,
+                  "bodies": 13,
+                  "walkers": 2,
+                  "over": 0,
+                  "short": 5
+                },
+                {
+                  "day": 700,
+                  "gangs": 2,
+                  "persons": 18,
+                  "bodies": 13,
+                  "walkers": 2,
+                  "over": 0,
+                  "short": 5
+                },
+                {
+                  "day": 725,
+                  "gangs": 2,
+                  "persons": 18,
+                  "bodies": 13,
+                  "walkers": 2,
+                  "over": 0,
+                  "short": 5
+                },
+                {
+                  "day": 750,
+                  "gangs": 2,
+                  "persons": 18,
+                  "bodies": 13,
+                  "walkers": 2,
+                  "over": 0,
+                  "short": 5
+                },
+                {
+                  "day": 775,
+                  "gangs": 1,
+                  "persons": 7,
+                  "bodies": 6,
+                  "walkers": 0,
+                  "over": 0,
+                  "short": 1
+                }
+              ]
+            },
+            "sup": {
+              "n": 0,
+              "kill": 0,
+              "expDead": 0,
+              "rows": []
+            },
+            "perf": {
+              "dayN": 800,
+              "dayMs": 3855.06,
+              "dayMax": 403.75,
+              "lifeN": 0,
+              "lifeMs": 0,
+              "ticks": 96081,
+              "tickMs": 116362.89,
+              "cpuMs": 2277388,
+              "wallMs": 3499776,
+              "t0": 1793904467742
+            },
+            "errs": [],
+            "bstats": {
+              "gangs": 0,
+              "members": 0,
+              "peak": 3,
+              "conv": 0,
+              "exo": 19,
+              "loot": 258,
+              "lootAmt": 18264.908629472367,
+              "sup": 0,
+              "supDead": 0,
+              "starve": 20,
+              "disband": 17,
+              "dens": 3,
+              "denOcc": 0,
+              "denForm": 17,
+              "denClear": 0,
+              "t1079": {
+                "pitch": 17,
+                "adopt": 14,
+                "left": 17,
+                "join": 4,
+                "joinN": 7,
+                "out": 23,
+                "home": 10,
+                "homeBody": 0,
+                "noRec": 12,
+                "hand": 0,
+                "vilArms": 0,
+                "unload": 0,
+                "relink": 0,
+                "lost": 0
+              },
+              "t1078": {
+                "dead": {
+                  "starve": 18,
+                  "other": 54
+                },
+                "out": 0,
+                "join": 0
+              },
+              "t1075Leave": 1871,
+              "t1080RoadDays": 2379,
+              "t765Arrive": 1871
+            },
+            "t1078": {
+              "on": true,
+              "stat": {
+                "dead": {
+                  "starve": 18,
+                  "other": 54
+                },
+                "out": 0,
+                "join": 0
+              },
+              "gangs": []
+            },
+            "bodyExit": {
+              "died": {
+                "starve": 0,
+                "old": 3,
+                "bandit_starve": 18,
+                "bandit_other": 54
+              },
+              "walk": {
+                "bandit": 0,
+                "desert": 6,
+                "move": 1880
+              },
+              "other": {
+                "expedition": 0,
+                "road": 0,
+                "unknown": 4446
+              },
+              "rot": 0,
+              "arrive": 3668,
+              "straight": 11,
+              "lost": 0,
+              "vanish": 0,
+              "noted": 2402,
+              "trimmed": 2397,
+              "lying": 75,
+              "walking": 790
+            },
+            "t1039Stat": {
+              "depart": 0,
+              "bodied": 0,
+              "bodyless": 0,
+              "joined": 0,
+              "capped": 0,
+              "noBody": 0,
+              "left": 0
+            }
+          },
+          "t1079": {
+            "ver": 1,
+            "knob": {
+              "T1078_BANDIT_ALL": "1",
+              "T1079_BANDIT_CAMP": "1",
+              "T521_GANG_ARMS": null,
+              "VILLAGE_NPC_CAP": "1",
+              "VILLAGE_DAY_MS": "250"
+            },
+            "days": 800,
+            "lastDay": 800,
+            "arms": {
+              "inMax": 0,
+              "lostMax": 0,
+              "lostDays": 0,
+              "firstLost": null,
+              "end": {
+                "day": 800,
+                "inn": 0,
+                "live": 0,
+                "left": 0,
+                "carry": 0,
+                "vil": 0,
+                "lost": 0
+              },
+              "gone": []
+            },
+            "camp": {
+              "pilesMax": 3,
+              "leftMax": 3,
+              "foodMax": 819.5,
+              "kgMax": 573.65,
+              "rows": [
+                {
+                  "day": 50,
+                  "piles": [
+                    [
+                      1,
+                      null,
+                      110,
+                      0,
+                      77
+                    ],
+                    [
+                      2,
+                      null,
+                      158.1,
+                      0,
+                      110.7
+                    ],
+                    [
+                      3,
+                      null,
+                      177,
+                      0,
+                      123.9
+                    ]
+                  ]
+                },
+                {
+                  "day": 100,
+                  "piles": [
+                    [
+                      1,
+                      null,
+                      24.4,
+                      0,
+                      17.1
+                    ],
+                    [
+                      2,
+                      null,
+                      109.1,
+                      0,
+                      76.3
+                    ],
+                    [
+                      3,
+                      null,
+                      44,
+                      0,
+                      30.8
+                    ]
+                  ]
+                },
+                {
+                  "day": 150,
+                  "piles": [
+                    [
+                      1,
+                      null,
+                      0,
+                      0,
+                      0
+                    ],
+                    [
+                      2,
+                      null,
+                      130.1,
+                      0,
+                      91.1
+                    ],
+                    [
+                      null,
+                      139,
+                      0,
+                      0,
+                      0
+                    ]
+                  ]
+                },
+                {
+                  "day": 200,
+                  "piles": [
+                    [
+                      null,
+                      162,
+                      0,
+                      0,
+                      0
+                    ],
+                    [
+                      2,
+                      null,
+                      0,
+                      0,
+                      0
+                    ],
+                    [
+                      4,
+                      null,
+                      115,
+                      0,
+                      80.5
+                    ]
+                  ]
+                },
+                {
+                  "day": 250,
+                  "piles": [
+                    [
+                      5,
+                      null,
+                      73.6,
+                      0,
+                      51.5
+                    ],
+                    [
+                      2,
+                      null,
+                      0,
+                      0,
+                      0
+                    ],
+                    [
+                      4,
+                      null,
+                      27,
+                      0,
+                      18.9
+                    ]
+                  ]
+                },
+                {
+                  "day": 300,
+                  "piles": [
+                    [
+                      5,
+                      null,
+                      0,
+                      0,
+                      0
+                    ],
+                    [
+                      null,
+                      255,
+                      0,
+                      0,
+                      0
+                    ],
+                    [
+                      4,
+                      null,
+                      29.6,
+                      0,
+                      20.8
+                    ]
+                  ]
+                },
+                {
+                  "day": 350,
+                  "piles": [
+                    [
+                      null,
+                      321,
+                      0,
+                      0,
+                      0
+                    ],
+                    [
+                      6,
+                      null,
+                      108,
+                      0,
+                      75.6
+                    ],
+                    [
+                      null,
+                      338,
+                      0,
+                      0,
+                      0
+                    ]
+                  ]
+                },
+                {
+                  "day": 400,
+                  "piles": [
+                    [
+                      8,
+                      null,
+                      72,
+                      0,
+                      50.4
+                    ],
+                    [
+                      6,
+                      null,
+                      397.7,
+                      0,
+                      278.4
+                    ],
+                    [
+                      7,
+                      null,
+                      216,
+                      0,
+                      151.2
+                    ]
+                  ]
+                },
+                {
+                  "day": 450,
+                  "piles": [
+                    [
+                      null,
+                      447,
+                      202,
+                      0,
+                      141.4
+                    ],
+                    [
+                      6,
+                      null,
+                      649,
+                      0,
+                      454.3
+                    ],
+                    [
+                      7,
+                      null,
+                      236,
+                      0,
+                      165.2
+                    ]
+                  ]
+                },
+                {
+                  "day": 500,
+                  "piles": [
+                    [
+                      null,
+                      479,
+                      378,
+                      0,
+                      264.6
+                    ],
+                    [
+                      6,
+                      null,
+                      596.1,
+                      0,
+                      417.3
+                    ],
+                    [
+                      7,
+                      null,
+                      236,
+                      0,
+                      165.2
+                    ]
+                  ]
+                },
+                {
+                  "day": 550,
+                  "piles": [
+                    [
+                      null,
+                      526,
+                      495.5,
+                      0,
+                      346.9
+                    ],
+                    [
+                      6,
+                      null,
+                      424.4,
+                      0,
+                      297.1
+                    ],
+                    [
+                      7,
+                      null,
+                      166.2,
+                      0,
+                      116.3
+                    ]
+                  ]
+                },
+                {
+                  "day": 600,
+                  "piles": [
+                    [
+                      null,
+                      572,
+                      642.5,
+                      0,
+                      449.8
+                    ],
+                    [
+                      6,
+                      null,
+                      492.4,
+                      0,
+                      344.7
+                    ],
+                    [
+                      null,
+                      553,
+                      163.2,
+                      0,
+                      114.2
+                    ]
+                  ]
+                },
+                {
+                  "day": 650,
+                  "piles": [
+                    [
+                      null,
+                      620,
+                      222,
+                      0,
+                      155.4
+                    ],
+                    [
+                      6,
+                      null,
+                      529.5,
+                      0,
+                      370.6
+                    ],
+                    [
+                      13,
+                      null,
+                      354,
+                      0,
+                      247.8
+                    ]
+                  ]
+                },
+                {
+                  "day": 700,
+                  "piles": [
+                    [
+                      null,
+                      681,
+                      339,
+                      0,
+                      237.3
+                    ],
+                    [
+                      6,
+                      null,
+                      407.2,
+                      0,
+                      285
+                    ],
+                    [
+                      13,
+                      null,
+                      279.7,
+                      0,
+                      195.8
+                    ]
+                  ]
+                },
+                {
+                  "day": 750,
+                  "piles": [
+                    [
+                      null,
+                      744,
+                      452,
+                      0,
+                      316.4
+                    ],
+                    [
+                      6,
+                      null,
+                      429.3,
+                      0,
+                      300.5
+                    ],
+                    [
+                      13,
+                      null,
+                      354,
+                      0,
+                      247.8
+                    ]
+                  ]
+                },
+                {
+                  "day": 800,
+                  "piles": [
+                    [
+                      null,
+                      800,
+                      599,
+                      0,
+                      419.3
+                    ],
+                    [
+                      null,
+                      765,
+                      59.5,
+                      0,
+                      41.6
+                    ],
+                    [
+                      null,
+                      776,
+                      338.5,
+                      0,
+                      236.9
+                    ]
+                  ]
+                }
+              ]
+            },
+            "scrum": {
+              "calls": 274,
+              "armed": 0,
+              "men": 2502
+            },
+            "perf": {
+              "dayN": 800,
+              "dayMs": 3925.96,
+              "dayMax": 403.81
+            },
+            "errs": [],
+            "t1079": {
+              "on": true,
+              "stat": {
+                "pitch": 17,
+                "adopt": 14,
+                "left": 17,
+                "join": 4,
+                "joinN": 7,
+                "out": 23,
+                "home": 10,
+                "homeBody": 0,
+                "noRec": 12,
+                "hand": 0,
+                "vilArms": 0,
+                "unload": 0,
+                "relink": 0,
+                "lost": 0
+              },
+              "piles": [
+                {
+                  "id": "b17428",
+                  "fire": "b17427",
+                  "x": 68352,
+                  "y": 41728,
+                  "owner": "public",
+                  "gid": null,
+                  "left": 800,
+                  "food": 599,
+                  "arms": {},
+                  "kg": 419.3,
+                  "lots": 9
+                },
+                {
+                  "id": "b17430",
+                  "fire": "b17429",
+                  "x": 44288,
+                  "y": 115968,
+                  "owner": "public",
+                  "gid": null,
+                  "left": 765,
+                  "food": 59.5,
+                  "arms": {},
+                  "kg": 41.65,
+                  "lots": 47
+                },
+                {
+                  "id": "b17739",
+                  "fire": "b17738",
+                  "x": 48896,
+                  "y": 122624,
+                  "owner": "public",
+                  "gid": null,
+                  "left": 776,
+                  "food": 338.4849037102462,
+                  "arms": {},
+                  "kg": 236.939,
+                  "lots": 44
+                }
+              ],
+              "carry": 0,
+              "walk": 1
+            },
+            "armsLoot": 0
+          },
+          "t1104": {
+            "ver": 1,
+            "knob": {
+              "T1078_BANDIT_ALL": "1",
+              "T1079_BANDIT_CAMP": "1",
+              "T1104_BANDIT_WALK": "0",
+              "VILLAGE_NPC_CAP": "1",
+              "VILLAGE_DAY_MS": "250"
+            },
+            "days": 800,
+            "lastDay": 800,
+            "gangDays": {
+              "camp": 1535,
+              "out": 0,
+              "back": 0
+            },
+            "supMax": 0,
+            "rows": [
+              {
+                "day": 100,
+                "gangs": [
+                  [
+                    1,
+                    4,
+                    null
+                  ],
+                  [
+                    2,
+                    5,
+                    null
+                  ],
+                  [
+                    3,
+                    6,
+                    null
+                  ]
+                ],
+                "sups": 0,
+                "stat": null
+              },
+              {
+                "day": 200,
+                "gangs": [
+                  [
+                    2,
+                    7,
+                    null
+                  ],
+                  [
+                    4,
+                    5,
+                    null
+                  ]
+                ],
+                "sups": 0,
+                "stat": null
+              },
+              {
+                "day": 300,
+                "gangs": [
+                  [
+                    4,
+                    7,
+                    null
+                  ],
+                  [
+                    5,
+                    6,
+                    null
+                  ]
+                ],
+                "sups": 0,
+                "stat": null
+              },
+              {
+                "day": 400,
+                "gangs": [
+                  [
+                    6,
+                    8,
+                    null
+                  ],
+                  [
+                    7,
+                    4,
+                    null
+                  ],
+                  [
+                    8,
+                    4,
+                    null
+                  ]
+                ],
+                "sups": 0,
+                "stat": null
+              },
+              {
+                "day": 500,
+                "gangs": [
+                  [
+                    6,
+                    11,
+                    null
+                  ],
+                  [
+                    7,
+                    4,
+                    null
+                  ]
+                ],
+                "sups": 0,
+                "stat": null
+              },
+              {
+                "day": 600,
+                "gangs": [
+                  [
+                    6,
+                    11,
+                    null
+                  ]
+                ],
+                "sups": 0,
+                "stat": null
+              },
+              {
+                "day": 700,
+                "gangs": [
+                  [
+                    6,
+                    12,
+                    null
+                  ],
+                  [
+                    13,
+                    6,
+                    null
+                  ]
+                ],
+                "sups": 0,
+                "stat": null
+              },
+              {
+                "day": 800,
+                "gangs": [],
+                "sups": 0,
+                "stat": null
+              }
+            ],
+            "errs": [],
+            "on": false,
+            "stat": null,
+            "sups": 0
           }
         }
       }
@@ -17799,11 +20066,11 @@
     }
   },
   "status": "running",
-  "completedMainCommands": 56,
+  "completedMainCommands": 60,
   "expectedMainCommands": 60,
-  "completedCorrectionCommands": 6,
+  "completedCorrectionCommands": 10,
   "expectedCorrectionCommands": 10,
-  "completedFollowupCommands": 5,
+  "completedFollowupCommands": 10,
   "expectedFollowupCommands": 27,
   "productHeads": {
     "individualUnaffected": "c58cd674",
