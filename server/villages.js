@@ -4447,7 +4447,7 @@ function _t661ReturnPts(body) {
 }
 function startReturnLeg(body, now) { // 도착 머묾(linger) 종료 → 귀환 출발
   const c = body.c;
-  if (body._t1182 && c._t707) { state.econV2.settleMarketsV2(state.world, c); if (c._t707) return; }   // T1182: 장 정산으로 짐을 받은 뒤 귀로를 걷는다.
+  if (body._t1182 && c._t707) { if(state.tickJobs || state._t731)return; state.econV2.settleMarketsV2(state.world, c); if (c._t707) return; }   // T1182: 장 정산으로 짐을 받은 뒤 귀로를 걷는다.
   if (body._xz && c && c._xzHome) return _xzStartReturnLeg(body, now);   // ★★[T533] 이웃 존 캐러밴 — 집은 경계 너머다(경계 칸까지 걷는다 · 끔이면 이 줄 무동작)
   if (T661_ON && body._t661 && body._t661.leg === 'inbound') {   // ★[T661] 돌아가는 길은 도착 경계에 장부가 이미 골랐다(`_t661ReturnPts`) — 몸은 그 길을 걷는다
     setBodyPts(body, body._t661.path.pts);
@@ -16018,7 +16018,7 @@ module.exports = { t1144Stat: () => Object.assign({ on: T1144_LIFE_EVENT, verify
       get L_WATERGAP() { return L_WATERGAP; },
       get TASKS_PER_FARMER() { return _lifeTasksPerFarmerDay(); },
     },
-    _caravanBodyProbe: { on: T762_CARAVAN_BODY, pack: _t1034Pack, restore: _t1034Apply, ready: _t1182BodyReady, tick: tickCaravanBodies, pts: setBodyPts, walk: _t1182Walk },
+    _caravanBodyProbe: { on: T762_CARAVAN_BODY, pack: _t1034Pack, restore: _t1034Apply, ready: _t1182BodyReady, tick: tickCaravanBodies, pts: setBodyPts, walk: _t1182Walk, returnLeg: startReturnLeg },
     _distProbe: {
       compute: (reason, opts) => computeAndInjectDistMatrix(reason, opts),
       gen: (reason, opts) => _distMatrixGen(reason, opts),   // ★[T957] 하네스가 한 양보씩 민다(`test-distmatrix` ⑥)

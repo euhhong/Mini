@@ -3,7 +3,7 @@
 if(process.env.T577_SEED || (process.env.T1182_OBSERVE_DIR && process.env.ZONE_ID)){
  const fs=require('fs'),path=require('path'),Module=require('module');
  const ROOT=path.resolve(__dirname,'..'),out=process.env.T577_OUT?process.env.T577_OUT+'.t1182.json':path.join(process.env.T1182_OBSERVE_DIR,process.env.ZONE_ID+'-'+process.pid+'.json');
- const st={seed:+process.env.T577_SEED,tickN:0,tickNs:0,bodySamples:0,actorSamples:0,xzone:0,xzoneNoBody:0,basketTrade:0,basketNoBody:0,moveN:0,moveNs:0,moveMaxNs:0,trade:0,tradeNoBody:0,deposit:0,depositNoBody:0,arrive:0,arriveNoBody:0,days:[],errors:[]};
+ const st={runtime:{node:process.version,v8:process.versions.v8,icu:process.versions.icu},flags:{body:process.env.T762_CARAVAN_BODY,escort:process.env.T1136_ESCORT_CARRY,basket:process.env.T1136_BASKET},source:{},seed:+process.env.T577_SEED,tickN:0,tickNs:0,bodySamples:0,actorSamples:0,xzone:0,xzoneNoBody:0,basketTrade:0,basketNoBody:0,moveN:0,moveNs:0,moveMaxNs:0,trade:0,tradeNoBody:0,deposit:0,depositNoBody:0,arrive:0,arriveNoBody:0,days:[],errors:[]};
  const proofs=new WeakMap();let S=null;
  const state=()=>{if(!S){const m=require.cache[path.join(ROOT,'server/villages.js')];if(m&&m.exports.__p3Bind)S=m.exports.__p3Bind({}).state;}return S;};
  function ready(c,leg){state();const m=require.cache[path.join(ROOT,'server/villages.js')];return !!(m&&m.exports.__labProbe._caravanBodyProbe.ready(c,leg));}
@@ -12,6 +12,7 @@ if(process.env.T577_SEED || (process.env.T1182_OBSERVE_DIR && process.env.ZONE_I
  Module._extensions['.js']=function(m,file){
   if(file!==path.join(ROOT,'server/villages.js')&&file!==path.join(ROOT,'sim/economy-sim-v2.js'))return old(m,file);
   const compile=m._compile;m._compile=function(src,name){
+   st.source[path.relative(ROOT,file)]=require('crypto').createHash('sha256').update(src).digest('hex');
    if(file.endsWith('/server/villages.js'))src+=`
 ;(()=>{const O=globalThis.__t1182Observe,move=_t1182Move,tick=tickCaravanBodies;
 tickCaravanBodies=function(...a){const t=process.hrtime.bigint();try{return tick.apply(this,a)}finally{O.st.tickN++;O.st.tickNs+=Number(process.hrtime.bigint()-t);const b=state.caravanBodies;if(b){O.st.bodySamples+=b.size;for(const c of b.values())O.st.actorSamples+=1+(c.escorts||[]).length;}}};
