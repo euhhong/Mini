@@ -1,0 +1,147 @@
+{
+  "source": "6727add3",
+  "node": "v22.23.0",
+  "harnesses": [
+    {
+      "name": "test-war-nosnap",
+      "exit": 0,
+      "summary": [
+        "=== 결과: 61 PASS / 0 FAIL ==="
+      ]
+    },
+    {
+      "name": "test-arms-body",
+      "exit": 0,
+      "summary": [
+        "=== 결과: 29 PASS / 0 FAIL ==="
+      ]
+    },
+    {
+      "name": "test-draft-famine",
+      "exit": 0,
+      "summary": [
+        "15 통과 · 0 실패"
+      ]
+    },
+    {
+      "name": "test-farm-act",
+      "exit": 0,
+      "summary": [
+        "=== 결과: 78 PASS / 0 FAIL ==="
+      ]
+    },
+    {
+      "name": "test-t941-ruler",
+      "exit": 0,
+      "summary": [
+        "=== PASS 9 / FAIL 0 ==="
+      ]
+    },
+    {
+      "name": "test-forage-act",
+      "exit": 0,
+      "summary": [
+        "=== 결과: 251 PASS / 0 FAIL ==="
+      ]
+    },
+    {
+      "name": "test-wood-act",
+      "exit": 0,
+      "summary": [
+        "=== 결과: 159 PASS / 0 FAIL ==="
+      ]
+    },
+    {
+      "name": "test-t1044-scram-walk",
+      "exit": 0,
+      "summary": [
+        "=== 결과: 18 PASS / 0 FAIL ==="
+      ]
+    },
+    {
+      "name": "test-t1060-scram-hold",
+      "exit": 0,
+      "summary": [
+        "=== 결과: 16 PASS / 0 FAIL ==="
+      ]
+    },
+    {
+      "name": "test-t1089-ret-walk",
+      "exit": 0,
+      "summary": [
+        "=== 결과: 19 PASS / 0 FAIL ==="
+      ]
+    },
+    {
+      "name": "test-army-morale",
+      "exit": 0,
+      "summary": [
+        "=== 22건 중 PASS 22 · FAIL 0 ==="
+      ]
+    },
+    {
+      "name": "test-loot-body",
+      "exit": 0,
+      "summary": [
+        "=== 결과: 13 PASS / 0 FAIL ==="
+      ]
+    },
+    {
+      "name": "test-t1168-sortie-ammo",
+      "exit": 0,
+      "summary": [
+        "=== 결과: 22 PASS / 0 FAIL ==="
+      ]
+    },
+    {
+      "name": "test-arms-keep",
+      "exit": 0,
+      "summary": [
+        "=== 결과: 17 PASS / 0 FAIL ==="
+      ]
+    },
+    {
+      "name": "test-t1183-physical-war",
+      "exit": 0,
+      "summary": [
+        "13 통과 / 0 실패"
+      ]
+    },
+    {
+      "name": "test-bandit-all",
+      "exit": 0,
+      "summary": [
+        "결과: PASS (32 통과 · 0 실패)"
+      ]
+    },
+    {
+      "name": "test-bandit-camp",
+      "exit": 0,
+      "summary": [
+        "결과: PASS (35 통과 · 0 실패)"
+      ]
+    },
+    {
+      "name": "test-bandit-walk",
+      "exit": 0,
+      "summary": [
+        "결과: PASS (32 통과 · 0 실패)"
+      ]
+    },
+    {
+      "name": "test-t1159-home-n",
+      "exit": 0,
+      "summary": [
+        "결과: 8 통과 / 0 실패"
+      ]
+    },
+    {
+      "name": "test-harness-lint",
+      "exit": 0,
+      "summary": [
+        "=== 69건 중 PASS 69 · FAIL 0 ==="
+      ]
+    }
+  ],
+  "note": "20개 관련 하네스 종료 코드 모두0. 기존 test-war-world 목 판 184/1 및 장기 판은 별도 보고."
+}

@@ -204,7 +204,7 @@ function _t862Drop(o, k) { if (T862_ECON_FAST) o[k] = undefined; else delete o[k
 //   `in` 문(부팅 복원) — 켬이면 `undefined` 칸 = 지운 칸(저장 줄은 JSON 이라 실린 칸이 `undefined` 일 수 없다 ⇒ 끔의 `k in o` 와 같은 답 · 두 번 불러도 같다)
 function _t862Has(o, k) { return (k in o) && !(T862_ECON_FAST && o[k] === undefined); }
 const NPC_CAP_PER_VILLAGE = process.env.VILLAGE_NPC_CAP ? Math.max(1, parseInt(process.env.VILLAGE_NPC_CAP, 10) || 40) : Infinity;
-// ★[T1041 ⓑ 2026-11-02 · 판 자 전용 손잡이 `T1041_WAR_BODY=1`(기본 끔 = 종전 바이트 · 제품 무변)] **전쟁에 든 마을만 몸 무제한.**
+// ★[T1041 ⓑ 2026-11-02 · 손잡이 `T1041_WAR_BODY`(T1183 켬 기본 · 되돌림 `=0`)] **전쟁에 든 마을만 몸 무제한.**
 //   판 자는 `VILLAGE_NPC_CAP=1`(가시 몸 하나)이라 군대가 몸 하나 대 하나다(T1031). 몸∞ 판은 평시 몸까지 다 굴려 1시간을 넘긴다.
 //   켜면 war-core 의 진행 전쟁(`WARS` — 행군 · 주둔 · 교전 · 귀환)에 공 · 방으로 든 마을만 상한을 풀고(econ 인구까지) 그날 한 번에 채운다.
 //   (몸∞ 판에선 그 몸이 이미 서 있으니 하루 2명씩 따라가면 교전 때 몸이 모자란다 — 그래서 채움만 한 번에.) 전쟁이 끝나면 종전대로 하루 2명씩 줄어든다.
@@ -6373,7 +6373,7 @@ function _warDraftPids(vil, comp, seed, warId) {
 //     무저항·소굴 전투 문(공격 무게중심이 교전 반경 안)이 그 한 명을 끝까지 기다렸다(재현 판: 소굴 원정 10건 중 3건 · 3건 중 2건).
 //     나선은 존 정본 하나(`_standCellNear` · deps 주입 · 사본 0) · 술어는 전쟁 술어(`_warBlockedCell` — 발자국·지형·나무).
 //     나선이 못 찾거나(24칸 안이 전부 막힘) 술어 미주입(랩·구 존)이면 종전대로 제자리.
-// ★★[T790 2026-10-18] **전쟁 몸 튐 둘 없애기** — 손잡이 `T790_NO_SNAP`('1' 만 켬 · 끔 = main 바이트) · T781 회부 2 · 캐논: 순간이동 금지(모든 NPC 는 물리 몸).
+// ★★[T790 2026-10-18] **전쟁 몸 튐 둘 없애기** — 손잡이 `T790_NO_SNAP`(T1183 켬 기본 · 되돌림 `=0`) · T781 회부 2 · 캐논: 순간이동 금지(모든 NPC 는 물리 몸).
 //   ① 지휘 몸 놓기 — war-live `_muStepFollow` 가 지휘 몸을 대형 원점에 바로 놓는다(귀환 첫 틱 결판 자리 → 길 머리 55~87 m/s · T681 날 장부가 옮긴 원점).
 //   ② 슬롯 놓기 — 이 함수(징발 `_warInstantiateAttackers` · 방어 소집 `_warEnsureDefense` · T703 날마다 행군 대형)가 몸을 슬롯에 바로 놓는다(픽스처는 마을 → 진 1,408 m).
 //   켜면 두 자리 모두 **몸이 걸어서** 간다: 대형마다 몸 걸음(`g._t790Walk` = 존 걸음 정본 `moveSpeed` px/s ÷ 셀 px × 교전 스텝 초 = 셀/스텝)을 달고,
@@ -6411,7 +6411,7 @@ function _t790Lag(g) {   // 하루 경계 — 대형 몸이 제 자리 밖인가
 }
 function _warSnapToSlots(g) {
   if (!g || !g.units) return;
-  if (T790_NO_SNAP) { _t790Mark(g); if (g._t790Walk > 0) _t790Stat.walk++; return; }   // ★[T790 ②] 켬 — 놓지 않는다(몸이 걸어서 슬롯에 붙는다 · 대형 몸 걸음만 단다) · 걸음 정본이 없는 판(하네스 목)은 종전대로 놓는다
+  if (T790_NO_SNAP) { _t790Mark(g); if (g._t790Walk > 0) _t790Stat.walk++; return; }   // ★[T790 ②] 켬 — 놓지 않는다(몸이 걸어서 슬롯에 붙는다 · 대형 몸 걸음만 단다) · 걸음 정본이 없어도 대신 놓지 않는다
   const blocked = _warBlockedCell;
   for (const u of g.units) { if (u.cmd) { u.x = g.cmd.cx; u.y = g.cmd.cy; continue; } const s = state.warLive._muSlotXY(g, u);
     if (!blocked(s[0], s[1])) { u.x = s[0]; u.y = s[1]; continue; }
@@ -7512,7 +7512,7 @@ function _warRationCollect(w) {
   return Object.keys(items).length ? items : null;
 }
 // ════════════════════════════════════════════════════════════════
-// ★★[T811 2026-10-19 · 2층 — 몸이 무기를 든다 · T764 회부 2 · T781 · T790 §3] 손잡이 `T811_ARMS_BODY`('1' 만 켬 · 끔 = main 바이트).
+// ★★[T811 2026-10-19 · 2층 — 몸이 무기를 든다 · T764 회부 2 · T781 · T790 §3] 손잡이 `T811_ARMS_BODY`(T1183 켬 기본 · 되돌림 `=0`).
 //   T403 무기 반출(`T403_ARMS_LEDGER=1`)이면 원정 짐(`w._arms.weapon`)에 무기가 있지만 몸 손은 비었다. 켬이면 그 짐을 **병사 몸 짐 칸**
 //   (T423 그 칸 = `inventory` · 곳간 통칭 `weapon` 한 칸 — 품목은 재민 칸 · 새 몸 필드 0)에 나눠 싣는다.
 //   ★정본은 장부다(ⓐ 장부 도착 · PM 10-18 T790 카드): 곳간에 서는 수 · 결판 흐름(`warWeaponFlow`) · 거울(`_warArmsOut`)은 **한 글자도 안 바뀐다**.
@@ -9162,7 +9162,7 @@ function __p3Bind(mock) {
     _t1078Walkers, _t1078Die, _t1078Out, _t1078Life,   // ★[T1078] 단원 = 몸 문 넷(하네스 `test-bandit-all` 이 운영과 같은 문을 부른다)
     T1080_ROAD_LIFE, _t1080Pick, _t1080Pack, _t1080RoadDay, _t1080Reroute, _t1080Arrive, _t1080Stat, _t1079Len,   // ★[T1080] 하네스(`test-t1080-road-life`)가 운영과 같은 문을 부른다(내보내기만)
     _t681Day, _t681Flush, T681_ON, T703_MARCH,   // ★[T703] T681 켬(기본) 판의 하루 경계 두 자리 — 하네스가 운영 하루 마감과 같은 차례(econ 앞 `_t681Flush` · 캐러밴 앞 `_t681Day`)로 부른다(값 무변 · 내보내기만)
-    _warOverwatch, _warSampleComp, _warGroupReady, _warAdvanceMarch, _warEngage, _warAfterDaily, _warEndFight, _warBuildRectIndex, _warBlockedCell, _warWorld, warPerf, _warOrderFallback, _warToStandoff,
+    _warOverwatch, _warGroupReady, _warAdvanceMarch, _warEngage, _warAfterDaily, _warEndFight, _warBuildRectIndex, _warBlockedCell, _warWorld, warPerf, _warOrderFallback, _warToStandoff,
     T1019_UNTRAP, T1019_ASSAULT_HP, _t1019HpRef, _t1019NoHurt,   // ★[T1019] 하네스(`test-t1019-untrap`)가 운영과 같은 문을 부른다(내보내기만)
     T1044_SCRAM_WALK,   // ★[T1044] 하네스(`test-t1044-scram-walk`)가 손잡이 값을 읽는다(내보내기만 · 걸음은 운영 문 `tickWarBodies` 그대로)
     T1060_SCRAM_HOLD, T1060_ATK_AIM,   // ★[T1060] 하네스(`test-t1060-scram-hold`)가 손잡이 값을 읽는다(내보내기만)
@@ -10730,7 +10730,7 @@ function _t325Scan(vil, day) {
 //     낮 초 = `state.dayMs × dayPhaseRatio ÷ 1000` · 왕복 초 = `2 × 거리 ÷ moveSpeed` ·
 //     한 짐에 드는 그루 = `⌊CAP_KG ÷ (그루당 단 × kgOf('wood'))⌋`(최소 1그루 — 한 그루는 지고 온다)
 //   ⇒ 하루 벨 그루 = 왕복 수 × 짐당 그루 수. 숲에 있는 만큼만 벤다(그게 T341 의 유일한 상한이다).
-// ★★[T627 2026-10-04 · **리허설 전용** 손잡이 `T627_TRIP_DAY` 기본 끔 — 제품은 이미 운영 시계라 켤 일이 없다]
+// ★★[T627 2026-10-04 · 손잡이 `T627_TRIP_DAY` T1183 켬 기본 — 제품은 이미 운영 시계라 켤 일이 없다]
 //   생활층 하루 몫(나무꾼·집 크루·채집 왕복 · 농부 하루 셀 · 원판 밖 채집 반경 · 행군 채집 시간)은 **하루의 실초**에서 유도된다.
 //   시험 시계(`VILLAGE_DAY_MS`)로 하루를 줄인 판은 그 몫이 줄어 세계가 달라진다(T581 §4 — 4초 판 집 0 · 120초 판 통나무 0).
 //   ⇒ 켜면 몫을 셀 때만 낮 초를 **정본 운영 하루**(`zone-config WORLD.dayLengthMs`)로 셈한다(새 수 0). 몸의 걸음은 판 시계 그대로라
@@ -13525,7 +13525,7 @@ function _mapBedsOf(vil) { return (vil._houseCells ? vil._houseCells.length : 0)
 // ★★★[T449 2026-09-27 · ★PM 결정(위임) · 재민 767b827e "아무도 안 보는 마을도 일과가 작동해야"의 반대쪽] **결산 문을 산다.**
 //   `_lifeDaily` 의 관측자 문은 `767b827e` 부터 **늘 거짓**이었다 — 존이 주입한 정본은 `anyViewerNear(점, r)` 인데 수 셋을
 //   넘겼다(`center.x` = undefined ⇒ 거리 NaN · T432 §2-ⓑ). 그래서 관측 마을도 새벽 일괄이 하루를 했다.
-//   손잡이 `T449_BODY_DAY`(기본 **끔** · 끔 = 종전 비트 동일 = 늘 거짓 — 아래 `_lifeDaily` 의 옛 줄이 그대로 돈다).
+//   손잡이 `T449_BODY_DAY`(T1183 기본 **켬** · 끔 = 종전 비트 동일 = 늘 거짓 — 아래 `_lifeDaily` 의 옛 줄이 그대로 돈다).
 //   켜면 **그 술어를 그 꼴로** 묻는다(점 · 반경 그 수 — 옛 줄의 두 식 그대로 · 새 술어 0 · 새 수 0).
 //   관측 마을의 하루는 **행위 팔이 켜진 직업은 몸이 · 나머지 직업은 일괄이** 한다(직업 × 몸/일괄 표 — 보고/T449 §1):
 //     ⓐ 헤드리스 결산(`_lifeHeadlessDay` — 개간 · 신축 · 작물)은 **이미 스스로 직업을 가른다** — 농부 두 절은 T368 켬이면
@@ -13546,7 +13546,7 @@ function _t449Seen(vil) {
 //   T449 켬 판의 빈손 14일은 나무꾼 몸이 `요양`한 날이었다(T449 §2-ⓒ) — 옛 명부(econ 수)는 몸의 그날을 안 보고 **성한 몸의 걸음 한도**를 벤다.
 //   ⚠몸의 ≈8 은 **하루 1그루**다 — 몸 갈래가 그날 목록(하루 캐시)에서 방금 비운 셀을 다시 고른다(보고/T491 §2-ⓑ · 회부 — 이 손잡이는 몸을 안 만진다).
 //   캐논: 일괄은 몸이 없을 때 몸을 **대신** 하는 것이지 몸보다 많이 내면 안 된다.
-//   손잡이 `T491_BATCH_FROM_BODY`(기본 **끔** · 끔 = 아래 `_lifeDaily` 나무꾼 절의 옛 줄 글자 그대로 — 명부 = econ 나무꾼 수 · 한 짐 = 그루).
+//   손잡이 `T491_BATCH_FROM_BODY`(T1183 기본 **켬** · 끔 = 아래 `_lifeDaily` 나무꾼 절의 옛 줄 글자 그대로 — 명부 = econ 나무꾼 수 · 한 짐 = 그루).
 //   켜면 나무꾼 절의 일괄은 **몸 크루의 하루**를 벤다 — 같은 함수(`_t491BodyDay` · T400 집 크루의 그 문법):
 //     ⓐ 명부 = 그날 일한 **나무꾼 몸**(`_t491Crew` — econ 수가 아니다) · 요양(`_rest`) · 시공 과업(`_lifeTask` 'build') ·
 //        집 크루(T400 `vil._t400Crew`)인 몸은 그날 나무를 못 했다 ⇒ 명부에서 빠진다(몸이 안 나른 날 일괄도 안 나른다 · 새 상태 0 — 몸이 이미 가진 칸).
@@ -13576,7 +13576,7 @@ function _t491BodyDay(vil, distPx) {   // 나무꾼 **한 몸**이 하루에 곳
 // ★★★[T561 2026-09-30 · #86 재민 "일괄 = 몸" · T491 판을 닫는 카드] **명부가 몸의 그날을 본다 · 몸이 하루 1그루에서 안 멈춘다.**
 //   T491 이 잰 25배의 주인 둘: ① 명부가 몸의 그날을 안 본다(앓은 날에도 econ 수만큼 성한 걸음 — 앓힌 판 끔 하루 66그루 ↔ 몸 0)
 //   ② 몸이 하루 1그루에서 멈춘다(그날 목록 하루 캐시에서 방금 비운 셀을 해 질 녘까지 다시 고른다 — 몸·날 848 중 657 이 정확히 1그루).
-//   손잡이 `T561_ROSTER_BODY`(기본 **끔** · 끔 = 아래 세 자리의 옛 줄 그대로 — `_lnE`·`_fgE` 는 econ 수 · 몸 갈래는 옛 고르기 · 사다리는 곡식 손만).
+//   손잡이 `T561_ROSTER_BODY`(T1183 기본 **켬** · 끔 = 아래 세 자리의 옛 줄 그대로 — `_lnE`·`_fgE` 는 econ 수 · 몸 갈래는 옛 고르기 · 사다리는 곡식 손만).
 //   ① 일괄 명부 — 나무꾼·채집 두 절(`_lifeDaily` 헤드리스 갈래 · 손은 `_lifeHandsIn`)의 명부 = 그날 **나설 수 있는** 그 직업 몸(`_t561Crew`).
 //      몸이 이미 가진 칸만 읽는다(새 상태 0 · 새 수 0 · 주사위 0): 쓰러짐(`isDown`) · 죽음(hp 0) · 요양(`_rest`) ·
 //      요양 문턱 아래(hp < maxHp × `SCH_REST_IN` — `npcLifeTick` 이 다음 결정에 침상으로 보내는 그 문턱 · 헤드리스 몸은 결정을 안 해서 칸이 늦게 선다) ·
