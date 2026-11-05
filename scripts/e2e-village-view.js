@@ -130,7 +130,7 @@ async function enterAndGo(page, V) {
   ok(reqT.length === S0.requests.rows.length && reqT.every((t, i) => t === `${S0.requests.rows[i].ko} ${S0.requests.rows[i].qty}`), '② 마을의 부탁 줄 = 서버 `requests.rows`(품목 이름 · 양)', reqT.join(' · '));
   const newsT = await page.evaluate(() => [...document.querySelectorAll('#vvBody .vv-news')].map((r) => [...r.querySelectorAll('.vv-t')].map((t) => (t.getAttribute('aria-label') || t.textContent).trim())));
   ok(newsT.length === S0.news.rows.length && newsT.every((n, i) => n[1] === S0.news.rows[i].line), '② 마을 소식 줄 = 서버 `news.rows[].line`', newsT.map((n) => n[1]).slice(0, 2).join(' / '));
-  ok(newsT.every((n) => /니다\.$/.test(n[1])), '② [T1103] 소식 줄 = 하십시오체(서버 `newsLine`)', newsT.length ? newsT[0][1] : '');
+  ok(newsT.length > 0 && newsT.some((n) => !/니다\.$/.test(n[1])), '② ★[T1190 ② · 문 25 ② ㄴ] 소식 줄 = 촌장 말(하게체) 그대로 — 화면용 하십시오체로 바꾸지 않는다', newsT.length ? newsT[0][1] : '');
   ok(!(await txts('#vvBody .vv-tabbody[data-k="dash"] .vv-t')).some((t) => /기여 \+|어제보다|오름|내림/.test(t)), '② 서버에 없는 칸(기여 +n · 어제보다)을 지어내지 않는다');
   await page.screenshot({ path: path.join(SHOTS, `${PFX}vv-dash.png`) });
 

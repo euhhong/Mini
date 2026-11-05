@@ -13,7 +13,7 @@
 //     [자명 통과 금지] 이 세계 곳간엔 뭉뚱그린 재화가 실제로 있고(`food`) 그것이 `withheld` 로 세어졌다 · 기준이 뭉뚱그린 것이면 `pick`
 //  ⑤ 바뀐 칸만 — 안 바뀌면 안 보낸다 · 곳간을 움직이면 그 칸만 온다(머리줄은 안 온다) · 닫으면 더 안 온다
 //  ⑥ 값 — 한 마을 열기 µs(평균 · 최대) · 박자 = 존의 5초
-//  ⑦ [T1103] 마을 화면 말투 — 소식 · 끝낸 일 줄 = 하십시오체(`Events.newsLine`) · 화면 줄 표의 사건 종류 = 촌장 말 표(`LINES`)
+//  ⑦ [T1103] 마을 화면 말투 — 끝낸 일 · 값 오르내림 줄 = 하십시오체(`Events.newsLine`) · 화면 줄 표의 사건 종류 = 촌장 말 표(`LINES`) · ★[T1190 ②] 소식 줄은 촌장 말(하게체) 그대로
 //  ②-T1084 없던 칸 중 셀 수 있는 둘 — 집터 `bedsGain` = econ `hutCapPerHut()`(= 침상 명부가 집 한 채에 더하는 수) ·
 //     공사 줄 `kind:'clear'` = 개간 술어 정본(`villageViewSrc().needClear`) ∧ 농부 몸 · 밭 칸 수 · 개간 몸 수 · 술어가 거짓이면 줄 없음 · 고정 자료 같은 모양
 //  ②-T1105 임시 vvAdapt 가 비워 둔 칸 중 셀 수 있는 셋 — 지역 이름 `head.region` = 그 존 `displayName` · 먹을 것 며칠치 `dash.foodDays` = 곳간 스냅숏 정본 ·
@@ -151,12 +151,13 @@ const ITEM_KEYS = (view) => {   // 품목이 서는 자리 전부(④)
       && (VV.isLumped(want[i].rewItem) ? !('line' in r) && !('rewRes' in r) : (r.line === want[i].line && r.rewRes === want[i].rewItem && r.rewQty === want[i].rewQty))),
       '부탁 줄마다 품목 · 양 · 모인 몫 = 게시판 그대로 · 갚는 것이 뭉뚱그린 것이면 갚는 칸 · 문장 없음(아니면 게시판 문장 그대로)', `갚는 칸 뺀 줄 ${view.requests.rewardWithheld}`);
     const nw = b.news.filter((r) => !VV.isLumped(r.item));
-    //   ★[T1103] 줄은 같은 사건의 하십시오체(`Events.newsLine`) — 사건 · 들은 날 · 소문 출처 · 줄 수는 게시판 소식 그대로, 문장만 화면 말투다(게시판 줄 = 촌장 하게체 그대로)
+    //   ★[T1190 ② · 문 25 ② ㄴ] 줄 = 촌장 말(하게체) 그대로 — 게시판 소식과 사건 · 들은 날 · 소문 출처 · 줄 수 · **문장까지** 같다(종전 T1103 화면용 하십시오체는 걷었다)
     const vn = V.villageViewNews(VID).filter((r) => !VV.isLumped(r.item));
     ok(view.news.rows.length === nw.length && view.news.rows.every((r, i) => r.type === nw[i].type && r.day === nw[i].day && r.heard === nw[i].heard && r.from === (nw[i].from || null) && r.line === vn[i].line && vn[i].type === nw[i].type),
-      '소식 = 게시판 소식(소문 가시성 `visibleEvents`)과 같은 사건 · 같은 줄 수 — 줄은 `villageViewNews`(하십시오체)', `${view.news.rows.length}줄 · 뺀 ${view.news.withheld}`);
-    ok(view.news.rows.length > 0 && view.news.rows.every((r) => /니다\.$/.test(r.line)) && nw.some((r, i) => r.line !== view.news.rows[i].line),
-      '[T1103 · 자명 통과 금지] 소식 줄이 하십시오체로 끝나고(…니다.) 게시판 줄(하게체)과 실제로 다르다', view.news.rows.slice(0, 2).map((r) => r.line).join(' / '));
+      '소식 = 게시판 소식(소문 가시성 `visibleEvents`)과 같은 사건 · 같은 줄 수 — 줄은 `villageViewNews`', `${view.news.rows.length}줄 · 뺀 ${view.news.withheld}`);
+    ok(view.news.rows.length > 0 && view.news.rows.every((r, i) => r.line === nw[i].line),
+      '[T1190 ② · 자명 통과 금지] 소식 줄 = 촌장 말(하게체 `Events.briefLine`) 그대로 — 게시판 줄과 글자까지 같다', view.news.rows.slice(0, 2).map((r) => r.line).join(' / '));
+    ok(view.news.rows.some((r) => !/니다\.$/.test(r.line)), '[T1190 ②] 화면용 하십시오체로 바꾸지 않는다(…니다. 아닌 줄이 실제로 있다)', view.news.rows[0] && view.news.rows[0].line);
   }
   {
     const bodies = (vil.npcPids || []).map((pid) => H.players.get(pid)).filter(Boolean);

@@ -15054,8 +15054,10 @@ function villageChronicle(vid, px, py, year) {
 //   ⚠260px 게이트가 **없다**. 그래도 캐논(원격 시세 조회 금지)을 어기지 않는 이유:
 //     여기서 나가는 건 시세도 재고도 아니라 **촌장이 할 말 한 줄**이고, 그마저도
 //     소문이 물리적으로 그 마을에 닿은 뒤에만 나간다. 정보 비대칭은 도달표가 지킨다.
-// ★[T1103] 마을 화면 "마을 소식" — 게시판 소식과 **같은 술어 · 같은 줄 수**(`_newsRows` · `BOARD_NEWS_N`) · 줄만 하십시오체(`Events.newsLine`). 게이트는 부르는 쪽(`village-view.js build` 가 `villageBoard` 로 먼저 지난다).
-function villageViewNews(vid) { return _newsRows(vid, BOARD_NEWS_N, Events.newsLine); }
+// ★[T1103] 마을 화면 "마을 소식" — 게시판 소식과 **같은 술어 · 같은 줄 수**(`_newsRows` · `BOARD_NEWS_N`). 게이트는 부르는 쪽(`village-view.js build` 가 `villageBoard` 로 먼저 지난다).
+// ★[T1190 ② · ★재민 11-05 문 25 ② ㄴ] 줄 = **촌장 말(하게체) 그대로**(`Events.briefLine` — 게시판 · 촌장 브리핑과 같은 줄). 종전(T1103)의 화면용 하십시오체(`newsLine`)를 걷었다.
+//   `Events.newsLine` 표는 남는다 — 끝낸 일(`projects.done`) · 값 오르내림(`store.priceMoves`) 줄은 소식 칸이 아니라 그대로 쓴다(문 25 는 "마을 소식"만).
+function villageViewNews(vid) { return _newsRows(vid, BOARD_NEWS_N); }
 function villageNews(vid, n) {
   if (!state.ledger) return { err: '아직 장부가 없습니다.' };
   const vil = state.byDbId && state.byDbId.get(vid | 0);
