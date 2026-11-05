@@ -134,7 +134,7 @@ const dist = (a, b) => (a && b) ? Math.hypot(a.x - b.x, a.y - b.y) : Infinity;
     H = await perf('hanbando'); N = await perf('nippon');
     if (!H || !N) { await sleep(1000); continue; }
     if (!pick) { const o = H.trace.find((t) => t.k === 'out' && t.body && t.at); if (o) pick = o; }
-    for (const b of N.bodies) { if (!b.key || !String(b.key).startsWith('xz:hanbando:')) continue; const L = seenN.get(b.key) || []; if (b.x != null) L.push({ x: b.x, y: b.y, t: N.now, prog: b.prog, len: b.len, nom: b.nomPxMs, dep: b.departAt, pend: b.pending, phase: b.phase, lu: b.lu, t952: b.t952, mk: b.mk }); seenN.set(b.key, L); }
+    for (const b of N.bodies) { if (!b.key || !String(b.key).startsWith('xz:hanbando:')) continue; const L = seenN.get(b.key) || []; if (b.x != null) L.push({ x: b.x, y: b.y, t: N.now, bt: b.bodyAt, prog: b.prog, len: b.len, nom: b.nomPxMs, dep: b.departAt, pend: b.pending, phase: b.phase, lu: b.lu, t952: b.t952, mk: b.mk }); seenN.set(b.key, L); }
     for (const x of (N.caravans || [])) if (x.mktD != null && String(x.id).startsWith('xz:hanbando:')) mktOf.set(String(x.id), x.mktD);   // ★[T1030] 장이 선 날(켬만 칸이 선다)
     if (pick) {
       const home = H.trace.find((t) => t.k === 'home' && t.id === pick.id);
@@ -156,9 +156,9 @@ const dist = (a, b) => (a && b) ? Math.hypot(a.x - b.x, a.y - b.y) : Infinity;
     const a = ln[i - 1], b = ln[i];
     const d = Math.hypot(b.x - a.x, b.y - a.y); moved += d;
     if (a.phase !== b.phase || a.dep !== b.dep) { legs++; continue; }   // 구간이 바뀌었다(머묾 → 귀환) — 새 길의 첫 점은 옛 길의 끝(같은 마을)
-    const dp = b.prog - a.prog, dt = Math.max(0, b.t - a.t);
-    if (d > Math.max(0, dp) + 2) offPath++;
-    const cap = BODY ? BODY_PX_MS * (dt + FRAME_MS) + 2 : (b.nom || 0) * 4 * dt + 2;
+    const dp = b.prog - a.prog, dt = Math.max(0, BODY ? (b.bt??b.t)-(a.bt??a.t) : b.t-a.t);
+    if (d > Math.max(0, dp) + (BODY ? Math.SQRT2 + 1 : 2)) offPath++;
+    const cap = BODY ? BODY_PX_MS * dt + 2 : (b.nom || 0) * 4 * dt + 2;
     if (dp > cap) overPace++;
     worst = Math.max(worst, cap > 0 ? dp / cap : 0);
   }

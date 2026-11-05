@@ -4719,6 +4719,7 @@ function _t1182Walk(path,p,want,dtMs) {
     const L=Math.min(q,want), next=caravanPointAt(path,L);
     if(isPositionActive && isPositionActive(prev.x,prev.y) && isBlockedByWall && isBlockedByWall(next.x,next.y,prev.x,prev.y,0)){blocked=true;break;}
     at=L;prev=next;
+    if(state.roads)state.roads.stampEntityPx(p,next.x,next.y);
   }
   path.prog=at;p.vx=(prev.x-p.x)/dtMs*1000;p.vy=(prev.y-p.y)/dtMs*1000;
   if(T1145_XY_COLS)BC.w(p,prev.x,prev.y);else{p.x=prev.x;p.y=prev.y;}
@@ -4726,7 +4727,7 @@ function _t1182Walk(path,p,want,dtMs) {
 }
 function _t1182Move(body,p,now,dtMs) {
   const blocked=_t1182Walk(body,p,Math.min(body.len,body.prog+_t1182Step(dtMs)),dtMs);
-  if(body._t661 && body._t661.path.pts===body.pts){_t661Stamp(body,body._t661.L,body.prog);body._t661.L=body.prog;}
+  if(body._t661 && body._t661.path.pts===body.pts)body._t661.L=body.prog;
   _escortMarch(body,dtMs,state.deps.players);
   if(blocked)caravanBlockedResponse(body,p,now);
 }
@@ -4767,6 +4768,7 @@ function tickCaravanBodies(now) {
   for (const body of bodies.values()) {
     const p = players.get(body.pid);
     if (!p) continue; // 외부 소실(비정상) — 소멸 동기(syncCaravanBodies)가 회수
+    if(body._t1182)body._t1182At=now;
     p.hunger = body.pinHunger; p.thirst = body.pinThirst; // 원정 중 아사 방지(스폰 시점 값 고정)
     if (p.hp <= 0) { p.vx = 0; p.vy = 0; continue; }      // 늑대 등 사망 — 부활 후 아래 경로 스냅으로 복귀
     if (body.phase === 'linger') {
@@ -4967,7 +4969,7 @@ function _caravanSyncSweep(S) {
   const bodies = state.caravanBodies, seen = S.seen;
   for (const [id, body] of [...bodies]) {
     if (seen.has(id)) continue;
-    if (body._xzHanding || (body.c && body.c._xzPending)) continue;   // ★[T533] 경계 문 앞(이웃 존 답을 기다린다) · 받은 몸(기록이 다음 경계에 든다) — 끔이면 없다
+    if (body._xzHanding || (body.c && body.c._xzPending) || (body._t1182 && body.c && body.c._xzHandedBack && !body.c._xzTraderDead)) continue;   // ★[T533] 경계 문 앞(이웃 존 답을 기다린다) · 받은 몸(기록이 다음 경계에 든다) — 끔이면 없다
     const c = body.c;
     const killed = c && c.trader && c.from && Array.isArray(c.from.npcs) && c.from.npcs.indexOf(c.trader) < 0;
     if (T772_ON && T661_ON && body._t661 && !killed && body._t661.leg === 'inbound') {   // ★[T772 ②] econ 이 집 도착을 냈는데 몸이 아직 길 위(또는 장) — 센다(메우지 않는다)
@@ -5114,6 +5116,7 @@ function _xzStartReturnLeg(body, now) {
     for (let i = body.pts.length - 1; i >= 0; i--) pts.push(body.pts[i]);
     if (body._xzInPts && body._xzInPts !== body.pts) for (let i = body._xzInPts.length - 1; i >= 0; i--) pts.push(body._xzInPts[i]);
   }
+  if(body._t1182){const p=state.deps.players.get(body.pid);if(p && !_xzSamePt(p,pts[0]))pts=[{x:p.x,y:p.y},...pts];}
   setBodyPts(body, pts);
   body.phase = 'inbound';
   const legDays = Math.max(1, c.returnArriveDay - state.world.day);
@@ -5368,7 +5371,7 @@ function xzonePerf() {
     const P = state.deps.players.get(b.pid);
     bodies.push({ key: k, phase: b.phase, pending: !!(b.c && b.c._xzPending), handing: !!b._xzHanding, x: P ? Math.round(P.x) : null, y: P ? Math.round(P.y) : null,
       len: Math.round(b.len), prog: Math.round(b.prog), end: b.pts && b.pts.length ? { x: Math.round(b.pts[b.pts.length - 1].x), y: Math.round(b.pts[b.pts.length - 1].y) } : null,
-      departAt: b.departAt, arriveAt: b.arriveAt, nomPxMs: b.nomPxMs, lu: b.lingerUntil, t952: b._t952 || null,   // ★[T952] 머묾 끝 · 켬 판의 셈(끔 = null)
+      bodyAt: b._t1182At, departAt: b.departAt, arriveAt: b.arriveAt, nomPxMs: b.nomPxMs, lu: b.lingerUntil, t952: b._t952 || null,   // ★[T952] 머묾 끝 · 켬 판의 셈(끔 = null)
       ...(_t1030On() ? { mk: (() => { const v = b.c && state.byEcon && state.byEcon.get(b.c.to), r = v && v._mkt; return (r && r.cars.has(k)) ? { d: r.d, end: r.end, at: r.at.size, vil: v.name, ls: b._t1030 ? b._t1030.at : null } : null; })() } : {}) });   // ★[T1030] 켬만 — 그 몸이 든 장 기록(날 · 끝 · 명부 수)
   }
   const cars = [];
@@ -12934,7 +12937,7 @@ function _t707Open(c) {
   if (!vil || !state.dayMs || !state.world) return null;
   const D = state.world.day | 0;
   let rec = vil._mkt;
-  if (!rec || rec.d !== D) { rec = vil._mkt = { d: D, end: econDayToMs(D) + state.dayMs * _lifeVL().MKT_LINGER_DAY_FRAC, at: new Map(), cars: new Set(), body: -1 }; _t707Stat.markets++; }
+  if (!rec || rec.d !== D) { rec = vil._mkt = { d: D, end: (T762_CARAVAN_BODY ? Date.now() : econDayToMs(D)) + state.dayMs * _lifeVL().MKT_LINGER_DAY_FRAC, at: new Map(), cars: new Set(), body: -1 }; _t707Stat.markets++; }
   if (rec.cars.has(c.id)) return rec;
   rec.cars.add(c.id); _t707Stat.joins++;
   _t707Stat.roster += _t707Roster(vil, rec);
@@ -16018,7 +16021,7 @@ module.exports = { t1144Stat: () => Object.assign({ on: T1144_LIFE_EVENT, verify
       get L_WATERGAP() { return L_WATERGAP; },
       get TASKS_PER_FARMER() { return _lifeTasksPerFarmerDay(); },
     },
-    _caravanBodyProbe: { on: T762_CARAVAN_BODY, pack: _t1034Pack, restore: _t1034Apply, ready: _t1182BodyReady, tick: tickCaravanBodies, pts: setBodyPts, walk: _t1182Walk, returnLeg: startReturnLeg, linger: _t707Linger },
+    _caravanBodyProbe: { on: T762_CARAVAN_BODY, pack: _t1034Pack, restore: _t1034Apply, ready: _t1182BodyReady, tick: tickCaravanBodies, pts: setBodyPts, walk: _t1182Walk, returnLeg: startReturnLeg, linger: _t707Linger, sweep: _caravanSyncSweep, openMarket: _t707Open },
     _distProbe: {
       compute: (reason, opts) => computeAndInjectDistMatrix(reason, opts),
       gen: (reason, opts) => _distMatrixGen(reason, opts),   // ★[T957] 하네스가 한 양보씩 민다(`test-distmatrix` ⑥)

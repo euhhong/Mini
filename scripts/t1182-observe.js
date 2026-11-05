@@ -1,6 +1,6 @@
 'use strict';
 // 계측 preload: 실제 도착 증거, 몸 없는 정산, 이동 µs. 동작 변경은 명시적 멈춤 시험뿐.
-if(process.env.T577_SEED || (process.env.T1182_OBSERVE_DIR && process.env.ZONE_ID)){
+if(require('worker_threads').isMainThread && (process.env.T577_SEED || (process.env.T1182_OBSERVE_DIR && process.env.ZONE_ID))){
  const fs=require('fs'),path=require('path'),Module=require('module');
  const ROOT=path.resolve(__dirname,'..'),out=process.env.T577_OUT?process.env.T577_OUT+'.t1182.json':path.join(process.env.T1182_OBSERVE_DIR,process.env.ZONE_ID+'-'+process.pid+'.json');
  const st={runtime:{node:process.version,v8:process.versions.v8,icu:process.versions.icu},flags:{body:process.env.T762_CARAVAN_BODY,escort:process.env.T1136_ESCORT_CARRY,basket:process.env.T1136_BASKET},source:{},seed:+process.env.T577_SEED,tickN:0,tickNs:0,bodySamples:0,actorSamples:0,xzone:0,xzoneNoBody:0,basketTrade:0,basketNoBody:0,moveN:0,moveNs:0,moveMaxNs:0,trade:0,tradeNoBody:0,deposit:0,depositNoBody:0,arrive:0,arriveNoBody:0,days:[],errors:[]};
