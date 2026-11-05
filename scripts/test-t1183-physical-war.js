@@ -110,4 +110,27 @@ check(() => {
     assert.equal(fight.adv.released,true);assert(Math.abs(group.cmd.cy-20)>1);
   } finally {H.state.deps.standCellNear=old;H.state.deps.isTerrainBlockedLocal=terrain;H.state._warNoCollide=true;H.state._warTerrMemo=new Map();}
 }, '거친 행군선이 벽을 관통해도 실제 적 몸까지 고운 길로 돌아 교전에 풀린다');
+check(() => {
+  // 실제 장기 판 W13: 길을 만든 뒤 (436,240)에 장애물이 섰다.
+  // 다음 길점이 1m 안이라 옛 clearLine은 참, 몸 콜라이더는 거짓: 같은 길점을 영원히 재사용했다.
+  const blocked=(x,y)=>(Math.floor(x)===436&&Math.floor(y)===240)||(Math.floor(x)===435&&[239,240].includes(Math.floor(y)));
+  const previous={warLive:H.state.warLive,terrain:H.state.deps.isTerrainBlockedLocal,noCollide:H.state._warNoCollide};
+  const walkWL=require('../server/war-live').createWarLive({cellPx:32,pxPerM:32,tickHz:30,blockedCell:blocked});
+  H.state.warLive=walkWL;H.state.deps.isTerrainBlockedLocal=(x,y)=>blocked(x/32,y/32);H.state._warTerrMemo=new Map();H.state._warNoCollide=false;
+  try {
+    const group=walkWL.buildGroup([{type:'champion',x:436.5,y:241.038}],'line',{cx:430.5,cy:244.5},0,7);H._t790Mark(group);
+    const unit=group.units[0];unit._t804p={pts:[{x:436,y:241},{x:436,y:240},{x:435,y:240},{x:435,y:239},{x:434,y:239}],i:0};
+    group.detour=H._warDetourFor({});
+    for(let i=0;i<200&&!H._warGroupReady(group);i++){
+      const before=[unit.x,unit.y];walkWL._muStepFollow(group,group._t790Walk);
+      assert(!blocked(unit.x,unit.y));assert(Math.hypot(unit.x-before[0],unit.y-before[1])<=group._t790Walk+1e-9);
+    }
+    assert.equal(H._warGroupReady(group),true,'새로 막힌 옛 길점을 버리고 실제 걸음으로 집결해야 한다');
+  } finally {H.state.warLive=previous.warLive;H.state.deps.isTerrainBlockedLocal=previous.terrain;H.state._warNoCollide=previous.noCollide;H.state._warTerrMemo=new Map();}
+}, '길을 만든 뒤 막힌 1m 안 길점도 폐기하고 보행 예산 안에서 실제 대열에 합류한다');
+check(() => {
+  const code=`const V=require('./server/villages'),WL=require('./server/war-live').createWarLive({cellPx:32,pxPerM:32,tickHz:30});const H=V.__p3Bind({warLive:WL,deps:{isTerrainBlockedLocal:(x,y)=>Math.floor(x/32)===436&&Math.floor(y/32)===240},_warNoCollide:false});const m={_t804p:{pts:[{x:436,y:241},{x:436,y:240}],i:0}};console.log(JSON.stringify(H._t804Way(m,436.5,241.038,430.5,244.5,1/15,null)));`;
+  const actual=require('child_process').execFileSync(process.execPath,['-e',code],{cwd:require('path').join(__dirname,'..'),env:{...process.env,T790_NO_SNAP:'0'},encoding:'utf8'}).trim();
+  assert.deepEqual(JSON.parse(actual),{x:436.5,y:240.5});
+}, 'T790 끔의 옛 길점 선택은 그대로 보존한다');
 console.log(`\n${pass} 통과 / 0 실패`);

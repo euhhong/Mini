@@ -14101,7 +14101,7 @@
       "afterServer800Sha256": "c5bc1e1c2af1d56002858e28a0c83a780620abece3794dbb922883e2f9251ac7"
     }
   },
-  "status": "running",
+  "status": "superseded-affected-rows-rerunning",
   "completedMainCommands": 60,
   "expectedMainCommands": 60,
   "completedCorrectionCommands": 10,
@@ -14116,5 +14116,13 @@
   "deathCounterContract": {
     "starvationDeaths": "econ _fdDeadTot: 식량 빚 정본 사망",
     "deadTot": "econ 인구 감소 고리 _deadTot, 전쟁·행상·도적 사상 전체 합이 아님"
+  },
+  "staleRouteCorrection": {
+    "affectedVariants": [
+      "T790_NO_SNAP",
+      "all"
+    ],
+    "affectedFollowup": "T790 켬인 도적/전쟁/집N 후속. 새 소스로 재측정. T790끔 rollback과 T1041개별 포함 그 밖의 행은 이 조건이 닫힘.",
+    "newFinalResultsAvailable": false
   }
 }

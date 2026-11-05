@@ -6515,6 +6515,7 @@ function _t804Local(mem, x, y, tx, ty, st) {   // 걸음 프리셋 길 — 반�
     P = mem._t804p; if (!P) return false;
   }
   for (let k = Math.min(P.pts.length - 1, P.i + CAP); k > P.i; k--) { const q = P.pts[k];
+    if (T790_NO_SNAP && _warBlockedCell(q.x, q.y)) continue; // [T1183] 생성 뒤 막힌 길점은 폐기. 1m 안 LOS 생략도 몸 충돌을 대신하지 않는다.
     if (_warClearLine(x * MPC, y * MPC, (q.x + 0.5) * MPC, (q.y + 0.5) * MPC)) { _t804Stat.follow++; return { x: q.x + 0.5, y: q.y + 0.5 }; } }
   mem._t804p = null; return null;   // 길 칸이 안 보인다 — 놓는다(다음 걸음에 막혔으면 그 자리에서 다시 묻는다)
 }
