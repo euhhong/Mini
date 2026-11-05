@@ -3,7 +3,7 @@
 // Completed production-card matrices only; retain original bytes and per-member hashes, no DB.
 // node scripts/production-chain-collect.js T1181 /tmp/t1181 계측/T1181_2026-11-06
 const fs=require('fs'),path=require('path'),crypto=require('crypto'),zlib=require('zlib'),cp=require('child_process');
-const[task,root,out]=process.argv.slice(2),cfg={T1181:{server:27,lab:21,commit:'c9f7bc5e',end:'all3 800 exit=0',labEnd:'all3 42 exit=0'},T1188:{server:9,lab:6,commit:'d1017945',end:'on 800 exit=0',labEnd:'on 42 exit=0'},T1192:{server:9,lab:6,commit:'46e06456',end:'on 800 exit=0',labEnd:'on 42 exit=0'}}[task];if(!cfg||!root||!out)throw Error('task, root, output stem required');
+const[task,root,out]=process.argv.slice(2),cfg={T1181:{server:27,lab:21,commit:'c9f7bc5e',end:'all3 800 exit=0',labEnd:'all3 42 exit=0'},T1188:{server:9,lab:6,commit:'d1017945',end:'on 800 exit=0',labEnd:'on 42 exit=0'},T1192:{server:9,lab:6,commit:'44f5e612',end:'on 800 exit=0',labEnd:'on 42 exit=0'}}[task];if(!cfg||!root||!out)throw Error('task, root, output stem required');
 const suffix='.'+task.toLowerCase()+'.json',sha=b=>crypto.createHash('sha256').update(b).digest('hex'),read=p=>JSON.parse(fs.readFileSync(p,'utf8')),files={},members={},server=[],lab=[];
 function add(k,p){if(k in files)return;const b=fs.readFileSync(p);files[k]=b.toString('utf8');members[k]={bytes:b.length,sha256:sha(b)};}
 for(const [kind,last]of[['server',cfg.end],['lab',cfg.labEnd]]){const p=path.join(root,kind,'progress.log');if(!fs.readFileSync(p,'utf8').split('\n').includes(last))throw Error('incomplete '+p);add('controllers/'+kind+'-progress.log',p);}
