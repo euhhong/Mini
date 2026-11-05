@@ -97,7 +97,9 @@ if (SUB) {   // ── 아이 판 — 손잡이는 모듈 적재 때 읽는다(e
       const q = pos.get(id); if (!q) { pos.set(id, [p.x, p.y]); continue; }
       const d = Math.hypot(p.x - q[0], p.y - q[1]);
       if (d > A.maxStep) A.maxStep = d;
-      if (d > MOVE / 1000 * dt * 1.001 + 0.01) A.jumps++;
+      const walking = p._t1104W != null || q[2], scale = walking && host.t1104Ppd ? host.t1104Ppd() / (MOVE / 1000 * DAY_MS) : 1;
+      if (d > MOVE / 1000 * dt * scale * 1.001 + 0.01) A.jumps++;
+      q[2] = p._t1104W != null;
       q[0] = p.x; q[1] = p.y;
     }
   }
@@ -213,7 +215,8 @@ const ok = (c, m, x) => { c ? pass++ : fail++; console.log((c ? '  ✓ ' : '  �
 function sub(name, on, bait) {
   const env = Object.assign({}, process.env, { T627_TRIP_DAY: '0', T1104_SUB: name, BANDIT_MINDAY: '1', T1078_BANDIT_ALL: '1', T1079_BANDIT_CAMP: '1' });
   env.T1104_BANDIT_WALK = '0'; delete env.T1039_BANDIT_BODY; delete env.VILLAGE_NPC_CAP; delete env.T1104_BAIT; delete env.BANDIT_FIXTURE; delete env.T476_PUNITIVE; delete env.T521_GANG_ARMS;
-  if (on === 'operating') { env.T627_TRIP_DAY='1'; env.T1104_OPERATING_DAY='1'; env.T1104_BANDIT_WALK='1'; }
+  if (on === 'compressed') { env.T627_TRIP_DAY='1'; env.T1104_BANDIT_WALK='1'; }
+  else if (on === 'operating') { env.T627_TRIP_DAY='1'; env.T1104_OPERATING_DAY='1'; env.T1104_BANDIT_WALK='1'; }
   else if (on === 'only') { env.T1104_BANDIT_WALK = '1'; env.T1079_BANDIT_CAMP = '0'; }
   else if (on === 'default') delete env.T1104_BANDIT_WALK;
   else if (on) env.T1104_BANDIT_WALK = typeof on === 'string' ? on : '1';
@@ -312,6 +315,7 @@ ok(RO && RF && MO && MF && SO && SF && WO, '[전제] 일곱 판이 다 돌았다
 { const raid=sub('raid',true,'stuckwalk'), sup=sub('sup',true,'stuckwalk'); ok(raid.A.ev.out && !raid.A.ev.meet && !raid.raids.length, '[T1184] 길목 장부 날이 지나도 몸이 못 닿으면 약탈0'); ok(sup.A.ev.go && sup.A.ev.go.pids.length === 8 && !sup.A.ev.fight, '[T1184] 몸8명 출발 장부가 있어도 은거지 미도착이면 교전0'); }
 if (process.env.T1184_OPERATING_PROBE === '1') { const raid=sub('raid','operating'), sup=sub('sup','operating'); ok(raidAtChoke(raid) && bodiesAtChoke(raid) && raid.A.jumps === 0, '[T1184] T627 켬·정본 운영 하루: 실제 길목 습격·걸음 상한'); ok(sup.A.ev.fight && sup.A.ev.fight.sup && sup.A.ev.fight.supAtCamp > 0 && sup.A.ev.fight.supAtCamp === sup.A.ev.fight.sup.pids.length && sup.A.jumps === 0, '[T1184] T627 켬·정본 운영 하루: 실제 은거지 토벌·걸음 상한',JSON.stringify(sup.A.ev.fight)); }
 { const boot=sub('sup',true,'bootempty'); ok(boot.A.ev.go && !boot.A.ev.fight && boot.t1104.sups.length === 0, '[T1184] 재부팅으로 몸 결속이 사라진 원정은 취소하고 장부만으로 싸우지 않는다'); }
+if (process.env.T1184_OPERATING_PROBE === '1') { const raid=sub('miss','compressed'), sup=sub('sup','compressed'); ok(raidAtChoke(raid) && bodiesAtChoke(raid) && raid.A.jumps === 0, '[T1184] T627 압축 시계: 옛 판에서 놓친 캐러밴도 실제 몸이 제때 닿아 만난다'); ok(sup.A.ev.go && sup.A.ev.fight && sup.A.ev.fight.day === sup.A.ev.go.eta && sup.A.jumps === 0, '[T1184] T627 압축 시계: 몸도 장부 도착 날에 은거지 도착·교전', JSON.stringify({eta:sup.A.ev.go&&sup.A.ev.go.eta,fight:sup.A.ev.fight&&sup.A.ev.fight.day,jumps:sup.A.jumps})); }
 { const partial=sub('sup',true,'partialdraft'); ok(partial.A.ev.go && partial.A.ev.go.force === 6 && partial.A.ev.go.pids.length === 6, '[T1184] 요청8명·실제6명이면 전투 병력도6명'); }
 { const clean = o => JSON.stringify(o, (k,v) => k === 'perf' ? null : v); ok(clean(sub('raid', 'default')) === clean(sub('raid', true)), '[T1184] 미설정 기본 = 명시적 켬(몸·더미·걸음 결과)'); }
 console.log(`\n결과: ${fail ? 'FAIL' : 'PASS'} (${pass} 통과 · ${fail} 실패)`);

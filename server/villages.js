@@ -1563,11 +1563,14 @@ function tickBodyExits(now) {
     if (r.t765 && remain <= 0.5) { p.vx = 0; p.vy = 0; continue; }   // ★[T765] 후보 몸은 닿아도 안 거둔다 — 붙는 날(도적 하루 장부)까지 그 자리에 선다
     if ((r.t1039 || r.t1078 != null || r.t1104 != null) && remain <= 0.5) { p.vx = 0; p.vy = 0; continue; }   // ★[T1104] 길목 · 은거지 · 원정 걸음도 닿으면 선다(도적 하루 장부가 다음 걸음 · 받기를 정한다)   // ★[T1039 walk] 단이 될 몸도 닿아도 안 거둔다 — 단이 서는 날(도적 하루 장부)까지 은거지에 선다 · ★[T1078] 단에 들 몸(절망 이탈)도
     if (remain <= 0.5) { if (T681_ON) { p.vx = 0; p.vy = 0; continue; } _bxGone(r, p); _bx.arrive++; continue; }   // ★[T681 ③] 켬이면 도착 회수는 하루 경계
-    const step = T681_ON ? Math.min(remain, sp * dtMs, Math.max(0, _t681BxVis(r, now) - r.prog)) : Math.min(remain, sp * dtMs);   // ★[T681 ③] 켬 = 장부 일정을 넘지 않게(보이는 것)
+    // [T1184] 길날과 몸의 시간은 같은 예산이다. T627 압축 판도 운영 하루를 걷는다.
+    // r.ppd(px/길날) ÷ (sp(px/ms) × 판 하루(ms)) = 두 시계의 비. 운영 시계 및 T627=0은 정확히1.
+    const moveMs = r.t1104 != null && r.ppd > 0 && state.dayMs > 0 ? dtMs * (r.ppd / (sp * state.dayMs)) : dtMs;
+    const step = T681_ON ? Math.min(remain, sp * moveMs, Math.max(0, _t681BxVis(r, now) - r.prog)) : Math.min(remain, sp * moveMs);   // ★[T681 ③] 켬 = 장부 일정을 넘지 않게(보이는 것)
     if (!(step > 0)) { p.vx = 0; p.vy = 0; continue; }
     const next = caravanPointAt(r, r.prog + step);
     r.prog += step;
-    p.vx = (next.x - p.x) / dtMs * 1000; p.vy = (next.y - p.y) / dtMs * 1000;
+    p.vx = (next.x - p.x) / moveMs * 1000; p.vy = (next.y - p.y) / moveMs * 1000;
     if (T1145_XY_COLS) BC.w(p, next.x, next.y); else { p.x = next.x; p.y = next.y; }   // ★[T1145] 켬 = 쓰기 길
   }
 }
@@ -1801,6 +1804,7 @@ function _t1104Walk(p, x, y, tag, id, vil) {
   p._bxExit = undefined;
   _bxWalk(vil || { dbId: null, ccx: x / SZ, ccy: y / SZ }, p, { k: 'move', to: { x, y } });
   const r = state.bodyExits.get(p.pid); if (!r) return null;
+  r.ppd = _t1079Ppd(); // [T1184] 만남·도착 장부와 같은 길날(기존 T1080/T627 정본).
   r.t1104 = id; r.t1104k = tag === 't1104s' ? 's' : 'g';
   p._t1104W = id;
   return r;
