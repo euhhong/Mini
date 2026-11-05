@@ -114,7 +114,24 @@ const body = (name) => {
 };
 // ★[T1145] 열 손잡이 — 아래 절들이 뜬 제품 글자가 읽는 이름(`BC` · `T1145_XY_COLS` · `_xyC` · `_xyX` · `_xyY`)을 제품 모듈 · 제품 글자 그대로 싣는다(사본 0 · 손잡이는 이 프로세스 env `T1145_XY_COLS`)
 globalThis.__T1145BC = require(path.join(ROOT, 'server', 'body-cols.js'));
-const T1145P = 'const BC = globalThis.__T1145BC, T1145_XY_COLS = BC.ON, _xyC = BC.C;\n' + body('_xyX') + '\n' + body('_xyY') + '\n';
+globalThis._B1155 = globalThis.__T1145BC; // extracted product writers use the real boundary
+// Compare the unchanged OFF expression once, rather than counting both
+// source branches as two executed RNG draws. Runtime comparisons still use Z.
+function t1155OffSource(src) {
+  const ast = require('acorn').parse(src, {ecmaVersion:'latest',allowReturnOutsideFunction:true});
+  const edits=[];
+  function walk(n) {
+    if (!n || typeof n!=='object') return;
+    if(n.type==='ConditionalExpression' && src.slice(n.test.start,n.test.end)==='_B1155.ON') {
+      let a=n.start,b=n.end;if(src[a-1]==='(' && src[b]===')'){a--;b++;}
+      edits.push([a,b,src.slice(n.alternate.start,n.alternate.end)]);return;
+    }
+    for(const k in n) { const v=n[k];if(Array.isArray(v))v.forEach(walk);else if(v&&typeof v==='object')walk(v); }
+  }
+  walk(ast);for(const [a,b,r] of edits.sort((a,b)=>b[0]-a[0]))src=src.slice(0,a)+r+src.slice(b);
+  return src;
+}
+const T1145P = 'const BC = globalThis.__T1145BC, T1145_XY_COLS = BC.ON, _xyC = BC.C;\n' + body('_xyX') + '\n' + body('_xyY') + '\n' + ['_t1155FollowSlot','_t1155FollowObject','_t1155StillSlot','_t1155StillObject','_t1155PreObject','_t1155PostObject','_t1155StreamSlot','_t1155AlwaysSlot','_t1155ActiveSlot'].map(body).join('\n') + '\n';
 
 console.log('\n③ 남은 할당 — 걸음 하나의 계수(T340 자를 그대로 다시 댄다)');
 {
@@ -155,7 +172,7 @@ console.log('\n③ 남은 할당 — 걸음 하나의 계수(T340 자를 그대�
 console.log('\n④ 주사위 0 — `decideNpcBehavior` 의 열다섯 굴림 [T350]');
 {
   const S = require(path.join(ROOT, 'server', 'seed-rand.js'));
-  const dnb = codeOnly(body('decideNpcBehavior'));
+  const dnb = codeOnly(t1155OffSource(body('decideNpcBehavior')));
   ok(!/Math\.random/.test(dnb), '④ ★★주민 결정 함수에 `Math.random` 이 **하나도 없다**(T340 계수 15 → 0)');
   ok((dnb.match(/_dn\(\)/g) || []).length === 15, '④ ★그 열다섯이 **같은 수만큼** 씨 흐름으로 갔다',
      `_dn() ${(dnb.match(/_dn\(\)/g) || []).length}개`);
@@ -1093,7 +1110,7 @@ console.log('\n⑪ T394 ①② — 일터 도넛에 지형 · ⑤ 목표 되짚�
   // ② — ⑤ 배회 목표 되짚기(zone.js)
   const otSrc = body('_t394OpenTarget');
   ok(otSrc.length > 200 && !/_dn\(|_dt\(|_dl\(|_dv\(|Math\.random/.test(otSrc), '⑪-e [전제] 되짚기 함수를 떴다 · ★주사위 0(흐름 무소비)', `${otSrc.length}자`);
-  const ds = body('decideNpcBehavior');
+  const ds = t1155OffSource(body('decideNpcBehavior'));
   ok(/npc\.targetY = npc\.npcWorkY \+ \(_dn\(\) - 0\.5\) \* 160;\n\s*\}\n\s*if \(T394_WORK_TERRAIN\) _t394OpenTarget\(npc, npc\.npcWorkX, npc\.npcWorkY\);/.test(ds),
      '⑪-e 되짚기는 ⑤ 의 **두 굴림 뒤**에만 선다(일터 ±50/80 을 뽑은 다음 줄 · 켬일 때만)');
   const OT = new Function('BUILDING_SIZE', 'isTerrainBlockedLocal', otSrc + '\nreturn _t394OpenTarget;')(32, river);
@@ -1143,7 +1160,7 @@ console.log('\n⑫ T399 ② — 튕김 도약이 강으로 뛰지 않는다 [T39
   const S = require(path.join(ROOT, 'server', 'seed-rand.js'));
   const us = body('unstuckNpc'), ot = body('_t394OpenTarget');
   ok(us.length > 400 && ot.length > 200, '⑫ [전제] 제품에서 **그 글자** 둘을 떴다(튕겨냄 · 되짚기)', `${us.length} · ${ot.length}자`);
-  ok(/npc\.targetY = npc\.y \+ Math\.sin\(ang\) \* 80;[\s\S]{0,700}?if \(T394_WORK_TERRAIN\) _t394OpenTarget\(npc, npc\.x, npc\.y\);\n\s*npc\.nextDecisionAt = now \+ 800;/.test(us),
+  ok(/npc\.targetY = npc\.y \+ Math\.sin\(ang\) \* 80;[\s\S]{0,700}?if \(T394_WORK_TERRAIN\) _t394OpenTarget\(npc, npc\.x, npc\.y\);\n\s*npc\.nextDecisionAt = now \+ 800;/.test(t1155OffSource(us)),
      '⑫-e 되짚기는 도약 점을 정한 **다음 줄**이고 결정 시각 **앞**이다(제 몸 쪽으로)');
   const SZ = 32;
   const river = (x, y) => { const c = Math.floor(x / SZ); return ((c % 6) + 6) % 6 >= 4; };   // 6칸마다 2칸 물(세로 줄)
@@ -1903,7 +1920,7 @@ console.log('\n⑳ T461 걸음 문 WASM 커널 — 1,000틱 뒤 전원 좌표 �
   // ★제품 글자를 뜬다: 이동 문(`movePlayerStep`) · 커널 앞문(`_wwPre`) · 뒷문(`_wwPost`) — 커널은 `server/walk-wasm.js`(제품 껍데기) 그대로.
   const MV = T1145P + body('movePlayerStep'), POST = body('_wwPost');   // ★[T1145] 열 손잡이 이름을 앞에(이동 문 · 앞문 묶음마다 한 번)
   //   ★[T689] 앞문 몸통이 `_wwPreOne` 으로 나뉘었다(손잡이 `T689_GC` · 켬 = `players.forEach`) — 둘을 같이 뜬다 · 판 손잡이는 이 프로세스 env(끔·켬 두 번 돌린다)
-  const PRE = T1145P + 'const T689_GC = ' + (process.env.T689_GC === '1') + ';\nlet _wwCut = false;\nconst T774_ACTIVE_COL = false; let _t774I = 0; const _t774Act = null;\n' + body('_wwPre') + '\n' + body('_wwPreOne');   // ★[T774] 앞문이 읽는 활성 열 손잡이 — 이 판은 끔 갈래
+  const PRE = T1145P + 'const Streams = {ON:false};\nconst T689_GC = ' + (process.env.T689_GC === '1') + ';\nlet _wwCut = false;\nconst T774_ACTIVE_COL = false; let _t774I = 0; const _t774Act = null;\n' + body('_wwPre') + '\n' + body('_wwPreOne');   // ★[T774] 앞문이 읽는 활성 열 손잡이 — 이 판은 끔 갈래
   const ISS = body('_wwIsStill'), SPOST = body('_wwStillPost');   // ★[T672] 서 있는 몸 거름 · 뒷일(앞문이 부른다 · 끔이면 안 열린다)
   const T672P = ['T672_WALK_CUT', '_wwStill', '_wwStill0', '_wwNoRes', '_wwTC', '_wwResGen', '_wwVerify'];
   const t672A = (on, gen) => [!!on, [], [], [], { src: null, rx: null, gen: -1, k: 0, hit: 0, miss: 0, treeBad: 0, still: 0, stillBad: 0 }, gen || 0, false];
@@ -1980,7 +1997,7 @@ console.log('\n⑳ T461 걸음 문 WASM 커널 — 1,000틱 뒤 전원 좌표 �
     const { _wwPre, _wwPost } = mkPrePost(players, WB, RES);
     let tickBad = 0, stA = 0, stB = 0, ejA = 0;
     for (let t = 0; t < 1000; t++) {
-      for (let i = 0; i < N; i++) { const v = velOf(i, t); A[i].vx = v[0]; A[i].vy = v[1]; B[i].vx = v[0]; B[i].vy = v[1]; }
+      for (let i = 0; i < N; i++) { const v = velOf(i, t); for (const p of [A[i],B[i]]) { _B1155.set(p,'vx',v[0]); _B1155.set(p,'vy',v[1]); } }
       stamps.length = 0;
       for (const p of A) move(p);
       stA += stamps.length; const sa = stamps.slice(); stamps.length = 0;
@@ -2009,7 +2026,7 @@ console.log('\n⑳ T461 걸음 문 WASM 커널 — 1,000틱 뒤 전원 좌표 �
     const N = 500, A = mkNpcs(N, 777), B = mkNpcs(N, 777), WA = mkWalk(), WB = mkWalk(), move = mkMove(WA);
     for (const p of B) if (p._rdMul === 1.1) p._rdMul = 1.1000000000000003;
     const { _wwPre, _wwPost } = mkPrePost(new Map(B.map((p) => [p.pid, p])), WB, RES);
-    for (let t = 0; t < 200; t++) { for (let i = 0; i < N; i++) { const v = velOf(i, t); A[i].vx = B[i].vx = v[0]; A[i].vy = B[i].vy = v[1]; }
+    for (let t = 0; t < 200; t++) { for (let i = 0; i < N; i++) { const v = velOf(i, t); for (const p of [A[i],B[i]]) { _B1155.set(p,'vx',v[0]); _B1155.set(p,'vy',v[1]); } }
       for (const p of A) move(p); const n = _wwPre(1 / 30); for (let i = 0; i < n; i++) _wwPost(B[i], i); }
     let bad = 0; for (let i = 0; i < N; i++) if (!sameF64(A[i].x, B[i].x) || !sameF64(A[i].y, B[i].y)) bad++;
     ok(bad > 0, '⑳ [자명 통과 금지] 한 비트 다른 길 배속(1.1 → 1.1000000000000003)을 넣으면 게이트가 **문다**', `어긋남 ${bad}`);
@@ -2054,7 +2071,7 @@ console.log('\n⑳ T461 걸음 문 WASM 커널 — 1,000틱 뒤 전원 좌표 �
       const f = new Function('players', '_t316WalkAlways', 'isPositionActive', 'qtResources', '_wwRes', '_wwList', '_wwSeq', '_wwCode', '_WW', '_walk', '_wwOn', '_wwStat',
         'TRUNK_COLLIDER_MAX', 'PLAYER_BODY_R', 'ROCK_COLLIDER_R', 'Roads', '_streamWalkMul', 'T585_WALK_STAT', '_t585WalkCount',
         'T672_WALK_CUT', '_wwStill', '_wwStill0', '_wwNoRes', '_wwTC', '_wwVerify',
-        'let _wwResGen = 0;\n' + PRE + '\n' + (still || ISS) + '\n' + POST + '\n' + SPOST + '\nreturn { _wwPre, _wwPost, _wwStillPost, bump: () => { _wwResGen++; } };')(
+        'let _wwResGen = 0;\n' + PRE + '\n' + (still || ISS) + (still ? '\n_t1155StillSlot = function(s) { return _wwIsStill(BC.own[s]); };\n' : '\n') + POST + '\n' + SPOST + '\nreturn { _wwPre, _wwPost, _wwStillPost, bump: () => { _wwResGen++; } };')(
         players, () => true, () => true, {}, resList, [], seq, code, WWx, W, true, { ticks: 0, steps: 0 }, 9, 6, 14, Roads, () => 1, false, () => {},
         !!on, [], [], [], tc, false);
       return Object.assign(f, { seq, code, tc }); };
@@ -2080,7 +2097,7 @@ console.log('\n⑳ T461 걸음 문 WASM 커널 — 1,000틱 뒤 전원 좌표 �
       for (let t = 0; t < T; t++) {
         if (t === 300) { for (let i = 0; i < R.length; i += 3) if (R[i].type === 'tree') { R[i].type = 'sapling'; R[i].r = 3; } if (!opt.noBump) { fB.bump(); fC.bump(); } }
         for (let i = 0; i < N; i++) { let v = velOf(i, t); if (h32(i, t >> 6, 9) % 3 === 0) v = [0, 0];
-          A[i].vx = B[i].vx = C[i].vx = v[0]; A[i].vy = B[i].vy = C[i].vy = v[1]; }
+          for (const p of [A[i],B[i],C[i]]) { _B1155.set(p,'vx',v[0]); _B1155.set(p,'vy',v[1]); } }
         stamps.length = 0; for (const p of A) moveA(p); const sA = stamps.slice();
         stamps.length = 0; fB._wwPre(1 / 30); post(fB); const sB = stamps.slice();
         stamps.length = 0; fC._wwPre(1 / 30); post(fC); const sC = stamps.slice();

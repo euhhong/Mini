@@ -15,6 +15,9 @@
 const MODE = (typeof process !== 'undefined' && process.env && process.env.T1145_XY_COLS || '').trim();
 const ON = MODE === '1' || MODE === 'verify', VERIFY = MODE === 'verify';
 const C = { X: new Float64Array(0), Y: new Float64Array(0), n: 0 };   // 열 둘 · 쓴 칸 수(높은 물) — 키울 때 `C.X` · `C.Y` 가 새 배열로 바뀐다(읽는 쪽은 늘 `C.X[s]`)
+const FIELDS = ["targetX", "targetY", "path", "pathIndex", "_t791P", "_t791Pn", "_t791Px", "_t791Py", "_pathAt", "_pathFor", "_stuckPos", "_stuckN", "canadiaVillage", "nextDecisionAt", "behavior", "simEvacUntil", "canadiaTask", "vx", "vy", "_rdMul", "floor", "onStairId", "handingOff", "isNpc", "simCaravan", "simWar", "simVillageId", "simJob", "_stCx", "_stCy", "_stMul", "pid", "dirty"];
+for (const k of FIELDS) C[k] = []; // mixed columns preserve undefined, references, booleans and doubles exactly
+const slots = new WeakMap();
 const own = [];    // 칸 → 몸(빈 칸 = undefined)
 const free = [];   // 돌려받은 칸(나중에 돌려준 칸 먼저 — 정해진 차례)
 const stat = { alloc: 0, reuse: 0, release: 0, live: 0, ticks: 0, checks: 0, bad: 0, stale: 0, noSlot: 0, ex: [] };
@@ -29,7 +32,9 @@ function alloc(p) {
   let s;
   if (free.length) { s = free.pop(); stat.reuse++; }
   else { s = C.n++; if (s >= C.X.length) _grow(s + 1); }
-  own[s] = p; C.X[s] = p.x; C.Y[s] = p.y; p._t1145S = s;
+  own[s] = p; slots.set(p, s); C.X[s] = p.x; C.Y[s] = p.y;
+  for (const k of FIELDS) C[k][s] = p[k];
+  p._t1145S = s;
   stat.alloc++; stat.live++;
   return s;
 }
@@ -37,9 +42,38 @@ function alloc(p) {
 function release(p) {
   const s = p._t1145S;
   if (!(s >= 0)) return;
-  if (own[s] === p) { own[s] = undefined; free.push(s); stat.release++; stat.live--; }
+  if (own[s] === p) { own[s] = undefined; slots.delete(p); for (const k of FIELDS) C[k][s] = undefined; free.push(s); stat.release++; stat.live--; }
   p._t1145S = -1;
 }
+// T1155 boundary: object identity is resolved once; the movement core uses slots.
+function slot(p) { const s = slots.get(p); return s === undefined ? -1 : s; }
+function setAt(s, k, value) {
+  const p = own[s];
+  if (!p) throw new Error('T1155 stale slot ' + s);
+  C[k][s] = value; p[k] = value; return value;
+}
+function set(p, k, value) {
+  const s = slots.get(p);
+  if (s !== undefined) { if (k === 'x') C.X[s] = value; else if (k === 'y') C.Y[s] = value; else if (Array.isArray(C[k])) C[k][s] = value; }
+  p[k] = value; return value;
+}
+function update(p, k, delta, prefix) {
+  // JS ++ converts first, including undefined -> NaN and BigInt semantics.
+  let value = p[k], old;
+  if (delta > 0) old = value++; else old = value--;
+  set(p, k, value); return prefix ? value : old;
+}
+function erase(p, k) {
+  const s = slots.get(p); if (s !== undefined && Array.isArray(C[k])) C[k][s] = undefined;
+  return delete p[k];
+}
+function assignObject(p, ...sources) {
+  Object.assign(p, ...sources);
+  const s = slots.get(p);
+  if (s !== undefined) for (const source of sources) if (source != null) for (const k of Object.keys(source)) if (k === 'x') C.X[s] = p.x; else if (k === 'y') C.Y[s] = p.y; else if (Array.isArray(C[k])) C[k][s] = p[k];
+  return p;
+}
+function positionAt(s, x, y) { C.X[s] = x; C.Y[s] = y; const p = own[s]; p.x = x; p.y = y; }
 // 쓰기 길 하나 — 열(정본) · 거울
 function w(p, x, y) { const s = p._t1145S; if (s >= 0) { C.X[s] = x; C.Y[s] = y; } p.x = x; p.y = y; }
 function wx(p, x) { const s = p._t1145S; if (s >= 0) C.X[s] = x; p.x = x; }
@@ -63,6 +97,7 @@ function check(M) {
   for (let s = 0; s < C.n; s++) {
     const p = own[s]; if (p === undefined) continue;
     stat.checks++;
+    for (const k of FIELDS) if (!Object.is(p[k], C[k][s])) { stat.bad++; if (stat.ex.length < 8) stat.ex.push({pid:p.pid,s,field:k,obj:p[k],col:C[k][s]}); }
     if (!Object.is(p.x, C.X[s]) || !Object.is(p.y, C.Y[s])) { stat.bad++; if (stat.ex.length < 8) stat.ex.push({ pid: p.pid, s, obj: [p.x, p.y], col: [C.X[s], C.Y[s]] }); }
     if (M && M.get(p.pid) !== p) stat.stale++;
   }
@@ -74,4 +109,4 @@ function perf(reset) {
   if (reset) { stat.ticks = 0; stat.checks = 0; stat.bad = 0; stat.stale = 0; stat.noSlot = 0; stat.ex.length = 0; }
   return o;
 }
-module.exports = { ON, VERIFY, MODE, C, own, alloc, release, w, wx, wy, bindMap, check, perf };
+module.exports = { FIELDS, slot, set, setAt, update, erase, assignObject, positionAt, ON, VERIFY, MODE, C, own, alloc, release, w, wx, wy, bindMap, check, perf };

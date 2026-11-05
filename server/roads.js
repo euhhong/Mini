@@ -19,6 +19,8 @@
 //   RNG 무소비(결정론 보존 — 랩 계약). econ 무접촉. 좌표: 셀(1셀=1m 캐논, px÷32).
 // =============================================================================
 'use strict';
+const _B1155 = require('./body-cols'); // T1155 authoritative writes; OFF keeps the original expression.
+
 
 const ENABLED = process.env.ENABLE_ROADS !== '0';
 
@@ -137,7 +139,7 @@ function stampEntityPx(ent, x, y) {
   const cx = (x / SZ) | 0, cy = (y / SZ) | 0, k = cy * S.cellsW + cx;
   if (ent._rdK === k) return;
   ent._rdK = k;
-  ent._rdMul = SPD[stampCell(cx, cy)];
+  (_B1155.ON ? _B1155.set(ent,"_rdMul",SPD[stampCell(cx, cy)]) : (ent._rdMul = SPD[stampCell(cx, cy)]));
 }
 function speedMulOf(ent) { return (S.ready && ent && ent._rdMul) ? ent._rdMul : 1; }
 // A* 스텝 할인(villages computeRoutePts — 코스 그리드 4셀 키). 랩 정신: 교역로 A*만, 거리행렬·bfs 무접촉.
@@ -313,7 +315,7 @@ function unpaveSoonKeys() {
   for (const k of I.low) if (S.paved.has(k)) out.push(k);
   return out;
 }
-function roadDayPerf() { return (T688_ON || T688_VERIFY) ? Object.assign({ mode: T688, lvl: I.lvl.size, sched: I.sched.size, dueDays: I.due.size, flRate: +_flRate.toFixed(3), flBatches: _flSt.n, flMaxMs: +_flSt.maxMs.toFixed(2), flMaxRows: _flSt.maxRows, flCapped: _flSt.capped, flSnap: _flSt.snap, flPending: !!_fl || !!_t713Q }, I.st) : null; }
+function roadDayPerf() { return (T688_ON || T688_VERIFY) ? (_B1155.ON ? _B1155.assignObject : Object.assign)({ mode: T688, lvl: I.lvl.size, sched: I.sched.size, dueDays: I.due.size, flRate: +_flRate.toFixed(3), flBatches: _flSt.n, flMaxMs: +_flSt.maxMs.toFixed(2), flMaxRows: _flSt.maxRows, flCapped: _flSt.capped, flSnap: _flSt.snap, flPending: !!_fl || !!_t713Q }, I.st) : null; }
 
 // ★[T578 ④] 교역로 A* 가 h 를 줄일 몫 — 스텝 비용 할인의 최저값(`COST` 의 가장 작은 값 · 수 사본 0).
 function courseCostMin() { return (S.ready && S.coarse.size) ? Math.min(...COST) : 1; }   // 등급 칸이 하나도 없으면 할인도 없다(h 그대로)
@@ -389,14 +391,14 @@ function flushDaily(day) { // 그날 행을 얼려 둔다(쓰기는 `_flushStep`
   if (_fl) _flushStep(0);   // 앞날 것이 남았으면 먼저 다 쓴다(날이 조각보다 길어 실제론 안 난다)
   if (!S.dirty.size) return { rows: 0, sentN: 0, pending: false };
   if (T688_ON) {   // ★[T688 ⓑ] 얼리기 = dirty 집합을 넘겨받기(O(1)) · 값은 묶음이 쓸 때 읽는다(그 사이 바뀐 키는 `_flSnap` 이 경계 값을 들고 있다) · 첫 묶음은 다음 틱
-    const keys = S.dirty; S.dirty = new Set();
+    const keys = S.dirty; (_B1155.ON ? _B1155.set(S,"dirty",new Set()) : (S.dirty = new Set()));
     _fl = { lazy: true, day, keys, it: keys.values(), snap: new Map(), out: [], i: 0, n: 0, total: keys.size, end: false, cells: S.cells.size, graded: S.stats.graded, stamped: S.stats.stamped };
     _flCow = true; _flDayMin = 0;
     return { rows: keys.size, sentN: 0, pending: true };
   }
   const rows = [];
   for (const k of S.dirty) { const r = S.cells.get(k); rows.push(r ? [k, r.v, r.d] : [k, null, 0]); }
-  S.dirty = new Set();
+  (_B1155.ON ? _B1155.set(S,"dirty",new Set()) : (S.dirty = new Set()));
   _fl = { day, rows, i: 0, n: 0, cells: S.cells.size, graded: S.stats.graded, stamped: S.stats.stamped };
   if (!TB.out(_sliceMs(), 'roads')) _flushStep(TB.slice(_sliceMs()));   // ★[T687] 켬 = 이 틱 남은 몫 · 없으면 다음 틱(행은 얼려 둔 채)
   return { rows: rows.length, sentN: 0, pending: !!_fl };
