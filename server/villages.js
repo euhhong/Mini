@@ -5897,6 +5897,8 @@ function init(deps) {
       villageCount: dbRows.length,          // 슬롯만 확보 — 아래서 전부 실지형 마을로 교체
       picker: 'rational', infoRange: 5000, raidPer100: 0.005, // 랩과 동일 옵션
     });
+    // [T1159] econ은 지형을 몰라 몸의 집 N을 호스트에 묻는다(손잡이 끔이면 호출 0).
+    world.homePopulation = (v) => { const vil = state.byEcon.get(v); return vil ? require('./home-population').homePopulation(vil, state.deps.players, SZ) : v.npcs.length; };
     world.villages = [];
     world.events = [];
     // ★★[T135] 나무 층을 econ 에 꽂는다 — `priceFn` 과 같은 계약(econ 은 지형·청크를 모른다).
