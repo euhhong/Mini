@@ -14408,7 +14408,7 @@ function npcLifeTick(npc, now) {   // zone.js decideNpcBehavior 훅(늑대 도�
         const _cc = _carryCfg();
         const _cap = (_cc && _cc.CFG && _cc.CFG.CAP_KG) || 0;
         if (!T720_LON_DAY && _cap > 0 && (npc._t312Kg || 0) >= _cap) _t312Deliver(vil, npc);   // T1180: 종전 시계 대조만 즉시 입고
-      } else if (!npc._lastFishAt || now - npc._lastFishAt > 8000) {   // ★[T340] 끈 팔만 8초 박자(종전 비트)
+      } else if (!_lifeEcon().T312_FISH_ACT && (!npc._lastFishAt || now - npc._lastFishAt > 8000)) {   // T1180: 현장 없는 켬 세계에서 옛 물고기를 만들지 않는다
         npc._lastFishAt = now;
         if (npc.inventory) { npc.inventory.fish = (npc.inventory.fish || 0) + 1; const _L = _t732Lots(); if (_L) _L.noteNow(npc, 'fish', 1); }   // 8초 1마리(구 ③-b 이관 — simJob 기준) · ★[T732] 손에 든 순간(곁 장부)
       }

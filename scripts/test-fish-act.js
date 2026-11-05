@@ -142,7 +142,7 @@ console.log('\n⑥ 끄면 비트 동일 — 새 줄이 전부 손잡이 뒤에 �
   ok(/function fishActOn\(v\) \{ return !!\(T312_FISH_ACT/.test(C), '⑥ ★게이트도 손잡이가 첫 항이다');
   // ★[T340] 끈 팔의 종전 연출은 **8초 박자 + 한 줄** 그대로다(켠 팔만 대본으로 갔다).
   ok(/if \(_lifeEcon\(\)\.fishActOn\(vil\.econ\)\) \{/.test(VC)
-     && /\} else if \(!npc\._lastFishAt \|\| now - npc\._lastFishAt > 8000\) \{/.test(VC)
+     && /\} else if \(!_lifeEcon\(\)\.T312_FISH_ACT && \(!npc\._lastFishAt \|\| now - npc\._lastFishAt > 8000\)\) \{/.test(VC)
      && /npc\.inventory\.fish = \(npc\.inventory\.fish \|\| 0\) \+ 1;/.test(VC),
     '⑥ ★★생활층 끈 팔은 **8초 박자 그대로**다(종전 연출 · 비트 동일)');
   ok(/if \(vil\.econ && _lifeEcon\(\)\.fishActOn\(vil\.econ\)\) \{/.test(VC), '⑥ ★하루 경계 절도 손잡이 뒤다');

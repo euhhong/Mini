@@ -27,6 +27,7 @@ check('physical host suppresses all formula byproducts even before sites exist',
   assert(sum(a.v)>0,job+' positive control');assert.strictEqual(sum(b.v),0,job+' formula leaked');
  }
 });
+check('missing fishing site cannot reactivate the legacy catch clock',()=>{const src=fs.readFileSync(path.join(ROOT,'server/villages.js'),'utf8'),m=src.match(/else if \((!_lifeEcon\(\)\.T312_FISH_ACT && .*?)\) \{/);assert(m);const f=new Function('_lifeEcon','npc','now','return ('+m[1]+');');assert.strictEqual(f(()=>E,{},10000),false);assert.strictEqual(f(()=>({T312_FISH_ACT:false}),{},10000),true);assert.strictEqual(f(()=>({T312_FISH_ACT:false}),{_lastFishAt:9000},10000),false);});
 check('full fish walks to the hall before any deposit',()=>{
  const {v,p}=fixture(),t=10000;
  assert(P.returnStep(v,p,t,.3,.7,1,true));assert(P.returnStep(v,p,t+P.storeMs()+1,.3,.7,1,true));
