@@ -11,8 +11,21 @@ if (OUT/'suite.json').exists():
  if prior.get('files') != rec['files']: raise RuntimeError('source changed; use a new output directory')
  rec=prior
 def save(): (OUT/'suite.json').write_text(json.dumps(rec,ensure_ascii=False,indent=2)+'\n')
+def completed(tag):
+ old=next((r for r in reversed(rec['runs']) if r['tag']==tag and r['exit'] in (0,1)),None)
+ if not old:return False
+ if tag.endswith('-plan'):
+  d=pathlib.Path(old.get('sbcDir','/nonexistent'))
+  return all((d/f'sbc-{seed}.fd-deaths.json').exists() for seed in [1020,7,42])
+ if tag.endswith('-server800'):
+  v=tag[:-10]
+  return (OUT/v/'server800'/f'{v}-1020.fd-deaths.json').exists()
+ if '-lab-' in tag:
+  try:return 'fdDeadTot' in json.loads(pathlib.Path(old['env']['T17_JSON']).read_text())
+  except (FileNotFoundError,json.JSONDecodeError):return False
+ return True
 def run(tag,args,env):
- if any(r['tag']==tag and r['exit'] in (0,1) for r in rec['runs']):return
+ if completed(tag):return
  log=OUT/(tag+'.log'); e=os.environ.copy(); e.update(env); t=time.monotonic(); ru=resource.getrusage(resource.RUSAGE_CHILDREN)
  print('START',tag,flush=True)
  with log.open('w') as stream:

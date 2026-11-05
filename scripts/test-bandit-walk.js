@@ -25,7 +25,7 @@ const R = (p) => require(path.join(ROOT, p));
 const SUB = process.env.T1104_SUB || '';
 const SZ = 32;
 const MOVE = 64;            // 목의 걸음(test-bandit-all · camp 와 같은 목 값)
-const DAY_MS = 30000;       // 목의 하루 길이(같은 목 값)
+const DAY_MS = process.env.T1104_OPERATING_DAY === '1' ? R('server/zone-config').WORLD.dayLengthMs : 30000;       // 목의 하루 길이(같은 목 값)
 const TICK = 100;
 
 if (SUB) {   // ── 아이 판 — 손잡이는 모듈 적재 때 읽는다(env) ─────────────────────────────────────────
@@ -68,6 +68,8 @@ if (SUB) {   // ── 아이 판 — 손잡이는 모듈 적재 때 읽는다(e
   H.syncVillagePop(vil, 0); H.syncVillagePop(other, 0);
   const host = Object.assign(H.banditHost(), { ta: { isBlocked: () => false, forestMult: () => 1 }, cellsW: 800, cellsH: 600 });
   if (BAIT === 'nowalk') host.t1104Walk = (p) => null;   // 미끼: 몸 걸음 문을 뗀다(몸은 은거지에 선다 — 장부만 걷는다)
+  if (BAIT === 'stuckwalk') { const walk=host.t1104Walk; host.t1104Walk=(...args)=>{const r=walk(...args);if(r)r.ppd=0;return r;}; }
+  if (BAIT === 'partialdraft') { const draft=host.t1104Draft; host.t1104Draft=(...args)=>draft(...args).slice(0,6); }
   if (BAIT === 'nodraft') host.t1104Draft = () => [];    // 미끼: 원정 뽑기 문을 뗀다(원정 몸 0 — 장부만 걷는다)
   const db = { rows: [], upsertBanditState: (z, json, day) => db.rows.push({ z, json, day }) };
   B._t765Probe.setHost(host, db);
@@ -171,7 +173,7 @@ if (SUB) {   // ── 아이 판 — 손잡이는 모듈 적재 때 읽는다(e
   } else if (SUB === 'sup') {   // 소굴 단(목촌에서 141셀) — 목촌 전사 8 이 토벌에 나선다
     B._t1078Probe.dens().push({ id: 1, cx: 300, cy: 300, sc: 0, dv: 0, dr: 0, gen: 0, next: 401, cleared: 0 });
     plan[401] = () => { e._banditRisk = 0.5; e.counts = Object.assign({}, e.counts, { warrior: 8, hunter: 0 }); let k = 0; for (let j = vil.npcPids.length - 1; j >= 0 && k < 8; j--, k++) players.get(vil.npcPids[j]).simJob = 'warrior'; A.ev.st0 = +((e.storage.food || 0).toFixed(6)); A.ev.pop0 = e.npcs.length; A.ev.pids0 = vil.npcPids.length; };
-    plan.after401 = () => { const t = B.t1104(); A.ev.go = t.sups.length ? JSON.parse(JSON.stringify(t.sups[0])) : null; const g = gangOf(); A.ev.gang = g ? { id: g.id, n: g.n, sup: g._sup ? JSON.parse(JSON.stringify(g._sup)) : null, food: +(+g.food).toFixed(6) } : null; A.ev.walkers = H.state.bodyExits ? [...H.state.bodyExits.values()].filter((r) => r.vid === 1 && r.cat !== 'died').length : 0; };
+    plan.after401 = () => { A.ev.campPx = camp(); const t = B.t1104(); A.ev.go = t.sups.length ? JSON.parse(JSON.stringify(t.sups[0])) : null; const g = gangOf(); A.ev.gang = g ? { id: g.id, n: g.n, sup: g._sup ? JSON.parse(JSON.stringify(g._sup)) : null, food: +(+g.food).toFixed(6) } : null; A.ev.walkers = H.state.bodyExits ? [...H.state.bodyExits.values()].filter((r) => r.vid === 1 && r.cat !== 'died').length : 0; if (BAIT === 'bootempty') { B._t765Probe.save(W.day); const saved=db.rows[db.rows.length-1]; for(const pid of (A.ev.go ? A.ev.go.pids : []))host.t1104Release(players.get(pid)); B._t765Probe.restore({data:saved.json,day:W.day}); } };
     for (let d = 402; d <= 420; d++) plan['after' + d] = ((dd) => () => {
       const lg = B.stats().log || [];
       const fought = lg.find((l) => /토벌⚔/.test(l));
@@ -185,7 +187,7 @@ if (SUB) {   // ── 아이 판 — 손잡이는 모듈 적재 때 읽는다(e
       const sup = B.t1104().sups[0] || null;
       if (A.ev.fight && !A.ev.back && !sup) A.ev.back = { day: dd, st: +((e.storage.food || 0).toFixed(6)), stored: stored.slice(), ai: (A.ev.fight.sup ? A.ev.fight.sup.pids : []).filter((pid) => npcs.has(pid)).length, home: (A.ev.fight.sup ? A.ev.fight.sup.pids : []).filter((pid) => players.get(pid) && dist(players.get(pid), { x: vil.ccx * SZ + SZ / 2, y: vil.ccy * SZ + SZ / 2 }) <= 64).length };
     })(d);
-    plan.after402 = ((f) => () => { A.ev.campPx = camp(); f(); })(plan.after402);
+    plan.after402 = ((f) => () => { A.ev.campPx = A.ev.campPx || camp(); f(); })(plan.after402);
   }
   const DAYS = 22, hr = () => { const t = process.hrtime(); return t[0] * 1e3 + t[1] / 1e6; };
   A.perf = { tickMs: 0, walkTicks: 0, dayMs: 0, days: 0 };   // 비용 자(값 무변 — `scripts/t1104-bench.js` 가 읽는다)
@@ -211,7 +213,8 @@ const ok = (c, m, x) => { c ? pass++ : fail++; console.log((c ? '  ✓ ' : '  �
 function sub(name, on, bait) {
   const env = Object.assign({}, process.env, { T627_TRIP_DAY: '0', T1104_SUB: name, BANDIT_MINDAY: '1', T1078_BANDIT_ALL: '1', T1079_BANDIT_CAMP: '1' });
   env.T1104_BANDIT_WALK = '0'; delete env.T1039_BANDIT_BODY; delete env.VILLAGE_NPC_CAP; delete env.T1104_BAIT; delete env.BANDIT_FIXTURE; delete env.T476_PUNITIVE; delete env.T521_GANG_ARMS;
-  if (on === 'only') { env.T1104_BANDIT_WALK = '1'; env.T1079_BANDIT_CAMP = '0'; }
+  if (on === 'operating') { env.T627_TRIP_DAY='1'; env.T1104_OPERATING_DAY='1'; env.T1104_BANDIT_WALK='1'; }
+  else if (on === 'only') { env.T1104_BANDIT_WALK = '1'; env.T1079_BANDIT_CAMP = '0'; }
   else if (on === 'default') delete env.T1104_BANDIT_WALK;
   else if (on) env.T1104_BANDIT_WALK = typeof on === 'string' ? on : '1';
   if (bait) env.T1104_BAIT = bait;
@@ -300,11 +303,16 @@ ok(RO && RF && MO && MF && SO && SF && WO, '[전제] 일곱 판이 다 돌았다
   const b1 = sub('raid', true, 'nomeet');
   ok(b1 && !raidAtChoke(b1), 'ⓑ 미끼 `nomeet`(econ 만남 문을 뗀다) — ① “그날 그 자리에서 치른다”가 빨개진다', b1 ? JSON.stringify(b1.raids) : '');
   const b2 = sub('raid', true, 'nowalk');
-  ok(b2 && raidAtChoke(b2) && !bodiesAtChoke(b2), 'ⓑ 미끼 `nowalk`(몸 걸음 문을 뗀다) — ① “산 단 몸이 다 길목에”가 빨개진다', b2 && b2.A.ev.meet ? JSON.stringify({ live: b2.A.ev.meet.live, atChoke: b2.A.ev.meet.liveAtChoke }) : '');
+  ok(b2 && !raidAtChoke(b2) && !bodiesAtChoke(b2), 'ⓑ 미끼 `nowalk`(몸 걸음 문을 뗀다) — [T1184] 걷지 못한 단은 장부 약탈도 하지 않는다', b2 && b2.A.ev.meet ? JSON.stringify({ live: b2.A.ev.meet.live, atChoke: b2.A.ev.meet.liveAtChoke }) : '');
   const b3 = sub('sup', true, 'nodraft');
+  ok(b3 && !b3.A.ev.go && !b3.A.ev.fight && b3.t1104.sups.length === 0, '[T1184] 몸0 토벌대는 파견·교전0');
   ok(b3 && !supWalks(b3), 'ⓑ 미끼 `nodraft`(원정 뽑기 문을 뗀다) — ② “원정 몸이 걷는다”가 빨개진다', b3 && b3.A.ev.go ? `몸 ${b3.A.ev.go.pids.length}` : '');
 }
 
+{ const raid=sub('raid',true,'stuckwalk'), sup=sub('sup',true,'stuckwalk'); ok(raid.A.ev.out && !raid.A.ev.meet && !raid.raids.length, '[T1184] 길목 장부 날이 지나도 몸이 못 닿으면 약탈0'); ok(sup.A.ev.go && sup.A.ev.go.pids.length === 8 && !sup.A.ev.fight, '[T1184] 몸8명 출발 장부가 있어도 은거지 미도착이면 교전0'); }
+if (process.env.T1184_OPERATING_PROBE === '1') { const raid=sub('raid','operating'), sup=sub('sup','operating'); ok(raidAtChoke(raid) && bodiesAtChoke(raid) && raid.A.jumps === 0, '[T1184] T627 켬·정본 운영 하루: 실제 길목 습격·걸음 상한'); ok(sup.A.ev.fight && sup.A.ev.fight.sup && sup.A.ev.fight.supAtCamp > 0 && sup.A.ev.fight.supAtCamp === sup.A.ev.fight.sup.pids.length && sup.A.jumps === 0, '[T1184] T627 켬·정본 운영 하루: 실제 은거지 토벌·걸음 상한',JSON.stringify(sup.A.ev.fight)); }
+{ const boot=sub('sup',true,'bootempty'); ok(boot.A.ev.go && !boot.A.ev.fight && boot.t1104.sups.length === 0, '[T1184] 재부팅으로 몸 결속이 사라진 원정은 취소하고 장부만으로 싸우지 않는다'); }
+{ const partial=sub('sup',true,'partialdraft'); ok(partial.A.ev.go && partial.A.ev.go.force === 6 && partial.A.ev.go.pids.length === 6, '[T1184] 요청8명·실제6명이면 전투 병력도6명'); }
 { const clean = o => JSON.stringify(o, (k,v) => k === 'perf' ? null : v); ok(clean(sub('raid', 'default')) === clean(sub('raid', true)), '[T1184] 미설정 기본 = 명시적 켬(몸·더미·걸음 결과)'); }
 console.log(`\n결과: ${fail ? 'FAIL' : 'PASS'} (${pass} 통과 · ${fail} 실패)`);
 process.exit(fail ? 1 : 0);

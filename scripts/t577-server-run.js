@@ -99,7 +99,7 @@ function table(outs) {
 
 if (process.argv.includes('--table')) {
   const dir = process.argv[process.argv.indexOf('--table') + 1];
-  const outs = fs.readdirSync(dir).filter((f) => /\.json$/.test(f)).sort().map((f) => JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')));
+  const outs = fs.readdirSync(dir).filter((f) => /\.json$/.test(f)).sort().map((f) => JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'))).filter((o) => o && o.eight && Array.isArray(o.rows));
   table(outs);
   process.exit(0);
 }
