@@ -1,0 +1,165 @@
+{
+  "framework": "t646 --seg --lines, t791 V8 sampling; separate phase restores, 60s warm-up, 3 x 15s slices, unchanged 24-minute day",
+  "host": "2a545d652fac",
+  "cpu": "AMD EPYC 9V74 80-Core Processor",
+  "node": "v22.23.0",
+  "source": "/tmp/t1155-code-v2",
+  "template": "/tmp/t1155-template/tpl-t100.db",
+  "inputsSHA256": {
+    "manifest.json": "3ea1e230b4855270fbb2a8dda4c44bb8a9bc07bc8b27cfe6f8ec1ce6c6700b97",
+    "table.json": "c620fc456cef22b5334e254d15c728e9aa1e1e73c16182c74bddd94cc5fe24cb"
+  },
+  "complete": true,
+  "runs": [
+    {
+      "tag": "A1-day",
+      "phase": "day",
+      "mode": "0",
+      "pop": 621,
+      "ticks": 900,
+      "chunks": 4,
+      "npcStepSamples": 1717,
+      "selfUs": 10.669,
+      "npcStepUs": 25.372
+    },
+    {
+      "tag": "B1-day",
+      "phase": "day",
+      "mode": "1",
+      "pop": 621,
+      "ticks": 900,
+      "chunks": 4,
+      "npcStepSamples": 2801,
+      "selfUs": 6.223,
+      "npcStepUs": 26.252
+    },
+    {
+      "tag": "B2-day",
+      "phase": "day",
+      "mode": "1",
+      "pop": 621,
+      "ticks": 1350,
+      "chunks": 4,
+      "npcStepSamples": 2462,
+      "selfUs": 5.676,
+      "npcStepUs": 25.782
+    },
+    {
+      "tag": "A2-day",
+      "phase": "day",
+      "mode": "0",
+      "pop": 621,
+      "ticks": 1350,
+      "chunks": 4,
+      "npcStepSamples": 1787,
+      "selfUs": 10.27,
+      "npcStepUs": 24.668
+    },
+    {
+      "tag": "A1-night",
+      "phase": "night",
+      "mode": "0",
+      "pop": 621,
+      "ticks": 900,
+      "chunks": 4,
+      "npcStepSamples": 1032,
+      "selfUs": 10.466,
+      "npcStepUs": 24.491
+    },
+    {
+      "tag": "B1-night",
+      "phase": "night",
+      "mode": "1",
+      "pop": 621,
+      "ticks": 1350,
+      "chunks": 4,
+      "npcStepSamples": 2284,
+      "selfUs": 6.306,
+      "npcStepUs": 25.093
+    },
+    {
+      "tag": "B2-night",
+      "phase": "night",
+      "mode": "1",
+      "pop": 621,
+      "ticks": 1350,
+      "chunks": 4,
+      "npcStepSamples": 2016,
+      "selfUs": 7.129,
+      "npcStepUs": 25.259
+    },
+    {
+      "tag": "A2-night",
+      "phase": "night",
+      "mode": "0",
+      "pop": 621,
+      "ticks": 900,
+      "chunks": 4,
+      "npcStepSamples": 850,
+      "selfUs": 12.015,
+      "npcStepUs": 23.054
+    }
+  ],
+  "phases": {
+    "day": {
+      "0": {
+        "selfUs": {
+          "median": 10.4695,
+          "min": 10.27,
+          "max": 10.669
+        },
+        "npcStepUs": {
+          "median": 25.02,
+          "min": 24.668,
+          "max": 25.372
+        }
+      },
+      "1": {
+        "selfUs": {
+          "median": 5.9495000000000005,
+          "min": 5.676,
+          "max": 6.223
+        },
+        "npcStepUs": {
+          "median": 26.017,
+          "min": 25.782,
+          "max": 26.252
+        }
+      },
+      "selfRangesDisjointAndLower": true,
+      "npcStepRangesDisjointAndLower": false
+    },
+    "night": {
+      "0": {
+        "selfUs": {
+          "median": 11.2405,
+          "min": 10.466,
+          "max": 12.015
+        },
+        "npcStepUs": {
+          "median": 23.7725,
+          "min": 23.054,
+          "max": 24.491
+        }
+      },
+      "1": {
+        "selfUs": {
+          "median": 6.717499999999999,
+          "min": 6.306,
+          "max": 7.129
+        },
+        "npcStepUs": {
+          "median": 25.176000000000002,
+          "min": 25.093,
+          "max": 25.259
+        }
+      },
+      "selfRangesDisjointAndLower": true,
+      "npcStepRangesDisjointAndLower": false
+    }
+  },
+  "selfRangeCondition": true,
+  "npcStepRangeCondition": false,
+  "candidateWithoutNpcStepRegression": false,
+  "condition": "same box, independent phase restores; competing jobs must be disclosed in the report; two repeat-window aggregates per arm form each range"
+}

@@ -1,0 +1,9054 @@
+{
+ "runs": [
+  {
+   "conf": "inf",
+   "tag": "A1-day",
+   "probe": true,
+   "ref": "dadba977",
+   "W": "day",
+   "pop": 621,
+   "ticks": 900,
+   "step": null,
+   "stepBr": null,
+   "tickP50": 20.381,
+   "tickP95": 35.672,
+   "totUs": 37.414,
+   "tq": {
+    "n": 2,
+    "p50": 20.2105,
+    "p95": 36.206,
+    "p99": 41.65,
+    "max": 66.568
+   },
+   "segUs": {
+    "econ(마을 하루 조각·캐러밴 몸)": 0.576,
+    "일 훅(도적·길·흙·눈)": 0.521,
+    "idle 문": 0.004,
+    "청크": 0.06,
+    "공간 색인·입력 시한": 0.389,
+    "결정 문(순회)": 32.037,
+    "화살·걸음 커널 준비": 1.098,
+    "이동 문(순회)": 0.92,
+    "계단·낙하·게이지·HP": 0.396,
+    "몹 AI": 0.646,
+    "델타·방송(AOI)": 0.65,
+    "꼬리(어로·저장·쓰러짐·계측)": 0.112
+   },
+   "segSumUs": 37.411,
+   "subUs": {
+    "gc": 2.88
+   },
+   "subN": {
+    "gc": 0.3
+   },
+   "hq": {
+    "dec": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    },
+    "life": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    },
+    "follow": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    }
+   },
+   "ast": {
+    "near": [
+     0,
+     0
+    ],
+    "beeline": [
+     0,
+     0
+    ],
+    "straight": [
+     0,
+     0
+    ],
+    "cooldown": [
+     0,
+     0
+    ],
+    "fail": [
+     0,
+     0
+    ],
+    "found": [
+     0,
+     0
+    ],
+    "inside": 0,
+    "outside": 0,
+    "outLab": {},
+    "why": {},
+    "walked": {},
+    "insideRate": 0,
+    "cats": {
+     "near": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "beeline": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "straight": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "cooldown": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "fail": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "found": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     }
+    }
+   },
+   "lines": {
+    "chunks": 4,
+    "samples": 98361,
+    "decSamples": 2168,
+    "stepSamples": 1717,
+    "decUs": 32.037,
+    "stepUs": 25.372,
+    "selfUs": 10.669,
+    "groups": [
+     [
+      "머리(결정 문 · 생활 손잡이 · 타이머) (5059~5066)",
+      87,
+      1.286
+     ],
+     [
+      "대피 · 밤 귀가 (5067~5089)",
+      7,
+      0.103
+     ],
+     [
+      "캐나디아 · 막힘 (5090~5098)",
+      2,
+      0.03
+     ],
+     [
+      "싸움 (5099~5150)",
+      3,
+      0.044
+     ],
+     [
+      "길 판정(배속 · 목표 키 · 되묻기) (5151~5171)",
+      36,
+      0.532
+     ],
+     [
+      "길 묻기 · 길 넣기 (5172~5179)",
+      11,
+      0.163
+     ],
+     [
+      "따라가기 · 도착 뒤 행동 (5180~5262)",
+      152,
+      2.246
+     ],
+     [
+      "몸통 밖 줄(인라인된 함수 · 다른 파일)",
+      424,
+      6.266
+     ]
+    ],
+    "calls": [
+     [
+      "decideNpcBehavior:4177",
+      691,
+      10.211
+     ],
+     [
+      "computeNpcPath:4607",
+      148,
+      2.187
+     ],
+     [
+      "detectStuck:4820",
+      83,
+      1.227
+     ],
+     [
+      "followNpcPath:4712",
+      69,
+      1.02
+     ],
+     [
+      "_t791Mir:5030",
+      2,
+      0.03
+     ],
+     [
+      "queryCircle:81",
+      1,
+      0.015
+     ],
+     [
+      "_t394OpenTarget:4349",
+      1,
+      0.015
+     ]
+    ],
+    "selfTop": [
+     [
+      4822,
+      206,
+      3.044
+     ],
+     [
+      5185,
+      144,
+      2.128
+     ],
+     [
+      5062,
+      76,
+      1.123
+     ],
+     [
+      611,
+      65,
+      0.961
+     ],
+     [
+      4832,
+      55,
+      0.813
+     ],
+     [
+      4828,
+      45,
+      0.665
+     ],
+     [
+      5154,
+      22,
+      0.325
+     ],
+     [
+      576,
+      21,
+      0.31
+     ],
+     [
+      4821,
+      20,
+      0.296
+     ],
+     [
+      5158,
+      12,
+      0.177
+     ],
+     [
+      5059,
+      8,
+      0.118
+     ],
+     [
+      5180,
+      8,
+      0.118
+     ],
+     [
+      4823,
+      6,
+      0.089
+     ],
+     [
+      5074,
+      4,
+      0.059
+     ],
+     [
+      5176,
+      4,
+      0.059
+     ]
+    ],
+    "deepFn": [
+     [
+      "npcLifeTick@villages.js:14113",
+      221,
+      3.266
+     ],
+     [
+      "decideNpcBehavior@zone.js:4177",
+      86,
+      1.271
+     ],
+     [
+      "_t670Stuck@zone.js:4792",
+      83,
+      1.227
+     ],
+     [
+      "computeNpcPath@zone.js:4607",
+      83,
+      1.227
+     ],
+     [
+      "followNpcPath@zone.js:4712",
+      69,
+      1.02
+     ],
+     [
+      "queryRect@quadtree.js:67",
+      63,
+      0.931
+     ],
+     [
+      "_lifeNeedClear@villages.js:11603",
+      27,
+      0.399
+     ],
+     [
+      "_riverU@fishing.js:98",
+      25,
+      0.369
+     ],
+     [
+      "_t340Try@villages.js:9543",
+      24,
+      0.355
+     ],
+     [
+      "_t400BodyStep@villages.js:12533",
+      22,
+      0.325
+     ],
+     [
+      "_terrBlocked0@zone.js:2306",
+      20,
+      0.296
+     ],
+     [
+      "_actRebuild@zone.js:1170",
+      18,
+      0.266
+     ],
+     [
+      "_warOutMul@villages.js:6318",
+      14,
+      0.207
+     ],
+     [
+      "zoneGameDay@zone.js:9501",
+      14,
+      0.207
+     ],
+     [
+      "_lifeJobSites@villages.js:11520",
+      13,
+      0.192
+     ],
+     [
+      "queryCircle@quadtree.js:81",
+      12,
+      0.177
+     ],
+     [
+      "isBlockedByWall@zone.js:15484",
+      10,
+      0.148
+     ],
+     [
+      "route@chunk-gates.js:181",
+      10,
+      0.148
+     ],
+     [
+      "_isPositionActiveBM@zone.js:1182",
+      8,
+      0.118
+     ],
+     [
+      "_edgeScan@zone.js:14971",
+      8,
+      0.118
+     ]
+    ],
+    "deepTop": [
+     [
+      "_t670Stuck@zone.js:4792 #4792",
+      83,
+      1.227
+     ],
+     [
+      "computeNpcPath@zone.js:4607 #4613",
+      70,
+      1.034
+     ],
+     [
+      "decideNpcBehavior@zone.js:4177 #4220",
+      53,
+      0.783
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14128",
+      39,
+      0.576
+     ],
+     [
+      "followNpcPath@zone.js:4712 #4729",
+      37,
+      0.547
+     ],
+     [
+      "_t400BodyStep@villages.js:12533 #12534",
+      22,
+      0.325
+     ],
+     [
+      "_lifeNeedClear@villages.js:11603 #11605",
+      21,
+      0.31
+     ],
+     [
+      "queryRect@quadtree.js:67 #69",
+      18,
+      0.266
+     ],
+     [
+      "followNpcPath@zone.js:4712 #4719",
+      18,
+      0.266
+     ],
+     [
+      "queryRect@quadtree.js:67 #70",
+      16,
+      0.236
+     ],
+     [
+      "zoneGameDay@zone.js:9501 #9501",
+      14,
+      0.207
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14165",
+      13,
+      0.192
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14400",
+      13,
+      0.192
+     ],
+     [
+      "_warOutMul@villages.js:6318 #6319",
+      12,
+      0.177
+     ],
+     [
+      "_terrBlocked0@zone.js:2306 #49",
+      11,
+      0.163
+     ],
+     [
+      "queryRect@quadtree.js:67 #27",
+      11,
+      0.163
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #9330",
+      10,
+      0.148
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14156",
+      10,
+      0.148
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14541",
+      10,
+      0.148
+     ],
+     [
+      "_riverU@fishing.js:98 #94",
+      10,
+      0.148
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #12534",
+      9,
+      0.133
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14209",
+      9,
+      0.133
+     ],
+     [
+      "_lifeJobSites@villages.js:11520 #11520",
+      8,
+      0.118
+     ],
+     [
+      "_riverU@fishing.js:98 #90",
+      7,
+      0.103
+     ],
+     [
+      "isTerrainBlockedLocal@zone.js:2313 #2323",
+      7,
+      0.103
+     ]
+    ],
+    "call2": [
+     [
+      "decideNpcBehavior:4177>npcLifeTick:14113",
+      476,
+      7.034
+     ],
+     [
+      "detectStuck:4820>_t670Stuck:4792",
+      83,
+      1.227
+     ],
+     [
+      "decideNpcBehavior:4177>queryCircle:81",
+      74,
+      1.094
+     ],
+     [
+      "computeNpcPath:4607>straightPathClear:4318",
+      39,
+      0.576
+     ],
+     [
+      "computeNpcPath:4607>_t678Route:4551",
+      21,
+      0.31
+     ],
+     [
+      "decideNpcBehavior:4177>zoneGameDay:9501",
+      18,
+      0.266
+     ],
+     [
+      "decideNpcBehavior:4177>_t394OpenTarget:4349",
+      16,
+      0.236
+     ],
+     [
+      "decideNpcBehavior:4177>pidHash:33",
+      3,
+      0.044
+     ],
+     [
+      "decideNpcBehavior:4177>_otRole:14555",
+      3,
+      0.044
+     ],
+     [
+      "computeNpcPath:4607>smoothPath:455",
+      3,
+      0.044
+     ],
+     [
+      "decideNpcBehavior:4177>_carryCfg:9350",
+      2,
+      0.03
+     ],
+     [
+      "decideNpcBehavior:4177>_isPositionActiveBM:1182",
+      2,
+      0.03
+     ],
+     [
+      "decideNpcBehavior:4177>_lifeOtherIndex:14563",
+      2,
+      0.03
+     ],
+     [
+      "computeNpcPath:4607>isBlockedByWall:15484",
+      2,
+      0.03
+     ],
+     [
+      "decideNpcBehavior:4177>_t1144Units:9531",
+      1,
+      0.015
+     ]
+    ],
+    "incl": [
+     [
+      "decideNpcBehavior@zone.js",
+      691,
+      10.211
+     ],
+     [
+      "npcLifeTick@villages.js",
+      476,
+      7.034
+     ],
+     [
+      "computeNpcPath@zone.js",
+      148,
+      2.187
+     ],
+     [
+      "_t340Try@villages.js",
+      90,
+      1.33
+     ],
+     [
+      "_t670Stuck@zone.js",
+      83,
+      1.227
+     ],
+     [
+      "detectStuck@zone.js",
+      83,
+      1.227
+     ],
+     [
+      "queryCircle@quadtree.js",
+      75,
+      1.108
+     ],
+     [
+      "followNpcPath@zone.js",
+      69,
+      1.02
+     ],
+     [
+      "queryRect@quadtree.js",
+      63,
+      0.931
+     ],
+     [
+      "_t677Spot@villages.js",
+      44,
+      0.65
+     ],
+     [
+      "spotAt@fishing.js",
+      42,
+      0.621
+     ],
+     [
+      "straightPathClear@zone.js",
+      39,
+      0.576
+     ],
+     [
+      "_lifeNeedClear@villages.js",
+      33,
+      0.488
+     ],
+     [
+      "_isPositionActiveBM@zone.js",
+      25,
+      0.369
+     ],
+     [
+      "_riverU@fishing.js",
+      25,
+      0.369
+     ],
+     [
+      "_lifeJobSites@villages.js",
+      25,
+      0.369
+     ],
+     [
+      "isBlockedByWall@zone.js",
+      22,
+      0.325
+     ],
+     [
+      "_t400BodyStep@villages.js",
+      22,
+      0.325
+     ],
+     [
+      "_t678Route@zone.js",
+      21,
+      0.31
+     ],
+     [
+      "_terrBlocked0@zone.js",
+      20,
+      0.296
+     ],
+     [
+      "zoneGameDay@zone.js",
+      18,
+      0.266
+     ],
+     [
+      "_actRebuild@zone.js",
+      18,
+      0.266
+     ],
+     [
+      "_t394OpenTarget@zone.js",
+      17,
+      0.251
+     ],
+     [
+      "route@chunk-gates.js",
+      17,
+      0.251
+     ],
+     [
+      "isTerrainBlockedLocal@zone.js",
+      17,
+      0.251
+     ],
+     [
+      "_warOutMul@villages.js",
+      14,
+      0.207
+     ],
+     [
+      "(anon)@villages.js",
+      13,
+      0.192
+     ],
+     [
+      "isWaterCellLocal@terrain.js",
+      11,
+      0.163
+     ],
+     [
+      "edgeBlockedStep@zone.js",
+      10,
+      0.148
+     ],
+     [
+      "_t427Reach@villages.js",
+      10,
+      0.148
+     ],
+     [
+      "_edgeScan@zone.js",
+      8,
+      0.118
+     ],
+     [
+      "findEdgeWall@zone.js",
+      7,
+      0.103
+     ],
+     [
+      "_otRole@villages.js",
+      7,
+      0.103
+     ],
+     [
+      "_t427Set@villages.js",
+      7,
+      0.103
+     ],
+     [
+      "_t593SeaBank@villages.js",
+      6,
+      0.089
+     ],
+     [
+      "_t1144Units@villages.js",
+      6,
+      0.089
+     ],
+     [
+      "_t374Done@villages.js",
+      6,
+      0.089
+     ],
+     [
+      "_t724BodyStep@villages.js",
+      6,
+      0.089
+     ],
+     [
+      "_isPointInRiver@terrain.js",
+      6,
+      0.089
+     ],
+     [
+      "collGenAround@zone.js",
+      6,
+      0.089
+     ],
+     [
+      "get@granary-lots.js",
+      6,
+      0.089
+     ],
+     [
+      "plan@fishing.js",
+      6,
+      0.089
+     ],
+     [
+      "_t1144NextFarmCell@villages.js",
+      5,
+      0.074
+     ],
+     [
+      "_lifeNextFarmCell@villages.js",
+      5,
+      0.074
+     ],
+     [
+      "pick@freshfish.js",
+      5,
+      0.074
+     ],
+     [
+      "_lifeOtherIndex@villages.js",
+      5,
+      0.074
+     ],
+     [
+      "Date.now@t455-clock.js",
+      4,
+      0.059
+     ],
+     [
+      "_rawGameDay@zone.js",
+      4,
+      0.059
+     ],
+     [
+      "_t312Take@villages.js",
+      4,
+      0.059
+     ],
+     [
+      "bfsTo@chunk-gates.js",
+      4,
+      0.059
+     ],
+     [
+      "_carryCfg@villages.js",
+      3,
+      0.044
+     ],
+     [
+      "pidHash@seed-rand.js",
+      3,
+      0.044
+     ],
+     [
+      "levelOf@roads.js",
+      3,
+      0.044
+     ],
+     [
+      "_roadKeep@zone.js",
+      3,
+      0.044
+     ],
+     [
+      "smoothPath@path-core.js",
+      3,
+      0.044
+     ],
+     [
+      "_handOf@villages.js",
+      3,
+      0.044
+     ],
+     [
+      "_ledgerDay@villages.js",
+      3,
+      0.044
+     ],
+     [
+      "chooseSpecies@region-profiles.js",
+      3,
+      0.044
+     ],
+     [
+      "_ch@villages.js",
+      3,
+      0.044
+     ],
+     [
+      "pickFrom@freshfish.js",
+      3,
+      0.044
+     ],
+     [
+      "_lognormal@fishing.js",
+      3,
+      0.044
+     ],
+     [
+      "corridorPath@chunk-gates.js",
+      2,
+      0.03
+     ],
+     [
+      "L@region-profiles.js",
+      2,
+      0.03
+     ],
+     [
+      "on@region-profiles.js",
+      2,
+      0.03
+     ],
+     [
+      "oreConsumeAt@zone.js",
+      2,
+      0.03
+     ],
+     [
+      "_lifeGoHome@villages.js",
+      2,
+      0.03
+     ],
+     [
+      "_t791Mir@zone.js",
+      2,
+      0.03
+     ],
+     [
+      "findCellFence@zone.js",
+      2,
+      0.03
+     ],
+     [
+      "poolOf@freshfish.js",
+      2,
+      0.03
+     ],
+     [
+      "_oreRec@zone.js",
+      2,
+      0.03
+     ],
+     [
+      "_oreKg@villages.js",
+      2,
+      0.03
+     ],
+     [
+      "_lifeAct@villages.js",
+      2,
+      0.03
+     ],
+     [
+      "stockRatioAt@fishing.js",
+      2,
+      0.03
+     ],
+     [
+      "blk@zone.js",
+      2,
+      0.03
+     ],
+     [
+      "windowMsFor@fishing.js",
+      1,
+      0.015
+     ],
+     [
+      "_t720Step@villages.js",
+      1,
+      0.015
+     ],
+     [
+      "_lakeR@fishing.js",
+      1,
+      0.015
+     ],
+     [
+      "seedRand@seed-rand.js",
+      1,
+      0.015
+     ],
+     [
+      "relax@chunk-gates.js",
+      1,
+      0.015
+     ],
+     [
+      "_t1144Memo@villages.js",
+      1,
+      0.015
+     ],
+     [
+      "oreStockAt@zone.js",
+      1,
+      0.015
+     ],
+     [
+      "fishActOn@economy-sim.js",
+      1,
+      0.015
+     ],
+     [
+      "_t312Day@villages.js",
+      1,
+      0.015
+     ],
+     [
+      "kgOf@weights.js",
+      1,
+      0.015
+     ],
+     [
+      "_t732Lots@villages.js",
+      1,
+      0.015
+     ],
+     [
+      "_mNote@lots.js",
+      1,
+      0.015
+     ],
+     [
+      "noteNow@lots.js",
+      1,
+      0.015
+     ],
+     [
+      "_t312Water@villages.js",
+      1,
+      0.015
+     ],
+     [
+      "_t1144SpGet@villages.js",
+      1,
+      0.015
+     ],
+     [
+      "mark@vein-batch.js",
+      1,
+      0.015
+     ],
+     [
+      "_oreSave@zone.js",
+      1,
+      0.015
+     ],
+     [
+      "seed@seed-rand.js",
+      1,
+      0.015
+     ],
+     [
+      "_isPointInLake@terrain.js",
+      1,
+      0.015
+     ],
+     [
+      "next@seed-rand.js",
+      1,
+      0.015
+     ],
+     [
+      "at@terrain-segindex.js",
+      1,
+      0.015
+     ],
+     [
+      "regionMix@region-profiles.js",
+      1,
+      0.015
+     ],
+     [
+      "mixAt@region-profiles.js",
+      1,
+      0.015
+     ],
+     [
+      "_fishingMod@villages.js",
+      1,
+      0.015
+     ],
+     [
+      "_t427HomeOf@villages.js",
+      1,
+      0.015
+     ]
+    ],
+    "reqBy": [],
+    "selfAll": [
+     [
+      576,
+      21,
+      0.31
+     ],
+     [
+      611,
+      65,
+      0.961
+     ],
+     [
+      4470,
+      2,
+      0.03
+     ],
+     [
+      4821,
+      20,
+      0.296
+     ],
+     [
+      4822,
+      206,
+      3.044
+     ],
+     [
+      4823,
+      6,
+      0.089
+     ],
+     [
+      4824,
+      3,
+      0.044
+     ],
+     [
+      4825,
+      1,
+      0.015
+     ],
+     [
+      4828,
+      45,
+      0.665
+     ],
+     [
+      4832,
+      55,
+      0.813
+     ],
+     [
+      5059,
+      8,
+      0.118
+     ],
+     [
+      5061,
+      3,
+      0.044
+     ],
+     [
+      5062,
+      76,
+      1.123
+     ],
+     [
+      5074,
+      4,
+      0.059
+     ],
+     [
+      5076,
+      2,
+      0.03
+     ],
+     [
+      5077,
+      1,
+      0.015
+     ],
+     [
+      5090,
+      1,
+      0.015
+     ],
+     [
+      5093,
+      1,
+      0.015
+     ],
+     [
+      5099,
+      3,
+      0.044
+     ],
+     [
+      5154,
+      22,
+      0.325
+     ],
+     [
+      5155,
+      1,
+      0.015
+     ],
+     [
+      5157,
+      1,
+      0.015
+     ],
+     [
+      5158,
+      12,
+      0.177
+     ],
+     [
+      5172,
+      2,
+      0.03
+     ],
+     [
+      5173,
+      2,
+      0.03
+     ],
+     [
+      5174,
+      1,
+      0.015
+     ],
+     [
+      5176,
+      4,
+      0.059
+     ],
+     [
+      5177,
+      1,
+      0.015
+     ],
+     [
+      5178,
+      1,
+      0.015
+     ],
+     [
+      5180,
+      8,
+      0.118
+     ],
+     [
+      5185,
+      144,
+      2.128
+     ]
+    ]
+   }
+  },
+  {
+   "conf": "inf",
+   "tag": "A1-night",
+   "probe": true,
+   "ref": "dadba977",
+   "W": "night",
+   "pop": 621,
+   "ticks": 900,
+   "step": null,
+   "stepBr": null,
+   "tickP50": 22.615,
+   "tickP95": 41.024,
+   "totUs": 41.001,
+   "tq": {
+    "n": 2,
+    "p50": 23.009999999999998,
+    "p95": 41.2555,
+    "p99": 50.941500000000005,
+    "max": 118.054
+   },
+   "segUs": {
+    "econ(마을 하루 조각·캐러밴 몸)": 1.002,
+    "일 훅(도적·길·흙·눈)": 0.404,
+    "idle 문": 0.013,
+    "청크": 0.088,
+    "공간 색인·입력 시한": 0.435,
+    "결정 문(순회)": 33.319,
+    "화살·걸음 커널 준비": 1.227,
+    "이동 문(순회)": 0.692,
+    "계단·낙하·게이지·HP": 0.682,
+    "몹 AI": 0.884,
+    "델타·방송(AOI)": 2.034,
+    "꼬리(어로·저장·쓰러짐·계측)": 0.212
+   },
+   "segSumUs": 40.993,
+   "subUs": {
+    "gc": 2.347
+   },
+   "subN": {
+    "gc": 0.2
+   },
+   "hq": {
+    "dec": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    },
+    "life": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    },
+    "follow": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    }
+   },
+   "ast": {
+    "near": [
+     0,
+     0
+    ],
+    "beeline": [
+     0,
+     0
+    ],
+    "straight": [
+     0,
+     0
+    ],
+    "cooldown": [
+     0,
+     0
+    ],
+    "fail": [
+     0,
+     0
+    ],
+    "found": [
+     0,
+     0
+    ],
+    "inside": 0,
+    "outside": 0,
+    "outLab": {},
+    "why": {},
+    "walked": {},
+    "insideRate": 0,
+    "cats": {
+     "near": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "beeline": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "straight": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "cooldown": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "fail": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "found": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     }
+    }
+   },
+   "lines": {
+    "chunks": 4,
+    "samples": 73333,
+    "decSamples": 1404,
+    "stepSamples": 1032,
+    "decUs": 33.319,
+    "stepUs": 24.491,
+    "selfUs": 10.466,
+    "groups": [
+     [
+      "머리(결정 문 · 생활 손잡이 · 타이머) (5059~5066)",
+      92,
+      2.183
+     ],
+     [
+      "대피 · 밤 귀가 (5067~5089)",
+      79,
+      1.875
+     ],
+     [
+      "캐나디아 · 막힘 (5090~5098)",
+      7,
+      0.166
+     ],
+     [
+      "싸움 (5099~5150)",
+      0,
+      0
+     ],
+     [
+      "길 판정(배속 · 목표 키 · 되묻기) (5151~5171)",
+      16,
+      0.38
+     ],
+     [
+      "길 묻기 · 길 넣기 (5172~5179)",
+      12,
+      0.285
+     ],
+     [
+      "따라가기 · 도착 뒤 행동 (5180~5262)",
+      100,
+      2.373
+     ],
+     [
+      "몸통 밖 줄(인라인된 함수 · 다른 파일)",
+      135,
+      3.204
+     ]
+    ],
+    "calls": [
+     [
+      "decideNpcBehavior:4177",
+      335,
+      7.95
+     ],
+     [
+      "detectStuck:4820",
+      170,
+      4.034
+     ],
+     [
+      "computeNpcPath:4607",
+      81,
+      1.922
+     ],
+     [
+      "followNpcPath:4712",
+      2,
+      0.047
+     ],
+     [
+      "_t791Mir:5030",
+      2,
+      0.047
+     ],
+     [
+      "npcLifeTick:14113",
+      1,
+      0.024
+     ]
+    ],
+    "selfTop": [
+     [
+      5185,
+      96,
+      2.278
+     ],
+     [
+      5062,
+      83,
+      1.97
+     ],
+     [
+      4724,
+      81,
+      1.922
+     ],
+     [
+      5081,
+      52,
+      1.234
+     ],
+     [
+      611,
+      36,
+      0.854
+     ],
+     [
+      5082,
+      15,
+      0.356
+     ],
+     [
+      5154,
+      11,
+      0.261
+     ],
+     [
+      576,
+      9,
+      0.214
+     ],
+     [
+      5074,
+      7,
+      0.166
+     ],
+     [
+      5093,
+      7,
+      0.166
+     ],
+     [
+      5059,
+      6,
+      0.142
+     ],
+     [
+      4716,
+      5,
+      0.119
+     ],
+     [
+      5173,
+      5,
+      0.119
+     ],
+     [
+      5176,
+      4,
+      0.095
+     ],
+     [
+      4719,
+      3,
+      0.071
+     ]
+    ],
+    "deepFn": [
+     [
+      "detectStuck@zone.js:4820",
+      170,
+      4.034
+     ],
+     [
+      "computeNpcPath@zone.js:4607",
+      79,
+      1.875
+     ],
+     [
+      "npcLifeTick@villages.js:14113",
+      77,
+      1.827
+     ],
+     [
+      "decideNpcBehavior@zone.js:4177",
+      69,
+      1.637
+     ],
+     [
+      "seed@seed-rand.js:60",
+      46,
+      1.092
+     ],
+     [
+      "queryRect@quadtree.js:67",
+      42,
+      0.997
+     ],
+     [
+      "_t720Step@villages.js:12727",
+      23,
+      0.546
+     ],
+     [
+      "_lifeGoHome@villages.js:9911",
+      12,
+      0.285
+     ],
+     [
+      "_handOf@villages.js:9330",
+      12,
+      0.285
+     ],
+     [
+      "_t720Held@villages.js:12650",
+      10,
+      0.237
+     ],
+     [
+      "_ledgerDay@villages.js:8513",
+      7,
+      0.166
+     ],
+     [
+      "_t737Held@villages.js:12672",
+      6,
+      0.142
+     ],
+     [
+      "seedOf@seed-rand.js:38",
+      6,
+      0.142
+     ],
+     [
+      "zoneGameDay@zone.js:9501",
+      5,
+      0.119
+     ],
+     [
+      "_lifeVL@villages.js:9304",
+      5,
+      0.119
+     ],
+     [
+      "_bodyDay@villages.js:8494",
+      5,
+      0.119
+     ],
+     [
+      "Date.now@t455-clock.js:9",
+      4,
+      0.095
+     ],
+     [
+      "_t720Fv@villages.js:8493",
+      3,
+      0.071
+     ],
+     [
+      "worldPhase@zone-config.js:614",
+      3,
+      0.071
+     ],
+     [
+      "followNpcPath@zone.js:4712",
+      2,
+      0.047
+     ]
+    ],
+    "deepTop": [
+     [
+      "detectStuck@zone.js:4820 #4792",
+      70,
+      1.661
+     ],
+     [
+      "detectStuck@zone.js:4820 #4822",
+      70,
+      1.661
+     ],
+     [
+      "computeNpcPath@zone.js:4607 #4613",
+      59,
+      1.4
+     ],
+     [
+      "decideNpcBehavior@zone.js:4177 #4220",
+      51,
+      1.21
+     ],
+     [
+      "seed@seed-rand.js:60 #60",
+      46,
+      1.092
+     ],
+     [
+      "detectStuck@zone.js:4820 #4823",
+      24,
+      0.57
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14127",
+      23,
+      0.546
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14128",
+      23,
+      0.546
+     ],
+     [
+      "_t720Step@villages.js:12727 #12732",
+      22,
+      0.522
+     ],
+     [
+      "queryRect@quadtree.js:67 #69",
+      19,
+      0.451
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14140",
+      13,
+      0.309
+     ],
+     [
+      "_handOf@villages.js:9330 #9330",
+      12,
+      0.285
+     ],
+     [
+      "decideNpcBehavior@zone.js:4177 #4185",
+      11,
+      0.261
+     ],
+     [
+      "_t720Held@villages.js:12650 #12651",
+      10,
+      0.237
+     ],
+     [
+      "_lifeGoHome@villages.js:9911 #9922",
+      8,
+      0.19
+     ],
+     [
+      "computeNpcPath@zone.js:4607 #4469",
+      8,
+      0.19
+     ],
+     [
+      "_ledgerDay@villages.js:8513 #8513",
+      7,
+      0.166
+     ],
+     [
+      "queryRect@quadtree.js:67 #70",
+      6,
+      0.142
+     ],
+     [
+      "zoneGameDay@zone.js:9501 #9501",
+      5,
+      0.119
+     ],
+     [
+      "seedOf@seed-rand.js:38 #39",
+      5,
+      0.119
+     ],
+     [
+      "_lifeVL@villages.js:9304 #9304",
+      5,
+      0.119
+     ],
+     [
+      "computeNpcPath@zone.js:4607 #4607",
+      5,
+      0.119
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14148",
+      4,
+      0.095
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14151",
+      4,
+      0.095
+     ],
+     [
+      "Date.now@t455-clock.js:9 #9",
+      4,
+      0.095
+     ]
+    ],
+    "call2": [
+     [
+      "decideNpcBehavior:4177>npcLifeTick:14113",
+      150,
+      3.56
+     ],
+     [
+      "decideNpcBehavior:4177>seed:60",
+      46,
+      1.092
+     ],
+     [
+      "decideNpcBehavior:4177>queryCircle:81",
+      42,
+      0.997
+     ],
+     [
+      "decideNpcBehavior:4177>zoneGameDay:9501",
+      9,
+      0.214
+     ],
+     [
+      "decideNpcBehavior:4177>seedOf:38",
+      6,
+      0.142
+     ],
+     [
+      "decideNpcBehavior:4177>_lifeVL:9304",
+      3,
+      0.071
+     ],
+     [
+      "computeNpcPath:4607>straightPathClear:4318",
+      2,
+      0.047
+     ],
+     [
+      "decideNpcBehavior:4177>_t720Fv:8493",
+      2,
+      0.047
+     ],
+     [
+      "decideNpcBehavior:4177>worldPhase:614",
+      2,
+      0.047
+     ],
+     [
+      "decideNpcBehavior:4177>_bodyDay:8494",
+      2,
+      0.047
+     ],
+     [
+      "decideNpcBehavior:4177>_lifeGoHome:9911",
+      1,
+      0.024
+     ],
+     [
+      "decideNpcBehavior:4177>_ledgerDay:8513",
+      1,
+      0.024
+     ],
+     [
+      "decideNpcBehavior:4177>_handOf:9330",
+      1,
+      0.024
+     ],
+     [
+      "decideNpcBehavior:4177>_t720Step:12727",
+      1,
+      0.024
+     ]
+    ],
+    "incl": [
+     [
+      "decideNpcBehavior@zone.js",
+      335,
+      7.95
+     ],
+     [
+      "detectStuck@zone.js",
+      170,
+      4.034
+     ],
+     [
+      "npcLifeTick@villages.js",
+      151,
+      3.583
+     ],
+     [
+      "computeNpcPath@zone.js",
+      81,
+      1.922
+     ],
+     [
+      "seed@seed-rand.js",
+      46,
+      1.092
+     ],
+     [
+      "queryRect@quadtree.js",
+      42,
+      0.997
+     ],
+     [
+      "queryCircle@quadtree.js",
+      42,
+      0.997
+     ],
+     [
+      "_t720Step@villages.js",
+      39,
+      0.926
+     ],
+     [
+      "_t720Held@villages.js",
+      15,
+      0.356
+     ],
+     [
+      "_lifeGoHome@villages.js",
+      12,
+      0.285
+     ],
+     [
+      "_handOf@villages.js",
+      12,
+      0.285
+     ],
+     [
+      "zoneGameDay@zone.js",
+      9,
+      0.214
+     ],
+     [
+      "_ledgerDay@villages.js",
+      7,
+      0.166
+     ],
+     [
+      "_t737Held@villages.js",
+      6,
+      0.142
+     ],
+     [
+      "seedOf@seed-rand.js",
+      6,
+      0.142
+     ],
+     [
+      "_lifeVL@villages.js",
+      5,
+      0.119
+     ],
+     [
+      "_bodyDay@villages.js",
+      5,
+      0.119
+     ],
+     [
+      "Date.now@t455-clock.js",
+      4,
+      0.095
+     ],
+     [
+      "_rawGameDay@zone.js",
+      4,
+      0.095
+     ],
+     [
+      "_t720Fv@villages.js",
+      3,
+      0.071
+     ],
+     [
+      "worldPhase@zone-config.js",
+      3,
+      0.071
+     ],
+     [
+      "straightPathClear@zone.js",
+      2,
+      0.047
+     ],
+     [
+      "followNpcPath@zone.js",
+      2,
+      0.047
+     ],
+     [
+      "_t791Mir@zone.js",
+      2,
+      0.047
+     ],
+     [
+      "_txTouch@granary-lots.js",
+      1,
+      0.024
+     ],
+     [
+      "_hold@granary-lots.js",
+      1,
+      0.024
+     ],
+     [
+      "set@granary-lots.js",
+      1,
+      0.024
+     ],
+     [
+      "actToGranary@economy-sim.js",
+      1,
+      0.024
+     ],
+     [
+      "fishToGranary@economy-sim.js",
+      1,
+      0.024
+     ],
+     [
+      "_t312Deliver@villages.js",
+      1,
+      0.024
+     ],
+     [
+      "_t720Settle@villages.js",
+      1,
+      0.024
+     ],
+     [
+      "isBlockedByWall@zone.js",
+      1,
+      0.024
+     ],
+     [
+      "isTerrainBlockedLocal@zone.js",
+      1,
+      0.024
+     ]
+    ],
+    "reqBy": [],
+    "selfAll": [
+     [
+      576,
+      9,
+      0.214
+     ],
+     [
+      611,
+      36,
+      0.854
+     ],
+     [
+      4469,
+      1,
+      0.024
+     ],
+     [
+      4716,
+      5,
+      0.119
+     ],
+     [
+      4719,
+      3,
+      0.071
+     ],
+     [
+      4724,
+      81,
+      1.922
+     ],
+     [
+      5059,
+      6,
+      0.142
+     ],
+     [
+      5061,
+      3,
+      0.071
+     ],
+     [
+      5062,
+      83,
+      1.97
+     ],
+     [
+      5074,
+      7,
+      0.166
+     ],
+     [
+      5076,
+      2,
+      0.047
+     ],
+     [
+      5078,
+      2,
+      0.047
+     ],
+     [
+      5081,
+      52,
+      1.234
+     ],
+     [
+      5082,
+      15,
+      0.356
+     ],
+     [
+      5083,
+      1,
+      0.024
+     ],
+     [
+      5093,
+      7,
+      0.166
+     ],
+     [
+      5152,
+      2,
+      0.047
+     ],
+     [
+      5154,
+      11,
+      0.261
+     ],
+     [
+      5156,
+      1,
+      0.024
+     ],
+     [
+      5158,
+      2,
+      0.047
+     ],
+     [
+      5173,
+      5,
+      0.119
+     ],
+     [
+      5174,
+      2,
+      0.047
+     ],
+     [
+      5176,
+      4,
+      0.095
+     ],
+     [
+      5178,
+      1,
+      0.024
+     ],
+     [
+      5181,
+      1,
+      0.024
+     ],
+     [
+      5185,
+      96,
+      2.278
+     ],
+     [
+      5206,
+      3,
+      0.071
+     ]
+    ]
+   }
+  },
+  {
+   "conf": "inf",
+   "tag": "A2-day",
+   "probe": true,
+   "ref": "dadba977",
+   "W": "day",
+   "pop": 621,
+   "ticks": 1350,
+   "step": null,
+   "stepBr": null,
+   "tickP50": 22.151,
+   "tickP95": 38.14,
+   "totUs": 38.757,
+   "tq": {
+    "n": 3,
+    "p50": 21.358,
+    "p95": 36.423,
+    "p99": 41.252,
+    "max": 77.593
+   },
+   "segUs": {
+    "econ(마을 하루 조각·캐러밴 몸)": 0.826,
+    "일 훅(도적·길·흙·눈)": 1.116,
+    "idle 문": 0.003,
+    "청크": 0.142,
+    "공간 색인·입력 시한": 0.394,
+    "결정 문(순회)": 31.336,
+    "화살·걸음 커널 준비": 1.408,
+    "이동 문(순회)": 1.035,
+    "계단·낙하·게이지·HP": 0.495,
+    "몹 AI": 0.774,
+    "델타·방송(AOI)": 1.078,
+    "꼬리(어로·저장·쓰러짐·계측)": 0.148
+   },
+   "segSumUs": 38.754,
+   "subUs": {
+    "gc": 1.488
+   },
+   "subN": {
+    "gc": 0.1
+   },
+   "hq": {
+    "dec": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    },
+    "life": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    },
+    "follow": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    }
+   },
+   "ast": {
+    "near": [
+     0,
+     0
+    ],
+    "beeline": [
+     0,
+     0
+    ],
+    "straight": [
+     0,
+     0
+    ],
+    "cooldown": [
+     0,
+     0
+    ],
+    "fail": [
+     0,
+     0
+    ],
+    "found": [
+     0,
+     0
+    ],
+    "inside": 0,
+    "outside": 0,
+    "outLab": {},
+    "why": {},
+    "walked": {},
+    "insideRate": 0,
+    "cats": {
+     "near": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "beeline": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "straight": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "cooldown": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "fail": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "found": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     }
+    }
+   },
+   "lines": {
+    "chunks": 4,
+    "samples": 80010,
+    "decSamples": 2270,
+    "stepSamples": 1787,
+    "decUs": 31.336,
+    "stepUs": 24.668,
+    "selfUs": 10.27,
+    "groups": [
+     [
+      "머리(결정 문 · 생활 손잡이 · 타이머) (5059~5066)",
+      155,
+      2.14
+     ],
+     [
+      "대피 · 밤 귀가 (5067~5089)",
+      6,
+      0.083
+     ],
+     [
+      "캐나디아 · 막힘 (5090~5098)",
+      1,
+      0.014
+     ],
+     [
+      "싸움 (5099~5150)",
+      2,
+      0.028
+     ],
+     [
+      "길 판정(배속 · 목표 키 · 되묻기) (5151~5171)",
+      58,
+      0.801
+     ],
+     [
+      "길 묻기 · 길 넣기 (5172~5179)",
+      12,
+      0.166
+     ],
+     [
+      "따라가기 · 도착 뒤 행동 (5180~5262)",
+      148,
+      2.043
+     ],
+     [
+      "몸통 밖 줄(인라인된 함수 · 다른 파일)",
+      362,
+      4.997
+     ]
+    ],
+    "calls": [
+     [
+      "decideNpcBehavior:4177",
+      705,
+      9.732
+     ],
+     [
+      "computeNpcPath:4607",
+      165,
+      2.278
+     ],
+     [
+      "detectStuck:4820",
+      100,
+      1.38
+     ],
+     [
+      "followNpcPath:4712",
+      64,
+      0.883
+     ],
+     [
+      "npcLifeTick:14113",
+      2,
+      0.028
+     ],
+     [
+      "queryRect:67",
+      2,
+      0.028
+     ],
+     [
+      "seedOf:38",
+      1,
+      0.014
+     ],
+     [
+      "_rawGameDay:9497",
+      1,
+      0.014
+     ],
+     [
+      "next:61",
+      1,
+      0.014
+     ],
+     [
+      "_t791Mir:5030",
+      1,
+      0.014
+     ],
+     [
+      "_pfRadius:4365",
+      1,
+      0.014
+     ]
+    ],
+    "selfTop": [
+     [
+      5062,
+      152,
+      2.098
+     ],
+     [
+      4822,
+      146,
+      2.015
+     ],
+     [
+      5185,
+      145,
+      2.002
+     ],
+     [
+      611,
+      58,
+      0.801
+     ],
+     [
+      4828,
+      56,
+      0.773
+     ],
+     [
+      4832,
+      54,
+      0.745
+     ],
+     [
+      5154,
+      26,
+      0.359
+     ],
+     [
+      4821,
+      23,
+      0.318
+     ],
+     [
+      5158,
+      17,
+      0.235
+     ],
+     [
+      576,
+      13,
+      0.179
+     ],
+     [
+      5157,
+      8,
+      0.11
+     ],
+     [
+      4823,
+      6,
+      0.083
+     ],
+     [
+      5178,
+      5,
+      0.069
+     ],
+     [
+      4837,
+      3,
+      0.041
+     ],
+     [
+      5152,
+      3,
+      0.041
+     ]
+    ],
+    "deepFn": [
+     [
+      "npcLifeTick@villages.js:14113",
+      203,
+      2.802
+     ],
+     [
+      "decideNpcBehavior@zone.js:4177",
+      107,
+      1.477
+     ],
+     [
+      "_t670Stuck@zone.js:4792",
+      100,
+      1.38
+     ],
+     [
+      "computeNpcPath@zone.js:4607",
+      80,
+      1.104
+     ],
+     [
+      "queryRect@quadtree.js:67",
+      74,
+      1.022
+     ],
+     [
+      "followNpcPath@zone.js:4712",
+      64,
+      0.883
+     ],
+     [
+      "_t400BodyStep@villages.js:12533",
+      33,
+      0.456
+     ],
+     [
+      "_actRebuild@zone.js:1170",
+      27,
+      0.373
+     ],
+     [
+      "_lifeNeedClear@villages.js:11603",
+      24,
+      0.331
+     ],
+     [
+      "_t340Try@villages.js:9543",
+      23,
+      0.318
+     ],
+     [
+      "_riverU@fishing.js:98",
+      23,
+      0.318
+     ],
+     [
+      "isTerrainBlockedLocal@zone.js:2313",
+      19,
+      0.262
+     ],
+     [
+      "isBlockedByWall@zone.js:15484",
+      15,
+      0.207
+     ],
+     [
+      "zoneGameDay@zone.js:9501",
+      13,
+      0.179
+     ],
+     [
+      "_lifeOtherIndex@villages.js:14563",
+      11,
+      0.152
+     ],
+     [
+      "_edgeScan@zone.js:14971",
+      11,
+      0.152
+     ],
+     [
+      "route@chunk-gates.js:181",
+      11,
+      0.152
+     ],
+     [
+      "_isPositionActiveBM@zone.js:1182",
+      10,
+      0.138
+     ],
+     [
+      "_lifeJobSites@villages.js:11520",
+      9,
+      0.124
+     ],
+     [
+      "_t427Reach@villages.js:11496",
+      9,
+      0.124
+     ]
+    ],
+    "deepTop": [
+     [
+      "_t670Stuck@zone.js:4792 #4792",
+      100,
+      1.38
+     ],
+     [
+      "computeNpcPath@zone.js:4607 #4613",
+      70,
+      0.966
+     ],
+     [
+      "decideNpcBehavior@zone.js:4177 #4220",
+      67,
+      0.925
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14128",
+      58,
+      0.801
+     ],
+     [
+      "_t400BodyStep@villages.js:12533 #12534",
+      33,
+      0.456
+     ],
+     [
+      "followNpcPath@zone.js:4712 #4729",
+      28,
+      0.387
+     ],
+     [
+      "followNpcPath@zone.js:4712 #4719",
+      27,
+      0.373
+     ],
+     [
+      "queryRect@quadtree.js:67 #69",
+      20,
+      0.276
+     ],
+     [
+      "_lifeNeedClear@villages.js:11603 #11605",
+      18,
+      0.248
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14154",
+      16,
+      0.221
+     ],
+     [
+      "queryRect@quadtree.js:67 #27",
+      16,
+      0.221
+     ],
+     [
+      "zoneGameDay@zone.js:9501 #9501",
+      13,
+      0.179
+     ],
+     [
+      "isTerrainBlockedLocal@zone.js:2313 #49",
+      11,
+      0.152
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14209",
+      10,
+      0.138
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14400",
+      10,
+      0.138
+     ],
+     [
+      "_riverU@fishing.js:98 #94",
+      10,
+      0.138
+     ],
+     [
+      "decideNpcBehavior@zone.js:4177 #4301",
+      9,
+      0.124
+     ],
+     [
+      "_actRebuild@zone.js:1170 #1177",
+      9,
+      0.124
+     ],
+     [
+      "queryRect@quadtree.js:67 #26",
+      9,
+      0.124
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #12534",
+      8,
+      0.11
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14165",
+      8,
+      0.11
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14347",
+      8,
+      0.11
+     ],
+     [
+      "decideNpcBehavior@zone.js:4177 #4292",
+      7,
+      0.097
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #9330",
+      7,
+      0.097
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14156",
+      7,
+      0.097
+     ]
+    ],
+    "call2": [
+     [
+      "decideNpcBehavior:4177>npcLifeTick:14113",
+      468,
+      6.46
+     ],
+     [
+      "detectStuck:4820>_t670Stuck:4792",
+      100,
+      1.38
+     ],
+     [
+      "decideNpcBehavior:4177>queryCircle:81",
+      71,
+      0.98
+     ],
+     [
+      "computeNpcPath:4607>straightPathClear:4318",
+      53,
+      0.732
+     ],
+     [
+      "computeNpcPath:4607>_t678Route:4551",
+      28,
+      0.387
+     ],
+     [
+      "decideNpcBehavior:4177>_t394OpenTarget:4349",
+      19,
+      0.262
+     ],
+     [
+      "decideNpcBehavior:4177>zoneGameDay:9501",
+      18,
+      0.248
+     ],
+     [
+      "decideNpcBehavior:4177>seedOf:38",
+      6,
+      0.083
+     ],
+     [
+      "decideNpcBehavior:4177>_lifeJobSites:11520",
+      3,
+      0.041
+     ],
+     [
+      "computeNpcPath:4607>smoothPath:455",
+      3,
+      0.041
+     ],
+     [
+      "decideNpcBehavior:4177>_carryCfg:9350",
+      2,
+      0.028
+     ],
+     [
+      "decideNpcBehavior:4177>pidHash:33",
+      2,
+      0.028
+     ],
+     [
+      "decideNpcBehavior:4177>_isPositionActiveBM:1182",
+      2,
+      0.028
+     ],
+     [
+      "decideNpcBehavior:4177>_lifeOtherIndex:14563",
+      2,
+      0.028
+     ],
+     [
+      "decideNpcBehavior:4177>_lifeAct:9908",
+      2,
+      0.028
+     ]
+    ],
+    "incl": [
+     [
+      "decideNpcBehavior@zone.js",
+      705,
+      9.732
+     ],
+     [
+      "npcLifeTick@villages.js",
+      470,
+      6.488
+     ],
+     [
+      "computeNpcPath@zone.js",
+      165,
+      2.278
+     ],
+     [
+      "_t670Stuck@zone.js",
+      100,
+      1.38
+     ],
+     [
+      "detectStuck@zone.js",
+      100,
+      1.38
+     ],
+     [
+      "_t340Try@villages.js",
+      89,
+      1.229
+     ],
+     [
+      "queryRect@quadtree.js",
+      74,
+      1.022
+     ],
+     [
+      "queryCircle@quadtree.js",
+      73,
+      1.008
+     ],
+     [
+      "followNpcPath@zone.js",
+      64,
+      0.883
+     ],
+     [
+      "straightPathClear@zone.js",
+      53,
+      0.732
+     ],
+     [
+      "_t677Spot@villages.js",
+      41,
+      0.566
+     ],
+     [
+      "spotAt@fishing.js",
+      36,
+      0.497
+     ],
+     [
+      "_isPositionActiveBM@zone.js",
+      35,
+      0.483
+     ],
+     [
+      "_t400BodyStep@villages.js",
+      33,
+      0.456
+     ],
+     [
+      "isBlockedByWall@zone.js",
+      31,
+      0.428
+     ],
+     [
+      "_lifeNeedClear@villages.js",
+      28,
+      0.387
+     ],
+     [
+      "_t678Route@zone.js",
+      28,
+      0.387
+     ],
+     [
+      "_actRebuild@zone.js",
+      27,
+      0.373
+     ],
+     [
+      "_riverU@fishing.js",
+      23,
+      0.318
+     ],
+     [
+      "route@chunk-gates.js",
+      19,
+      0.262
+     ],
+     [
+      "isTerrainBlockedLocal@zone.js",
+      19,
+      0.262
+     ],
+     [
+      "_t394OpenTarget@zone.js",
+      19,
+      0.262
+     ],
+     [
+      "zoneGameDay@zone.js",
+      18,
+      0.248
+     ],
+     [
+      "_lifeJobSites@villages.js",
+      15,
+      0.207
+     ],
+     [
+      "_t427Reach@villages.js",
+      14,
+      0.193
+     ],
+     [
+      "(anon)@villages.js",
+      14,
+      0.193
+     ],
+     [
+      "edgeBlockedStep@zone.js",
+      13,
+      0.179
+     ],
+     [
+      "_lifeOtherIndex@villages.js",
+      11,
+      0.152
+     ],
+     [
+      "_edgeScan@zone.js",
+      11,
+      0.152
+     ],
+     [
+      "findEdgeWall@zone.js",
+      11,
+      0.152
+     ],
+     [
+      "isWaterCellLocal@terrain.js",
+      10,
+      0.138
+     ],
+     [
+      "_t724BodyStep@villages.js",
+      10,
+      0.138
+     ],
+     [
+      "plan@fishing.js",
+      9,
+      0.124
+     ],
+     [
+      "_otRole@villages.js",
+      8,
+      0.11
+     ],
+     [
+      "seedOf@seed-rand.js",
+      7,
+      0.097
+     ],
+     [
+      "bfsTo@chunk-gates.js",
+      7,
+      0.097
+     ],
+     [
+      "_warOutMul@villages.js",
+      6,
+      0.083
+     ],
+     [
+      "_t374Done@villages.js",
+      6,
+      0.083
+     ],
+     [
+      "_rawGameDay@zone.js",
+      6,
+      0.083
+     ],
+     [
+      "_t593SeaBank@villages.js",
+      6,
+      0.083
+     ],
+     [
+      "blk@zone.js",
+      6,
+      0.083
+     ],
+     [
+      "isBlockedByStairSide@zone.js",
+      5,
+      0.069
+     ],
+     [
+      "_t427Set@villages.js",
+      4,
+      0.055
+     ],
+     [
+      "_t312Take@villages.js",
+      4,
+      0.055
+     ],
+     [
+      "_lifeAct@villages.js",
+      4,
+      0.055
+     ],
+     [
+      "_t1144NextFarmCell@villages.js",
+      4,
+      0.055
+     ],
+     [
+      "get@granary-lots.js",
+      4,
+      0.055
+     ],
+     [
+      "_handOf@villages.js",
+      3,
+      0.041
+     ],
+     [
+      "_lifeGoHome@villages.js",
+      3,
+      0.041
+     ],
+     [
+      "L@region-profiles.js",
+      3,
+      0.041
+     ],
+     [
+      "on@region-profiles.js",
+      3,
+      0.041
+     ],
+     [
+      "_t1144Units@villages.js",
+      3,
+      0.041
+     ],
+     [
+      "pickFrom@freshfish.js",
+      3,
+      0.041
+     ],
+     [
+      "pick@freshfish.js",
+      3,
+      0.041
+     ],
+     [
+      "_t1144Memo@villages.js",
+      3,
+      0.041
+     ],
+     [
+      "_lifeNextFarmCell@villages.js",
+      3,
+      0.041
+     ],
+     [
+      "Date.now@t455-clock.js",
+      3,
+      0.041
+     ],
+     [
+      "smoothPath@path-core.js",
+      3,
+      0.041
+     ],
+     [
+      "mineDemandLeft@economy-sim.js",
+      2,
+      0.028
+     ],
+     [
+      "_carryCfg@villages.js",
+      2,
+      0.028
+     ],
+     [
+      "collGenAround@zone.js",
+      2,
+      0.028
+     ],
+     [
+      "mixAt@region-profiles.js",
+      2,
+      0.028
+     ],
+     [
+      "chooseSpecies@region-profiles.js",
+      2,
+      0.028
+     ],
+     [
+      "_ch@villages.js",
+      2,
+      0.028
+     ],
+     [
+      "pidHash@seed-rand.js",
+      2,
+      0.028
+     ],
+     [
+      "_ledgerDay@villages.js",
+      2,
+      0.028
+     ],
+     [
+      "_isPointInRiver@terrain.js",
+      2,
+      0.028
+     ],
+     [
+      "next@seed-rand.js",
+      2,
+      0.028
+     ],
+     [
+      "oreStockAt@zone.js",
+      2,
+      0.028
+     ],
+     [
+      "_roadKeep@zone.js",
+      2,
+      0.028
+     ],
+     [
+      "_t312Water@villages.js",
+      2,
+      0.028
+     ],
+     [
+      "findCellFence@zone.js",
+      2,
+      0.028
+     ],
+     [
+      "stockRatioAt@fishing.js",
+      2,
+      0.028
+     ],
+     [
+      "_actDay@villages.js",
+      1,
+      0.014
+     ],
+     [
+      "pop@chunk-gates.js",
+      1,
+      0.014
+     ],
+     [
+      "at@terrain-segindex.js",
+      1,
+      0.014
+     ],
+     [
+      "_t427HomeOf@villages.js",
+      1,
+      0.014
+     ],
+     [
+      "put@region-profiles.js",
+      1,
+      0.014
+     ],
+     [
+      "regionMix@region-profiles.js",
+      1,
+      0.014
+     ],
+     [
+      "levelOf@roads.js",
+      1,
+      0.014
+     ],
+     [
+      "_waterBit@zone.js",
+      1,
+      0.014
+     ],
+     [
+      "isSeaTileLocal@zone.js",
+      1,
+      0.014
+     ],
+     [
+      "mark@vein-batch.js",
+      1,
+      0.014
+     ],
+     [
+      "_oreSave@zone.js",
+      1,
+      0.014
+     ],
+     [
+      "oreConsumeAt@zone.js",
+      1,
+      0.014
+     ],
+     [
+      "woodActOn@economy-sim.js",
+      1,
+      0.014
+     ],
+     [
+      "_lognormal@fishing.js",
+      1,
+      0.014
+     ],
+     [
+      "spotScore@fishing.js",
+      1,
+      0.014
+     ],
+     [
+      "_t791Mir@zone.js",
+      1,
+      0.014
+     ],
+     [
+      "_pfRadius@zone.js",
+      1,
+      0.014
+     ],
+     [
+      "_t312EconNpc@villages.js",
+      1,
+      0.014
+     ],
+     [
+      "(anon)@validators",
+      1,
+      0.014
+     ],
+     [
+      "wrappedFn@errors",
+      1,
+      0.014
+     ],
+     [
+      "now@performance",
+      1,
+      0.014
+     ],
+     [
+      "_t678Now@zone.js",
+      1,
+      0.014
+     ],
+     [
+      "_actTake@villages.js",
+      1,
+      0.014
+     ],
+     [
+      "_isPointInLake@terrain.js",
+      1,
+      0.014
+     ],
+     [
+      "fishBudgetPerCell@economy-sim.js",
+      1,
+      0.014
+     ],
+     [
+      "_t312Day@villages.js",
+      1,
+      0.014
+     ],
+     [
+      "isLot@lots.js",
+      1,
+      0.014
+     ],
+     [
+      "_mNote@lots.js",
+      1,
+      0.014
+     ],
+     [
+      "noteNow@lots.js",
+      1,
+      0.014
+     ],
+     [
+      "(anon)@zone.js",
+      1,
+      0.014
+     ],
+     [
+      "_t678Wp@zone.js",
+      1,
+      0.014
+     ],
+     [
+      "_fishingMod@villages.js",
+      1,
+      0.014
+     ],
+     [
+      "rec@fishing.js",
+      1,
+      0.014
+     ]
+    ],
+    "reqBy": [],
+    "selfAll": [
+     [
+      576,
+      13,
+      0.179
+     ],
+     [
+      611,
+      58,
+      0.801
+     ],
+     [
+      4470,
+      1,
+      0.014
+     ],
+     [
+      4792,
+      1,
+      0.014
+     ],
+     [
+      4821,
+      23,
+      0.318
+     ],
+     [
+      4822,
+      146,
+      2.015
+     ],
+     [
+      4823,
+      6,
+      0.083
+     ],
+     [
+      4825,
+      1,
+      0.014
+     ],
+     [
+      4828,
+      56,
+      0.773
+     ],
+     [
+      4832,
+      54,
+      0.745
+     ],
+     [
+      4837,
+      3,
+      0.041
+     ],
+     [
+      5059,
+      1,
+      0.014
+     ],
+     [
+      5061,
+      2,
+      0.028
+     ],
+     [
+      5062,
+      152,
+      2.098
+     ],
+     [
+      5067,
+      1,
+      0.014
+     ],
+     [
+      5074,
+      2,
+      0.028
+     ],
+     [
+      5076,
+      2,
+      0.028
+     ],
+     [
+      5077,
+      1,
+      0.014
+     ],
+     [
+      5093,
+      1,
+      0.014
+     ],
+     [
+      5099,
+      2,
+      0.028
+     ],
+     [
+      5151,
+      1,
+      0.014
+     ],
+     [
+      5152,
+      3,
+      0.041
+     ],
+     [
+      5154,
+      26,
+      0.359
+     ],
+     [
+      5155,
+      1,
+      0.014
+     ],
+     [
+      5156,
+      2,
+      0.028
+     ],
+     [
+      5157,
+      8,
+      0.11
+     ],
+     [
+      5158,
+      17,
+      0.235
+     ],
+     [
+      5173,
+      1,
+      0.014
+     ],
+     [
+      5174,
+      3,
+      0.041
+     ],
+     [
+      5176,
+      2,
+      0.028
+     ],
+     [
+      5177,
+      1,
+      0.014
+     ],
+     [
+      5178,
+      5,
+      0.069
+     ],
+     [
+      5180,
+      3,
+      0.041
+     ],
+     [
+      5185,
+      145,
+      2.002
+     ]
+    ]
+   }
+  },
+  {
+   "conf": "inf",
+   "tag": "A2-night",
+   "probe": true,
+   "ref": "dadba977",
+   "W": "night",
+   "pop": 621,
+   "ticks": 900,
+   "step": null,
+   "stepBr": null,
+   "tickP50": 21.679,
+   "tickP95": 37.33,
+   "totUs": 39.037,
+   "tq": {
+    "n": 2,
+    "p50": 21.5925,
+    "p95": 37.1505,
+    "p99": 46.237,
+    "max": 60.801
+   },
+   "segUs": {
+    "econ(마을 하루 조각·캐러밴 몸)": 0.876,
+    "일 훅(도적·길·흙·눈)": 0.395,
+    "idle 문": 0.031,
+    "청크": 0.087,
+    "공간 색인·입력 시한": 0.381,
+    "결정 문(순회)": 32.709,
+    "화살·걸음 커널 준비": 1.119,
+    "이동 문(순회)": 0.567,
+    "계단·낙하·게이지·HP": 0.562,
+    "몹 AI": 0.917,
+    "델타·방송(AOI)": 1.199,
+    "꼬리(어로·저장·쓰러짐·계측)": 0.191
+   },
+   "segSumUs": 39.033,
+   "subUs": {
+    "gc": 1.809
+   },
+   "subN": {
+    "gc": 0.2
+   },
+   "hq": {
+    "dec": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    },
+    "life": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    },
+    "follow": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    }
+   },
+   "ast": {
+    "near": [
+     0,
+     0
+    ],
+    "beeline": [
+     0,
+     0
+    ],
+    "straight": [
+     0,
+     0
+    ],
+    "cooldown": [
+     0,
+     0
+    ],
+    "fail": [
+     0,
+     0
+    ],
+    "found": [
+     0,
+     0
+    ],
+    "inside": 0,
+    "outside": 0,
+    "outLab": {},
+    "why": {},
+    "walked": {},
+    "insideRate": 0,
+    "cats": {
+     "near": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "beeline": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "straight": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "cooldown": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "fail": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "found": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     }
+    }
+   },
+   "lines": {
+    "chunks": 4,
+    "samples": 78901,
+    "decSamples": 1206,
+    "stepSamples": 850,
+    "decUs": 32.709,
+    "stepUs": 23.054,
+    "selfUs": 12.015,
+    "groups": [
+     [
+      "머리(결정 문 · 생활 손잡이 · 타이머) (5059~5066)",
+      65,
+      1.763
+     ],
+     [
+      "대피 · 밤 귀가 (5067~5089)",
+      79,
+      2.143
+     ],
+     [
+      "캐나디아 · 막힘 (5090~5098)",
+      2,
+      0.054
+     ],
+     [
+      "싸움 (5099~5150)",
+      2,
+      0.054
+     ],
+     [
+      "길 판정(배속 · 목표 키 · 되묻기) (5151~5171)",
+      17,
+      0.461
+     ],
+     [
+      "길 묻기 · 길 넣기 (5172~5179)",
+      8,
+      0.217
+     ],
+     [
+      "따라가기 · 도착 뒤 행동 (5180~5262)",
+      87,
+      2.36
+     ],
+     [
+      "몸통 밖 줄(인라인된 함수 · 다른 파일)",
+      183,
+      4.963
+     ]
+    ],
+    "calls": [
+     [
+      "decideNpcBehavior:4177",
+      226,
+      6.13
+     ],
+     [
+      "computeNpcPath:4607",
+      86,
+      2.332
+     ],
+     [
+      "detectStuck:4820",
+      78,
+      2.116
+     ],
+     [
+      "followNpcPath:4712",
+      16,
+      0.434
+     ],
+     [
+      "seedOf:38",
+      1,
+      0.027
+     ]
+    ],
+    "selfTop": [
+     [
+      4822,
+      101,
+      2.739
+     ],
+     [
+      5185,
+      81,
+      2.197
+     ],
+     [
+      5081,
+      59,
+      1.6
+     ],
+     [
+      5062,
+      57,
+      1.546
+     ],
+     [
+      611,
+      32,
+      0.868
+     ],
+     [
+      576,
+      24,
+      0.651
+     ],
+     [
+      5082,
+      14,
+      0.38
+     ],
+     [
+      4823,
+      13,
+      0.353
+     ],
+     [
+      5154,
+      11,
+      0.298
+     ],
+     [
+      4824,
+      5,
+      0.136
+     ],
+     [
+      5059,
+      5,
+      0.136
+     ],
+     [
+      5180,
+      5,
+      0.136
+     ],
+     [
+      4469,
+      4,
+      0.108
+     ],
+     [
+      5173,
+      4,
+      0.108
+     ],
+     [
+      4821,
+      3,
+      0.081
+     ]
+    ],
+    "deepFn": [
+     [
+      "computeNpcPath@zone.js:4607",
+      86,
+      2.332
+     ],
+     [
+      "_t670Stuck@zone.js:4792",
+      78,
+      2.116
+     ],
+     [
+      "npcLifeTick@villages.js:14113",
+      57,
+      1.546
+     ],
+     [
+      "decideNpcBehavior@zone.js:4177",
+      53,
+      1.437
+     ],
+     [
+      "queryRect@quadtree.js:67",
+      34,
+      0.922
+     ],
+     [
+      "_t720Step@villages.js:12727",
+      25,
+      0.678
+     ],
+     [
+      "followNpcPath@zone.js:4712",
+      16,
+      0.434
+     ],
+     [
+      "_lifeGoHome@villages.js:9911",
+      12,
+      0.325
+     ],
+     [
+      "zoneGameDay@zone.js:9501",
+      12,
+      0.325
+     ],
+     [
+      "_t737Held@villages.js:12672",
+      9,
+      0.244
+     ],
+     [
+      "_handOf@villages.js:9330",
+      6,
+      0.163
+     ],
+     [
+      "_t720Held@villages.js:12650",
+      4,
+      0.108
+     ],
+     [
+      "seedOf@seed-rand.js:38",
+      3,
+      0.081
+     ],
+     [
+      "_ledgerDay@villages.js:8513",
+      2,
+      0.054
+     ],
+     [
+      "_rawGameDay@zone.js:9497",
+      2,
+      0.054
+     ],
+     [
+      "_lifeVL@villages.js:9304",
+      1,
+      0.027
+     ],
+     [
+      "_bodyDay@villages.js:8494",
+      1,
+      0.027
+     ],
+     [
+      "Date.now@t455-clock.js:9",
+      1,
+      0.027
+     ],
+     [
+      "_t720Fv@villages.js:8493",
+      1,
+      0.027
+     ],
+     [
+      "doorRest@granary-lots.js:446",
+      1,
+      0.027
+     ]
+    ],
+    "deepTop": [
+     [
+      "_t670Stuck@zone.js:4792 #4792",
+      78,
+      2.116
+     ],
+     [
+      "computeNpcPath@zone.js:4607 #4613",
+      72,
+      1.953
+     ],
+     [
+      "decideNpcBehavior@zone.js:4177 #4220",
+      40,
+      1.085
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14128",
+      32,
+      0.868
+     ],
+     [
+      "_t720Step@villages.js:12727 #12732",
+      22,
+      0.597
+     ],
+     [
+      "zoneGameDay@zone.js:9501 #9501",
+      12,
+      0.325
+     ],
+     [
+      "queryRect@quadtree.js:67 #70",
+      11,
+      0.298
+     ],
+     [
+      "queryRect@quadtree.js:67 #69",
+      10,
+      0.271
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14151",
+      7,
+      0.19
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14140",
+      6,
+      0.163
+     ],
+     [
+      "_handOf@villages.js:9330 #9330",
+      6,
+      0.163
+     ],
+     [
+      "_lifeGoHome@villages.js:9911 #9922",
+      6,
+      0.163
+     ],
+     [
+      "computeNpcPath@zone.js:4607 #4469",
+      6,
+      0.163
+     ],
+     [
+      "decideNpcBehavior@zone.js:4177 #4193",
+      5,
+      0.136
+     ],
+     [
+      "_lifeGoHome@villages.js:9911 #9921",
+      5,
+      0.136
+     ],
+     [
+      "followNpcPath@zone.js:4712 #4469",
+      5,
+      0.136
+     ],
+     [
+      "_t737Held@villages.js:12672 #12672",
+      4,
+      0.108
+     ],
+     [
+      "_t737Held@villages.js:12672 #12683",
+      4,
+      0.108
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14127",
+      3,
+      0.081
+     ],
+     [
+      "queryRect@quadtree.js:67 #68",
+      3,
+      0.081
+     ],
+     [
+      "computeNpcPath@zone.js:4607 #4624",
+      3,
+      0.081
+     ],
+     [
+      "followNpcPath@zone.js:4712 #4719",
+      3,
+      0.081
+     ],
+     [
+      "decideNpcBehavior@zone.js:4177 #60",
+      2,
+      0.054
+     ],
+     [
+      "decideNpcBehavior@zone.js:4177 #73",
+      2,
+      0.054
+     ],
+     [
+      "_t720Held@villages.js:12650 #12651",
+      2,
+      0.054
+     ]
+    ],
+    "call2": [
+     [
+      "decideNpcBehavior:4177>npcLifeTick:14113",
+      120,
+      3.255
+     ],
+     [
+      "detectStuck:4820>_t670Stuck:4792",
+      78,
+      2.116
+     ],
+     [
+      "decideNpcBehavior:4177>queryCircle:81",
+      34,
+      0.922
+     ],
+     [
+      "decideNpcBehavior:4177>zoneGameDay:9501",
+      15,
+      0.407
+     ],
+     [
+      "decideNpcBehavior:4177>seedOf:38",
+      2,
+      0.054
+     ],
+     [
+      "decideNpcBehavior:4177>_t720Fv:8493",
+      1,
+      0.027
+     ],
+     [
+      "decideNpcBehavior:4177>_t720Step:12727",
+      1,
+      0.027
+     ]
+    ],
+    "incl": [
+     [
+      "decideNpcBehavior@zone.js",
+      226,
+      6.13
+     ],
+     [
+      "npcLifeTick@villages.js",
+      120,
+      3.255
+     ],
+     [
+      "computeNpcPath@zone.js",
+      86,
+      2.332
+     ],
+     [
+      "_t670Stuck@zone.js",
+      78,
+      2.116
+     ],
+     [
+      "detectStuck@zone.js",
+      78,
+      2.116
+     ],
+     [
+      "_t720Step@villages.js",
+      42,
+      1.139
+     ],
+     [
+      "queryRect@quadtree.js",
+      34,
+      0.922
+     ],
+     [
+      "queryCircle@quadtree.js",
+      34,
+      0.922
+     ],
+     [
+      "followNpcPath@zone.js",
+      16,
+      0.434
+     ],
+     [
+      "zoneGameDay@zone.js",
+      15,
+      0.407
+     ],
+     [
+      "_lifeGoHome@villages.js",
+      13,
+      0.353
+     ],
+     [
+      "_t737Held@villages.js",
+      9,
+      0.244
+     ],
+     [
+      "_t720Held@villages.js",
+      9,
+      0.244
+     ],
+     [
+      "_handOf@villages.js",
+      6,
+      0.163
+     ],
+     [
+      "_t312Deliver@villages.js",
+      4,
+      0.108
+     ],
+     [
+      "_t720Settle@villages.js",
+      4,
+      0.108
+     ],
+     [
+      "_rawGameDay@zone.js",
+      3,
+      0.081
+     ],
+     [
+      "seedOf@seed-rand.js",
+      3,
+      0.081
+     ],
+     [
+      "_ledgerDay@villages.js",
+      2,
+      0.054
+     ],
+     [
+      "doorShut@granary-lots.js",
+      2,
+      0.054
+     ],
+     [
+      "_lifeVL@villages.js",
+      1,
+      0.027
+     ],
+     [
+      "_bodyDay@villages.js",
+      1,
+      0.027
+     ],
+     [
+      "_t720Fv@villages.js",
+      1,
+      0.027
+     ],
+     [
+      "Date.now@t455-clock.js",
+      1,
+      0.027
+     ],
+     [
+      "doorRest@granary-lots.js",
+      1,
+      0.027
+     ],
+     [
+      "doorBegin@granary-lots.js",
+      1,
+      0.027
+     ],
+     [
+      "doorOpen@granary-lots.js",
+      1,
+      0.027
+     ],
+     [
+      "_t748FishRecs@villages.js",
+      1,
+      0.027
+     ],
+     [
+      "_in@granary-lots.js",
+      1,
+      0.027
+     ],
+     [
+      "doorIn@granary-lots.js",
+      1,
+      0.027
+     ]
+    ],
+    "reqBy": [],
+    "selfAll": [
+     [
+      576,
+      24,
+      0.651
+     ],
+     [
+      611,
+      32,
+      0.868
+     ],
+     [
+      4469,
+      4,
+      0.108
+     ],
+     [
+      4821,
+      3,
+      0.081
+     ],
+     [
+      4822,
+      101,
+      2.739
+     ],
+     [
+      4823,
+      13,
+      0.353
+     ],
+     [
+      4824,
+      5,
+      0.136
+     ],
+     [
+      5031,
+      1,
+      0.027
+     ],
+     [
+      5059,
+      5,
+      0.136
+     ],
+     [
+      5061,
+      3,
+      0.081
+     ],
+     [
+      5062,
+      57,
+      1.546
+     ],
+     [
+      5067,
+      1,
+      0.027
+     ],
+     [
+      5074,
+      1,
+      0.027
+     ],
+     [
+      5076,
+      1,
+      0.027
+     ],
+     [
+      5078,
+      2,
+      0.054
+     ],
+     [
+      5080,
+      1,
+      0.027
+     ],
+     [
+      5081,
+      59,
+      1.6
+     ],
+     [
+      5082,
+      14,
+      0.38
+     ],
+     [
+      5093,
+      1,
+      0.027
+     ],
+     [
+      5095,
+      1,
+      0.027
+     ],
+     [
+      5099,
+      2,
+      0.054
+     ],
+     [
+      5152,
+      1,
+      0.027
+     ],
+     [
+      5154,
+      11,
+      0.298
+     ],
+     [
+      5156,
+      1,
+      0.027
+     ],
+     [
+      5157,
+      1,
+      0.027
+     ],
+     [
+      5158,
+      3,
+      0.081
+     ],
+     [
+      5173,
+      4,
+      0.108
+     ],
+     [
+      5174,
+      2,
+      0.054
+     ],
+     [
+      5176,
+      2,
+      0.054
+     ],
+     [
+      5180,
+      5,
+      0.136
+     ],
+     [
+      5181,
+      1,
+      0.027
+     ],
+     [
+      5185,
+      81,
+      2.197
+     ]
+    ]
+   }
+  },
+  {
+   "conf": "inf",
+   "tag": "B1-day",
+   "probe": true,
+   "ref": "dadba977",
+   "W": "day",
+   "pop": 621,
+   "ticks": 900,
+   "step": null,
+   "stepBr": null,
+   "tickP50": 22.046,
+   "tickP95": 38.769,
+   "totUs": 40.07,
+   "tq": {
+    "n": 2,
+    "p50": 22.054000000000002,
+    "p95": 39.987,
+    "p99": 46.0055,
+    "max": 132.662
+   },
+   "segUs": {
+    "econ(마을 하루 조각·캐러밴 몸)": 0.78,
+    "일 훅(도적·길·흙·눈)": 0.472,
+    "idle 문": 0.004,
+    "청크": 0.052,
+    "공간 색인·입력 시한": 0.298,
+    "결정 문(순회)": 31.791,
+    "화살·걸음 커널 준비": 2.599,
+    "이동 문(순회)": 1.632,
+    "계단·낙하·게이지·HP": 0.564,
+    "몹 AI": 0.955,
+    "델타·방송(AOI)": 0.758,
+    "꼬리(어로·저장·쓰러짐·계측)": 0.159
+   },
+   "segSumUs": 40.065,
+   "subUs": {
+    "gc": 2.435
+   },
+   "subN": {
+    "gc": 0.2
+   },
+   "hq": {
+    "dec": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    },
+    "life": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    },
+    "follow": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    }
+   },
+   "ast": {
+    "near": [
+     0,
+     0
+    ],
+    "beeline": [
+     0,
+     0
+    ],
+    "straight": [
+     0,
+     0
+    ],
+    "cooldown": [
+     0,
+     0
+    ],
+    "fail": [
+     0,
+     0
+    ],
+    "found": [
+     0,
+     0
+    ],
+    "inside": 0,
+    "outside": 0,
+    "outLab": {},
+    "why": {},
+    "walked": {},
+    "insideRate": 0,
+    "cats": {
+     "near": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "beeline": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "straight": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "cooldown": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "fail": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "found": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     }
+    }
+   },
+   "lines": {
+    "chunks": 4,
+    "samples": 86527,
+    "decSamples": 3392,
+    "stepSamples": 2801,
+    "decUs": 31.791,
+    "stepUs": 26.252,
+    "selfUs": 6.223,
+    "groups": [
+     [
+      "머리(결정 문 · 생활 손잡이 · 타이머) (5059~5066)",
+      192,
+      1.799
+     ],
+     [
+      "대피 · 밤 귀가 (5067~5089)",
+      5,
+      0.047
+     ],
+     [
+      "캐나디아 · 막힘 (5090~5098)",
+      25,
+      0.234
+     ],
+     [
+      "싸움 (5099~5150)",
+      2,
+      0.019
+     ],
+     [
+      "길 판정(배속 · 목표 키 · 되묻기) (5151~5171)",
+      94,
+      0.881
+     ],
+     [
+      "길 묻기 · 길 넣기 (5172~5179)",
+      53,
+      0.497
+     ],
+     [
+      "따라가기 · 도착 뒤 행동 (5180~5262)",
+      91,
+      0.853
+     ],
+     [
+      "몸통 밖 줄(인라인된 함수 · 다른 파일)",
+      202,
+      1.893
+     ]
+    ],
+    "calls": [
+     [
+      "_t1145Detect:4891",
+      820,
+      7.685
+     ],
+     [
+      "decideNpcBehavior:4177",
+      662,
+      6.204
+     ],
+     [
+      "set:55",
+      284,
+      2.662
+     ],
+     [
+      "_t1145Follow:4774",
+      187,
+      1.753
+     ],
+     [
+      "computeNpcPath:4607",
+      152,
+      1.425
+     ],
+     [
+      "_t791Mir:5030",
+      17,
+      0.159
+     ],
+     [
+      "_t1155StuckSlot:4871",
+      6,
+      0.056
+     ],
+     [
+      "next:61",
+      4,
+      0.037
+     ],
+     [
+      "_t394OpenTarget:4349",
+      1,
+      0.009
+     ],
+     [
+      "setAt:50",
+      1,
+      0.009
+     ],
+     [
+      "straightPathClear:4318",
+      1,
+      0.009
+     ],
+     [
+      "_rawGameDay:9497",
+      1,
+      0.009
+     ],
+     [
+      "queryCircle:81",
+      1,
+      0.009
+     ]
+    ],
+    "selfTop": [
+     [
+      5062,
+      186,
+      1.743
+     ],
+     [
+      5185,
+      91,
+      0.853
+     ],
+     [
+      5154,
+      75,
+      0.703
+     ],
+     [
+      611,
+      43,
+      0.403
+     ],
+     [
+      4760,
+      43,
+      0.403
+     ],
+     [
+      4762,
+      27,
+      0.253
+     ],
+     [
+      5093,
+      24,
+      0.225
+     ],
+     [
+      57,
+      18,
+      0.169
+     ],
+     [
+      576,
+      17,
+      0.159
+     ],
+     [
+      5174,
+      16,
+      0.15
+     ],
+     [
+      5176,
+      16,
+      0.15
+     ],
+     [
+      53,
+      12,
+      0.112
+     ],
+     [
+      5175,
+      11,
+      0.103
+     ],
+     [
+      4757,
+      9,
+      0.084
+     ],
+     [
+      5158,
+      8,
+      0.075
+     ]
+    ],
+    "deepFn": [
+     [
+      "_t1145Detect@zone.js:4891",
+      514,
+      4.817
+     ],
+     [
+      "set@body-cols.js:55",
+      308,
+      2.887
+     ],
+     [
+      "npcLifeTick@villages.js:14113",
+      201,
+      1.884
+     ],
+     [
+      "setAt@body-cols.js:50",
+      178,
+      1.668
+     ],
+     [
+      "_t1155StuckSlot@zone.js:4871",
+      132,
+      1.237
+     ],
+     [
+      "decideNpcBehavior@zone.js:4177",
+      87,
+      0.815
+     ],
+     [
+      "computeNpcPath@zone.js:4607",
+      76,
+      0.712
+     ],
+     [
+      "slot@body-cols.js:49",
+      70,
+      0.656
+     ],
+     [
+      "_t1155FollowSlot@zone.js:4756",
+      67,
+      0.628
+     ],
+     [
+      "_t1155DetectSlot@zone.js:4876",
+      53,
+      0.497
+     ],
+     [
+      "queryRect@quadtree.js:67",
+      51,
+      0.478
+     ],
+     [
+      "zoneGameDay@zone.js:9501",
+      46,
+      0.431
+     ],
+     [
+      "_terrBlocked0@zone.js:2306",
+      26,
+      0.244
+     ],
+     [
+      "_t400BodyStep@villages.js:12533",
+      24,
+      0.225
+     ],
+     [
+      "_lifeNeedClear@villages.js:11603",
+      22,
+      0.206
+     ],
+     [
+      "_riverU@fishing.js:98",
+      21,
+      0.197
+     ],
+     [
+      "_t340Try@villages.js:9543",
+      17,
+      0.159
+     ],
+     [
+      "isBlockedByWall@zone.js:15484",
+      15,
+      0.141
+     ],
+     [
+      "_actRebuild@zone.js:1170",
+      10,
+      0.094
+     ],
+     [
+      "_lifeOtherIndex@villages.js:14563",
+      10,
+      0.094
+     ]
+    ],
+    "deepTop": [
+     [
+      "_t1145Detect@zone.js:4891 #4879",
+      259,
+      2.427
+     ],
+     [
+      "set@body-cols.js:55 #57",
+      184,
+      1.725
+     ],
+     [
+      "setAt@body-cols.js:50 #53",
+      156,
+      1.462
+     ],
+     [
+      "_t1155StuckSlot@zone.js:4871 #4873",
+      121,
+      1.134
+     ],
+     [
+      "set@body-cols.js:55 #58",
+      100,
+      0.937
+     ],
+     [
+      "slot@body-cols.js:49 #49",
+      70,
+      0.656
+     ],
+     [
+      "_t1145Detect@zone.js:4891 #4885",
+      66,
+      0.619
+     ],
+     [
+      "computeNpcPath@zone.js:4607 #4613",
+      49,
+      0.459
+     ],
+     [
+      "decideNpcBehavior@zone.js:4177 #4220",
+      48,
+      0.45
+     ],
+     [
+      "zoneGameDay@zone.js:9501 #9501",
+      46,
+      0.431
+     ],
+     [
+      "_t1145Detect@zone.js:4891 #4877",
+      45,
+      0.422
+     ],
+     [
+      "_t1145Detect@zone.js:4891 #4880",
+      44,
+      0.412
+     ],
+     [
+      "_t1145Detect@zone.js:4891 #4884",
+      44,
+      0.412
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14128",
+      40,
+      0.375
+     ],
+     [
+      "_t1145Detect@zone.js:4891 #4878",
+      31,
+      0.291
+     ],
+     [
+      "_t1155FollowSlot@zone.js:4756 #4770",
+      28,
+      0.262
+     ],
+     [
+      "_t400BodyStep@villages.js:12533 #12534",
+      24,
+      0.225
+     ],
+     [
+      "set@body-cols.js:55 #56",
+      21,
+      0.197
+     ],
+     [
+      "computeNpcPath@zone.js:4607 #4609",
+      20,
+      0.187
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14154",
+      17,
+      0.159
+     ],
+     [
+      "queryRect@quadtree.js:67 #69",
+      16,
+      0.15
+     ],
+     [
+      "_terrBlocked0@zone.js:2306 #49",
+      15,
+      0.141
+     ],
+     [
+      "_lifeNeedClear@villages.js:11603 #11605",
+      15,
+      0.141
+     ],
+     [
+      "setAt@body-cols.js:50 #51",
+      15,
+      0.141
+     ],
+     [
+      "queryRect@quadtree.js:67 #70",
+      14,
+      0.131
+     ]
+    ],
+    "call2": [
+     [
+      "decideNpcBehavior:4177>npcLifeTick:14113",
+      433,
+      4.058
+     ],
+     [
+      "_t1145Detect:4891>_t1155DetectSlot:4876",
+      237,
+      2.221
+     ],
+     [
+      "_t1145Follow:4774>_t1155FollowSlot:4756",
+      186,
+      1.743
+     ],
+     [
+      "_t1145Detect:4891>slot:49",
+      69,
+      0.647
+     ],
+     [
+      "decideNpcBehavior:4177>queryCircle:81",
+      56,
+      0.525
+     ],
+     [
+      "computeNpcPath:4607>straightPathClear:4318",
+      49,
+      0.459
+     ],
+     [
+      "decideNpcBehavior:4177>zoneGameDay:9501",
+      48,
+      0.45
+     ],
+     [
+      "computeNpcPath:4607>_t678Route:4551",
+      20,
+      0.187
+     ],
+     [
+      "decideNpcBehavior:4177>_t394OpenTarget:4349",
+      17,
+      0.159
+     ],
+     [
+      "_t791Mir:5030>set:55",
+      12,
+      0.112
+     ],
+     [
+      "decideNpcBehavior:4177>set:55",
+      7,
+      0.066
+     ],
+     [
+      "computeNpcPath:4607>smoothPath:455",
+      3,
+      0.028
+     ],
+     [
+      "decideNpcBehavior:4177>_lifeOtherIndex:14563",
+      3,
+      0.028
+     ],
+     [
+      "computeNpcPath:4607>isBlockedByWall:15484",
+      2,
+      0.019
+     ],
+     [
+      "decideNpcBehavior:4177>next:61",
+      2,
+      0.019
+     ]
+    ],
+    "incl": [
+     [
+      "_t1145Detect@zone.js",
+      820,
+      7.685
+     ],
+     [
+      "decideNpcBehavior@zone.js",
+      662,
+      6.204
+     ],
+     [
+      "npcLifeTick@villages.js",
+      433,
+      4.058
+     ],
+     [
+      "set@body-cols.js",
+      308,
+      2.887
+     ],
+     [
+      "_t1155DetectSlot@zone.js",
+      237,
+      2.221
+     ],
+     [
+      "_t1145Follow@zone.js",
+      187,
+      1.753
+     ],
+     [
+      "_t1155FollowSlot@zone.js",
+      186,
+      1.743
+     ],
+     [
+      "setAt@body-cols.js",
+      178,
+      1.668
+     ],
+     [
+      "computeNpcPath@zone.js",
+      152,
+      1.425
+     ],
+     [
+      "_t1155StuckSlot@zone.js",
+      132,
+      1.237
+     ],
+     [
+      "_t340Try@villages.js",
+      85,
+      0.797
+     ],
+     [
+      "slot@body-cols.js",
+      70,
+      0.656
+     ],
+     [
+      "queryCircle@quadtree.js",
+      57,
+      0.534
+     ],
+     [
+      "straightPathClear@zone.js",
+      51,
+      0.478
+     ],
+     [
+      "queryRect@quadtree.js",
+      51,
+      0.478
+     ],
+     [
+      "zoneGameDay@zone.js",
+      48,
+      0.45
+     ],
+     [
+      "_t677Spot@villages.js",
+      35,
+      0.328
+     ],
+     [
+      "spotAt@fishing.js",
+      30,
+      0.281
+     ],
+     [
+      "isTerrainBlockedLocal@zone.js",
+      28,
+      0.262
+     ],
+     [
+      "_lifeNeedClear@villages.js",
+      28,
+      0.262
+     ],
+     [
+      "isBlockedByWall@zone.js",
+      27,
+      0.253
+     ],
+     [
+      "_terrBlocked0@zone.js",
+      26,
+      0.244
+     ],
+     [
+      "_t400BodyStep@villages.js",
+      24,
+      0.225
+     ],
+     [
+      "_riverU@fishing.js",
+      21,
+      0.197
+     ],
+     [
+      "_t678Route@zone.js",
+      20,
+      0.187
+     ],
+     [
+      "_t394OpenTarget@zone.js",
+      18,
+      0.169
+     ],
+     [
+      "_isPositionActiveBM@zone.js",
+      18,
+      0.169
+     ],
+     [
+      "_t791Mir@zone.js",
+      17,
+      0.159
+     ],
+     [
+      "route@chunk-gates.js",
+      14,
+      0.131
+     ],
+     [
+      "(anon)@villages.js",
+      11,
+      0.103
+     ],
+     [
+      "blk@zone.js",
+      11,
+      0.103
+     ],
+     [
+      "_actRebuild@zone.js",
+      10,
+      0.094
+     ],
+     [
+      "pick@freshfish.js",
+      10,
+      0.094
+     ],
+     [
+      "_lifeOtherIndex@villages.js",
+      10,
+      0.094
+     ],
+     [
+      "_lifeJobSites@villages.js",
+      9,
+      0.084
+     ],
+     [
+      "pickFrom@freshfish.js",
+      9,
+      0.084
+     ],
+     [
+      "_t427Reach@villages.js",
+      9,
+      0.084
+     ],
+     [
+      "isWaterCellLocal@terrain.js",
+      8,
+      0.075
+     ],
+     [
+      "plan@fishing.js",
+      8,
+      0.075
+     ],
+     [
+      "mixAt@region-profiles.js",
+      8,
+      0.075
+     ],
+     [
+      "chooseSpecies@region-profiles.js",
+      8,
+      0.075
+     ],
+     [
+      "_ch@villages.js",
+      8,
+      0.075
+     ],
+     [
+      "_t1144Units@villages.js",
+      7,
+      0.066
+     ],
+     [
+      "_t427Set@villages.js",
+      7,
+      0.066
+     ],
+     [
+      "_lifeNextFarmCell@villages.js",
+      6,
+      0.056
+     ],
+     [
+      "next@seed-rand.js",
+      6,
+      0.056
+     ],
+     [
+      "get@granary-lots.js",
+      6,
+      0.056
+     ],
+     [
+      "_otRole@villages.js",
+      6,
+      0.056
+     ],
+     [
+      "findEdgeWall@zone.js",
+      6,
+      0.056
+     ],
+     [
+      "bfsTo@chunk-gates.js",
+      6,
+      0.056
+     ],
+     [
+      "findStairBuildingForCell@zone.js",
+      5,
+      0.047
+     ],
+     [
+      "isBlockedByStairSide@zone.js",
+      5,
+      0.047
+     ],
+     [
+      "_t593SeaBank@villages.js",
+      5,
+      0.047
+     ],
+     [
+      "_t374Done@villages.js",
+      5,
+      0.047
+     ],
+     [
+      "stockRatioAt@fishing.js",
+      5,
+      0.047
+     ],
+     [
+      "edgeBlockedStep@zone.js",
+      5,
+      0.047
+     ],
+     [
+      "_t724BodyStep@villages.js",
+      5,
+      0.047
+     ],
+     [
+      "_t1144NextFarmCell@villages.js",
+      4,
+      0.037
+     ],
+     [
+      "L@region-profiles.js",
+      4,
+      0.037
+     ],
+     [
+      "on@region-profiles.js",
+      4,
+      0.037
+     ],
+     [
+      "_handOf@villages.js",
+      4,
+      0.037
+     ],
+     [
+      "collGenAround@zone.js",
+      4,
+      0.037
+     ],
+     [
+      "_warOutMul@villages.js",
+      3,
+      0.028
+     ],
+     [
+      "smoothPath@path-core.js",
+      3,
+      0.028
+     ],
+     [
+      "_lifeGoHome@villages.js",
+      3,
+      0.028
+     ],
+     [
+      "findCellFence@zone.js",
+      3,
+      0.028
+     ],
+     [
+      "pidHash@seed-rand.js",
+      3,
+      0.028
+     ],
+     [
+      "_rawGameDay@zone.js",
+      3,
+      0.028
+     ],
+     [
+      "_geoOf@region-profiles.js",
+      3,
+      0.028
+     ],
+     [
+      "_edgeScan@zone.js",
+      3,
+      0.028
+     ],
+     [
+      "_t312Take@villages.js",
+      3,
+      0.028
+     ],
+     [
+      "_isPointInRiver@terrain.js",
+      2,
+      0.019
+     ],
+     [
+      "Date.now@t455-clock.js",
+      2,
+      0.019
+     ],
+     [
+      "_t720Step@villages.js",
+      2,
+      0.019
+     ],
+     [
+      "isWaterTileLocal@zone.js",
+      2,
+      0.019
+     ],
+     [
+      "_t1144Memo@villages.js",
+      2,
+      0.019
+     ],
+     [
+      "weightsOf@region-profiles.js",
+      2,
+      0.019
+     ],
+     [
+      "_actTake@villages.js",
+      2,
+      0.019
+     ],
+     [
+      "_mNote@lots.js",
+      2,
+      0.019
+     ],
+     [
+      "noteNow@lots.js",
+      2,
+      0.019
+     ],
+     [
+      "_ledgerDay@villages.js",
+      2,
+      0.019
+     ],
+     [
+      "regionMix@region-profiles.js",
+      2,
+      0.019
+     ],
+     [
+      "step@seed-rand.js",
+      1,
+      0.009
+     ],
+     [
+      "_get@roads.js",
+      1,
+      0.009
+     ],
+     [
+      "levelOf@roads.js",
+      1,
+      0.009
+     ],
+     [
+      "_roadKeep@zone.js",
+      1,
+      0.009
+     ],
+     [
+      "_lifeAct@villages.js",
+      1,
+      0.009
+     ],
+     [
+      "_isPointInLake@terrain.js",
+      1,
+      0.009
+     ],
+     [
+      "_t678Wp@zone.js",
+      1,
+      0.009
+     ],
+     [
+      "rec@fishing.js",
+      1,
+      0.009
+     ],
+     [
+      "_t1144SpGet@villages.js",
+      1,
+      0.009
+     ],
+     [
+      "_fishingMod@villages.js",
+      1,
+      0.009
+     ],
+     [
+      "at@terrain-segindex.js",
+      1,
+      0.009
+     ],
+     [
+      "oreConsumeAt@zone.js",
+      1,
+      0.009
+     ],
+     [
+      "_lifeEcon@villages.js",
+      1,
+      0.009
+     ],
+     [
+      "kgOf@weights.js",
+      1,
+      0.009
+     ],
+     [
+      "_oreKg@villages.js",
+      1,
+      0.009
+     ],
+     [
+      "_carryCfg@villages.js",
+      1,
+      0.009
+     ],
+     [
+      "_npcOreNow@zone.js",
+      1,
+      0.009
+     ],
+     [
+      "oreStockAt@zone.js",
+      1,
+      0.009
+     ],
+     [
+      "windowMsFor@fishing.js",
+      1,
+      0.009
+     ],
+     [
+      "isLot@lots.js",
+      1,
+      0.009
+     ],
+     [
+      "corridorPath@chunk-gates.js",
+      1,
+      0.009
+     ],
+     [
+      "PathCore.smoothPath.keep@zone.js",
+      1,
+      0.009
+     ],
+     [
+      "hrtimeBigInt@per_thread",
+      1,
+      0.009
+     ],
+     [
+      "out@seed-rand.js",
+      1,
+      0.009
+     ]
+    ],
+    "reqBy": [],
+    "selfAll": [
+     [
+      49,
+      1,
+      0.009
+     ],
+     [
+      51,
+      4,
+      0.037
+     ],
+     [
+      52,
+      1,
+      0.009
+     ],
+     [
+      53,
+      12,
+      0.112
+     ],
+     [
+      56,
+      1,
+      0.009
+     ],
+     [
+      57,
+      18,
+      0.169
+     ],
+     [
+      576,
+      17,
+      0.159
+     ],
+     [
+      611,
+      43,
+      0.403
+     ],
+     [
+      4469,
+      3,
+      0.028
+     ],
+     [
+      4757,
+      9,
+      0.084
+     ],
+     [
+      4758,
+      6,
+      0.056
+     ],
+     [
+      4760,
+      43,
+      0.403
+     ],
+     [
+      4761,
+      1,
+      0.009
+     ],
+     [
+      4762,
+      27,
+      0.253
+     ],
+     [
+      4764,
+      5,
+      0.047
+     ],
+     [
+      4765,
+      3,
+      0.028
+     ],
+     [
+      4766,
+      2,
+      0.019
+     ],
+     [
+      4770,
+      5,
+      0.047
+     ],
+     [
+      4771,
+      1,
+      0.009
+     ],
+     [
+      5059,
+      5,
+      0.047
+     ],
+     [
+      5061,
+      1,
+      0.009
+     ],
+     [
+      5062,
+      186,
+      1.743
+     ],
+     [
+      5074,
+      5,
+      0.047
+     ],
+     [
+      5090,
+      1,
+      0.009
+     ],
+     [
+      5093,
+      24,
+      0.225
+     ],
+     [
+      5099,
+      2,
+      0.019
+     ],
+     [
+      5152,
+      2,
+      0.019
+     ],
+     [
+      5154,
+      75,
+      0.703
+     ],
+     [
+      5155,
+      1,
+      0.009
+     ],
+     [
+      5156,
+      5,
+      0.047
+     ],
+     [
+      5157,
+      3,
+      0.028
+     ],
+     [
+      5158,
+      8,
+      0.075
+     ],
+     [
+      5173,
+      4,
+      0.037
+     ],
+     [
+      5174,
+      16,
+      0.15
+     ],
+     [
+      5175,
+      11,
+      0.103
+     ],
+     [
+      5176,
+      16,
+      0.15
+     ],
+     [
+      5178,
+      6,
+      0.056
+     ],
+     [
+      5185,
+      91,
+      0.853
+     ]
+    ]
+   }
+  },
+  {
+   "conf": "inf",
+   "tag": "B1-night",
+   "probe": true,
+   "ref": "dadba977",
+   "W": "night",
+   "pop": 621,
+   "ticks": 1350,
+   "step": null,
+   "stepBr": null,
+   "tickP50": 23.144,
+   "tickP95": 39.487,
+   "totUs": 40.455,
+   "tq": {
+    "n": 3,
+    "p50": 22.914,
+    "p95": 39.396,
+    "p99": 46.419,
+    "max": 72.71
+   },
+   "segUs": {
+    "econ(마을 하루 조각·캐러밴 몸)": 0.817,
+    "일 훅(도적·길·흙·눈)": 0.476,
+    "idle 문": 0.005,
+    "청크": 0.066,
+    "공간 색인·입력 시한": 0.513,
+    "결정 문(순회)": 31.937,
+    "화살·걸음 커널 준비": 1.938,
+    "이동 문(순회)": 0.811,
+    "계단·낙하·게이지·HP": 0.632,
+    "몹 AI": 1.044,
+    "델타·방송(AOI)": 2.065,
+    "꼬리(어로·저장·쓰러짐·계측)": 0.146
+   },
+   "segSumUs": 40.451,
+   "subUs": {
+    "gc": 1.376
+   },
+   "subN": {
+    "gc": 0.2
+   },
+   "hq": {
+    "dec": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    },
+    "life": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    },
+    "follow": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    }
+   },
+   "ast": {
+    "near": [
+     0,
+     0
+    ],
+    "beeline": [
+     0,
+     0
+    ],
+    "straight": [
+     0,
+     0
+    ],
+    "cooldown": [
+     0,
+     0
+    ],
+    "fail": [
+     0,
+     0
+    ],
+    "found": [
+     0,
+     0
+    ],
+    "inside": 0,
+    "outside": 0,
+    "outLab": {},
+    "why": {},
+    "walked": {},
+    "insideRate": 0,
+    "cats": {
+     "near": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "beeline": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "straight": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "cooldown": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "fail": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "found": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     }
+    }
+   },
+   "lines": {
+    "chunks": 4,
+    "samples": 77985,
+    "decSamples": 2907,
+    "stepSamples": 2284,
+    "decUs": 31.937,
+    "stepUs": 25.093,
+    "selfUs": 6.306,
+    "groups": [
+     [
+      "머리(결정 문 · 생활 손잡이 · 타이머) (5059~5066)",
+      158,
+      1.736
+     ],
+     [
+      "대피 · 밤 귀가 (5067~5089)",
+      53,
+      0.582
+     ],
+     [
+      "캐나디아 · 막힘 (5090~5098)",
+      20,
+      0.22
+     ],
+     [
+      "싸움 (5099~5150)",
+      6,
+      0.066
+     ],
+     [
+      "길 판정(배속 · 목표 키 · 되묻기) (5151~5171)",
+      64,
+      0.703
+     ],
+     [
+      "길 묻기 · 길 넣기 (5172~5179)",
+      14,
+      0.154
+     ],
+     [
+      "따라가기 · 도착 뒤 행동 (5180~5262)",
+      108,
+      1.187
+     ],
+     [
+      "몸통 밖 줄(인라인된 함수 · 다른 파일)",
+      151,
+      1.659
+     ]
+    ],
+    "calls": [
+     [
+      "_t1145Detect:4891",
+      680,
+      7.471
+     ],
+     [
+      "_t1145Follow:4774",
+      386,
+      4.241
+     ],
+     [
+      "decideNpcBehavior:4177",
+      375,
+      4.12
+     ],
+     [
+      "set:55",
+      153,
+      1.681
+     ],
+     [
+      "computeNpcPath:4607",
+      104,
+      1.143
+     ],
+     [
+      "_t1155StuckSlot:4871",
+      9,
+      0.099
+     ],
+     [
+      "npcLifeTick:14113",
+      3,
+      0.033
+     ]
+    ],
+    "selfTop": [
+     [
+      5062,
+      147,
+      1.615
+     ],
+     [
+      5185,
+      103,
+      1.132
+     ],
+     [
+      57,
+      60,
+      0.659
+     ],
+     [
+      5154,
+      56,
+      0.615
+     ],
+     [
+      611,
+      50,
+      0.549
+     ],
+     [
+      5081,
+      26,
+      0.286
+     ],
+     [
+      576,
+      21,
+      0.231
+     ],
+     [
+      5082,
+      19,
+      0.209
+     ],
+     [
+      5093,
+      18,
+      0.198
+     ],
+     [
+      5173,
+      11,
+      0.121
+     ],
+     [
+      4776,
+      10,
+      0.11
+     ],
+     [
+      5059,
+      7,
+      0.077
+     ],
+     [
+      5099,
+      6,
+      0.066
+     ],
+     [
+      56,
+      5,
+      0.055
+     ],
+     [
+      5074,
+      5,
+      0.055
+     ]
+    ],
+    "deepFn": [
+     [
+      "_t1145Detect@zone.js:4891",
+      252,
+      2.769
+     ],
+     [
+      "setAt@body-cols.js:50",
+      248,
+      2.725
+     ],
+     [
+      "slot@body-cols.js:49",
+      174,
+      1.912
+     ],
+     [
+      "set@body-cols.js:55",
+      167,
+      1.835
+     ],
+     [
+      "_t1155StuckSlot@zone.js:4871",
+      153,
+      1.681
+     ],
+     [
+      "_t1155FollowSlot@zone.js:4756",
+      141,
+      1.549
+     ],
+     [
+      "npcLifeTick@villages.js:14113",
+      102,
+      1.121
+     ],
+     [
+      "computeNpcPath@zone.js:4607",
+      102,
+      1.121
+     ],
+     [
+      "decideNpcBehavior@zone.js:4177",
+      95,
+      1.044
+     ],
+     [
+      "_t1145Follow@zone.js:4774",
+      65,
+      0.714
+     ],
+     [
+      "queryRect@quadtree.js:67",
+      48,
+      0.527
+     ],
+     [
+      "_t1155DetectSlot@zone.js:4876",
+      42,
+      0.461
+     ],
+     [
+      "_t720Step@villages.js:12727",
+      30,
+      0.33
+     ],
+     [
+      "zoneGameDay@zone.js:9501",
+      27,
+      0.297
+     ],
+     [
+      "_lifeGoHome@villages.js:9911",
+      22,
+      0.242
+     ],
+     [
+      "_handOf@villages.js:9330",
+      11,
+      0.121
+     ],
+     [
+      "_t720Held@villages.js:12650",
+      10,
+      0.11
+     ],
+     [
+      "_t737Held@villages.js:12672",
+      4,
+      0.044
+     ],
+     [
+      "_t720Fv@villages.js:8493",
+      4,
+      0.044
+     ],
+     [
+      "_t748FishRecs@villages.js:121",
+      2,
+      0.022
+     ]
+    ],
+    "deepTop": [
+     [
+      "setAt@body-cols.js:50 #53",
+      237,
+      2.604
+     ],
+     [
+      "slot@body-cols.js:49 #49",
+      174,
+      1.912
+     ],
+     [
+      "_t1145Detect@zone.js:4891 #4879",
+      150,
+      1.648
+     ],
+     [
+      "set@body-cols.js:55 #58",
+      130,
+      1.428
+     ],
+     [
+      "_t1155StuckSlot@zone.js:4871 #4873",
+      129,
+      1.417
+     ],
+     [
+      "decideNpcBehavior@zone.js:4177 #4220",
+      68,
+      0.747
+     ],
+     [
+      "_t1145Follow@zone.js:4774 #4776",
+      65,
+      0.714
+     ],
+     [
+      "computeNpcPath@zone.js:4607 #4609",
+      48,
+      0.527
+     ],
+     [
+      "computeNpcPath@zone.js:4607 #4613",
+      47,
+      0.516
+     ],
+     [
+      "_t1155FollowSlot@zone.js:4756 #4760",
+      44,
+      0.483
+     ],
+     [
+      "_t1145Detect@zone.js:4891 #4877",
+      44,
+      0.483
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14128",
+      36,
+      0.396
+     ],
+     [
+      "_t1145Detect@zone.js:4891 #4878",
+      30,
+      0.33
+     ],
+     [
+      "_t720Step@villages.js:12727 #12732",
+      28,
+      0.308
+     ],
+     [
+      "set@body-cols.js:55 #56",
+      28,
+      0.308
+     ],
+     [
+      "zoneGameDay@zone.js:9501 #9501",
+      27,
+      0.297
+     ],
+     [
+      "_t1155FollowSlot@zone.js:4756 #53",
+      23,
+      0.253
+     ],
+     [
+      "_t1155FollowSlot@zone.js:4756 #4762",
+      22,
+      0.242
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14127",
+      19,
+      0.209
+     ],
+     [
+      "queryRect@quadtree.js:67 #69",
+      19,
+      0.209
+     ],
+     [
+      "_t1155DetectSlot@zone.js:4876 #4881",
+      18,
+      0.198
+     ],
+     [
+      "_t1155FollowSlot@zone.js:4756 #4758",
+      16,
+      0.176
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14140",
+      15,
+      0.165
+     ],
+     [
+      "_t1155StuckSlot@zone.js:4871 #4872",
+      15,
+      0.165
+     ],
+     [
+      "_handOf@villages.js:9330 #9330",
+      11,
+      0.121
+     ]
+    ],
+    "call2": [
+     [
+      "_t1145Follow:4774>_t1155FollowSlot:4756",
+      316,
+      3.472
+     ],
+     [
+      "_t1145Detect:4891>_t1155DetectSlot:4876",
+      259,
+      2.845
+     ],
+     [
+      "decideNpcBehavior:4177>npcLifeTick:14113",
+      194,
+      2.131
+     ],
+     [
+      "_t1145Detect:4891>slot:49",
+      169,
+      1.857
+     ],
+     [
+      "decideNpcBehavior:4177>queryCircle:81",
+      48,
+      0.527
+     ],
+     [
+      "decideNpcBehavior:4177>zoneGameDay:9501",
+      30,
+      0.33
+     ],
+     [
+      "_t1145Follow:4774>slot:49",
+      5,
+      0.055
+     ],
+     [
+      "decideNpcBehavior:4177>set:55",
+      3,
+      0.033
+     ],
+     [
+      "computeNpcPath:4607>straightPathClear:4318",
+      2,
+      0.022
+     ],
+     [
+      "decideNpcBehavior:4177>_t720Fv:8493",
+      2,
+      0.022
+     ],
+     [
+      "decideNpcBehavior:4177>_lifeGoHome:9911",
+      2,
+      0.022
+     ],
+     [
+      "decideNpcBehavior:4177>_handOf:9330",
+      1,
+      0.011
+     ]
+    ],
+    "incl": [
+     [
+      "_t1145Detect@zone.js",
+      680,
+      7.471
+     ],
+     [
+      "_t1145Follow@zone.js",
+      386,
+      4.241
+     ],
+     [
+      "decideNpcBehavior@zone.js",
+      375,
+      4.12
+     ],
+     [
+      "_t1155FollowSlot@zone.js",
+      316,
+      3.472
+     ],
+     [
+      "_t1155DetectSlot@zone.js",
+      259,
+      2.845
+     ],
+     [
+      "setAt@body-cols.js",
+      248,
+      2.725
+     ],
+     [
+      "npcLifeTick@villages.js",
+      197,
+      2.164
+     ],
+     [
+      "slot@body-cols.js",
+      174,
+      1.912
+     ],
+     [
+      "set@body-cols.js",
+      167,
+      1.835
+     ],
+     [
+      "_t1155StuckSlot@zone.js",
+      153,
+      1.681
+     ],
+     [
+      "computeNpcPath@zone.js",
+      104,
+      1.143
+     ],
+     [
+      "_t720Step@villages.js",
+      48,
+      0.527
+     ],
+     [
+      "queryRect@quadtree.js",
+      48,
+      0.527
+     ],
+     [
+      "queryCircle@quadtree.js",
+      48,
+      0.527
+     ],
+     [
+      "_lifeGoHome@villages.js",
+      34,
+      0.374
+     ],
+     [
+      "zoneGameDay@zone.js",
+      30,
+      0.33
+     ],
+     [
+      "_t720Held@villages.js",
+      12,
+      0.132
+     ],
+     [
+      "_handOf@villages.js",
+      11,
+      0.121
+     ],
+     [
+      "_t720Settle@villages.js",
+      5,
+      0.055
+     ],
+     [
+      "_t720Fv@villages.js",
+      4,
+      0.044
+     ],
+     [
+      "_t737Held@villages.js",
+      4,
+      0.044
+     ],
+     [
+      "_t312Deliver@villages.js",
+      4,
+      0.044
+     ],
+     [
+      "_rawGameDay@zone.js",
+      3,
+      0.033
+     ],
+     [
+      "isTerrainBlockedLocal@zone.js",
+      2,
+      0.022
+     ],
+     [
+      "straightPathClear@zone.js",
+      2,
+      0.022
+     ],
+     [
+      "_t748FishRecs@villages.js",
+      2,
+      0.022
+     ],
+     [
+      "Date.now@t455-clock.js",
+      2,
+      0.022
+     ],
+     [
+      "_ledgerDay@villages.js",
+      1,
+      0.011
+     ],
+     [
+      "_lifeVL@villages.js",
+      1,
+      0.011
+     ],
+     [
+      "_txTouch@granary-lots.js",
+      1,
+      0.011
+     ],
+     [
+      "_hold@granary-lots.js",
+      1,
+      0.011
+     ],
+     [
+      "set@granary-lots.js",
+      1,
+      0.011
+     ],
+     [
+      "actToGranary@economy-sim.js",
+      1,
+      0.011
+     ],
+     [
+      "fishToGranary@economy-sim.js",
+      1,
+      0.011
+     ],
+     [
+      "_terrBlocked0@zone.js",
+      1,
+      0.011
+     ]
+    ],
+    "reqBy": [],
+    "selfAll": [
+     [
+      49,
+      2,
+      0.022
+     ],
+     [
+      56,
+      5,
+      0.055
+     ],
+     [
+      57,
+      60,
+      0.659
+     ],
+     [
+      58,
+      1,
+      0.011
+     ],
+     [
+      576,
+      21,
+      0.231
+     ],
+     [
+      611,
+      50,
+      0.549
+     ],
+     [
+      4776,
+      10,
+      0.11
+     ],
+     [
+      5059,
+      7,
+      0.077
+     ],
+     [
+      5061,
+      4,
+      0.044
+     ],
+     [
+      5062,
+      147,
+      1.615
+     ],
+     [
+      5074,
+      5,
+      0.055
+     ],
+     [
+      5077,
+      1,
+      0.011
+     ],
+     [
+      5078,
+      1,
+      0.011
+     ],
+     [
+      5080,
+      1,
+      0.011
+     ],
+     [
+      5081,
+      26,
+      0.286
+     ],
+     [
+      5082,
+      19,
+      0.209
+     ],
+     [
+      5093,
+      18,
+      0.198
+     ],
+     [
+      5095,
+      2,
+      0.022
+     ],
+     [
+      5099,
+      6,
+      0.066
+     ],
+     [
+      5151,
+      1,
+      0.011
+     ],
+     [
+      5152,
+      1,
+      0.011
+     ],
+     [
+      5154,
+      56,
+      0.615
+     ],
+     [
+      5155,
+      1,
+      0.011
+     ],
+     [
+      5156,
+      2,
+      0.022
+     ],
+     [
+      5158,
+      3,
+      0.033
+     ],
+     [
+      5172,
+      1,
+      0.011
+     ],
+     [
+      5173,
+      11,
+      0.121
+     ],
+     [
+      5177,
+      1,
+      0.011
+     ],
+     [
+      5178,
+      1,
+      0.011
+     ],
+     [
+      5180,
+      1,
+      0.011
+     ],
+     [
+      5181,
+      2,
+      0.022
+     ],
+     [
+      5185,
+      103,
+      1.132
+     ],
+     [
+      5206,
+      1,
+      0.011
+     ],
+     [
+      5237,
+      1,
+      0.011
+     ]
+    ]
+   }
+  },
+  {
+   "conf": "inf",
+   "tag": "B2-day",
+   "probe": true,
+   "ref": "dadba977",
+   "W": "day",
+   "pop": 621,
+   "ticks": 1350,
+   "step": null,
+   "stepBr": null,
+   "tickP50": 22.971,
+   "tickP95": 40.551,
+   "totUs": 41.263,
+   "tq": {
+    "n": 3,
+    "p50": 22.859,
+    "p95": 39.798,
+    "p99": 46.047,
+    "max": 71.34
+   },
+   "segUs": {
+    "econ(마을 하루 조각·캐러밴 몸)": 0.985,
+    "일 훅(도적·길·흙·눈)": 1.097,
+    "idle 문": 0.004,
+    "청크": 0.079,
+    "공간 색인·입력 시한": 0.573,
+    "결정 문(순회)": 30.693,
+    "화살·걸음 커널 준비": 2.894,
+    "이동 문(순회)": 1.817,
+    "계단·낙하·게이지·HP": 0.637,
+    "몹 AI": 0.966,
+    "델타·방송(AOI)": 1.314,
+    "꼬리(어로·저장·쓰러짐·계측)": 0.2
+   },
+   "segSumUs": 41.258,
+   "subUs": {
+    "gc": 1.053
+   },
+   "subN": {
+    "gc": 0.1
+   },
+   "hq": {
+    "dec": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    },
+    "life": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    },
+    "follow": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    }
+   },
+   "ast": {
+    "near": [
+     0,
+     0
+    ],
+    "beeline": [
+     0,
+     0
+    ],
+    "straight": [
+     0,
+     0
+    ],
+    "cooldown": [
+     0,
+     0
+    ],
+    "fail": [
+     0,
+     0
+    ],
+    "found": [
+     0,
+     0
+    ],
+    "inside": 0,
+    "outside": 0,
+    "outLab": {},
+    "why": {},
+    "walked": {},
+    "insideRate": 0,
+    "cats": {
+     "near": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "beeline": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "straight": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "cooldown": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "fail": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "found": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     }
+    }
+   },
+   "lines": {
+    "chunks": 4,
+    "samples": 73712,
+    "decSamples": 2931,
+    "stepSamples": 2462,
+    "decUs": 30.693,
+    "stepUs": 25.782,
+    "selfUs": 5.676,
+    "groups": [
+     [
+      "머리(결정 문 · 생활 손잡이 · 타이머) (5059~5066)",
+      114,
+      1.194
+     ],
+     [
+      "대피 · 밤 귀가 (5067~5089)",
+      9,
+      0.094
+     ],
+     [
+      "캐나디아 · 막힘 (5090~5098)",
+      24,
+      0.251
+     ],
+     [
+      "싸움 (5099~5150)",
+      2,
+      0.021
+     ],
+     [
+      "길 판정(배속 · 목표 키 · 되묻기) (5151~5171)",
+      111,
+      1.162
+     ],
+     [
+      "길 묻기 · 길 넣기 (5172~5179)",
+      12,
+      0.126
+     ],
+     [
+      "따라가기 · 도착 뒤 행동 (5180~5262)",
+      195,
+      2.042
+     ],
+     [
+      "몸통 밖 줄(인라인된 함수 · 다른 파일)",
+      75,
+      0.785
+     ]
+    ],
+    "calls": [
+     [
+      "_t1145Detect:4891",
+      764,
+      8
+     ],
+     [
+      "decideNpcBehavior:4177",
+      568,
+      5.948
+     ],
+     [
+      "_t1145Follow:4774",
+      310,
+      3.246
+     ],
+     [
+      "computeNpcPath:4607",
+      164,
+      1.717
+     ],
+     [
+      "set:55",
+      89,
+      0.932
+     ],
+     [
+      "_t791Mir:5030",
+      13,
+      0.136
+     ],
+     [
+      "_t1155StuckSlot:4871",
+      6,
+      0.063
+     ],
+     [
+      "setAt:50",
+      2,
+      0.021
+     ],
+     [
+      "_t394OpenTarget:4349",
+      2,
+      0.021
+     ],
+     [
+      "queryRect:67",
+      1,
+      0.01
+     ],
+     [
+      "_t678Now:1957",
+      1,
+      0.01
+     ]
+    ],
+    "selfTop": [
+     [
+      5185,
+      156,
+      1.634
+     ],
+     [
+      5062,
+      106,
+      1.11
+     ],
+     [
+      5154,
+      76,
+      0.796
+     ],
+     [
+      5180,
+      39,
+      0.408
+     ],
+     [
+      57,
+      33,
+      0.346
+     ],
+     [
+      611,
+      31,
+      0.325
+     ],
+     [
+      5093,
+      23,
+      0.241
+     ],
+     [
+      5157,
+      18,
+      0.188
+     ],
+     [
+      5158,
+      10,
+      0.105
+     ],
+     [
+      576,
+      7,
+      0.073
+     ],
+     [
+      5173,
+      6,
+      0.063
+     ],
+     [
+      5059,
+      5,
+      0.052
+     ],
+     [
+      5074,
+      5,
+      0.052
+     ],
+     [
+      5178,
+      5,
+      0.052
+     ],
+     [
+      5156,
+      4,
+      0.042
+     ]
+    ],
+    "deepFn": [
+     [
+      "_t1145Detect@zone.js:4891",
+      469,
+      4.911
+     ],
+     [
+      "npcLifeTick@villages.js:14113",
+      168,
+      1.759
+     ],
+     [
+      "_t1155StuckSlot@zone.js:4871",
+      150,
+      1.571
+     ],
+     [
+      "setAt@body-cols.js:50",
+      146,
+      1.529
+     ],
+     [
+      "_t1145Follow@zone.js:4774",
+      141,
+      1.477
+     ],
+     [
+      "set@body-cols.js:55",
+      110,
+      1.152
+     ],
+     [
+      "computeNpcPath@zone.js:4607",
+      94,
+      0.984
+     ],
+     [
+      "decideNpcBehavior@zone.js:4177",
+      93,
+      0.974
+     ],
+     [
+      "_t1155FollowSlot@zone.js:4756",
+      69,
+      0.723
+     ],
+     [
+      "slot@body-cols.js:49",
+      62,
+      0.649
+     ],
+     [
+      "queryRect@quadtree.js:67",
+      48,
+      0.503
+     ],
+     [
+      "_t1155DetectSlot@zone.js:4876",
+      45,
+      0.471
+     ],
+     [
+      "_t400BodyStep@villages.js:12533",
+      22,
+      0.23
+     ],
+     [
+      "_terrBlocked0@zone.js:2306",
+      21,
+      0.22
+     ],
+     [
+      "zoneGameDay@zone.js:9501",
+      18,
+      0.188
+     ],
+     [
+      "_lifeNeedClear@villages.js:11603",
+      17,
+      0.178
+     ],
+     [
+      "_t340Try@villages.js:9543",
+      16,
+      0.168
+     ],
+     [
+      "_actRebuild@zone.js:1170",
+      15,
+      0.157
+     ],
+     [
+      "_riverU@fishing.js:98",
+      13,
+      0.136
+     ],
+     [
+      "isBlockedByWall@zone.js:15484",
+      13,
+      0.136
+     ]
+    ],
+    "deepTop": [
+     [
+      "_t1145Detect@zone.js:4891 #4879",
+      239,
+      2.503
+     ],
+     [
+      "_t1155StuckSlot@zone.js:4871 #4873",
+      139,
+      1.456
+     ],
+     [
+      "setAt@body-cols.js:50 #53",
+      125,
+      1.309
+     ],
+     [
+      "set@body-cols.js:55 #58",
+      74,
+      0.775
+     ],
+     [
+      "slot@body-cols.js:49 #49",
+      62,
+      0.649
+     ],
+     [
+      "computeNpcPath@zone.js:4607 #4613",
+      57,
+      0.597
+     ],
+     [
+      "_t1145Detect@zone.js:4891 #4884",
+      51,
+      0.534
+     ],
+     [
+      "_t1145Detect@zone.js:4891 #4885",
+      51,
+      0.534
+     ],
+     [
+      "decideNpcBehavior@zone.js:4177 #4220",
+      45,
+      0.471
+     ],
+     [
+      "_t1145Detect@zone.js:4891 #4880",
+      39,
+      0.408
+     ],
+     [
+      "_t1145Detect@zone.js:4891 #4877",
+      36,
+      0.377
+     ],
+     [
+      "_t1145Follow@zone.js:4774 #4762",
+      32,
+      0.335
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14128",
+      30,
+      0.314
+     ],
+     [
+      "_t1145Follow@zone.js:4774 #53",
+      30,
+      0.314
+     ],
+     [
+      "_t1145Follow@zone.js:4774 #4760",
+      28,
+      0.293
+     ],
+     [
+      "computeNpcPath@zone.js:4607 #4609",
+      27,
+      0.283
+     ],
+     [
+      "_t1145Detect@zone.js:4891 #4878",
+      26,
+      0.272
+     ],
+     [
+      "queryRect@quadtree.js:67 #69",
+      24,
+      0.251
+     ],
+     [
+      "_t400BodyStep@villages.js:12533 #12534",
+      22,
+      0.23
+     ],
+     [
+      "_t1155FollowSlot@zone.js:4756 #4770",
+      22,
+      0.23
+     ],
+     [
+      "setAt@body-cols.js:50 #52",
+      19,
+      0.199
+     ],
+     [
+      "set@body-cols.js:55 #56",
+      18,
+      0.188
+     ],
+     [
+      "zoneGameDay@zone.js:9501 #9501",
+      18,
+      0.188
+     ],
+     [
+      "set@body-cols.js:55 #57",
+      17,
+      0.178
+     ],
+     [
+      "_t1155FollowSlot@zone.js:4756 #4757",
+      17,
+      0.178
+     ]
+    ],
+    "call2": [
+     [
+      "decideNpcBehavior:4177>npcLifeTick:14113",
+      348,
+      3.644
+     ],
+     [
+      "_t1145Detect:4891>_t1155DetectSlot:4876",
+      237,
+      2.482
+     ],
+     [
+      "_t1145Follow:4774>_t1155FollowSlot:4756",
+      165,
+      1.728
+     ],
+     [
+      "_t1145Detect:4891>slot:49",
+      58,
+      0.607
+     ],
+     [
+      "decideNpcBehavior:4177>queryCircle:81",
+      52,
+      0.545
+     ],
+     [
+      "computeNpcPath:4607>straightPathClear:4318",
+      43,
+      0.45
+     ],
+     [
+      "decideNpcBehavior:4177>zoneGameDay:9501",
+      26,
+      0.272
+     ],
+     [
+      "decideNpcBehavior:4177>_t394OpenTarget:4349",
+      19,
+      0.199
+     ],
+     [
+      "computeNpcPath:4607>_t678Route:4551",
+      19,
+      0.199
+     ],
+     [
+      "decideNpcBehavior:4177>set:55",
+      11,
+      0.115
+     ],
+     [
+      "_t791Mir:5030>set:55",
+      9,
+      0.094
+     ],
+     [
+      "computeNpcPath:4607>smoothPath:455",
+      4,
+      0.042
+     ],
+     [
+      "_t1145Follow:4774>slot:49",
+      4,
+      0.042
+     ],
+     [
+      "decideNpcBehavior:4177>_lifeNeedClear:11603",
+      3,
+      0.031
+     ],
+     [
+      "decideNpcBehavior:4177>_lifeJobSites:11520",
+      3,
+      0.031
+     ]
+    ],
+    "incl": [
+     [
+      "_t1145Detect@zone.js",
+      764,
+      8
+     ],
+     [
+      "decideNpcBehavior@zone.js",
+      568,
+      5.948
+     ],
+     [
+      "npcLifeTick@villages.js",
+      348,
+      3.644
+     ],
+     [
+      "_t1145Follow@zone.js",
+      310,
+      3.246
+     ],
+     [
+      "_t1155DetectSlot@zone.js",
+      237,
+      2.482
+     ],
+     [
+      "_t1155FollowSlot@zone.js",
+      165,
+      1.728
+     ],
+     [
+      "computeNpcPath@zone.js",
+      164,
+      1.717
+     ],
+     [
+      "_t1155StuckSlot@zone.js",
+      150,
+      1.571
+     ],
+     [
+      "setAt@body-cols.js",
+      146,
+      1.529
+     ],
+     [
+      "set@body-cols.js",
+      110,
+      1.152
+     ],
+     [
+      "_t340Try@villages.js",
+      63,
+      0.66
+     ],
+     [
+      "slot@body-cols.js",
+      62,
+      0.649
+     ],
+     [
+      "queryCircle@quadtree.js",
+      54,
+      0.565
+     ],
+     [
+      "queryRect@quadtree.js",
+      48,
+      0.503
+     ],
+     [
+      "straightPathClear@zone.js",
+      45,
+      0.471
+     ],
+     [
+      "zoneGameDay@zone.js",
+      26,
+      0.272
+     ],
+     [
+      "isBlockedByWall@zone.js",
+      25,
+      0.262
+     ],
+     [
+      "_t677Spot@villages.js",
+      23,
+      0.241
+     ],
+     [
+      "_t400BodyStep@villages.js",
+      22,
+      0.23
+     ],
+     [
+      "_lifeNeedClear@villages.js",
+      21,
+      0.22
+     ],
+     [
+      "_terrBlocked0@zone.js",
+      21,
+      0.22
+     ],
+     [
+      "_t394OpenTarget@zone.js",
+      21,
+      0.22
+     ],
+     [
+      "spotAt@fishing.js",
+      20,
+      0.209
+     ],
+     [
+      "_isPositionActiveBM@zone.js",
+      20,
+      0.209
+     ],
+     [
+      "_t678Route@zone.js",
+      19,
+      0.199
+     ],
+     [
+      "_actRebuild@zone.js",
+      15,
+      0.157
+     ],
+     [
+      "isTerrainBlockedLocal@zone.js",
+      15,
+      0.157
+     ],
+     [
+      "_riverU@fishing.js",
+      13,
+      0.136
+     ],
+     [
+      "(anon)@villages.js",
+      13,
+      0.136
+     ],
+     [
+      "_t791Mir@zone.js",
+      13,
+      0.136
+     ],
+     [
+      "route@chunk-gates.js",
+      13,
+      0.136
+     ],
+     [
+      "_t427Reach@villages.js",
+      11,
+      0.115
+     ],
+     [
+      "_lifeJobSites@villages.js",
+      10,
+      0.105
+     ],
+     [
+      "edgeBlockedStep@zone.js",
+      10,
+      0.105
+     ],
+     [
+      "_rawGameDay@zone.js",
+      8,
+      0.084
+     ],
+     [
+      "pick@freshfish.js",
+      8,
+      0.084
+     ],
+     [
+      "_t724BodyStep@villages.js",
+      7,
+      0.073
+     ],
+     [
+      "bfsTo@chunk-gates.js",
+      7,
+      0.073
+     ],
+     [
+      "_otRole@villages.js",
+      7,
+      0.073
+     ],
+     [
+      "findEdgeWall@zone.js",
+      6,
+      0.063
+     ],
+     [
+      "_lifeOtherIndex@villages.js",
+      6,
+      0.063
+     ],
+     [
+      "_edgeScan@zone.js",
+      6,
+      0.063
+     ],
+     [
+      "Date.now@t455-clock.js",
+      6,
+      0.063
+     ],
+     [
+      "isWaterCellLocal@terrain.js",
+      5,
+      0.052
+     ],
+     [
+      "_t427Set@villages.js",
+      5,
+      0.052
+     ],
+     [
+      "poolOf@freshfish.js",
+      5,
+      0.052
+     ],
+     [
+      "_isPointInLake@terrain.js",
+      4,
+      0.042
+     ],
+     [
+      "smoothPath@path-core.js",
+      4,
+      0.042
+     ],
+     [
+      "get@granary-lots.js",
+      4,
+      0.042
+     ],
+     [
+      "plan@fishing.js",
+      4,
+      0.042
+     ],
+     [
+      "mixAt@region-profiles.js",
+      4,
+      0.042
+     ],
+     [
+      "chooseSpecies@region-profiles.js",
+      4,
+      0.042
+     ],
+     [
+      "_ch@villages.js",
+      4,
+      0.042
+     ],
+     [
+      "pickFrom@freshfish.js",
+      4,
+      0.042
+     ],
+     [
+      "_lifeAct@villages.js",
+      4,
+      0.042
+     ],
+     [
+      "_t374Done@villages.js",
+      4,
+      0.042
+     ],
+     [
+      "isBlockedByStairSide@zone.js",
+      3,
+      0.031
+     ],
+     [
+      "L@region-profiles.js",
+      3,
+      0.031
+     ],
+     [
+      "on@region-profiles.js",
+      3,
+      0.031
+     ],
+     [
+      "_t593SeaBank@villages.js",
+      3,
+      0.031
+     ],
+     [
+      "corridorPath@chunk-gates.js",
+      3,
+      0.031
+     ],
+     [
+      "pidHash@seed-rand.js",
+      3,
+      0.031
+     ],
+     [
+      "collGenAround@zone.js",
+      3,
+      0.031
+     ],
+     [
+      "_warOutMul@villages.js",
+      3,
+      0.031
+     ],
+     [
+      "stockRatioAt@fishing.js",
+      3,
+      0.031
+     ],
+     [
+      "blk@zone.js",
+      3,
+      0.031
+     ],
+     [
+      "_roadKeep@zone.js",
+      2,
+      0.021
+     ],
+     [
+      "findStairBuildingForCell@zone.js",
+      2,
+      0.021
+     ],
+     [
+      "_handOf@villages.js",
+      2,
+      0.021
+     ],
+     [
+      "PathCore.smoothPath.keep@zone.js",
+      2,
+      0.021
+     ],
+     [
+      "_t427HomeOf@villages.js",
+      2,
+      0.021
+     ],
+     [
+      "regionMix@region-profiles.js",
+      2,
+      0.021
+     ],
+     [
+      "_t1144Units@villages.js",
+      2,
+      0.021
+     ],
+     [
+      "_t1144NextFarmCell@villages.js",
+      2,
+      0.021
+     ],
+     [
+      "_lifeNextFarmCell@villages.js",
+      2,
+      0.021
+     ],
+     [
+      "weightsOf@region-profiles.js",
+      2,
+      0.021
+     ],
+     [
+      "_lifeGoHome@villages.js",
+      2,
+      0.021
+     ],
+     [
+      "rec@fishing.js",
+      2,
+      0.021
+     ],
+     [
+      "findCellFence@zone.js",
+      1,
+      0.01
+     ],
+     [
+      "fishActOn@economy-sim.js",
+      1,
+      0.01
+     ],
+     [
+      "_t1144SpGet@villages.js",
+      1,
+      0.01
+     ],
+     [
+      "_lakeWobble@terrain.js",
+      1,
+      0.01
+     ],
+     [
+      "_get@roads.js",
+      1,
+      0.01
+     ],
+     [
+      "_t312EconNpc@villages.js",
+      1,
+      0.01
+     ],
+     [
+      "_t720Step@villages.js",
+      1,
+      0.01
+     ],
+     [
+      "_fishingMod@villages.js",
+      1,
+      0.01
+     ],
+     [
+      "_isPointInRiver@terrain.js",
+      1,
+      0.01
+     ],
+     [
+      "oreConsumeAt@zone.js",
+      1,
+      0.01
+     ],
+     [
+      "next@seed-rand.js",
+      1,
+      0.01
+     ],
+     [
+      "_t312Day@villages.js",
+      1,
+      0.01
+     ],
+     [
+      "_t312Take@villages.js",
+      1,
+      0.01
+     ],
+     [
+      "oreStockAt@zone.js",
+      1,
+      0.01
+     ],
+     [
+      "get@node",
+      1,
+      0.01
+     ],
+     [
+      "_carryCfg@villages.js",
+      1,
+      0.01
+     ],
+     [
+      "_ledgerDay@villages.js",
+      1,
+      0.01
+     ],
+     [
+      "_terrainMod@villages.js",
+      1,
+      0.01
+     ],
+     [
+      "_t678Now@zone.js",
+      1,
+      0.01
+     ],
+     [
+      "seasonOf@freshfish.js",
+      1,
+      0.01
+     ],
+     [
+      "_oreKg@villages.js",
+      1,
+      0.01
+     ]
+    ],
+    "reqBy": [],
+    "selfAll": [
+     [
+      56,
+      3,
+      0.031
+     ],
+     [
+      57,
+      33,
+      0.346
+     ],
+     [
+      58,
+      1,
+      0.01
+     ],
+     [
+      576,
+      7,
+      0.073
+     ],
+     [
+      611,
+      31,
+      0.325
+     ],
+     [
+      5059,
+      5,
+      0.052
+     ],
+     [
+      5061,
+      3,
+      0.031
+     ],
+     [
+      5062,
+      106,
+      1.11
+     ],
+     [
+      5067,
+      3,
+      0.031
+     ],
+     [
+      5074,
+      5,
+      0.052
+     ],
+     [
+      5076,
+      1,
+      0.01
+     ],
+     [
+      5090,
+      1,
+      0.01
+     ],
+     [
+      5093,
+      23,
+      0.241
+     ],
+     [
+      5099,
+      2,
+      0.021
+     ],
+     [
+      5152,
+      3,
+      0.031
+     ],
+     [
+      5154,
+      76,
+      0.796
+     ],
+     [
+      5156,
+      4,
+      0.042
+     ],
+     [
+      5157,
+      18,
+      0.188
+     ],
+     [
+      5158,
+      10,
+      0.105
+     ],
+     [
+      5173,
+      6,
+      0.063
+     ],
+     [
+      5174,
+      1,
+      0.01
+     ],
+     [
+      5178,
+      5,
+      0.052
+     ],
+     [
+      5180,
+      39,
+      0.408
+     ],
+     [
+      5185,
+      156,
+      1.634
+     ]
+    ]
+   }
+  },
+  {
+   "conf": "inf",
+   "tag": "B2-night",
+   "probe": true,
+   "ref": "dadba977",
+   "W": "night",
+   "pop": 621,
+   "ticks": 1350,
+   "step": null,
+   "stepBr": null,
+   "tickP50": 23.087,
+   "tickP95": 40.096,
+   "totUs": 39.547,
+   "tq": {
+    "n": 3,
+    "p50": 22.101,
+    "p95": 38.87,
+    "p99": 45.923,
+    "max": 56.104
+   },
+   "segUs": {
+    "econ(마을 하루 조각·캐러밴 몸)": 1.032,
+    "일 훅(도적·길·흙·눈)": 0.438,
+    "idle 문": 0.005,
+    "청크": 0.081,
+    "공간 색인·입력 시한": 0.442,
+    "결정 문(순회)": 32.087,
+    "화살·걸음 커널 준비": 1.99,
+    "이동 문(순회)": 0.668,
+    "계단·낙하·게이지·HP": 0.592,
+    "몹 AI": 0.926,
+    "델타·방송(AOI)": 1.099,
+    "꼬리(어로·저장·쓰러짐·계측)": 0.182
+   },
+   "segSumUs": 39.543,
+   "subUs": {
+    "gc": 0.732
+   },
+   "subN": {
+    "gc": 0.1
+   },
+   "hq": {
+    "dec": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    },
+    "life": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    },
+    "follow": {
+     "n": 0,
+     "sameRate": 0,
+     "gatedRate": 0,
+     "sameUs": 0,
+     "diffUs": 0,
+     "changes": {
+      "a": 0,
+      "b": 0,
+      "c": 0
+     },
+     "runP50": 0,
+     "runP95": 0
+    }
+   },
+   "ast": {
+    "near": [
+     0,
+     0
+    ],
+    "beeline": [
+     0,
+     0
+    ],
+    "straight": [
+     0,
+     0
+    ],
+    "cooldown": [
+     0,
+     0
+    ],
+    "fail": [
+     0,
+     0
+    ],
+    "found": [
+     0,
+     0
+    ],
+    "inside": 0,
+    "outside": 0,
+    "outLab": {},
+    "why": {},
+    "walked": {},
+    "insideRate": 0,
+    "cats": {
+     "near": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "beeline": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "straight": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "cooldown": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "fail": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     },
+     "found": {
+      "n": 0,
+      "us": 0,
+      "perCallUs": 0
+     }
+    }
+   },
+   "lines": {
+    "chunks": 4,
+    "samples": 74812,
+    "decSamples": 2561,
+    "stepSamples": 2016,
+    "decUs": 32.087,
+    "stepUs": 25.259,
+    "selfUs": 7.129,
+    "groups": [
+     [
+      "머리(결정 문 · 생활 손잡이 · 타이머) (5059~5066)",
+      100,
+      1.253
+     ],
+     [
+      "대피 · 밤 귀가 (5067~5089)",
+      53,
+      0.664
+     ],
+     [
+      "캐나디아 · 막힘 (5090~5098)",
+      34,
+      0.426
+     ],
+     [
+      "싸움 (5099~5150)",
+      5,
+      0.063
+     ],
+     [
+      "길 판정(배속 · 목표 키 · 되묻기) (5151~5171)",
+      42,
+      0.526
+     ],
+     [
+      "길 묻기 · 길 넣기 (5172~5179)",
+      9,
+      0.113
+     ],
+     [
+      "따라가기 · 도착 뒤 행동 (5180~5262)",
+      106,
+      1.328
+     ],
+     [
+      "몸통 밖 줄(인라인된 함수 · 다른 파일)",
+      220,
+      2.756
+     ]
+    ],
+    "calls": [
+     [
+      "_t1145Detect:4891",
+      568,
+      7.117
+     ],
+     [
+      "_t1145Follow:4774",
+      360,
+      4.51
+     ],
+     [
+      "decideNpcBehavior:4177",
+      297,
+      3.721
+     ],
+     [
+      "set:55",
+      144,
+      1.804
+     ],
+     [
+      "computeNpcPath:4607",
+      74,
+      0.927
+     ],
+     [
+      "queryRect:67",
+      3,
+      0.038
+     ],
+     [
+      "_shOf:48",
+      1,
+      0.013
+     ]
+    ],
+    "selfTop": [
+     [
+      611,
+      122,
+      1.529
+     ],
+     [
+      5185,
+      105,
+      1.316
+     ],
+     [
+      5062,
+      88,
+      1.103
+     ],
+     [
+      57,
+      66,
+      0.827
+     ],
+     [
+      5154,
+      34,
+      0.426
+     ],
+     [
+      5093,
+      33,
+      0.413
+     ],
+     [
+      5081,
+      30,
+      0.376
+     ],
+     [
+      576,
+      17,
+      0.213
+     ],
+     [
+      5059,
+      12,
+      0.15
+     ],
+     [
+      5082,
+      12,
+      0.15
+     ],
+     [
+      4776,
+      8,
+      0.1
+     ],
+     [
+      5173,
+      7,
+      0.088
+     ],
+     [
+      5074,
+      5,
+      0.063
+     ],
+     [
+      5099,
+      5,
+      0.063
+     ],
+     [
+      58,
+      4,
+      0.05
+     ]
+    ],
+    "deepFn": [
+     [
+      "_t1145Detect@zone.js:4891",
+      343,
+      4.297
+     ],
+     [
+      "setAt@body-cols.js:50",
+      248,
+      3.107
+     ],
+     [
+      "set@body-cols.js:55",
+      161,
+      2.017
+     ],
+     [
+      "_t1155FollowSlot@zone.js:4756",
+      153,
+      1.917
+     ],
+     [
+      "slot@body-cols.js:49",
+      84,
+      1.052
+     ],
+     [
+      "decideNpcBehavior@zone.js:4177",
+      78,
+      0.977
+     ],
+     [
+      "npcLifeTick@villages.js:14113",
+      74,
+      0.927
+     ],
+     [
+      "computeNpcPath@zone.js:4607",
+      74,
+      0.927
+     ],
+     [
+      "_t1145Follow@zone.js:4774",
+      51,
+      0.639
+     ],
+     [
+      "queryRect@quadtree.js:67",
+      50,
+      0.626
+     ],
+     [
+      "_t1155DetectSlot@zone.js:4876",
+      43,
+      0.539
+     ],
+     [
+      "seed@seed-rand.js:60",
+      19,
+      0.238
+     ],
+     [
+      "_lifeGoHome@villages.js:9911",
+      17,
+      0.213
+     ],
+     [
+      "_t720Step@villages.js:12727",
+      15,
+      0.188
+     ],
+     [
+      "_handOf@villages.js:9330",
+      8,
+      0.1
+     ],
+     [
+      "_t1155StuckSlot@zone.js:4871",
+      6,
+      0.075
+     ],
+     [
+      "_t720Held@villages.js:12650",
+      5,
+      0.063
+     ],
+     [
+      "_t737Held@villages.js:12672",
+      5,
+      0.063
+     ],
+     [
+      "Date.now@t455-clock.js:9",
+      2,
+      0.025
+     ],
+     [
+      "zoneGameDay@zone.js:9501",
+      2,
+      0.025
+     ]
+    ],
+    "deepTop": [
+     [
+      "setAt@body-cols.js:50 #53",
+      248,
+      3.107
+     ],
+     [
+      "_t1145Detect@zone.js:4891 #4879",
+      138,
+      1.729
+     ],
+     [
+      "set@body-cols.js:55 #58",
+      122,
+      1.529
+     ],
+     [
+      "_t1145Detect@zone.js:4891 #4873",
+      86,
+      1.078
+     ],
+     [
+      "slot@body-cols.js:49 #49",
+      84,
+      1.052
+     ],
+     [
+      "decideNpcBehavior@zone.js:4177 #4220",
+      55,
+      0.689
+     ],
+     [
+      "_t1145Follow@zone.js:4774 #4776",
+      51,
+      0.639
+     ],
+     [
+      "_t1145Detect@zone.js:4891 #4877",
+      39,
+      0.489
+     ],
+     [
+      "_t1155FollowSlot@zone.js:4756 #4760",
+      37,
+      0.464
+     ],
+     [
+      "computeNpcPath@zone.js:4607 #4609",
+      35,
+      0.439
+     ],
+     [
+      "set@body-cols.js:55 #56",
+      32,
+      0.401
+     ],
+     [
+      "_t1155FollowSlot@zone.js:4756 #53",
+      32,
+      0.401
+     ],
+     [
+      "_t1155FollowSlot@zone.js:4756 #4762",
+      28,
+      0.351
+     ],
+     [
+      "computeNpcPath@zone.js:4607 #4613",
+      26,
+      0.326
+     ],
+     [
+      "queryRect@quadtree.js:67 #69",
+      24,
+      0.301
+     ],
+     [
+      "_t1145Detect@zone.js:4891 #4878",
+      23,
+      0.288
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14127",
+      22,
+      0.276
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14128",
+      22,
+      0.276
+     ],
+     [
+      "seed@seed-rand.js:60 #60",
+      19,
+      0.238
+     ],
+     [
+      "npcLifeTick@villages.js:14113 #14140",
+      16,
+      0.2
+     ],
+     [
+      "_t1155FollowSlot@zone.js:4756 #4758",
+      16,
+      0.2
+     ],
+     [
+      "_t720Step@villages.js:12727 #12732",
+      14,
+      0.175
+     ],
+     [
+      "_t1155DetectSlot@zone.js:4876 #4880",
+      14,
+      0.175
+     ],
+     [
+      "_t1155FollowSlot@zone.js:4756 #4757",
+      14,
+      0.175
+     ],
+     [
+      "_t1145Detect@zone.js:4891 #53",
+      13,
+      0.163
+     ]
+    ],
+    "call2": [
+     [
+      "_t1145Follow:4774>_t1155FollowSlot:4756",
+      309,
+      3.871
+     ],
+     [
+      "_t1145Detect:4891>_t1155DetectSlot:4876",
+      141,
+      1.767
+     ],
+     [
+      "decideNpcBehavior:4177>npcLifeTick:14113",
+      136,
+      1.704
+     ],
+     [
+      "_t1145Detect:4891>slot:49",
+      84,
+      1.052
+     ],
+     [
+      "decideNpcBehavior:4177>queryCircle:81",
+      47,
+      0.589
+     ],
+     [
+      "decideNpcBehavior:4177>seed:60",
+      19,
+      0.238
+     ],
+     [
+      "decideNpcBehavior:4177>set:55",
+      9,
+      0.113
+     ],
+     [
+      "decideNpcBehavior:4177>zoneGameDay:9501",
+      4,
+      0.05
+     ],
+     [
+      "decideNpcBehavior:4177>_bodyDay:8494",
+      1,
+      0.013
+     ],
+     [
+      "decideNpcBehavior:4177>_t720Fv:8493",
+      1,
+      0.013
+     ],
+     [
+      "decideNpcBehavior:4177>seedOf:38",
+      1,
+      0.013
+     ],
+     [
+      "decideNpcBehavior:4177>_t720Step:12727",
+      1,
+      0.013
+     ]
+    ],
+    "incl": [
+     [
+      "_t1145Detect@zone.js",
+      568,
+      7.117
+     ],
+     [
+      "_t1145Follow@zone.js",
+      360,
+      4.51
+     ],
+     [
+      "_t1155FollowSlot@zone.js",
+      309,
+      3.871
+     ],
+     [
+      "decideNpcBehavior@zone.js",
+      297,
+      3.721
+     ],
+     [
+      "setAt@body-cols.js",
+      248,
+      3.107
+     ],
+     [
+      "set@body-cols.js",
+      161,
+      2.017
+     ],
+     [
+      "_t1155DetectSlot@zone.js",
+      141,
+      1.767
+     ],
+     [
+      "npcLifeTick@villages.js",
+      136,
+      1.704
+     ],
+     [
+      "slot@body-cols.js",
+      84,
+      1.052
+     ],
+     [
+      "computeNpcPath@zone.js",
+      74,
+      0.927
+     ],
+     [
+      "queryRect@quadtree.js",
+      50,
+      0.626
+     ],
+     [
+      "queryCircle@quadtree.js",
+      47,
+      0.589
+     ],
+     [
+      "_t720Step@villages.js",
+      28,
+      0.351
+     ],
+     [
+      "_lifeGoHome@villages.js",
+      24,
+      0.301
+     ],
+     [
+      "seed@seed-rand.js",
+      19,
+      0.238
+     ],
+     [
+      "_t720Held@villages.js",
+      10,
+      0.125
+     ],
+     [
+      "_handOf@villages.js",
+      8,
+      0.1
+     ],
+     [
+      "_t1155StuckSlot@zone.js",
+      6,
+      0.075
+     ],
+     [
+      "_t737Held@villages.js",
+      5,
+      0.063
+     ],
+     [
+      "zoneGameDay@zone.js",
+      4,
+      0.05
+     ],
+     [
+      "Date.now@t455-clock.js",
+      2,
+      0.025
+     ],
+     [
+      "_rawGameDay@zone.js",
+      2,
+      0.025
+     ],
+     [
+      "_t312Deliver@villages.js",
+      2,
+      0.025
+     ],
+     [
+      "_t720Settle@villages.js",
+      2,
+      0.025
+     ],
+     [
+      "_lifeAct@villages.js",
+      1,
+      0.013
+     ],
+     [
+      "_shOf@zone.js",
+      1,
+      0.013
+     ],
+     [
+      "_bodyDay@villages.js",
+      1,
+      0.013
+     ],
+     [
+      "_lifeVL@villages.js",
+      1,
+      0.013
+     ],
+     [
+      "_t720Fv@villages.js",
+      1,
+      0.013
+     ],
+     [
+      "_txTouch@granary-lots.js",
+      1,
+      0.013
+     ],
+     [
+      "_hold@granary-lots.js",
+      1,
+      0.013
+     ],
+     [
+      "set@granary-lots.js",
+      1,
+      0.013
+     ],
+     [
+      "actToGranary@economy-sim.js",
+      1,
+      0.013
+     ],
+     [
+      "fishToGranary@economy-sim.js",
+      1,
+      0.013
+     ],
+     [
+      "econUnitsOf@kcal.js",
+      1,
+      0.013
+     ],
+     [
+      "_t1128HandUnits@villages.js",
+      1,
+      0.013
+     ],
+     [
+      "_t748FishRecs@villages.js",
+      1,
+      0.013
+     ],
+     [
+      "seedOf@seed-rand.js",
+      1,
+      0.013
+     ],
+     [
+      "_ledgerDay@villages.js",
+      1,
+      0.013
+     ]
+    ],
+    "reqBy": [],
+    "selfAll": [
+     [
+      49,
+      1,
+      0.013
+     ],
+     [
+      56,
+      2,
+      0.025
+     ],
+     [
+      57,
+      66,
+      0.827
+     ],
+     [
+      58,
+      4,
+      0.05
+     ],
+     [
+      576,
+      17,
+      0.213
+     ],
+     [
+      611,
+      122,
+      1.529
+     ],
+     [
+      4776,
+      8,
+      0.1
+     ],
+     [
+      5059,
+      12,
+      0.15
+     ],
+     [
+      5062,
+      88,
+      1.103
+     ],
+     [
+      5067,
+      1,
+      0.013
+     ],
+     [
+      5074,
+      5,
+      0.063
+     ],
+     [
+      5076,
+      2,
+      0.025
+     ],
+     [
+      5077,
+      1,
+      0.013
+     ],
+     [
+      5078,
+      1,
+      0.013
+     ],
+     [
+      5081,
+      30,
+      0.376
+     ],
+     [
+      5082,
+      12,
+      0.15
+     ],
+     [
+      5083,
+      1,
+      0.013
+     ],
+     [
+      5090,
+      1,
+      0.013
+     ],
+     [
+      5093,
+      33,
+      0.413
+     ],
+     [
+      5099,
+      5,
+      0.063
+     ],
+     [
+      5152,
+      3,
+      0.038
+     ],
+     [
+      5154,
+      34,
+      0.426
+     ],
+     [
+      5156,
+      3,
+      0.038
+     ],
+     [
+      5158,
+      2,
+      0.025
+     ],
+     [
+      5172,
+      1,
+      0.013
+     ],
+     [
+      5173,
+      7,
+      0.088
+     ],
+     [
+      5174,
+      1,
+      0.013
+     ],
+     [
+      5185,
+      105,
+      1.316
+     ],
+     [
+      5206,
+      1,
+      0.013
+     ]
+    ]
+   }
+  }
+ ],
+ "dest": {
+  "A1-day.dest.json": {
+   "villageDays": 0,
+   "cellsP50": 0,
+   "cellsP95": 0,
+   "cellsMax": 0,
+   "usersP50": 0,
+   "usersP95": 0,
+   "usersMax": 0,
+   "top10": []
+  },
+  "A1-night.dest.json": {
+   "villageDays": 0,
+   "cellsP50": 0,
+   "cellsP95": 0,
+   "cellsMax": 0,
+   "usersP50": 0,
+   "usersP95": 0,
+   "usersMax": 0,
+   "top10": []
+  },
+  "A2-day.dest.json": {
+   "villageDays": 0,
+   "cellsP50": 0,
+   "cellsP95": 0,
+   "cellsMax": 0,
+   "usersP50": 0,
+   "usersP95": 0,
+   "usersMax": 0,
+   "top10": []
+  },
+  "A2-night.dest.json": {
+   "villageDays": 0,
+   "cellsP50": 0,
+   "cellsP95": 0,
+   "cellsMax": 0,
+   "usersP50": 0,
+   "usersP95": 0,
+   "usersMax": 0,
+   "top10": []
+  },
+  "B1-day.dest.json": {
+   "villageDays": 0,
+   "cellsP50": 0,
+   "cellsP95": 0,
+   "cellsMax": 0,
+   "usersP50": 0,
+   "usersP95": 0,
+   "usersMax": 0,
+   "top10": []
+  },
+  "B1-night.dest.json": {
+   "villageDays": 0,
+   "cellsP50": 0,
+   "cellsP95": 0,
+   "cellsMax": 0,
+   "usersP50": 0,
+   "usersP95": 0,
+   "usersMax": 0,
+   "top10": []
+  },
+  "B2-day.dest.json": {
+   "villageDays": 0,
+   "cellsP50": 0,
+   "cellsP95": 0,
+   "cellsMax": 0,
+   "usersP50": 0,
+   "usersP95": 0,
+   "usersMax": 0,
+   "top10": []
+  },
+  "B2-night.dest.json": {
+   "villageDays": 0,
+   "cellsP50": 0,
+   "cellsP95": 0,
+   "cellsMax": 0,
+   "usersP50": 0,
+   "usersP95": 0,
+   "usersMax": 0,
+   "top10": []
+  }
+ }
+}

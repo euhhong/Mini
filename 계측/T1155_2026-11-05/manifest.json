@@ -1,0 +1,73 @@
+{
+  "source": "/tmp/t1155-code-v2",
+  "template": "/tmp/t1155-template/tpl-t100.db",
+  "node": "v22.23.0",
+  "host": "2a545d652fac",
+  "cpu": "AMD EPYC 9V74 80-Core Processor",
+  "cpus": 5,
+  "order": [
+    "A1",
+    "B1",
+    "B2",
+    "A2"
+  ],
+  "framework": "t646 --seg --lines, t791 V8 sampling; separate phase restores, 60s warm-up, 3 x 15s slices, unchanged 24-minute day",
+  "runs": [
+    {
+      "tag": "A1-day",
+      "mode": "0",
+      "phase": "day",
+      "rc": 0,
+      "seconds": 150.391
+    },
+    {
+      "tag": "B1-day",
+      "mode": "1",
+      "phase": "day",
+      "rc": 0,
+      "seconds": 152.892
+    },
+    {
+      "tag": "B2-day",
+      "mode": "1",
+      "phase": "day",
+      "rc": 0,
+      "seconds": 168.224
+    },
+    {
+      "tag": "A2-day",
+      "mode": "0",
+      "phase": "day",
+      "rc": 0,
+      "seconds": 158.348
+    },
+    {
+      "tag": "A1-night",
+      "mode": "0",
+      "phase": "night",
+      "rc": 0,
+      "seconds": 175.577
+    },
+    {
+      "tag": "B1-night",
+      "mode": "1",
+      "phase": "night",
+      "rc": 0,
+      "seconds": 166.723
+    },
+    {
+      "tag": "B2-night",
+      "mode": "1",
+      "phase": "night",
+      "rc": 0,
+      "seconds": 164.641
+    },
+    {
+      "tag": "A2-night",
+      "mode": "0",
+      "phase": "night",
+      "rc": 0,
+      "seconds": 156.152
+    }
+  ]
+}

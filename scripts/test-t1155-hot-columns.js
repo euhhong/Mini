@@ -23,8 +23,11 @@ assert.equal(f._t1145Follow(p,1),false);assert.equal(BC.C.vx[s],64);
 assert.equal(f._wwIsStill(p),true);
 assert.equal(f._wwPre(1/30),1);f._wwPost(p,0);assert(BC.C.X[s]>64);assert.equal(stampN,1);
 BC.setAt(s,'vx',0);BC.setAt(s,'vy',0);assert.equal(f._wwPre(1/30),0);f._wwStillPost(p);assert.equal(stampN,2);
+BC.positionAt(s,100,64);assert.equal(f._t1145Follow(p,1),true);assert.equal(BC.C.pathIndex[s],1);
 guarded=false;
 for(const k of BC.FIELDS){BC.set(p,k,undefined);assert(Object.is(BC.C[k][s],p[k]));BC.set(p,k,-0);assert(Object.is(BC.C[k][s],-0));BC.set(p,k,NaN);assert(Number.isNaN(BC.C[k][s]));}
+BC.set(p,'pathIndex','2');assert.equal(BC.update(p,'pathIndex',1,false),2);assert.equal(BC.C.pathIndex[s],3);assert.equal(BC.update(p,'pathIndex',1,true),4);
+BC.set(p,'_stuckN',0n);assert.equal(BC.update(p,'_stuckN',-1,true),-1n);assert.equal(BC.C._stuckN[s],-1n);
 BC.assignObject(p,{behavior:'sleep',floor:undefined});assert.equal(BC.C.behavior[s],'sleep');assert.equal(BC.C.floor[s],undefined);
 BC.erase(p,'behavior');assert.equal(BC.C.behavior[s],undefined);assert(!Object.hasOwn(p,'behavior'));
 BC.release(p);assert.equal(BC.slot(p),-1);for(const k of BC.FIELDS)assert.equal(BC.C[k][s],undefined);

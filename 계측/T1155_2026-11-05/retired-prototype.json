@@ -1,0 +1,10 @@
+{
+  "reason": "T1155 live verify found unsynchronized bandit simJob; prototype measurements retired, not accepted gates",
+  "retiredPids": [
+    178214,
+    178215,
+    180009,
+    180016
+  ],
+  "time": 1793915205.5028696
+}

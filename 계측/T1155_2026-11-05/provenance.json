@@ -1,0 +1,30 @@
+{
+  "productHead": "dadba977",
+  "prerequisiteHead": "1424a2c9",
+  "mainBase": "1db22f04",
+  "sourceSHA256": {
+    "server/body-cols.js": "cc6f875337d036702b623836eb74283814227308cad220adf4da478267921413",
+    "server/zone.js": "b4f109f6c05485d7043829aec66042fbd6d994c5eb61c11b6c76ba871be50d28",
+    "server/villages.js": "edf8f2435d54799e50e0256bfa35ef49849a1b679b31599c81ce6b84075d7cd8",
+    "server/roads.js": "a78094834932c320f17424f2a96fa0bfdb6e34fe667db55896f4c392812bc878",
+    "server/bandits.js": "d47cb1f64ec7d8f9a9404c7cf5509b509a33ea609047a85345297f9fa285c2ba",
+    "server/wildlife.js": "51c2d78cbc7b43351b7e1dba7dd474f6f740630e5202c2fce9cadb748191a20e"
+  },
+  "template": {
+    "sourceProduct": "bf0c3c93",
+    "mode": "T1145_XY_COLS=0",
+    "days": 200,
+    "population": 612,
+    "sha256": "e280d92877a8c6df82c08b5b6576f2c0da3a6aeb211e5f711cb9bf330ddf2c58",
+    "mtimeMs": 1793915558071.5571,
+    "bytes": 60645376,
+    "archive": "tpl-t100.db.gz"
+  },
+  "runtime": "Node22.23.0, 4CPU quota, concurrent legacy war/laboratory/baseline/client jobs; this is not an isolated benchmark",
+  "method": "same template restored independently at day/night phase; real 24-minute clock; 60s observer warmup; ABBA each phase;3x15s slices; range is two completed repeat-window aggregates per arm",
+  "retiredPrototype": {
+    "product": "bf0c3c93",
+    "issue": "body-only bandits.simJob writer; live column verification found mismatches; excluded from accepted gates",
+    "marker": "retired-prototype.json"
+  }
+}
