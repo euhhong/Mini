@@ -1093,7 +1093,7 @@ const _t740Stat = { restored: null };
 //   마을 클레임 그림자(`_claim` · `_clearCrew` · `_buildCrew` · `_psiteCrew` · `_cropClaim` · 광부 손 합 `_t724HeldKg`)는 되돌린 몸에서 다시 센다(하루 마감의 재대사 줄과 같은 식).
 //   몸 열쇠 = 마을 `npcPids` 자리(T728 `_t728HuntWk` 문법). 저장된 몸이 지금 몸보다 많으면 남은 손은 그 마을 첫 몸의 손에 더한다(소멸 0).
 const T747_BODY = process.env.T747_BODY_KEEP !== '0';   // ★[PM 10-14] 켬 기본(소멸 금지 · 다시 뜰 때만 — 손 · 진행 작업 · 자리) · 되돌림 `=0`
-const _T747_KEYS = ['simJob', 'x', 'y', 'hp', '_rest', 'inventory', '_t312U', '_t312Kg', '_t1180FullFish', '_t1181Haul', '_t368H', '_t368N', '_t717L', '_t733F',
+const _T747_KEYS = ['simJob', 'x', 'y', 'hp', '_rest', 'inventory', '_t312U', '_t312Kg', '_t1180FullFish', '_t1181Haul', '_t1181Returns', '_t368H', '_t368N', '_t717L', '_t733F',
   '_lifeTask', '_farmK', '_fOutD', '_workSite', '_jobN', '_fishSpotX', '_fishSpotY', '_t340N', '_t724Site', '_huntBud', '_huntKil',
   '_sh', '_hd', '_half'];   // 신원 해시 캐시(존 `_shOf` 가 `playerId` — 스폰마다 무작위 꼬리 — 로 먼저 세우면 다시 뜬 몸의 주사위 씨가 바뀐다) · 그날 반일 굴림(같은 날 다시 굴리지 않게)
 // ★★[T1133 2026-11-04 · ★PM 11-03 판정대기 문 17 ㄱ "몸 영속과 같이 저장"] 손잡이 `T1133_BAG_PERSIST`(★켬 기본 후보 · `=0` = 종전 글자).
@@ -1149,12 +1149,12 @@ function _t747Restore() {
     if (!Array.isArray(rows)) continue;
     const dropped = [];
     R.villages++;
-    const spill = [], spillBag = [];
+    const spill = [], spillBag = [], spillHaul = [];
     for (let i = 0; i < rows.length; i++) {
       const S0 = rows[i]; if (!S0) continue;
       const S = _t740Dec(S0);
       const b = i < vil.npcPids.length ? P.get(vil.npcPids[i]) : null;
-      if (!b) { if (S.inventory) spill.push(S.inventory); if (S._bag) spillBag.push(S._bag); continue; }
+      if (!b) { if (S.inventory) spill.push(S.inventory); if (S._bag) spillBag.push(S._bag); if(S._t1181Haul?.n>0)spillHaul.push({...S._t1181Haul,returning:true,at:null}); for(const h of(S._t1181Returns||[]))if(h.n>0)spillHaul.push({...h,returning:true,at:null}); continue; }
       R.bodies++;
       if (S._bag && T1133_BAG) { const _G = _t748G(); const n = _G ? _G.bagLoad(b, S._bag) : 0; if (n) { _t1133Stat.restored++; _t1133Stat.restoredRecs += n; if (S._packOf != null) b._warPackOf = S._packOf; } }   // ★[T1133] 같은 자리 몸에 짐 줄 · 표식(끄면 칸을 안 읽는다)
       if (S.simJob != null && b.simJob !== S.simJob) { R.jobMiss++; b.simJob = S.simJob; }   // 같은 자리 = 같은 몸(직업도 그 몸의 것)
@@ -1162,8 +1162,9 @@ function _t747Restore() {
       if (Number.isFinite(S.hp) && S.hp > 0) { _setHp(b, Math.min(S.hp, b.maxHp || S.hp), 'restore'); if (b.hp < (b.maxHp || 100)) R.hpLow++; }   // ★[T942] 문으로
       if (S._rest != null) b._rest = S._rest;
       if (S.inventory && typeof S.inventory === 'object') { b.inventory = S.inventory; let any = false; for (const k in S.inventory) if (S.inventory[k] > 0 && k !== 'seed_berry') any = true; if (any) R.hands++; }
-      for (const k of ['_t312U', '_t312Kg', '_t368H', '_t368N', '_t717L', '_t733F', '_farmK', '_fOutD', '_workSite', '_jobN', '_fishSpotX', '_fishSpotY', '_t340N', '_t724Site', '_huntBud', '_huntKil', '_sh', '_hd', '_half'])
+      for (const k of ['_t312U', '_t312Kg', '_t1180FullFish', '_t1181Haul', '_t1181Returns', '_t368H', '_t368N', '_t717L', '_t733F', '_farmK', '_fOutD', '_workSite', '_jobN', '_fishSpotX', '_fishSpotY', '_t340N', '_t724Site', '_huntBud', '_huntKil', '_sh', '_hd', '_half'])
         if (k in S) b[k] = S[k];
+      if(b._t1181Haul)b._t1181Haul.at=null;   // 재기동 중 시공·체류 적산 없음
       //   반쯤 한 일 — 대상이 그대로면 잇고(노동 적산은 도착부터 — `_workT` 없음) · 사라졌으면 푼다
       if (S._lifeTask && typeof S._lifeTask === 'object') {
         const t = S._lifeTask, key = t.cx + ',' + t.cy;
@@ -1175,6 +1176,7 @@ function _t747Restore() {
     if (spill.length) {   // 저장된 몸이 지금보다 많았다 — 남은 손은 첫 몸에(소멸 0)
       const b0 = vil.npcPids.length ? P.get(vil.npcPids[0]) : null;
       if (b0) { b0.inventory = b0.inventory || {}; for (const inv of spill) for (const k in inv) if (typeof inv[k] === 'number' && inv[k] > 0 && k !== 'seed_berry') { b0.inventory[k] = +((b0.inventory[k] || 0) + inv[k]).toFixed(6); R.extraHands++; } }
+      if(b0&&spillHaul.length)b0._t1181Returns=(b0._t1181Returns||[]).concat(spillHaul);   // 남은 운반 짐도 소유권을 이어 원래 곳간에 반환
       if (b0 && T1133_BAG && spillBag.length) { const _G = _t748G(); if (_G) for (const bg of spillBag) { const n = _G.bagLoad(b0, bg); if (n) { _t1133Stat.spill++; _t1133Stat.restoredRecs += n; } } }   // ★[T1133] 그 손의 짐 줄도 같은 몸에(날짜째 · 소멸 0)
     }
     //   마을 클레임 그림자 — 저장 순간 그대로 · 푼 진행 작업의 몫만 뺀다 · 광부 손 합은 되돌린 손에서 다시 센다(T724 가 해 질 녘에 다시 세는 그 합)
@@ -13124,6 +13126,7 @@ function _t1181Task(vil,npc) {
 }
 function _t1181Step(vil,npc,now,awake) {
   const E=_lifeEcon();if(!E.productionActsBound(vil.econ))return false;
+  if(npc._t1181Returns?.length&&!(npc._t1181Haul?.n>0))npc._t1181Haul={...npc._t1181Returns.shift(),returning:true,at:null};
   const t=_t1181Task(vil,npc);if(!t&&!npc._t1181Haul)return false;
   if(t&&!npc._t1181Haul)_lifeDropTask(vil,npc);
   if(t){let bd=Infinity,source={x:vil.ccx*SZ+SZ/2,y:vil.ccy*SZ+SZ/2};for(const g of(vil._granList||[])){const L=_granLadder(g),d=Math.hypot(L.x-t.target.x,L.y-t.target.y);if(d<bd){source=L;bd=d;}}t.source=source;}

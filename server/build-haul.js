@@ -8,7 +8,7 @@ function step(p, task, ctx) {
   let s=S;
   if(!s){s=p._t1181Haul={key:task.key,leg:'source',at:null,n:0,item:null,source:task.source};}
   // A removed/replaced site returns its owned load at the original source.
-  const cancelled=!task||s.key!==task.key;
+  const cancelled=!!s.returning||!task||s.key!==task.key;
   if(cancelled&&!s.n){delete p._t1181Haul;return false;}
   const goal=cancelled||s.leg==='source'?s.source:task.target;
   ctx.move(goal,s.n>0?'운반':'출근');
