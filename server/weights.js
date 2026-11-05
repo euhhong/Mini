@@ -175,6 +175,7 @@ function catalog() {
   for (const [item, key] of Object.entries(ITEM_ALIAS)) if (out[item] == null && out[key] != null) out[item] = out[key];
   if (Crops) for (const [k, w] of Object.entries(Crops.weightMap())) if (out[k] == null) out[k] = w;
   { const FP = _fp(); if (FP && FP.ON && typeof FP.items === 'function') for (const k of [...Object.keys(FP.items()), ...FP.species()]) if (out[k] == null) { const w = kgOf(k); if (w > 0) out[k] = w; } }   // ★[T1128]
+  if(require('./fish-goods').ON)for(const id of require('./fish-goods').species())out[id]=kgOf(id); // 클라 payload도 같은 몸 kg
   return out;
 }
 // 알려진 아이디 전부(하네스 전수 스윕용)
