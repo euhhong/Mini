@@ -6055,6 +6055,7 @@ function init(deps) {
       rationCollect: (w) => _warRationCollect(w),
       // ★[T811] 무기 몸 짐 — 장부 도착(귀환)에 몸 짐을 거둔다(손잡이 끔이면 `_armsOnBodies` 가 안 서 war-core 가 안 부른다)
       armsCollect: (w) => _warArmsCollect(w),
+      surrenderDeaths: (w) => _t1183SurrenderDeaths(w),
       // ★[T466] 약탈 곳간 몫을 몸이 받는다(몸이 있을 때만 true — 아니면 war-core 가 종전대로 즉시 옮긴다) · 손잡이 끔이면 안 불린다
       lootCarry: (w, items, kind, lots) => { try { return _warLootAccept(w, items, kind, lots); } catch (e) { console.error(`[${state.zoneId}] 💰 [T466] 노획 받기 실패(즉시 정산으로):`, e.message); return false; } },
       onEngage: (w, day, why) => {
@@ -7918,6 +7919,16 @@ function warThreats() {
 }
 
 // ★[T284] 그날 war-core 결단이 전쟁을 끝냈는가(항복·철수) — daily 직후 한 번. 정산은 행위 한 번(f.settled 게이트).
+// [T1183] 교전 뒤 항복도 이미 쓰러진 몸의 주민 결속을 정산한다.
+// 전투 결과·노획을 다시 판정하지 않고, 항복 정본이 이 pid 명부만 읽는다.
+function _t1183SurrenderDeaths(w) {
+  if (!T1041_WAR_BODY || !w || !state.warBodies) return null;
+  const b = state.warBodies.get(w.id), f = b && b.w === w && b.fight;
+  if (!f) return null;
+  const out = { A: [], B: [] };
+  for (const u of f.ctx.units) if (u.hp <= 0 && u.agent != null && out[u.side]) out[u.side].push(u.agent);
+  return out;
+}
 //   항복은 war-core 가 이미 정산했다(_opDoSurrender) → 기록만. 철수는 교전이 있었으면 그 교전을 정산한다(수비 승).
 //   항복/철수 구별 = 그날 war-core 통계 surrender 증분(내보낸 stats() · 읽기만) — 같은 날 둘이 겹치면 곳간이 더 빈 쪽이 항복.
 function _warAfterDaily(surrBefore) {
@@ -9179,7 +9190,7 @@ function __p3Bind(mock) {
     _t804Way, _t804WalkOut, _t804Stat, _warWalkGroupTo,   // ★[T804] 걷는 몸의 길 · 전진 풀기 걸음 — 하네스가 운영과 같은 문을 부른다(내보내기만)
     _t821Stat,   // ★[T821] 재개형 걸음 탐색 셈(내보내기만 — 관찰자 · 하네스)
     T822_BODY_SEED, _t822Rekey, _t833Boot, _t747Pack, _t747Restore, t1133Stat: () => Object.assign({ on: T1133_BAG }, _t1133Stat), _warDespawnPid, serializeEcon, restoreEcon, _t728Meta,   // ★[T833] 몸 주사위 신원 · 다시 뜬 판 — 하네스(`test-body-seed-restart`)가 운영과 같은 문을 부른다(내보내기만)
-    _warDraftPids, _warReleasePid, econDayToMs, _warEnsureBody, _warSampleComp, _vbFootprint,
+    _warDraftPids, _warReleasePid, _t1183SurrenderDeaths, econDayToMs, _warEnsureBody, _warSampleComp, _vbFootprint,
     threatOf, _warWriteThreats, _warOutMul, _lifeJobSites, _lifeJobSiteOK, _warRoutePts, _warTreeCell, computeRoutePts,
     _t619Region, _t619RedigKeep,   // ★[T619] 쌍 둘레 · 다시 파기 거르개 — 자(`t619-h-audit`)가 **이 함수**로 센다(사본 0)
     _econSameOf, _warEatBySpoil,   // ★[T458] 같은 물건 한 줄 · 상하는 것부터 — 하네스가 **이 함수**로 등가 표를 센다(사본 0)

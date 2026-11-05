@@ -975,12 +975,27 @@ function createWar(opts) {
   // 무혈 항복 공통 효과 — 조공 계약+곳간 공납(WAR_LOOT 절반·★음수 하한 0 — 빈 곳간 항복=공납 0+조공 계약만, 랩 최신 수리)·사상 0·방화 없음·원한/피로 소폭
   function _opDoSurrender(atkVil, defVil, day, w) {
     const A = atkVil && atkVil.econ, D = defVil && defVil.econ; if (!A || !D) return 0;
+    // [T1183] 실제 교전 뒤 항복: 쓰러진 몸에 결속된 주민만 한 번 제거한다.
+    // 항복의 노획·조공은 아래 정본 한 번이며, 교전 승패/포로 주사위를 다시 돌리지 않는다.
+    const fallen = typeof opts.surrenderDeaths === 'function' ? opts.surrenderDeaths(w) : null;
+    const loss = { A: 0, B: 0 }, wid = w && ((w.id | 0) || 1);
+    if (fallen && w) for (const side of ['A', 'B']) {
+      const e = side === 'A' ? A : D;
+      for (const pid of new Set(Array.isArray(fallen[side]) ? fallen[side] : [])) {
+        const npc = e.npcs.find(n => n._warDraft === wid && n._warPid === pid);
+        if (npc && _warRemoveNpc(e, npc)) loss[side]++;
+      }
+    }
+    if (loss.A) armyMoraleLoss(w, loss.A);
+    if (loss.A + loss.B) stats().cas += loss.A + loss.B;
     const take = _warLootMove(w, D, A, Math.max(0, _feOf(D)) * WAR_LOOT * 0.5, 'surrender');   // ★[T295 ③] 곳간 품목대로(식량등가) · ★[T466] 켬이면 몸이 옮긴다
     if (D.npcs.length > 4) _addTribute(defVil, atkVil, day);
     warAddGrudge(D, atkVil.name, WAR_GRUDGE_UP * 0.5);
     A._warFatigue = (A._warFatigue || 0) + 0.10; D._warFatigue = (D._warFatigue || 0) + 0.25;
     const st = stats(); st.surrender = (st.surrender || 0) + 1;
-    log(day, defVil.name + ' 무혈 항복 → ' + atkVil.name + ' — 곳간 ' + take.toFixed(0) + ' 공납·조공 ' + WAR_TRIB_YRS + '년·사상 0·성문 개방(방화 없음)');
+    const fallText = loss.A + loss.B ? '교전 뒤 항복' : '무혈 항복';
+    const casText = loss.A + loss.B ? (loss.A + loss.B) + '(공격 ' + loss.A + '·수비 ' + loss.B + ')' : '0';
+    log(day, defVil.name + ' ' + fallText + ' → ' + atkVil.name + ' — 곳간 ' + take.toFixed(0) + ' 공납·조공 ' + WAR_TRIB_YRS + '년·사상 ' + casText + '·성문 개방(방화 없음)');
     return take;
   }
   // 무저항 함락(walkover) — 방어 징발 불가(주민<2)·전투·사상·유령 0. 승리 권리는 J 상한(§17) 그대로.
