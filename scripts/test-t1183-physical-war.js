@@ -27,6 +27,13 @@ check(() => {
   assert.equal(comp.spear, 80); assert.equal(comp.archer, 26);
 }, '전쟁 몸 팔에서는 106명 명부를 34명 표본으로 줄이지 않는다');
 check(() => {
+  const group = WL.buildGroup(Array.from({length:106},(_,i)=>({type:i%2?'archer':'spear',x:10+(i%11)*.2,y:10+Math.floor(i/11)*.2})), 'wall', {cx:30,cy:30}, 0, 7);
+  H._t790Mark(group);
+  let steps=0;
+  while (!H._warGroupReady(group) && steps++<10000) WL._muStepFollow(group,group._t790Walk);
+  assert.equal(H._warGroupReady(group),true);assert.equal(group.units.length,106);
+}, '106명 밀집 대열도 같은 걸음 예산으로 전원 집결한다');
+check(() => {
   const speed = H.state.deps.moveSpeed; H.state.deps.moveSpeed = undefined;
   try {
     const group = WL.buildGroup([{ type: 'champion', x: 10, y: 10 }], 'line', { cx: 20, cy: 20 }, 0, 7);
