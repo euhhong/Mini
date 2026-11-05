@@ -1093,7 +1093,7 @@ const _t740Stat = { restored: null };
 //   마을 클레임 그림자(`_claim` · `_clearCrew` · `_buildCrew` · `_psiteCrew` · `_cropClaim` · 광부 손 합 `_t724HeldKg`)는 되돌린 몸에서 다시 센다(하루 마감의 재대사 줄과 같은 식).
 //   몸 열쇠 = 마을 `npcPids` 자리(T728 `_t728HuntWk` 문법). 저장된 몸이 지금 몸보다 많으면 남은 손은 그 마을 첫 몸의 손에 더한다(소멸 0).
 const T747_BODY = process.env.T747_BODY_KEEP !== '0';   // ★[PM 10-14] 켬 기본(소멸 금지 · 다시 뜰 때만 — 손 · 진행 작업 · 자리) · 되돌림 `=0`
-const _T747_KEYS = ['simJob', 'x', 'y', 'hp', '_rest', 'inventory', '_t312U', '_t312Kg', '_t1180FullFish', '_t1181Haul', '_t1181Returns', '_t368H', '_t368N', '_t717L', '_t733F',
+const _T747_KEYS = ['simJob', 'x', 'y', 'hp', '_rest', 'inventory', 'oreLedger', '_t312U', '_t312Kg', '_t1180FullFish', '_t1181Haul', '_t1181Returns', '_t368H', '_t368N', '_t717L', '_t733F',
   '_lifeTask', '_farmK', '_fOutD', '_workSite', '_jobN', '_fishSpotX', '_fishSpotY', '_t340N', '_t724Site', '_huntBud', '_huntKil',
   '_sh', '_hd', '_half'];   // 신원 해시 캐시(존 `_shOf` 가 `playerId` — 스폰마다 무작위 꼬리 — 로 먼저 세우면 다시 뜬 몸의 주사위 씨가 바뀐다) · 그날 반일 굴림(같은 날 다시 굴리지 않게)
 // ★★[T1133 2026-11-04 · ★PM 11-03 판정대기 문 17 ㄱ "몸 영속과 같이 저장"] 손잡이 `T1133_BAG_PERSIST`(★켬 기본 후보 · `=0` = 종전 글자).
@@ -1128,7 +1128,7 @@ function _t747Pack(vil) {
   for (let i = 0; i < vil.npcPids.length; i++) {
     const b = P.get(vil.npcPids[i]); if (!b) { rows.push(null); continue; }
     const o = {};
-    for (const k of _T747_KEYS) { const x = b[k]; if (x !== undefined && x !== null) o[k] = _t740Enc(x); }
+    for (const k of _T747_KEYS) { const x = b[k]; if (x !== undefined && x !== null && !(k==='oreLedger'&&!Object.keys(x).length)) o[k] = _t740Enc(x); }
     if (_G) { const bg = _G.bagDump(b); if (bg) { o._bag = bg; if (b._warPackOf != null) o._packOf = b._warPackOf; _t1133Stat.saved++; for (const res in bg) _t1133Stat.savedRecs += bg[res].length; } }   // ★[T1133] 몸 짐 줄(있을 때만 — 없으면 칸 0 · 종전 바이트)
     if (o._lifeTask && o._lifeTask.k === 'greet') delete o._lifeTask;   // 인사(T529)는 그 사람 · 그 순간의 일 — 싣지 않는다
     rows.push(o);
@@ -1149,12 +1149,12 @@ function _t747Restore() {
     if (!Array.isArray(rows)) continue;
     const dropped = [];
     R.villages++;
-    const spill = [], spillBag = [], spillHaul = [];
+    const spill = [], spillBag = [], spillHaul = [], spillOre = [];
     for (let i = 0; i < rows.length; i++) {
       const S0 = rows[i]; if (!S0) continue;
       const S = _t740Dec(S0);
       const b = i < vil.npcPids.length ? P.get(vil.npcPids[i]) : null;
-      if (!b) { if (S.inventory) spill.push(S.inventory); if (S._bag) spillBag.push(S._bag); if(S._t1181Haul?.n>0)spillHaul.push({...S._t1181Haul,returning:true,at:null}); for(const h of(S._t1181Returns||[]))if(h.n>0)spillHaul.push({...h,returning:true,at:null}); continue; }
+      if (!b) { if (S.inventory) spill.push(S.inventory); if(S.oreLedger)spillOre.push(S.oreLedger); if (S._bag) spillBag.push(S._bag); if(S._t1181Haul?.n>0)spillHaul.push({...S._t1181Haul,returning:true,at:null}); for(const h of(S._t1181Returns||[]))if(h.n>0)spillHaul.push({...h,returning:true,at:null}); continue; }
       R.bodies++;
       if (S._bag && T1133_BAG) { const _G = _t748G(); const n = _G ? _G.bagLoad(b, S._bag) : 0; if (n) { _t1133Stat.restored++; _t1133Stat.restoredRecs += n; if (S._packOf != null) b._warPackOf = S._packOf; } }   // ★[T1133] 같은 자리 몸에 짐 줄 · 표식(끄면 칸을 안 읽는다)
       if (S.simJob != null && b.simJob !== S.simJob) { R.jobMiss++; b.simJob = S.simJob; }   // 같은 자리 = 같은 몸(직업도 그 몸의 것)
@@ -1162,7 +1162,7 @@ function _t747Restore() {
       if (Number.isFinite(S.hp) && S.hp > 0) { _setHp(b, Math.min(S.hp, b.maxHp || S.hp), 'restore'); if (b.hp < (b.maxHp || 100)) R.hpLow++; }   // ★[T942] 문으로
       if (S._rest != null) b._rest = S._rest;
       if (S.inventory && typeof S.inventory === 'object') { b.inventory = S.inventory; let any = false; for (const k in S.inventory) if (S.inventory[k] > 0 && k !== 'seed_berry') any = true; if (any) R.hands++; }
-      for (const k of ['_t312U', '_t312Kg', '_t1180FullFish', '_t1181Haul', '_t1181Returns', '_t368H', '_t368N', '_t717L', '_t733F', '_farmK', '_fOutD', '_workSite', '_jobN', '_fishSpotX', '_fishSpotY', '_t340N', '_t724Site', '_huntBud', '_huntKil', '_sh', '_hd', '_half'])
+      for (const k of ['oreLedger', '_t312U', '_t312Kg', '_t1180FullFish', '_t1181Haul', '_t1181Returns', '_t368H', '_t368N', '_t717L', '_t733F', '_farmK', '_fOutD', '_workSite', '_jobN', '_fishSpotX', '_fishSpotY', '_t340N', '_t724Site', '_huntBud', '_huntKil', '_sh', '_hd', '_half'])
         if (k in S) b[k] = S[k];
       if(b._t1181Haul)b._t1181Haul.at=null;   // 재기동 중 시공·체류 적산 없음
       //   반쯤 한 일 — 대상이 그대로면 잇고(노동 적산은 도착부터 — `_workT` 없음) · 사라졌으면 푼다
@@ -1176,6 +1176,7 @@ function _t747Restore() {
     if (spill.length) {   // 저장된 몸이 지금보다 많았다 — 남은 손은 첫 몸에(소멸 0)
       const b0 = vil.npcPids.length ? P.get(vil.npcPids[0]) : null;
       if (b0) { b0.inventory = b0.inventory || {}; for (const inv of spill) for (const k in inv) if (typeof inv[k] === 'number' && inv[k] > 0 && k !== 'seed_berry') { b0.inventory[k] = +((b0.inventory[k] || 0) + inv[k]).toFixed(6); R.extraHands++; } }
+      if(b0&&spillOre.length){const L=b0.oreLedger||(b0.oreLedger={});for(const d of spillOre)for(const[k,n]of Object.entries(d))if(n>0)L[k]=(L[k]||0)+n;}
       if(b0&&spillHaul.length)b0._t1181Returns=(b0._t1181Returns||[]).concat(spillHaul);   // 남은 운반 짐도 소유권을 이어 원래 곳간에 반환
       if (b0 && T1133_BAG && spillBag.length) { const _G = _t748G(); if (_G) for (const bg of spillBag) { const n = _G.bagLoad(b0, bg); if (n) { _t1133Stat.spill++; _t1133Stat.restoredRecs += n; } } }   // ★[T1133] 그 손의 짐 줄도 같은 몸에(날짜째 · 소멸 0)
     }
@@ -1303,6 +1304,7 @@ function restoreEcon(json, econ) {
     v.counts = {};
     for (const npcRow of v.npcs) v.counts[npcRow.currentJob] = (v.counts[npcRow.currentJob] || 0) + 1;
   }
+  if(econ.migrateOre)econ.migrateOre(v);
   return v;
 }
 
@@ -5426,7 +5428,7 @@ function _oreMineDaily(vil) {
   // ★★[T724] 켬 · **그날 광부 몸이 친 마을**은 셀을 여기서 안 깎는다 — 몸이 칠 때마다 이미 깎았다(두 번 깎기 0).
   //   몸이 안 친 마을(헤드리스 · 관측자 없는 마을)은 종전 일괄 그대로다(카드 ③). 숙련(`_mineLvl`)·oFrac 은 그대로 센다(몸의 덩이 kg 가 숙련을 읽는다).
   //   끄면 `_t724Skip` 은 늘 거짓 — 아래 줄은 종전 그대로(비트 동일).
-  const _t724Skip = !!(_lifeEcon().T724_MINE_ACT && vil.econ && (vil.econ._t724Walk | 0) > 0);
+  const _t724Skip = !!(vil.econ && ((_lifeEcon().T724_MINE_ACT && (vil.econ._t724Walk | 0) > 0) || (_lifeEcon().T1188_ORE_SPLIT && _lifeEcon().productionActsBound(vil.econ))));
   if (_lifeEcon().T724_MINE_ACT && nMiner > 0) {   // 계측 전용(켬만) — 그날 몸 XOR 일괄 · 수요 D
     const P = _t724P(); if (_t724Skip) P.skip++; else P.batch++;
     if (P.dv.length < 300) P.dv.push([vil.name, _t724Day(_dayNow()), nMiner, _t724Skip ? 1 : 0, +((vil.econ && vil.econ._oreOutLast) || 0).toFixed(4), +(lvlAvg).toFixed(2)]);
@@ -5584,11 +5586,14 @@ function _t724BodyStep(vil, npc, now, day) {
   n = Math.min(n, Math.max(1, Math.ceil(st * need)));
   npc._t724T += n * S.MINE_SWING_MS;
   if (now - npc._t724T >= S.MINE_SWING_MS) npc._t724T = now;
+  const _oreType = E.T1188_ORE_SPLIT ? dep.oreMineralAt?.(s.x,s.y,_t340Rng(_seedOf(_shOfNpc(npc),s.cx,s.cy,day,vil._t724Hit||0))) : null;
+  if(E.T1188_ORE_SPLIT&&!E.OreGoods.idOf(_oreType)){npc._t724T=now;return true;}   // 광물 모르는 짐을 마을 평균으로 꾸미지 않는다
   const got = dep.oreConsumeAt(s.cx, s.cy, n / need) || 0;             // ★친 때마다 재고를 깎는다(1타 = 1/타수 덩이)
   P.nsCut += Number(process.hrtime.bigint() - _c0);
   if (!(got > 0)) { npc._t724Site = null; P.repick++; return true; }
   const kg = got * ck;                                                 // 깎은 덩이 × 덩이 kg
   inv.ore_chunk = +(hand + kg).toFixed(6);
+  if(E.T1188_ORE_SPLIT){const L=npc.oreLedger||(npc.oreLedger={});L[_oreType]=+((L[_oreType]||0)+kg).toFixed(6);}
   vil._t724HeldKg = (vil._t724HeldKg || 0) + kg;
   vil._t724Hit = (vil._t724Hit | 0) + n;
   if (!vil._t724B || vil._t724B.day !== day) vil._t724B = { day, ids: new Set() };
@@ -5602,9 +5607,12 @@ function _t724Deliver(vil, npc, why, now) {
   if (!vil || !vil.econ || !npc || !npc.inventory || !_lifeEcon().T724_MINE_ACT) return 0;
   const kg = npc.inventory.ore_chunk || 0; if (!(kg > 0)) return 0;
   const kgU = _oreKg(); if (!(kgU > 0)) return 0;
-  const g = _lifeEcon().mineToGranary(vil.econ, kg / kgU) || 0;
+  const E=_lifeEcon();let g=0;
+  if(E.T1188_ORE_SPLIT){let left=kg;for(const[k,q]of Object.entries(npc.oreLedger||{})){if(!E.OreGoods.idOf(k)||!(q>0)||!(left>0))continue;const can=Math.min(q,left),u=E.mineToGranary(vil.econ,can/kgU,k)||0,used=Math.min(can,u*kgU);if(used>0){npc.oreLedger[k]=+Math.max(0,q-used).toFixed(6);left-=used;g+=u;}}}
+  else g=E.mineToGranary(vil.econ,kg/kgU)||0;
   const r = +(kg - g * kgU).toFixed(6);
   npc.inventory.ore_chunk = r > 1e-9 ? r : 0;
+  if(!E.T1188_ORE_SPLIT&&npc.oreLedger)for(const k in npc.oreLedger)npc.oreLedger[k]=+(npc.oreLedger[k]*npc.inventory.ore_chunk/kg).toFixed(6);
   const out = kg - npc.inventory.ore_chunk;
   vil._t724HeldKg = Math.max(0, (vil._t724HeldKg || 0) - out);
   const P = _t724P();
@@ -11898,6 +11906,7 @@ if (process.env.T694_GAME_MEAT !== '0' && require('./game-meat').on()) Object.as
 //   ★순서가 계약이다: 두 칸의 대표 품목(`toEcon`)은 위 종전 줄(`dried_fish` · `pickled_veg`)이 그대로 맡는다(이 줄은 그 뒤에 선다).
 //   곳간 레코드는 넣은 그 품목을 든다(T768 `it`) — 꺼내면 넣은 그 품목 그대로 · 개수 그대로(T1128 문 10 · `playerVillageWithdraw`).
 { const _FP = require('./fish-preserve'); if (_FP.ON) for (const [k, it] of Object.entries(_FP.items())) if (!PV_DEPOSIT_MAP[k]) PV_DEPOSIT_MAP[k] = it.kind === 'dry' ? 'dried_fish' : 'pickled_veg'; }
+{const E=_lifeEcon();if(E.T1188_ORE_SPLIT)for(const k of E.OreGoods.ids)PV_DEPOSIT_MAP[k]=k;}
 const PV_DEPOSIT_RATE = (() => { const x = parseFloat(process.env.VILLAGE_DEPOSIT_RATE || '1'); return (isFinite(x) && x > 0) ? x : 1; })();
 // ★[T59] 열량 정본 — 늦게 부른다(맞물림 금지 · `forage`·`spoil` 과 같은 규약).
 let _Kc = null;
@@ -15847,6 +15856,7 @@ module.exports = { t1144Stat: () => Object.assign({ on: T1144_LIFE_EVENT, verify
     // ★[T374] 관측 갈래 퇴근 판정의 **그 함수 자체**를 내준다(같은 규약 · 최소 주입구 하나 — 손을 세려면 사람 목록이 있어야 한다).
     //   하네스가 "D − 오늘 − 손" 을 다시 적으면 그게 사본이다 — 정본 `_t374Done`·`_t374Held` 를 그대로 부른다.
     // ★[T400] 집 행위 하네스용 — 같은 규약(최소 주입구 하나). 하네스는 걸음·자재 규칙을 다시 적지 않는다 — 정본 함수를 그대로 부른다.
+    _t1188Probe: {mine:(v,p,n,d)=>_t724BodyStep(v,p,n,d),deliver:(v,p,n)=>_t724Deliver(v,p,'gran',n),bulk:v=>_oreMineDaily(v)},
     _t1181Probe: { step:(v,p,n,a)=>_t1181Step(v,p,n,a),task:(v,p)=>_t1181Task(v,p),drawMs:()=>G_DRAWW,storeMs:()=>G_STOREW },
     _t435Probe: { granAdd: (vil) => _lifeGranAdd(vil), day: (vil) => _t435GranaryDay(vil), ready: (vil) => _t435Ready(vil), crew: (vil) => _t435Crew(vil).map((p) => p.pid) },   // ★[T435] 하네스가 같은 함수를 부른다
     _t527Probe: { sites: () => _t527Sites(), reset: () => { state._t527Sites = null; }, sig: (site) => _t527Sig(site), day: (vil) => _t527BridgeDay(vil), crew: (vil) => _t527Crew(vil).map((p) => p.pid), need: (site, i) => _t527EconNeed(site, i), stages: (site) => _t527StageCount(site) },   // ★[T527] 하네스가 같은 함수를 부른다

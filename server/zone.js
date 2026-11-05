@@ -4952,7 +4952,7 @@ let _t316Econ = null;
 function _t316WalkAlways(npc) {
   if (!npc || !npc.simVillageId) return false;
   if (_t316Econ === null) { try { _t316Econ = require('../sim/economy-sim'); } catch (e) { _t316Econ = false; } }
-  if (_t316Econ && (_t316Econ.T312_FISH_ACT || _t316Econ.T435_GRANARY_ACT || _t316Econ.T527_BRIDGE_ACT || (_t316Econ.T325_WOOD_ACT && npc.simJob === 'lumberjack') || (_t316Econ.T347_FORAGE_ACT && npc.simJob === 'forager') || (_t316Econ.T368_FARM_ACT && npc.simJob === 'farmer'))) return true;   // T1180: 단독 켬도 해당 몸의 결정·이동 문을 연다
+  if (_t316Econ && (_t316Econ.T312_FISH_ACT || (_t316Econ.T1188_ORE_SPLIT&&npc.simJob==='miner') || _t316Econ.T435_GRANARY_ACT || _t316Econ.T527_BRIDGE_ACT || (_t316Econ.T325_WOOD_ACT && npc.simJob === 'lumberjack') || (_t316Econ.T347_FORAGE_ACT && npc.simJob === 'forager') || (_t316Econ.T368_FARM_ACT && npc.simJob === 'farmer'))) return true;   // T1180: 단독 켬도 해당 몸의 결정·이동 문을 연다
   //   ★★[T529] 인사하러 가는 촌장도 — 줄은 손잡이 켬에서만 생긴다(끔이면 거짓 · 술어는 여전히 이 하나).
   return !!(SimVillages.chiefWalking && SimVillages.chiefWalking(npc));
 }
@@ -5562,6 +5562,7 @@ SimVillages.init({ spawnNpc, players, npcs, broadcast, isTerrainBlockedLocal, is
     rec.s -= got; _oreSaveNpc++; _oreSave(key, rec); return got;
   },
   // ★NPC 경제가 보는 p 는 **자잘을 뺀 합성**이다(isMajorOreAt 과 짝) — 자잘은 플레이어 전용
+  oreMineralAt:(px,py,rng)=>_terrain.oreMineralAt?_terrain.oreMineralAt(ZONE_ID,px,py,rng):null,   // T1188: 사람과 같은 실제 광맥의 광물
   oreProbAt: (px, py) => (_terrain.oreProbMajorAt ? _terrain.oreProbMajorAt(ZONE_ID, px, py) : 0.3),
   ORE_K: require('./specialty').ORE_K, NPC_MINE_PER_DAY: require('./specialty').NPC_MINE_PER_DAY,
   // ★NPC 광부도 **플레이어와 같은 공식**으로 깊이 페널티를 겪고 숙련으로 상쇄한다(축이 하나다)

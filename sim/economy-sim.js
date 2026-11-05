@@ -17,6 +17,9 @@
  */
 
 'use strict';
+const OreGoods=require('../server/ore-goods');
+const T1188_ORE_SPLIT=OreGoods.ON;
+if(T1188_ORE_SPLIT)require('../server/specialty');
 
 // === Phase 5-5-econ-d: 마을 stat 계산 (specialty.contributes 기반) ===
 //   인구당 정규화한 자원 만족도로 5 stat 산출.
@@ -66,6 +69,7 @@ function _computeVillageStats(v, N) {
   const pop = Math.max(1, N);
   for (const [id, qty] of Object.entries(v.storage || {})) {
     if (qty <= 0) continue;
+    if(T1188_ORE_SPLIT&&(id==='ore'||OreGoods.isOre(id)))continue;   // 원석 효용 예산은 광종 수만큼 늘리지 않는다
     // specialty.js 우선, 없으면 LEGACY
     const contributes = (SP && SP[id] && SP[id].contributes) || LEGACY_CONTRIBUTES[id] || null;
     if (!contributes) continue;
@@ -75,6 +79,7 @@ function _computeVillageStats(v, N) {
       if (stats[stat] !== undefined) stats[stat] += w * sat;
     }
   }
+  if(T1188_ORE_SPLIT){const qty=OreGoods.total(v.storage)+Math.max(0,v.storage?.ore||0),sat=Math.min(1,qty/pop/2);for(const[k,n]of Object.entries(LEGACY_CONTRIBUTES.ore))stats[k]+=n*sat;}
   // ★S3 무기 품질(_weapQ) → defense·prestige 배수: 고품질(청동·명장) 무기가 방어·위세↑, 저품질(막석검) 무기는 낮음.
   //   기본 defense 기여(1.0×sat)에 (1 + SPAN×(_weapQ−0.5)) 추가분. _weapQ 0.5(석검)=중립, 1.0(명장청동)=+SPAN×0.5.
   if ((v.storage.weapon || 0) > 0 && v._weapQ != null) {
@@ -196,6 +201,8 @@ const RESOURCES = [
   'bone', 'tigerhide',  // ★§9 3차: 뼈(사냥 부산물+시각층 대물 도축 — 무기장 활 티어 투입재) · 호피(호랑이 도축 — 최고가 위신재, 교역 전용)
   'obsidian', 'jade',  // ★S5: 흑요석(특수 산지 — 예리 → 화살촉/소형칼날, 사냥·방어 보조 교역재) · 옥(특수 산지 — 위세품 교역재). 광부가 특수 산지에서 채굴.
 ];
+
+if(T1188_ORE_SPLIT)RESOURCES.splice(RESOURCES.indexOf('ore'),1,...OreGoods.ids);
 
 // 부재료 set (cook이 variety 계산할 때 사용. food + 이 중 어떤 것이든 1종으로 카운트)
 const COOK_SIDE_INGREDIENTS = ['fruit', 'vegetable', 'mushroom', 'meat', 'fish', 'twig'];
@@ -394,6 +401,16 @@ const BASE_VALUE = {
   copper: 4, tin: 4, iron: 4, lead: 4, silver: 30, gold: 100,
   jade: 80, obsidian: 15, bronze: 12, gem: 60,
 };
+// 단위 가격은 기존 원석 단가. 비축 수·그 비축의 값 몫을 기존 광종 비율로 나눈다.
+if(T1188_ORE_SPLIT)for(const id of OreGoods.ids){const f=OreGoods.shares()[OreGoods.mineralOf(id)]||0;BASE_VALUE[id]=BASE_VALUE.ore;RESERVE_PC[id]=RESERVE_PC.ore*f;}
+if(T1188_ORE_SPLIT)delete RESERVE_PC.ore;
+function oreSourceMix(v) { const m=v?.land?.oreMix;return m&&Object.keys(m).length?m:m?SMELT_PLACER:OreGoods.POOL; }
+function oreTotal(v) { return T1188_ORE_SPLIT?OreGoods.total(v?.storage):(v?.storage?.ore||0); }
+function oreReserveTotal() { return T1188_ORE_SPLIT?OreGoods.ids.reduce((n,k)=>n+(RESERVE_PC[k]||0),0):(RESERVE_PC.ore||0); }
+function oreValue(v,w) { let n=0;for(const[k,f]of Object.entries(OreGoods.shares(oreSourceMix(v))))n+=f*(w(OreGoods.idOf(k))||0);return n; }
+function oreWeights(v,w) { return T1188_ORE_SPLIT?(r=>r==='ore'?oreValue(v,w):w(r)):w; }
+function migrateOre(v) { if(!v)return;if(!T1188_ORE_SPLIT){for(const st of[v.storage,v.treasury]){const n=OreGoods.total(st);if(!(n>0))continue;if(st===v.storage)foldOreMix(v,st.ore||0,n,OreGoods.heldMix(st));st.ore=(st.ore||0)+n;for(const k of OreGoods.ids)if(k in st)st[k]=0;}return;}for(const st of[v.storage,v.treasury])if(st?.ore>0){const n=st.ore;OreGoods.add(st,n,Object.keys(OreGoods.shares(v._oreMixEff||{})).length?v._oreMixEff:oreSourceMix(v));st.ore=0;} }
+function takeOre(v,n) { const out=OreGoods.take(v.storage,n);for(const[k,q]of Object.entries(out))_cons(v,k,q);return Object.values(out).reduce((a,b)=>a+b,0); }
 const JOB_NAMES = Object.keys(JOBS);
 const FIELDS = [...new Set([...JOB_NAMES.map(j => JOBS[j].field), 'archery'])];   // ★archery=사냥꾼 제2숙련(활·직업 매핑 없는 무기 필드)
 
@@ -1134,7 +1151,7 @@ function bindProductionActs(world) { if (world && typeof world === 'object') _pr
 function productionActsBound(v) { return !!(v && v._world && _productionActHosts.has(v._world)); }
 function productionFormulaOff(v, job) {
   return !!(v && v._world && _productionActHosts.has(v._world) &&
-    ((job === 'fisher' && T312_FISH_ACT) || (job === 'lumberjack' && T325_WOOD_ACT) || (job === 'forager' && T347_FORAGE_ACT)));
+    ((job === 'miner' && T1188_ORE_SPLIT) || (job === 'fisher' && T312_FISH_ACT) || (job === 'lumberjack' && T325_WOOD_ACT) || (job === 'forager' && T347_FORAGE_ACT)));
 }
 // ★★★[T724 2026-10-13] **채굴 행위 이식 — 기본 끔.** 끄면 이 파일은 **오늘 main 과 비트 동일**이다
 //   (아래 네 자리가 전부 이 상수 뒤에 있다: 곳간 입구 `mineToGranary` · `addProduce('ore')` 게이트 · 수요 칸 `_oreOutLast` · 장부 다리).
@@ -1987,16 +2004,18 @@ function forageActOn(v) { return !!(T347_FORAGE_ACT && v && (v._t347Cells | 0) >
 //   ⚠수요 문도 같은 몸통이다(`actDemandCap` · D = 그 마을이 오늘 수식으로 낼 원석 `_oreOutLast`) — 곳간이 안 받은 몫은 부르는 쪽 손에 남는다(T544 꼴).
 //   ⚠조성(`oreMix`)은 **넣는 몫만큼** 접는다 — 종전 수식 갈래가 `addProduce` 앞에서 하던 그 접기(같은 함수 · 같은 자리 순서: 재고 가산 전).
 //   ★새 수 0.
-function mineToGranary(v, units) {
+function mineToGranary(v, units, mineral) {
   if (!T724_MINE_ACT || !v || !v.storage) return 0;
+  if(T1188_ORE_SPLIT&&!OreGoods.idOf(mineral))return 0;
   const u = actDemandCap(v, units, (v._oreOutLast || 0), '_t724InflowToday');
   if (!(u > 0)) return 0;
-  if (v.land && v.land.oreMix) foldOreMix(v, v.storage.ore || 0, u, v.land.oreMix);
+  if(T1188_ORE_SPLIT){const k=OreGoods.idOf(mineral),g=actToGranary(v,k,u,'_t724InflowToday','_t724InN');if(g>0){const d=v._t1188InByItem||(v._t1188InByItem={});d[k]=(d[k]||0)+g;}return g;}
+  if (v.land && v.land.oreMix) foldOreMix(v, oreTotal(v), u, v.land.oreMix);
   return actToGranary(v, 'ore', u, '_t724InflowToday', '_t724InN');
 }
 function mineDemandLeft(v, held) { return actDemandLeft(v, (v && v._oreOutLast) || 0, '_t724InflowToday', held); }
 // ★[T724] 이 마을의 원석이 **오늘 몸에서** 오는가 — 손잡이 ∧ 그날 광부 몸이 한 번이라도 쳤다(생활층이 심는다 · 헤드리스는 0 = 종전).
-function mineActOn(v) { return !!(T724_MINE_ACT && v && (v._t724Walk | 0) > 0); }
+function mineActOn(v) { return !!(T724_MINE_ACT && v && ((v._t724Walk | 0) > 0 || (T1188_ORE_SPLIT && productionActsBound(v)))); }
 // ★★[T347] **걷는 목록** — 이 파일이 안 짓는다. 군락 실체가 대는 품목을 생활층이 세어 주입하고
 //   (`world.forageActItems` · `lootOfResource` → `PV_DEPOSIT_MAP` 를 지나 econ 재화로 · 사본 0),
 //   여기서는 그 목록과 채집 믹스의 **교집합**만 걷는다. 목록이 없으면 아무것도 안 걷는다(비트 동일).
@@ -2167,6 +2186,7 @@ function gardenFloorTopUp(v) {
 // ★무용재 — 실수요(use-value)가 ~0이라 수출해도 식량 못 삼. 식량안보와 무관하게 *항상* 생산 포만(성장기 누적까지 차단).
 //   광석(ore): 갑옷에 미량뿐. 장식재(금·은·보석): 화폐화 전엔 수요 0. 돌·금속(구리·주석)은 수요 있어 제외(가치재 수출).
 const SAT_ALWAYS = { ore: 1, gold: 1, silver: 1, gem: 1, pearl: 1, amber: 1, jade: 1, ivory: 1 };
+if(T1188_ORE_SPLIT)for(const k of OreGoods.ids)SAT_ALWAYS[k]=SAT_ALWAYS.ore;
 // ★e2 도구(석기) 글럿 임계 — 대장장이 산출·원료소비를 커버리지(도구재고/도구의존인구)로 taper.
 //   커버리지 ≤ X면 풀생산, X~(X+RAMP) 구간서 선형 감산, ≥(X+RAMP)면 0(정지). 재고는 X 부근 수렴(완전수렴 1로 안 감).
 //   도구는 석기(간돌) 단일 자본재 → X는 석기 재고 버퍼(포화선 1.0의 약 2.5배). RAMP=1.0(부드러운 감산, 진동 방지).
@@ -2822,7 +2842,7 @@ function assignableJobs(v) {
 //   생산자(예: 도구 과잉 마을의 대장장이 → 도구가격↓)는 가치가 낮아 1순위로 차출됨.
 //   w(r) = 그림자가격 가중(없으면 1). 숙련 보너스로 명인은 약간 덜 차출(마을 내 비교우위).
 function opportunityCost(npc, v, w) {
-  w = (typeof w === 'function') ? w : (_ => 1.0);
+  w = oreWeights(v,(typeof w === 'function') ? w : (_ => 1.0));
   const L = (v && v.land) || {};
   const _skv = npc.currentJob === 'hunter' ? ((npc.skills.hunting || 0) + (npc.skills.archery || 0)) / 2 : (npc.skills[npcField(npc)] || 0);
   const sk = 1 + _skv * 0.05;   // ★사냥꾼=활·사냥 평균(두 숙련이 함께 생산성)
@@ -2944,6 +2964,7 @@ const SMELT_PLACER = { iron: 0.9, gold: 0.1 };
 //   ★손잡이 ORE_MIX_EFF=0 → 채택 전 동작(land.oreMix 만) 정확히 재현.
 const ORE_MIX_EFF_ON = !(typeof process !== 'undefined' && process.env && process.env.ORE_MIX_EFF === '0');
 function oreMixOf(v) {
+  if(T1188_ORE_SPLIT){const m=OreGoods.heldMix(v?.storage);return Object.keys(m).length?m:oreSourceMix(v);}
   if (ORE_MIX_EFF_ON) {
     const e = v && v._oreMixEff;
     if (e && typeof e === 'object') { for (const k in e) if (e[k] > 0) return e; }
@@ -3017,7 +3038,7 @@ function kilnWant(v) {   // 서는 조건 — 숲 마을
 function furnaceCharcoalTarget(v) {
   const S = _smeltUses(); if (!S || !v || !v.storage) return 0;
   const N = (v.npcs && v.npcs.length) || 0;
-  return Math.max((RESERVE_PC.ore || 0) * N, v.storage.ore || 0) * (S.fuelPerOre().charcoal || 0);
+  return Math.max(oreReserveTotal() * N, oreTotal(v)) * (S.fuelPerOre().charcoal || 0);
 }
 function kilnDay(v) {
   const S = _smeltUses(); if (!S || !v || !v.storage) return null;
@@ -3042,11 +3063,29 @@ function kilnDay(v) {
   v._kilnWood = (v._kilnWood || 0) + w; v._kilnCharcoal = (v._kilnCharcoal || 0) + c; v._kilnDays = (v._kilnDays || 0) + 1;
   return { batches: n };
 }
+function _typedSmeltCandidates(v) {
+  const N=v.npcs?.length||1,out=[];
+  for(const raw of OreGoods.ids){const m=OreGoods.mineralOf(raw),id=m==='jade_raw'?'jade':m,qty=v.storage[raw]||0;if(!(qty>0)||(_ERA_METAL(id)&&!_eraKnows(id)))continue;
+    if((v.storage[id]||0)>(RESERVE_PC[id]||0.1)*N*4)continue;
+    out.push({raw,id,qty});
+  }
+  return out;
+}
+function _tryTypedSmelt(v,laborBase) {
+  const a=_typedSmeltCandidates(v);if(a.reduce((n,x)=>n+x.qty,0)<SMELT_MIN_ORE)return 0;
+  let left=Math.max(0,laborBase*SMELT_PER_LABOR),used=0;
+  for(const x of a){if(!(left>0))break;const want=Math.min(x.qty,left),use=smeltFuelOn()?smeltFuelTake(v,want):want;if(!(use>0))break;
+    v.storage[x.raw]-=use;_cons(v,x.raw,use);const q=use*SMELT_YIELD;v.storage[x.id]=(v.storage[x.id]||0)+q;
+    const flow=v._t1188Smelt||(v._t1188Smelt={});flow[x.id]=(flow[x.id]||0)+q;used+=use;left-=use;
+  }
+  v._smeltedToday=(v._smeltedToday||0)+used;v._smeltedTotal=(v._smeltedTotal||0)+used;return used;
+}
 function _trySmelt(v, laborBase) {
+  if(T1188_ORE_SPLIT){migrateOre(v);return _tryTypedSmelt(v,laborBase);}
   const om = oreMixOf(v);                              // ★유효 조성 우선(수입 원석 포함) — 없으면 땅 조성
   if (!om) return 0;                                   // 지도 정보 없는 호출부(랩·CLI)는 옛 경로
   const mix = Object.keys(om).length ? om : SMELT_PLACER;
-  const have = v.storage.ore || 0;
+  const have = oreTotal(v);
   if (have < SMELT_MIN_ORE) return 0;
   // ★★[끊김① 해소 2026-08-01] 금속이 이미 넘치면 녹이지 않는다 — 같은 판정이 채용 게이트(smeltTarget)에도
   //   있지만, **이미 고용된** 대장장이의 행위는 안 막고 있었다. 실측(새 지도 임업2): 구리 529·주석 284 를
@@ -3375,6 +3414,7 @@ function createVillage(opts) {
   //   서버 `land._fishBase` 의 사본이 저장된다. 열거를 끄면 저장 줄 · JSON 바이트가 종전과 같다(메모리에만 · 다시 뜬 마을은 저장된 `land.fishSustain` 이 이미 있다).
   if (T17_MSY && opts.fishSustain != null) Object.defineProperty(v, '_fishMsySeed', { value: opts.fishSustain, writable: true, configurable: true, enumerable: false });
   if (T731_LOCAL_MIDNIGHT) _t731StreamInit(v);   // ★[T744] 켬 = 마을 흐름 씨를 **만드는 순간**에 — 그 세계의 씨(`setSeed`)로(첫 틱까지 미루면 그 사이 만든 다른 세계의 씨를 받았다)
+  migrateOre(v);
   return v;
 }
 
@@ -3432,6 +3472,7 @@ function pickInitialJob(v) {
 
 // 마을 일일 처리
 function tickVillage(v, day) {
+  migrateOre(v);
   if (v.npcs.length === 0) return;
 
   // ★flow-EMA 일 경계 폴드(2026-07-12): 어제 _consDay → _consEMA(α=1/30, ~30일 관성 — prodK EMA 동형).
@@ -3600,7 +3641,7 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
     // input 자원 부족 시 생산 0
     let inputMult = 1;
     for (const [inp, need] of Object.entries(jdef.inputs || {})) {
-      if (v.storage[inp] < need) { inputMult = 0; break; }
+      if ((T1188_ORE_SPLIT&&inp==='ore'?oreTotal(v):v.storage[inp]) < need) { inputMult = 0; break; }
     }
     const landBoost = jdef.landBoost(v);
     // skill 효과 — 만렙(10)이면 ×1.5. 분업/교역 의존 강화 위해 효율 ↓.
@@ -3646,6 +3687,7 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
     // produceSpecial 분기 — 각 산출에 대해 세금 떼고 storage로
     const addProduce = (r, amt) => {
       if (productionFormulaOff(v, npc.currentJob)) return;   // T1180: 부산물·현장 0 폴백도 수식 생산이다
+      if(T1188_ORE_SPLIT&&r==='ore'){for(const[k,q]of Object.entries(OreGoods.split(amt,oreSourceMix(v))))addProduce(k,q);return;}
       const sm = satMul(r);
       _potA += amt; _actA += amt * sm;   // 여유노동 측정: 잠재(감산 전) vs 실제(감산 후)
       dailyProductionPotential[r] = (dailyProductionPotential[r] || 0) + amt;   // 잠재 생산(건강·포만 적용 전) — prodK용
@@ -3941,7 +3983,7 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
         //   몸이 친 날(`mineActOn`)은 원석이 이 줄로 안 들어온다 — 손 → 곳간(`mineToGranary`) 하나다(이중 0). 부산물(소금·점토·특수석)은 그대로.
         if (T724_MINE_ACT) v._t724OutAcc = (v._t724OutAcc || 0) + oAmt;
         if (!mineActOn(v)) {
-          if (v.land && v.land.oreMix) foldOreMix(v, v.storage.ore || 0, oAmt, v.land.oreMix);
+          if (v.land && v.land.oreMix) foldOreMix(v, oreTotal(v), oAmt, v.land.oreMix);
           addProduce('ore', oAmt);
         }
         // ★청동 희소성 복원: tin을 부산물에서 *제거*. 종전 { copper:0.22, tin:0.11, ... } → tin은 전 마을 자동산출 = 청동 보편재의 근본 원인.
@@ -3952,30 +3994,30 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
         //   oreMix 가 없는 호출부(랩·CLI)는 옛 dict 로 폴백해 기존 거동을 보존한다.
         //   ※oreMix 가 **없는** 호출부(랩·CLI)는 제련 층이 없던 시절 그대로 금속을 바로 낸다 —
         //     기존 회귀 기준선을 보존하기 위해서다. 지도가 있는 본 게임만 제련을 거친다.
-        if (!(v.land && v.land.oreMix)) {
+        if (!T1188_ORE_SPLIT && !(v.land && v.land.oreMix)) {
           // ★[2026-08-01] 폴백 dict 도 시대를 탄다 — v2 5시드 회귀에서 여기서 나온 철 840 이
           //   쓸 데 없이 쌓였다(청동기 NPC 는 철을 못 다룬다). 시대가 모르는 금속은 뺀다.
           const bp0 = { copper: 0.22, iron: 0.03, silver: 0.05, gold: 0.02, gem: 0.01 };
           const bp = {}; for (const _k in bp0) { if (_ERA_METAL(_k) && !_eraKnows(_k)) continue; bp[_k] = bp0[_k]; }
           for (const r in bp) addProduce(r, oAmt * bp[r]);
         }
-        addProduce('salt', oAmt * 0.05); addProduce('clay', oAmt * 0.08);   // ★소금=완충 교역재(광범위 수요 utility 0.8). 제거 시 교역균형 흔들려 취약 시드 boom-bust. 고증(소금길). 이제 광맥 채굴 부산물로 산출(돌 채석과 분리).
+        if(!T1188_ORE_SPLIT){addProduce('salt', oAmt * 0.05); addProduce('clay', oAmt * 0.08);}   // ★소금=완충 교역재(광범위 수요 utility 0.8). 제거 시 교역균형 흔들려 취약 시드 boom-bust. 고증(소금길). 이제 광맥 채굴 부산물로 산출(돌 채석과 분리).
       }
       // ★청동 희소성: 주석 채굴 — *산지 마을(land.tin>0)만*. 대부분 마을은 land.tin=0 → tin 산출 0 → 청동 불가(석기 무장).
       //   주석(cassiterite)은 자체 광상 → land.ore와 독립(obsidian/jade 동형: 부존만으로 채굴). 산지 마을이 청동검을 만들고 수출(교역 특산).
       // ★산출을 *마을 규모·광부 수 무관* 정량(광량 = land.tin이 결정)으로 — 대형/소형 산지 마을 간 tin 산출 편차(→청동/명 시드 변동)를 차단.
       //   첫 광부가 마을 일일 정량(TIN_DEPOSIT_YIELD_FLAT × land.tin)을 1회 산출(이후 광부는 tin 안 캠 — 광석·구리는 계속). _tinGlut로 과축적 시 감산.
       //   ※oreMix 가 있는 마을(본 게임)은 주석도 **제련에서** 나온다 — 여기서 또 내면 이중 산출이다.
-      if (!(v.land && v.land.oreMix) && (v.land.tin || 0) > 0 && (v._tinToday || 0) === 0) {
+      if (!T1188_ORE_SPLIT && !(v.land && v.land.oreMix) && (v.land.tin || 0) > 0 && (v._tinToday || 0) === 0) {
         const tinAmt = TIN_DEPOSIT_YIELD_FLAT * (v.land.tin || 0) * (1 - _tinGlut);
         if (tinAmt > 0) { addProduce('tin', tinAmt); v._tinMined = (v._tinMined || 0) + tinAmt; v._tinToday = (v._tinToday || 0) + tinAmt; }
       }
       // ★S5 특수 산지 채굴 — 흑요석(화산지대)·옥(옥 산지). 광부가 광석과 별개로 채굴(비교우위 교역재).
       //   흑요석=예리(화살촉·소형칼날 → 사냥·방어 보조), 옥=위세품. 채굴량 ∝ land 부존. 부존 0이면 산출 0(대부분 마을).
       const obAmt = jdef.base * (v.land.obsidian || 0) * skillMul * toolB * (1 - _obsGlut);
-      if (obAmt > 0) addProduce('obsidian', obAmt);
+      if (!T1188_ORE_SPLIT && obAmt > 0) addProduce('obsidian', obAmt);
       const jaAmt = jdef.base * (v.land.jade || 0) * skillMul * toolB * (1 - _jadeGlut);
-      if (jaAmt > 0) addProduce('jade', jaAmt);
+      if (!T1188_ORE_SPLIT && jaAmt > 0) addProduce('jade', jaAmt);
       if (oAmt > 0 || obAmt > 0 || jaAmt > 0) workNPC(npc);
     } else if (jdef.output && baseAmt > 0) {
       // ★[재민 지시 "직접 해결"] 수요-캡(jdef.stockCap) — 재고가 캡 이상이면 **산출도 투입도** 건너뛴다.
@@ -3984,6 +4026,7 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
       if (jdef.stockCap && (v.storage[jdef.output] || 0) >= jdef.stockCap(v)) { continue; }
       const _t860 = (T860_ON && T17_PRESERVE && CATCH_FROM[npc.currentJob]) ? _t860Begin(v, CATCH_FROM[npc.currentJob], _potA, _actA) : null;   // ★[T860] 잡기 전 곳간 · 잠재/실제(끔 = null)
       for (const [inp, need] of Object.entries(jdef.inputs || {})) {
+        if(T1188_ORE_SPLIT&&inp==='ore'){takeOre(v,need);continue;}
         _cons(v, inp, Math.min(v.storage[inp] || 0, need));   // ★flow-EMA(실차감분)
         v.storage[inp] = Math.max(0, v.storage[inp] - need);
       }
@@ -4108,10 +4151,12 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
     const _t724In = v._t724InflowToday || 0;
     if (_t724In > 0) {
       v._t724InflowToday = 0;
+      if(T1188_ORE_SPLIT){for(const[k,q]of Object.entries(v._t1188InByItem||{})){dailyProductionPotential[k]=(dailyProductionPotential[k]||0)+q;dailyProduction[k]=(dailyProduction[k]||0)+q;}}else{
       dailyProductionPotential.ore = (dailyProductionPotential.ore || 0) + _t724In;
       dailyProduction.ore = (dailyProduction.ore || 0) + _t724In;
+      }
     }
-    v._oreOutLast = v._t724OutAcc || 0; v._t724OutAcc = 0;
+    v._oreOutLast = v._t724OutAcc || 0; v._t724OutAcc = 0; if(T1188_ORE_SPLIT)v._t1188InByItem={};
   }
   // ★★[T374 2026-09-23 · ★T347 의 빚을 갚는다] **채집 입고도 같은 자리에서 장부에 적는다.**
   //   T347 은 `_t347InflowToday` 를 남기기만 하고 **이 다리를 안 놓았다** — 그래서 두 가지가 동시에 틀렸다:
@@ -4830,7 +4875,7 @@ function pickDeficitJob(v) {
   //   (석공 폭증은 500일 이후라 원인이 아니라 결과였다 — 도구·무기 결손이 누적된 것.)
   //   ⇒ 채굴에도 **파생수요**를 준다: 녹일 원석이 모자라면 캘 사람을 뽑는다.
   //     제련이 원석을 다 먹고 굶는데 광부를 안 뽑는 건 어느 모로 봐도 결함이다.
-  if ((v.land.ore || 0) > 0.15 && (v.storage.ore || 0) < N * ORE_STOCK_PC
+  if ((v.land.ore || 0) > 0.15 && oreTotal(v) < N * ORE_STOCK_PC
       && hasSlot(v, 'miner', cap, counts)) return 'miner';
   // ★★[재민 확정] 제련 — 광석이 쌓였으면 녹일 사람이 필요하다. **무기 수요와 무관한 상시 일감**이라
   //   전사 사슬(상인2→전사→무기부족→대장장이)을 안 거친다. 그 사슬은 첫 고리가 폐지된 직업이라 죽어 있었다.
@@ -5078,7 +5123,7 @@ function derivedInputTarget(v, r) {
   //   ★뜻은 T443 연료 **와** T452 숯가마가 둘 다 켜졌을 때만 있다 — 하나라도 끄면 0(손잡이 0 · 끔 = 종전 비트).
   if (r === 'charcoal') {
     if (!v || !v.storage || !smeltFuelOn() || !kilnActOn() || !oreMixOf(v)) return 0;
-    if (!(((v.counts && v.counts.miner) || 0) > 0 || (v.storage.ore || 0) >= SMELT_MIN_ORE)) return 0;
+    if (!(((v.counts && v.counts.miner) || 0) > 0 || oreTotal(v) >= SMELT_MIN_ORE)) return 0;
     return furnaceCharcoalTarget(v);
   }
   if (!COPPER_DERIV_ON || r !== 'copper' || !v || !v.storage) return 0;
@@ -5117,9 +5162,14 @@ function derivedInputTarget(v, r) {
   return (best.take.copper || _MELT_TOTAL) * COPPER_DERIV_DAYS;
 }
 function smeltTarget(v) {
+  if(T1188_ORE_SPLIT){migrateOre(v);const a=_typedSmeltCandidates(v),have=a.reduce((n,x)=>n+x.qty,0);if(have<SMELT_MIN_ORE)return 0;
+    const value=a.reduce((n,x)=>n+x.qty*(BASE_VALUE[x.id]||1),0)/have;if(!(SMELT_YIELD*value-(BASE_VALUE.ore||1)>0))return 0;
+    const per=0.45*SMELT_PER_LABOR,need=Math.max(1,Math.round(have/(per*30)));return Math.min(Math.max(1,Math.ceil((v.npcs.length||1)*SMELT_LABOR_CAP_PC)),need);
+  }
+
   const mix = oreMixOf(v);   // ★유효 조성 — 수입 원석도 녹일 수 있다(2026-08-02b)
   if (!mix) return 0;
-  const ore = v.storage.ore || 0;
+  const ore = oreTotal(v);
   if (ore < SMELT_MIN_ORE) return 0;
   // ★★[재민 지시 "경제학적 원리에 입각해"] 제련의 **한계 부가가치**가 양수일 때만 사람을 붙인다.
   //   전에는 "원석이 쌓였으면 무조건" 이라 금속이 남아도는데도 계속 제련했고, 그 노동이 식량
@@ -5334,7 +5384,7 @@ function allocTermsOf(job, ctx, world) {
     // 종전: max(ore·w(ore)·(1−글럿), obsidian·w, jade·w, tin·…) * 0.3 * period
     //   ★주산물은 `ore` 하나다. 종전의 max 는 **땅 부존**을 고르는 것이라 실현 양에는 자리가 없다 —
     //     실제로 무엇을 캤는지는 `dailyProductionBuf` 가 이미 안다(표 §0ⓐ 예외란).
-    case 'miner':      return [[['ore'], () => W('ore')]];
+    case 'miner':      return T1188_ORE_SPLIT?OreGoods.ids.map(k=>[[k],()=>W(k)]):[[['ore'], () => W('ore')]];
     // 종전: (forageLandMean*0.25*(w('vegetable')+0.6*w('herb')) + land.stone*0.9*w('stone')) * period * MSY
     //   ★**항이 둘**이다 — 종전식 그대로 둘로 나눈다. 첫 항의 양은 채집 믹스 실현, 둘째 항은 돌 실현.
     case 'forager': {
@@ -5583,7 +5633,7 @@ function pickDeficitJob_rational(v, world) {
   //   v2 r9: cap 풀기 (0.05~200). 진짜 시장 — 가격 폭락 자원의 직업은 거의 매력 0,
   //   가격 폭등 자원은 압도적 매력. Lewis 모델식 노동 이동.
   const priceTbl = (world && typeof world.priceFn === 'function') ? world.priceFn(v) : null;
-  const w = priceTbl ? (r => Math.max(0.05, Math.min(200, (priceTbl[r] || 1) / 1.0))) : (_ => 1.0);
+  const w = oreWeights(v,priceTbl ? (r => Math.max(0.05, Math.min(200, (T1188_ORE_SPLIT&&OreGoods.isOre(r)?(priceTbl[r]??1):(priceTbl[r]||1)) / 1.0))) : (_ => 1.0));
 
   // 인근 마을 식량 공급 — world.villages에서 infoRange 안의 마을 jobs.farmer 합계
   let nearbyFoodCapacity = 0;
@@ -5713,7 +5763,7 @@ function autoSwitchJob(v, day, world) {
   //   (옛 surplusBonus[25%미만 보호] 제거 — 그게 도구 글럿에도 10% 대장장이를 고착시킨 원인.
   //    시장가치가 직접 결정: 도구가격 폭락 → 대장장이 비용 최저 → 부족직으로 전환됨.)
   const priceTbl = (world && typeof world.priceFn === 'function') ? world.priceFn(v) : null;
-  const w = priceTbl ? (r => Math.max(0.05, Math.min(200, (priceTbl[r] || 1) / 1.0))) : (_ => 1.0);
+  const w = oreWeights(v,priceTbl ? (r => Math.max(0.05, Math.min(200, (T1188_ORE_SPLIT&&OreGoods.isOre(r)?(priceTbl[r]??1):(priceTbl[r]||1)) / 1.0))) : (_ => 1.0));
   let bestIdx = -1, bestCost = Infinity;
   //   ★[T1085 ②] 굶는 날의 식량직 전환은 촌장 지정 쿨다운을 넘는다(지정 표지가 마지막 전환일 때만 — 표지 없는 세계 = 종전 비트).
   let _t1085Hunger = null;
@@ -5962,7 +6012,7 @@ function adjustGuildTax(v, day) {
   // treasury 누적 총 가치
   const t = v.treasury;
   const income = (t.food||0) + (t.wood||0)*1.67 + (t.stone||0)*2.14 + (t.tool||0)*5.0
-               + (t.fish||0)*1.25 + (t.meat||0)*2.14 + (t.ore||0)*3.0;
+               + (t.fish||0)*1.25 + (t.meat||0)*2.14 + (T1188_ORE_SPLIT?OreGoods.total(t):(t.ore||0))*3.0;
   // 이번 30일 동안 들어온 세수 = 누적 - 30일 전 누적
   const recentIncome = income - v.guild._lastIncome;
   // 이전 30일 세수와 비교 — hill climbing
@@ -6379,6 +6429,7 @@ function computeDailyConsumption(v) {
       cons[inp] = (cons[inp] || 0) + estDailyProd * perOut;
     }
   }
+  if(T1188_ORE_SPLIT&&cons.ore>0){const n=cons.ore;delete cons.ore;Object.assign(cons,OreGoods.split(n,oreSourceMix(v)));}
   return cons;
 }
 
@@ -6398,6 +6449,7 @@ function computeDynReserve(v, cons, resourceKey, defaultPerPop) {
 
 // 마을 시세 (가격표) 계산 — 다른 마을 시세 비교용
 function computeVillagePrices(v) {
+  migrateOre(v);
   const N = v.npcs.length || 1;
   const cons = computeDailyConsumption(v);
   const prices = {};
@@ -6440,10 +6492,13 @@ function computeVillagePrices(v) {
       if (tot > 0) prices.ore = Math.min(prices.ore, SMELT_YIELD * (mv / tot));
     }
   }
+  if(T1188_ORE_SPLIT)for(const k of OreGoods.ids){const m=OreGoods.mineralOf(k),id=m==='jade_raw'?'jade':m;prices[k]=Math.min(prices[k]||0,_ERA_METAL(id)&&!_eraKnows(id)?0:SMELT_YIELD*(prices[id]||0));}
+  if(T1188_ORE_SPLIT)delete prices.ore;
   return prices;
 }
 
 module.exports = {
+  T1188_ORE_SPLIT, OreGoods, oreTotal, oreReserveTotal, oreValue, oreSourceMix, migrateOre, takeOre,
   T1149, t1149LeanDays, t1149WinterDays, t1149WinterNeed,   // ★[T1149] 겨울 골짜기 — 손잡이 갈래 · 달력 셈 · 다가오는 겨울에 모자랄 식량(v2 가을 사 모으기가 읽는다)
   T1179_CROP_SEASON, t1179FieldDay, t1179Standing,   // ★[T1179] 작물 철 — 손잡이 · 밭 하루 · 밭에 선 먹을 것(계측)
   assignNPCJob, assignableJobs, JOB_SWITCH_COOLDOWN,
