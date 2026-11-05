@@ -21,6 +21,8 @@
 //  ②-T1116 창고 탭 — 하루 수요 `use` = econ `_consEMA` · 모자란 것/남는 것 줄 `store.short`/`glut` = 사건 장부 래치 전부(곳간이 바닥난 물건 포함) ·
 //     값 래치 `priceUp`/`priceDown` = `detOf().up/down`(창을 못 채우면 키 없음) · 값 오르내림 줄 `store.priceMoves` = 장부 링의 지난 `PRICE_WIN` 날 값 사건 ·
 //     값 수 싣지 않음 · 30날 시세 흐름은 키 없음(회부) · 고정 자료 같은 모양
+//  ⑧ [T1169] 촌장 「일 맡기기」 칸 `members.assign` = `assignRoster`(촌장에게만 · 아니면 키 없음) · 진짜 문 `assign_job` 뒤 마을 화면 칸만(게시판 판 0) ·
+//     화면 `vvAdapt` 「모자란 것」 = `store.short.rows`(바닥난 물건 포함) · `vvAssign` 판(고정 자료 · vm)
 //
 // 실행: node scripts/test-village-view.js   (존 한 벌을 이 프로세스 안에서 띄운다 · 마을 2곳)
 'use strict';
@@ -447,6 +449,51 @@ const ITEM_KEYS = (view) => {   // 품목이 서는 자리 전부(④)
     ok(!bad.length, '모든 사건 · 품목 갈래에서 줄이 …니다. 로 끝난다(하게체 끝 0)', bad.length ? bad.slice(0, 3).map(([e, l]) => `${e.type}:${l}`).join(' / ') : `${samples.length}갈래`);
     ok(samples.some(([, l, br]) => l !== br) && samples.every(([, , br]) => typeof br === 'string'), '[자명 통과 금지] 촌장 말(`briefLine`)은 그대로 하게체 — 두 표가 실제로 다르다', samples[0][2]);
     ok(!/[0-9]/.test(samples.map(([, l]) => l).join('')), '화면 줄도 수치를 읊지 않는다(`LINES` 와 같은 계약)');
+  }
+
+  // ── ⑧ [T1169 · K18] 촌장 「일 맡기기」 칸 `members.assign` · 화면 「모자란 것」 = `store.short.rows` ──
+  say('\n⑧ [T1169] 촌장 일 맡기기 칸 · 모자란 것 줄(화면)');
+  {
+    p.x = AX; p.y = AY;
+    const v0 = VV.build(p, VID, 'wood').view;
+    ok(!!v0 && !('assign' in v0.members) && !(v0.me && v0.me.chief), '촌장이 아니면 `members.assign` 키 없음(옛 바이트)', v0 ? Object.keys(v0.members).join(',') : '없음');
+    const was = { founder: vil.econ.founder, kin: vil._kin };
+    vil.econ.founder = p.playerId; if (vil._kin) vil._kin = Object.assign({}, vil._kin, { chief: p.playerId });   // `__e2e_chief` 와 같은 판 꾸밈
+    const v1 = VV.build(p, VID, 'wood').view, R = V.assignRoster(vil), JK = H.JOB_KR_NPC;
+    const want = { rows: R.rows.map((x) => Object.assign(x, { jobKo: JK[x.job] || x.job })), jobs: R.jobs.map((x) => Object.assign(x, { ko: JK[x.job] || x.job })), cooldown: R.cooldown };
+    ok(!!(v1.me && v1.me.chief) && JSON.stringify(v1.members.assign) === JSON.stringify(want), '촌장이면 `members.assign` = `SimVillages.assignRoster`(게시판 판 T1085 명부와 같은 자료) + 이름표', v1.members.assign ? `줄 ${v1.members.assign.rows.length} · 일 ${v1.members.assign.jobs.length} · 쿨다운 ${v1.members.assign.cooldown}` : '없음');
+    ok(want.rows.length > 0 && want.jobs.some((j) => j.open), '[자명 통과 금지] 명부에 사람 · 빈자리 있는 일이 실제로 있다', `${want.rows.length} · ${want.jobs.filter((j) => j.open).map((j) => j.job).join(',')}`);
+    // 진짜 문으로 맡긴다 — 열린 마을 화면이면 그 화면의 칸만 다시 오고 게시판 판(`village_board`)은 안 온다
+    send({ type: 'village_view', vid: VID });
+    const pick = want.rows.find((r) => !r.away && !r.left && want.jobs.some((j) => j.open && j.job !== r.job));
+    const job = pick && want.jobs.find((j) => j.open && j.job !== pick.job).job;
+    const nB = msgs('village_board').length, nV = msgs('village_view').length, nN = msgs('notice').length;
+    if (pick) send({ type: 'assign_job', vid: VID, npc: pick.id, job });
+    await sleep(50);
+    const nt = msgs('notice').slice(nN).map((m) => m.text), vs = msgs('village_view').slice(nV);
+    const done = nt.some((t) => /일을 맡겼습니다/.test(t));
+    ok(!!pick && done, '「일 맡기기」 = `assign_job` 그 문 — 서버가 맡겼다(알림 한 줄)', JSON.stringify([pick && pick.id, job, nt]));
+    ok(msgs('village_board').length === nB, '마을 화면이 열려 있으면 맡긴 뒤 게시판 판을 안 보낸다(종전: `tryVillageBoard` → 옛 판이 떴다)', `${msgs('village_board').length - nB}통`);
+    const sl = vs.find((m) => !m.full && m.slots && m.slots.members);
+    const nr = sl && sl.slots.members.assign && sl.slots.members.assign.rows.find((r) => r.id === pick.id);
+    ok(!!(nr && nr.job === job && nr.chief && nr.left > 0), '맡긴 뒤 마을 화면의 `members` 칸만 다시 온다 — 그 사람 = 새 일 · 촌장이 맡김 · 남은 날', nr ? JSON.stringify(nr) : JSON.stringify(vs.map((m) => Object.keys(m.slots || m.view || {}))));
+    send({ type: 'village_view_close' });
+    vil.econ.founder = was.founder; vil._kin = was.kin;
+    // 화면(클라 `vvAdapt` · `vvAssign`) — 고정 자료로 · 최상위 실행문 0 이라 선언만 읽힌다
+    const vm = require('vm');
+    const C = vm.createContext({ location: { search: '' }, URLSearchParams, document: {}, CSS: { escape: (x) => x } });
+    const F = vm.runInContext(fs.readFileSync(path.join(ROOT, 'public', 'client', '52-v-village-view.js'), 'utf8') + '\n;({ vvAdapt, vvAssign })', C);
+    const A = F.vvAdapt(FIX.view), FS2 = FIX.view.store;
+    ok(JSON.stringify(A.store.short.map((x) => x.res)) === JSON.stringify(FS2.short.rows.map((r) => r.res)) && FS2.short.rows.some((r) => r.qty === 0 && !FS2.rows.some((q) => q.res === r.res)),
+      '★화면 「모자란 것」 = 서버 `store.short.rows`(곳간 줄에 없는 바닥난 물건 포함 — 종전 `rows[].short` 거르기는 못 봤다)', A.store.short.map((x) => `${x.item}:${x.why}`).join(' · '));
+    ok(A.store.short.find((x) => x.res === 'hide').why === '곳간에 없습니다' && A.store.short.find((x) => x.res === 'stone').why === '3.1일치 남았습니다', '바닥난 줄 = "곳간에 없습니다" · 나머지 = "n일치 남았습니다"(서버 값 그대로)');
+    const noShort = JSON.parse(JSON.stringify(FIX.view)); delete noShort.store.short;
+    ok(JSON.stringify(F.vvAdapt(noShort).store.short.map((x) => x.res)) === JSON.stringify(FS2.rows.filter((r) => r.short).map((r) => r.res)), '칸이 없는 옛 서버면 종전 거르기(`rows[].short`)');
+    const h = F.vvAssign(A.members.assign), FA = FIX.view.members.assign;
+    const rowsH = (h.match(/data-vv-npc="/g) || []).length, btnH = (h.match(/data-vv="assign"/g) || []).length;
+    ok(rowsH === FA.rows.length && btnH === FA.rows.filter((r) => !r.away && !r.left).length && /자리 없음/.test(h) && /원정 중/.test(h) && /12일 뒤 · 촌장이 맡김/.test(h) && /30일 동안/.test(h),
+      '「일 맡기기」 판 — 줄 = 명부 · 단추 = 맡길 수 있는 사람만 · 형편(원정 중 · n일 뒤 · 촌장이 맡김) · 빈자리 없음 표시 · 쿨다운 = 서버 값', `줄 ${rowsH} · 단추 ${btnH}`);
+    ok(F.vvAssign(null) === '' && F.vvAdapt(Object.assign({}, FIX.view, { members: Object.assign({}, FIX.view.members, { assign: undefined }) })).members.assign === null, '키가 없으면 판을 안 그린다');
   }
 
   say(`\n결과: PASS ${pass} · FAIL ${fail}`);

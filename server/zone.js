@@ -13119,7 +13119,8 @@ function tryAssignJob(player, vid, npcId, job) {
     const O = JOB_KR_NPC[r.old] || r.old;
     const CD = (SimVillages.assignRoster(vil) || {}).cooldown;
     _t1085Notice(player, `${O} 한 사람에게 ${L} 일을 맡겼습니다. 이 사람은 ${CD}일 동안 스스로 일을 바꾸지 않습니다. 마을이 굶으면 먹을 것을 구하는 일로 먼저 돌아갑니다.`);
-    tryVillageBoard(player, vid);   // 명부를 새로 그린다(같은 판 · 같은 자료)
+    if (VillageView.isOpen(player)) VillageView.poke(player);   // ★[T1169] 마을 화면(켬 기본)에서 맡겼으면 그 화면의 명부 칸만 다시(게시판 판을 띄우지 않는다)
+    else tryVillageBoard(player, vid);   // 명부를 새로 그린다(같은 판 · 같은 자료)
     return r;
   };
   const c = Membership.chiefCheck(player, vil);

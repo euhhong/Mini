@@ -52,7 +52,20 @@
         { "pid": "npc_simvil_3_2", "name": "갈매", "job": "fisher", "jobKo": "어부", "act": "낚시", "chief": false },
         { "pid": "npc_simvil_3_3", "name": "다래", "job": "farmer", "jobKo": "농부", "act": "개간", "chief": false },
         { "pid": "npc_simvil_3_4", "name": "솔이", "job": "forager", "jobKo": "채집꾼", "act": "", "chief": false }
-      ]
+      ],
+      "assign": {
+        "rows": [
+          { "id": "v3_n1", "job": "fisher", "age": 31, "left": 0, "away": false, "chief": false, "jobKo": "어부" },
+          { "id": "v3_n2", "job": "farmer", "age": 24, "left": 12, "away": false, "chief": true, "jobKo": "농부" },
+          { "id": "v3_n3", "job": "warrior", "age": 27, "left": 0, "away": true, "chief": false, "jobKo": "전사" }
+        ],
+        "jobs": [
+          { "job": "farmer", "open": true, "ko": "농부" },
+          { "job": "fisher", "open": true, "ko": "어부" },
+          { "job": "smith", "open": false, "ko": "대장장이" }
+        ],
+        "cooldown": 30
+      }
     },
     "store": {
       "rows": [
