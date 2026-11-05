@@ -39,7 +39,7 @@ def execute(tag,args,env):
  print('START',tag,flush=True)
  with log.open('w') as stream:
   p=subprocess.Popen([NODE]+args,cwd=SRC,env=e,stdout=stream,stderr=subprocess.STDOUT,start_new_session=True)
-  deadline=time.monotonic()+3600; timedOut=False
+  limitSec=7200; deadline=time.monotonic()+limitSec; timedOut=False
   while True:
    pid,status,usage=os.wait4(p.pid,os.WNOHANG)
    if pid:
@@ -48,7 +48,7 @@ def execute(tag,args,env):
     os.killpg(p.pid,signal.SIGKILL if timedOut else signal.SIGTERM)
     timedOut=True;deadline=time.monotonic()+10
    time.sleep(.1)
- row={'tag':tag,'args':args,'env':env,'exit':code,'wallSec':round(time.monotonic()-t,3),'cpuUs':round((usage.ru_utime+usage.ru_stime)*1e6),'log':str(log)}
+ row={'tag':tag,'limitSec':limitSec,'args':args,'env':env,'exit':code,'wallSec':round(time.monotonic()-t,3),'cpuUs':round((usage.ru_utime+usage.ru_stime)*1e6),'log':str(log)}
  txt=log.read_text(); m=re.search(r'판 (/tmp/sbc-[\w-]+)',txt)
  if m: row['sbcDir']=m[1]
  if args[0]=='scripts/server-baseline-check.js' and code in (0,1):
