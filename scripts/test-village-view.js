@@ -36,7 +36,7 @@ const say = (m) => console.log(m);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const codeOnly = require('./code-only.js');   // 주석 제거기 정본(사본 0)
 
-const TMP = `/tmp/test-village-view-${process.pid}.db`;
+const TMP = require("path").join(require("os").tmpdir(), `test-village-view-${process.pid}.db`);
 for (const f of [TMP, TMP + '-wal', TMP + '-shm']) { try { fs.unlinkSync(f); } catch (e) {} }
 process.env.ZONE_ID = 'hanbando';
 process.env.PORT = String(36000 + (process.pid % 800));

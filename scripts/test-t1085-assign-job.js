@@ -75,7 +75,7 @@ const runSwitch = (hungry, mark) => {
 // ─────────────────────────────── ② 서버 ────────────────────────────────────────────
 console.log('② 서버 — 진짜 문(tryAssignJob · tryVillageBoard)');
 (async () => {
-  const TMP = `/tmp/test-t1085-${process.pid}.db`;
+  const TMP = require("path").join(require("os").tmpdir(), `test-t1085-${process.pid}.db`);
   for (const f of [TMP, TMP + '-wal', TMP + '-shm']) { try { fs.unlinkSync(f); } catch (e) {} }
   process.env.ZONE_ID = 'hanbando'; process.env.PORT = String(43000 + (process.pid % 900)); process.env.DB_PATH = TMP;
   process.env.ENABLE_VILLAGES = '1'; process.env.ENABLE_WILDLIFE = '0'; process.env.ENABLE_BANDITS = '0';
