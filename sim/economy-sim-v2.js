@@ -17,7 +17,15 @@
 
 const v1 = require('./economy-sim');
 const OreGoods=v1.OreGoods,T1188_ORE_SPLIT=v1.T1188_ORE_SPLIT;
-const _oreShares=OreGoods.shares(),_orePart=r=>T1188_ORE_SPLIT&&OreGoods.isOre(r)?(_oreShares[OreGoods.mineralOf(r)]||0):1;
+const FishGoods=v1.FishGoods;
+// T1192: observed catch energy divides the old dried-fish target once. Mixed vegetable pickle stock has no historical fish fraction: flow only.
+function _fishTarget(v,r,target){
+ if(!v1.T1192_FISH_SPECIES)return target;
+ if(FishGoods.isItem(r)){const it=FishGoods.items()[r],split=it.kind==='dry'?FishGoods.reserve(v,r,(SUBSISTENCE_PER_NPC.dried_fish||0)*30,0,v1.PRESERVE_FOOD_FACTOR)*(v.npcs.length||1):0;return Math.max(target,split);}
+ if(r==='dried_fish'&&Object.keys(FishGoods.shares(v)).length)return((v._consEMA||{})[r]||0)*30;
+ return target;
+}
+const _oreShares=OreGoods.shares(),_orePart=r=>FishGoods.isItem(r)?0:T1188_ORE_SPLIT&&OreGoods.isOre(r)?(_oreShares[OreGoods.mineralOf(r)]||0):1;
 const _oreQuote=(p,r,f=1)=>T1188_ORE_SPLIT&&OreGoods.isOre(r)?(p[r]??f):(p[r]||f);
 // ★[T180] 되돌림 — 끄면 종전(굶는 마을도 돌을 판다) **비트 동일**. 채택값은 ON(한 줄 결함 수리).
 const T180_STONE_EXPORT = !(typeof process !== 'undefined' && process.env && process.env.T180_STONE_EXPORT === '0');
@@ -429,6 +437,7 @@ function xzoneSnapshot(v, day, fresh) {
     isolated: !!v.isolated, isolatedUntilDay: v.isolatedUntilDay || 0, grudge: v._grudgeBlock ? Object.assign({}, v._grudgeBlock) : null,
     counts: { warrior: (v.counts && v.counts.warrior) || 0, hunter: (v.counts && v.counts.hunter) || 0 },
     foodEMA: (v.surplusEMA && v.surplusEMA.food) || 0, weapQ: v._weapQ, oreMix: (v.land && v.land.oreMix) || null,
+    ...(v1.T1192_FISH_SPECIES?{fishCatchMix:v._t1192CatchMix||null}:{}),
     oreMixEff: v._oreMixEff ? Object.assign({}, v._oreMixEff) : null, day,
   };
 }
@@ -439,6 +448,7 @@ function xzoneStub(snap, zone, extra) {
     _xz: true, zone, name: snap.name, npcs: { length: snap.n }, storage: snap.storage, _xzPrices: snap.prices,
     isolated: snap.isolated, isolatedUntilDay: snap.isolatedUntilDay, _grudgeBlock: snap.grudge,
     counts: snap.counts, surplusEMA: { food: snap.foodEMA }, _weapQ: snap.weapQ, land: { oreMix: snap.oreMix },
+    ...(v1.T1192_FISH_SPECIES?{_t1192CatchMix:snap.fishCatchMix||null}:{}),
     _oreMixEff: snap.oreMixEff, tradeStats: { caravansRaided: 0, cargoLost: 0, banditsRepelled: 0 }, _xzDay: snap.day,   // 도착 존 약탈 델타(`_caravanArrive` 가 더하는 칸 · 0 에서)
   }, extra || {});
 }
@@ -830,7 +840,7 @@ function _targetV2(v, r, ctx) {
   const elast = ELASTICITY[r] || 1.0;
   // v2 r6.1: target에 효용 가중치 약하게 — 너무 크면 모두 부족 신호로 식량 폭주
   const subs = (SUBSISTENCE_PER_NPC[r] || 0) * N;
-  const util = T1188_ORE_SPLIT&&OreGoods.isOre(r)?(UTILITY_WEIGHT[r]??0):(UTILITY_WEIGHT[r]||0.1);
+  const util = (T1188_ORE_SPLIT&&OreGoods.isOre(r))||FishGoods.isItem(r)?(UTILITY_WEIGHT[r]??0):(UTILITY_WEIGHT[r]||0.1);
   let target, stock;
   if (CAP_TARGET[r] !== undefined) {
     // 자본재: 커버리지 기반(사용자 1인당 1개). 도구는 합산 재고.
@@ -862,7 +872,7 @@ function _targetV2(v, r, ctx) {
     // ★[2026-08-02f ①-2] 파생 투입수요 — 판정은 v1 한 곳에서만(사본 금지). 손잡이 OFF 면 항상 0.
     //   동기 계약: 아래 `_priceParamsV2`·`tickDecay` 도 같은 줄을 갖는다.
     const derivT = v1.derivedInputTarget ? v1.derivedInputTarget(v, r) : 0;
-    target = Math.max(subs * 30, buffer, flowT, derivT);
+    target = _fishTarget(v,r,Math.max(subs * 30, buffer, flowT, derivT));
     // ★식량 다양성 수요 — 자체 생산 못 하는 식품군은 다양성 위해 소량 수입 목표. 자체 생산하면(≥0.05/명) 보너스 없음.
     //   ★식량안보 게이트: 주식(곡물) 25일치 이상일 때만 — 굶는 마을은 다양성보다 생존(주식) 우선(변방 마을 아사 방지).
     if (VARIETY_FOOD[r] && (v.dailyProductionBuf ? (v.dailyProductionBuf[r] || 0) / N : 0) < 0.05
@@ -970,7 +980,7 @@ function _priceParamsV2(v, r) {
   const cnt = v.counts || {};
   const base = BASE_VALUE_V2[r] || 1;
   const e = ELASTICITY[r] || 1.0;
-  const util = T1188_ORE_SPLIT&&OreGoods.isOre(r)?(UTILITY_WEIGHT[r]??0):(UTILITY_WEIGHT[r]||0.1);
+  const util = (T1188_ORE_SPLIT&&OreGoods.isOre(r))||FishGoods.isItem(r)?(UTILITY_WEIGHT[r]??0):(UTILITY_WEIGHT[r]||0.1);
   let target, stock;
   if (r === 'tool' || r === 'bronze_tool' || r === 'iron_tool') {
     let toolDeps = 0;
@@ -985,7 +995,7 @@ function _priceParamsV2(v, r) {
     const flowT = subsGuard(r, 'price') ? 0 : ((v._consEMA || {})[r] || 0) * 30;   // ★flow-EMA(동기 계약: computeShadowPrices와 동일 공식·subs 가드)
     const buffer = ORNAMENTAL[r] ? N * LUX_TARGET_PC : N * (util * 1.2);
     const derivT = v1.derivedInputTarget ? v1.derivedInputTarget(v, r) : 0;   // ★[2026-08-02f ①-2] 동기 계약
-    target = Math.max(subs * 30, buffer, flowT, derivT);
+    target = _fishTarget(v,r,Math.max(subs * 30, buffer, flowT, derivT));
     if (VARIETY_FOOD[r] && (v.dailyProductionBuf ? (v.dailyProductionBuf[r] || 0) / N : 0) < 0.05
         && (v.storage.food || 0) / N > 25) target = Math.max(target, N * VARIETY_TARGET_PC);
     stock = Math.max(0.1, T859_FOOD_HUNGER ? _t859Stock(v, r) : (v.storage[r] || 0));   // ★[T859] 켬 — food 는 곳간 식량 환산(결정층과 같은 칸)
@@ -1814,7 +1824,7 @@ function* tickTradeV2Steps(world, day) {
       //   ★★[T726] 켬 — 결정층과 같은 값(목표 함수 하나 · 웃돈 상한 · 원석 상한). 끔 = 종전 축약식(보유 수요 `N × max(0.5, util × 1.2)`).
       if (T726_ONE_TARGET) a.prices[cand.res] = _priceNowV2(a.v, cand.res);
       else { const r = cand.res, base = BASE_VALUE_V2[r] || 1, elast = ELASTICITY[r] || 1,
-          subs = (SUBSISTENCE_PER_NPC[r] || 0) * N, buf = N * Math.max(0.5*_orePart(r), (T1188_ORE_SPLIT&&OreGoods.isOre(r)?(UTILITY_WEIGHT[r]??0):(UTILITY_WEIGHT[r]||0.1)) * 1.2),
+          subs = (SUBSISTENCE_PER_NPC[r] || 0) * N, buf = N * Math.max(0.5*_orePart(r), ((T1188_ORE_SPLIT&&OreGoods.isOre(r))||FishGoods.isItem(r)?(UTILITY_WEIGHT[r]??0):(UTILITY_WEIGHT[r]||0.1)) * 1.2),
           tg = Math.max(subs * 30, buf), st = Math.max(0.1, T859_FOOD_HUNGER ? _t859Stock(a.v, r) : (a.v.storage[r] || 0));   // ★[T859]
         a.prices[r] = base * Math.max(PRICE_ADJ_MIN, Math.min(PRICE_ADJ_MAX, Math.pow(tg / st, elast))); }
       if (!T726_ONE_TARGET && _t1152Own(a.v, cand.res)) a.prices[cand.res] = _priceNowV2(a.v, cand.res);   // ★[T1152 ①] 그 곡선이 선 품목은 출발 직후 값도 결정층 한 함수(종전 축약식은 목표 30날 · 탄력을 글자로 가진다 · 끔 = 무동작)
@@ -1871,7 +1881,7 @@ function* tickTradeV2Steps(world, day) {
         a.sent += _n2 * _p2;
         if (T726_ONE_TARGET) a.prices[_res2] = _priceNowV2(a.v, _res2);   // ★[T726] 켬 — 첫 품목과 같은 값 문
         else { const r = _res2, base = BASE_VALUE_V2[r] || 1, elast = ELASTICITY[r] || 1,
-            subs = (SUBSISTENCE_PER_NPC[r] || 0) * N, buf = N * Math.max(0.5*_orePart(r), (T1188_ORE_SPLIT&&OreGoods.isOre(r)?(UTILITY_WEIGHT[r]??0):(UTILITY_WEIGHT[r]||0.1)) * 1.2),
+            subs = (SUBSISTENCE_PER_NPC[r] || 0) * N, buf = N * Math.max(0.5*_orePart(r), ((T1188_ORE_SPLIT&&OreGoods.isOre(r))||FishGoods.isItem(r)?(UTILITY_WEIGHT[r]??0):(UTILITY_WEIGHT[r]||0.1)) * 1.2),
             tg = Math.max(subs * 30, buf), st = Math.max(0.1, T859_FOOD_HUNGER ? _t859Stock(a.v, r) : (a.v.storage[r] || 0));   // ★[T859]
           a.prices[r] = base * Math.max(PRICE_ADJ_MIN, Math.min(PRICE_ADJ_MAX, Math.pow(tg / st, elast))); }
         if (!T726_ONE_TARGET && _t1152Own(a.v, _res2)) a.prices[_res2] = _priceNowV2(a.v, _res2);   // ★[T1152 ①] 첫 품목과 같은 문(끔 = 무동작)
@@ -1896,7 +1906,7 @@ function* tickTradeV2Steps(world, day) {
         // ★A(수입쪽)가 이미 그 재화 글럿이면 수입 안 함 — 수요 없는 걸 계속 실어와 무한 누적(돌 덤핑)되는 것 방지.
         //   연속교역으로 거래가 잦아지면 최저가 이웃에서 잉여를 계속 끌어와 쌓이므로, 자기 목표재고 넘으면 후보 제외.
         const aSubs = (SUBSISTENCE_PER_NPC[r] || 0) * N;
-        let aTarget = Math.max(aSubs * 30, N * Math.max(0.5*_orePart(r), (T1188_ORE_SPLIT&&OreGoods.isOre(r)?(UTILITY_WEIGHT[r]??0):(UTILITY_WEIGHT[r]||0.1)) * 1.2));
+        let aTarget = Math.max(aSubs * 30, N * Math.max(0.5*_orePart(r), ((T1188_ORE_SPLIT&&OreGoods.isOre(r))||FishGoods.isItem(r)?(UTILITY_WEIGHT[r]??0):(UTILITY_WEIGHT[r]||0.1)) * 1.2));
         // ★무기·갑옷 자본재 목표=사용자(전사+사냥꾼)×1.3 — 일반칙(N×0.5)은 전사 적은 마을서 과대 → 청동검 과잉 귀환 허용하던 원인.
         if (r === 'weapon') aTarget = Math.max(2, (((a.v.counts && a.v.counts.warrior) || 0) + ((a.v.counts && a.v.counts.hunter) || 0)) * 1.3);
         else if (r === 'armor') aTarget = Math.max(1, ((a.v.counts && a.v.counts.warrior) || 0) * 1.3);
@@ -2268,7 +2278,7 @@ function _caravanArrive(world, c, day) {
 function _returnGluttedV2(from, r) {
   const _fromN = from.npcs.length || 1;
   const subs = (SUBSISTENCE_PER_NPC[r] || 0) * _fromN;
-  let target = Math.max(subs * 30, _fromN * Math.max(0.5*_orePart(r), (T1188_ORE_SPLIT&&OreGoods.isOre(r)?(UTILITY_WEIGHT[r]??0):(UTILITY_WEIGHT[r]||0.1)) * 1.2));
+  let target = Math.max(subs * 30, _fromN * Math.max(0.5*_orePart(r), ((T1188_ORE_SPLIT&&OreGoods.isOre(r))||FishGoods.isItem(r)?(UTILITY_WEIGHT[r]??0):(UTILITY_WEIGHT[r]||0.1)) * 1.2));
   // ★무기·갑옷은 자본재 — 목표=사용자(전사+사냥꾼)×1.3(활 포함). 일반칙(N×0.5)은 전사 적은 마을서 과대 → 무기 과잉비축 허용하던 원인.
   if (r === 'weapon') target = Math.max(2, ((from.counts && from.counts.warrior || 0) + (from.counts && from.counts.hunter || 0)) * 1.3);
   else if (r === 'armor') target = Math.max(1, (from.counts && from.counts.warrior || 0) * 1.3);
@@ -2697,11 +2707,11 @@ function tickDecay(v) {
     if (_t726) target = _targetV2(v, r, _t726).target;
     else {
     const subs = (SUBSISTENCE_PER_NPC[r] || 0) * N;
-    const util = T1188_ORE_SPLIT&&OreGoods.isOre(r)?(UTILITY_WEIGHT[r]??0):(UTILITY_WEIGHT[r]||0.1);
+    const util = (T1188_ORE_SPLIT&&OreGoods.isOre(r))||FishGoods.isItem(r)?(UTILITY_WEIGHT[r]??0):(UTILITY_WEIGHT[r]||0.1);
     const flowT = subsGuard(r, 'price') ? 0 : ((v._consEMA || {})[r] || 0) * 30;   // ★flow-EMA(동기 계약·subs 가드) — 롱테일 작업 재고는 과잉부패에서 보호
     const buffer = N * (util * 1.2);
     const derivT = v1.derivedInputTarget ? v1.derivedInputTarget(v, r) : 0;   // ★[2026-08-02f ①-2] 동기 계약
-    target = Math.max(subs * 30, buffer, flowT, derivT);
+    target = _fishTarget(v,r,Math.max(subs * 30, buffer, flowT, derivT));
     }
     // excess: target × mult 초과분은 비례 가속(쥐·곰팡이·도둑). 부패성 식량은 mult 낮아 ~60일에서 cap.
     const xm = DECAY_EXCESS_MULT[r] || 10;
@@ -3204,6 +3214,11 @@ function subsGuard(r, who) {
   return who === 'board' ? false : isSubsistenceFlow(r);   // 현행: 가격만 가드
 }
 
+if(v1.T1192_FISH_SPECIES)for(const [id,it]of Object.entries(v1.FishGoods.items())){
+ const parent=it.kind==='dry'?'dried_fish':'pickled_veg',f=v1.preservedFactor(id)/v1.PRESERVE_FOOD_FACTOR;
+ BASE_VALUE_V2[id]=v1.BASE_VALUE[id];UTILITY_WEIGHT[id]=0;SUBSISTENCE_PER_NPC[id]=0;DECAY_V2[id]=DECAY_V2[parent];
+ ELASTICITY[id]=ELASTICITY[parent]||1;DECAY_EXCESS_MULT[id]=DECAY_EXCESS_MULT[parent]||3;
+}
 module.exports = {
   _t1188Probe:{budgetPart:_orePart,returnGlutted:_returnGluttedV2,exportCandidates:_exportCandidatesV2,quote:_oreQuote},
   createWorldV2,

@@ -457,6 +457,7 @@ function plan(sp, stock01, now, rng, kg0) {
   const waitMs = Math.max(CFG.WAIT_MIN_MS, Math.min(CFG.WAIT_MAX_MS, Math.round(raw)));
   let kg = _lognormal(rng, (kg0 > 0 ? Math.log(kg0) : CFG.SIZE_MU) + Math.log(sc.size), CFG.SIZE_SIGMA);
   kg = Math.min(CFG.SIZE_MAX, +kg.toFixed(3));
+  if(require('./fish-goods').ON&&kg0>0)kg=kg0;
   if (!T609_BIG_WINDOW) return { biteAt: now + waitMs, waitMs, kg, windowMs: windowMsFor(kg) };
   return { biteAt: now + waitMs, waitMs, kg, windowMs: windowFor(kg, kg0), fightMs: fightMsFor(kg) };   // ★[T609 ②] 켬만
 }

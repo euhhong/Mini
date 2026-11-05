@@ -17,6 +17,8 @@
  */
 
 'use strict';
+const FishGoods=require('../server/fish-goods');
+const T1192_FISH_SPECIES=FishGoods.ON;
 const OreGoods=require('../server/ore-goods');
 const T1188_ORE_SPLIT=OreGoods.ON;
 if(T1188_ORE_SPLIT)require('../server/specialty');
@@ -202,6 +204,7 @@ const RESOURCES = [
   'obsidian', 'jade',  // ★S5: 흑요석(특수 산지 — 예리 → 화살촉/소형칼날, 사냥·방어 보조 교역재) · 옥(특수 산지 — 위세품 교역재). 광부가 특수 산지에서 채굴.
 ];
 
+if(T1192_FISH_SPECIES)RESOURCES.push(...Object.keys(FishGoods.items()).filter(k=>!RESOURCES.includes(k)));
 if(T1188_ORE_SPLIT)RESOURCES.splice(RESOURCES.indexOf('ore'),1,...OreGoods.ids);
 
 // 부재료 set (cook이 variety 계산할 때 사용. food + 이 중 어떤 것이든 1종으로 카운트)
@@ -488,7 +491,7 @@ const PRESERVED_FOODS = ['dried_fish', 'dried_fruit', 'smoked_meat', 'pickled_ve
 // ★수율 — **새 수가 아니다.** `server/spoil.js` 의 산출 수율은 `0.4 + 0.6×신선도` 이고,
 //   여기서 보존하는 것은 **목표 재고를 넘긴 잉여**(= 오래 묵어 신선도가 바닥인 몫)라 그 식의 **하한 0.4** 다.
 //   (플레이어가 싱싱한 걸 말리면 1.0 까지 받는다 — 그건 플레이어 층의 손맛이고 여기서 흉내내지 않는다.)
-const PRESERVE_YIELD = 0.4;
+const PRESERVE_YIELD = require('../server/fish-preserve').ECON_YIELD;
 // ★★[T17 ② 수리 2026-09-02] **말린다고 열량이 사라지면 안 된다.**
 //   첫 판 실측에서 시드 7 인구가 −12.5% 났다. 원인이 정확히 이것이었다:
 //   생선 1 → 건어물 0.4 로 만들어 놓고 건어물을 **1:1 로 먹였더니** 열량의 60% 가 증발했고,
@@ -514,6 +517,7 @@ function _preserveSurplus(v, from, budget, addProduce, cap, unit) {
       if (cap) _sur = Math.min(_sur, cap[_fr] || 0);
       if (!(_sur > 0)) continue;
       const _take = Math.min(_sur, _pBudget);
+      if(T1192_FISH_SPECIES&&(_fr==='fish'||FishGoods.species().includes(_fr))){_t1192Preserve(v,_fr,_take,addProduce);_pBudget-=_take;continue;}
       v.storage[_fr] -= _take; _cons(v, _fr, _take);   // ★flow-EMA — 보존도 수요다
       addProduce(from[_fr], unit ? _take * PRESERVE_YIELD * unit(_fr) : _take * PRESERVE_YIELD);
       _pBudget -= _take;
@@ -539,6 +543,31 @@ const _t860Unit = (r) => (FORAGE_FOOD_FACTOR[r] != null ? FORAGE_FOOD_FACTOR[r] 
 const T877_ON = (() => { try { return !!require('../server/specialty').T877_ON; } catch (e) { return false; } })();
 // ★★[T877 ②] 켬 = 건굴 · 마른 미역이 보존식(환산 2.5 · 사다리 맨 뒤)이고 어부가 잡은 날 굴 · 해조를 그것으로 말린다(spoil 정본 `dry_oyster` · `dry_seaweed`).
 if (T877_ON) { PRESERVED_FOODS.push('dried_oyster', 'dried_seaweed'); Object.assign(CATCH_FROM.fisher, { oyster: 'dried_oyster', seaweed: 'dried_seaweed' }); }
+// T1192: no inferred species for an anonymous fish slot. Real lot identities override aggregate storage.
+function preservedFactor(r){return T1192_FISH_SPECIES&&FishGoods.isItem(r)?FishGoods.factor(r):PRESERVE_FOOD_FACTOR;}
+if(T1192_FISH_SPECIES){
+  for(const [id,it]of Object.entries(FishGoods.items())){
+    if(!PRESERVED_FOODS.includes(id))PRESERVED_FOODS.push(id);
+    const f=FishGoods.factor(id);BASE_VALUE[id]=require('../server/specialty').RESOURCES[it.kind==='dry'?'dried_fish':'pickled_veg'].baseValue*f/PRESERVE_FOOD_FACTOR;RESERVE_PC[id]=0;
+  }
+  for(const s of FishGoods.species())if(RESOURCES.includes(s)){PRESERVE_FROM[s]=require('../server/fish-preserve').driedId(s);CATCH_FROM.fisher[s]=PRESERVE_FROM[s];}
+}
+function fishPreserveReserve(v,id){return FishGoods.reserve(v,id,RESERVE_PC.dried_fish||0,RESERVE_PC.pickled_veg||0,PRESERVE_FOOD_FACTOR);}
+function _t1192Preserve(v,from,take,addProduce){
+  const G=require('../server/granary-lots'),FP=require('../server/fish-preserve'),K=require('../server/kcal');
+  const active=G.ON&&G.attached(v),captured=active&&G.capBegin(v,from);
+  v.storage[from]-=take;_cons(v,from,take);
+  const recs=captured?G.capEnd(v,from):[],out=[];let accounted=0;
+  for(const r of recs){const src=FishGoods.species().includes(r.it)?r.it:(FishGoods.species().includes(from)?from:null);if(!src)continue;
+    const n=G.countOf(r,src,K.kcalOf,K.DAY_KCAL);if(!(n>0))continue;
+    const id=FP.driedId(src),row=G.preserveRecord(r,src,id,n);out.push({id,n,row});accounted+=r.u;
+  }
+  // Headless typed catches have an identity; generic historical stock does not.
+  const left=Math.max(0,take-accounted);
+  if(left>1e-9){if(FishGoods.species().includes(from)){const n=left*_t860Unit(from)/FishGoods.factor(from);out.push({id:FP.driedId(from),n});}
+    else out.push({id:'dried_fish',n:left*PRESERVE_YIELD});}
+  for(const x of out){if(x.row)G.pushIn(v,x.id,[x.row]);addProduce(x.id,x.n,true);if(x.row)G.clearIn(v,x.id);}
+}
 function _t860Begin(v, from, potA, actA) {
   const st = {}; for (const r in from) st[r] = v.storage[r] || 0;
   return { from, potA, actA, st };
@@ -779,9 +808,9 @@ function consumeFood(v, need) {
     for (const r of PRESERVED_FOODS) {
       if (remaining > 0 && v.storage[r] > 0) {
         // ★환산 2.5 — 채집물 사다리와 **같은 꼴**이되 방향이 반대다(채집물은 0.3~0.4, 보존식은 2.5).
-        const need = remaining / PRESERVE_FOOD_FACTOR;
+        const need = remaining / preservedFactor(r);
         const consumed = Math.min(need, v.storage[r]);
-        v.storage[r] -= consumed; remaining -= consumed * PRESERVE_FOOD_FACTOR; eaten[r] = (eaten[r] || 0) + consumed;
+        v.storage[r] -= consumed; remaining -= consumed * preservedFactor(r); eaten[r] = (eaten[r] || 0) + consumed;
       }
     }
   }
@@ -809,7 +838,7 @@ function totalFoodEquivalent(v) {
   }
   // ★[T17 ②] 곳간에 든 보존식도 **식량이다**. 안 세면 갈무리하는 순간 마을 수용력(K)이 내려간다
   //   — 첫 판에서 실제로 그랬다(위 `PRESERVE_FOOD_FACTOR` 주석). 끄면 이 줄은 0 을 더한다.
-  if (T17_PRESERVE) for (const r of PRESERVED_FOODS) total += (v.storage[r] || 0) * PRESERVE_FOOD_FACTOR;
+  if (T17_PRESERVE) for (const r of PRESERVED_FOODS) total += (v.storage[r] || 0) * preservedFactor(r);
   // ★[T73] 곳간의 생곡도 식량이다 — 도정 수율만큼(위 근거 표). 끄면 이 줄은 0 을 더한다.
   if (T73_RAWGRAIN) for (const r of RAW_GRAINS) total += (v.storage[r] || 0) * RAW_GRAIN_FOOD_FACTOR;
   // ★★[T368] 곳간의 작물도 식량이다 — **econ 이 모르는 것만**(위 줄들이 센 생곡은 빼고 · 이중 0). 끈 팔은 `null` ⇒ 0.
@@ -825,7 +854,7 @@ function totalFoodProductionEquivalent(prod, v) {
   // ★[T17 ②] 생산 쪽도 같은 자로 — 갈무리는 **재고를 옮기는 일**이지 생산을 줄이는 일이 아니다.
   //   ⚠원물을 `_cons` 로 빼고 보존식을 `addProduce` 로 넣으므로, 같은 열량이 두 번 세지지 않는다
   //     (하루 생산 버퍼는 순증분만 담는다).
-  if (T17_PRESERVE) for (const r of PRESERVED_FOODS) total += (prod[r] || 0) * PRESERVE_FOOD_FACTOR;
+  if (T17_PRESERVE) for (const r of PRESERVED_FOODS) total += (prod[r] || 0) * preservedFactor(r);
   // ★[T73] 생산 쪽도 같은 자로 — 오늘 거둔 생곡도 식량 생산이다.
   if (T73_RAWGRAIN) for (const r of RAW_GRAINS) total += (prod[r] || 0) * RAW_GRAIN_FOOD_FACTOR;
   // ★★[T368] 생산 쪽도 같은 자로 — 오늘 밭이 낸 작물(장부 다리가 품목별로 적은 것). 둘째 인수(마을)가 없으면 0.
@@ -3685,7 +3714,8 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
     const _capM = npc.captive ? CAPTIVE_WORK_MUL : 1;
 
     // produceSpecial 분기 — 각 산출에 대해 세금 떼고 storage로
-    const addProduce = (r, amt) => {
+    const addProduce = (r, amt, exactPreserve=false) => {
+      if(T1192_FISH_SPECIES&&exactPreserve){if(!(amt>0))return;v.storage[r]=(v.storage[r]||0)+amt;dailyProduction[r]=(dailyProduction[r]||0)+amt;dailyProductionPotential[r]=(dailyProductionPotential[r]||0)+amt;return;}
       if (productionFormulaOff(v, npc.currentJob)) return;   // T1180: 부산물·현장 0 폴백도 수식 생산이다
       if(T1188_ORE_SPLIT&&r==='ore'){for(const[k,q]of Object.entries(OreGoods.split(amt,oreSourceMix(v))))addProduce(k,q);return;}
       const sm = satMul(r);
@@ -3694,6 +3724,7 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
       amt *= _hpm * _hwm * _prodMul * sm * (v._laborMul || 1) * _capM;
       if (_t1113LQ !== 1 && !t1113IsFood(v, r)) amt *= _t1113LQ;   // ★[T1113 ③] 식량 외만(끔 = 이 줄 무동작)   // ★건강→작업량(±10%) × **행복→작업량(T157 · 주입 없으면 1)** × production stat × 포만 × 부상노동력(요양=일손 X·부상=효율↓ — 생활층서 계산) × 포로 노동(captive만 0.6, 미설치=1) ★[T329] 포위 배수 제거(반경으로 간다)
       if (amt <= 0) return;
+      if(T1192_FISH_SPECIES&&npc.currentJob==='fisher'&&FishGoods.species().includes(r))FishGoods.note(v,r,amt*_t860Unit(r)/FishGoods.factor(r));
       if (r === 'food') v._grainToday = (v._grainToday || 0) + amt;   // ★오늘 곡물 실생산 → 볏짚 연료(아래 연료 블록)
       const tax = amt * TAX_RATE;
       if (T1179_CROP_SEASON && T1179_ITEMS[r] && npc.currentJob === 'farmer') t1179Accrue(v, r, amt - tax);   // ★[T1179] 켬 = 밭에 선 작물로(익는 날 곳간에 · 위 `T1179_CROP_SEASON` 주석)
@@ -6469,7 +6500,7 @@ function computeVillagePrices(v) {
     ws = w._rsCache;
   }
   for (const r of Object.keys(RESERVE_PC)) {
-    let reserve = computeDynReserve(v, cons, r, RESERVE_PC[r]);
+    let reserve = computeDynReserve(v, cons, r, T1192_FISH_SPECIES&&FishGoods.isItem(r)?fishPreserveReserve(v,r):RESERVE_PC[r]);
     if (ws && !ESSENTIAL_V1[r]) {
       reserve = Math.min(reserve, Math.max(0.2, (ws.stock[r] || 0) * (N / Math.max(1, ws.pop)) * 1.5));
     }
@@ -6498,6 +6529,7 @@ function computeVillagePrices(v) {
 }
 
 module.exports = {
+  T1192_FISH_SPECIES,FishGoods,preservedFactor,fishPreserveReserve,_t1192Preserve,
   T1188_ORE_SPLIT, OreGoods, oreTotal, oreReserveTotal, oreValue, oreSourceMix, migrateOre, takeOre,
   T1149, t1149LeanDays, t1149WinterDays, t1149WinterNeed,   // ★[T1149] 겨울 골짜기 — 손잡이 갈래 · 달력 셈 · 다가오는 겨울에 모자랄 식량(v2 가을 사 모으기가 읽는다)
   T1179_CROP_SEASON, t1179FieldDay, t1179Standing,   // ★[T1179] 작물 철 — 손잡이 · 밭 하루 · 밭에 선 먹을 것(계측)

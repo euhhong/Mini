@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // @regress
 'use strict';
+process.env.T1192_FISH_SPECIES='0';
 const assert=require('assert'),fs=require('fs'),path=require('path'),Module=require('module'),{spawnSync}=require('child_process');
 const ROOT=path.resolve(__dirname,'..'),flags=['T312_FISH_ACT','T325_WOOD_ACT','T347_FORAGE_ACT'];
 let pass=0,fail=0;

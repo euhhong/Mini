@@ -111,6 +111,7 @@ function _t748BagsOf(G, body, w, keys) {
 //   ⚠짐 무게(`_t312Kg` · 짐이 차면 귀환)는 그대로 몸 크기(민물 표 kg)다 — 무게 표 kg 와의 어긋남은 회부.
 function _t1128HandUnits(K, id, kg) {   // 켬 전용 — 표에 그 종의 열량이 없으면(어종 밖 · 열량 0) 종전 식으로 떨어진다
   if (!K) return 0;
+  if(require('./fish-goods').ON)return +K.econUnitsOf(id,1,require('./fish-goods').bodyKg(id,kg))||0;
   const u = +K.econUnitsOf(id, 1) || 0;
   return u > 0 ? u : (kg > 0 ? (+K.econUnitsOf('fish', 1, kg) || 0) : 0);
 }
@@ -123,7 +124,7 @@ function _t748FishRecs(G, npc) {
   const out = [];
   for (const id of ids) {
     const n = inv[id] || 0; if (!(n > 0)) continue;
-    const kg = _fresh().kgOf(id) || _seaTbl().kgOf(id) || 0;
+    const kg = (require('./fish-goods').ON?require('./fish-goods').bodyKg(id):0) || _fresh().kgOf(id) || _seaTbl().kgOf(id) || 0;
     const per = _t1128On() ? _t1128HandUnits(K, id, kg) : ((K && kg > 0) ? (+K.econUnitsOf('fish', 1, kg) || 0) : 0);   // ★[T1128 9-b] 켬 = 그 종 한 마리의 표 열량(끔 = 종전 글자)
     out.push(...G.handRecs(npc, id, n, per > 0 ? per : 1));
   }
@@ -9406,19 +9407,20 @@ const _lifeEconNpc = _t312EconNpc;
 // ★★[T312] **귀환하면 곳간에.** 회계는 econ 정본 한 함수(`fishToGranary`)가 한다 — 이 파일은 넘기기만.
 //   손에 든 것은 그때 비운다(이중 0 — 손과 곳간에 같이 있을 수 없다).
 function _t312Deliver(vil, npc) {
-  const u = npc._t312U || 0;
+  let u = npc._t312U || 0;
   if (!(u > 0)) { npc._t312U = 0; npc._t312Kg = 0; return 0; }
   // T1180: 마리째 받을 수 있는 몫만 고른다. 거절된 생선·짐·로트는 손에 남는다.
   const K = _kcal(), inv = npc.inventory || {}, ids = new Set(_fresh().ids());
   if (_t593SeaHand()) for (const id of _seaTbl().ids()) ids.add(id);
   const hand = []; let natural = 0, mass = 0;
   for (const id of ids) {
-    const n = inv[id] || 0, kg = _fresh().kgOf(id) || _seaTbl().kgOf(id) || 0;
+    const n = inv[id] || 0, kg = (require('./fish-goods').ON?require('./fish-goods').bodyKg(id):0) || _fresh().kgOf(id) || _seaTbl().kgOf(id) || 0;
     const per = _t1128On() ? _t1128HandUnits(K, id, kg) : ((K && kg > 0) ? (+K.econUnitsOf('fish', 1, kg) || 0) : 0);
     if (!(n > 0 && per > 0)) continue;
     hand.push({id,n,kg,per}); natural += n * per; mass += n * kg;
   }
   if (!(natural > 0)) return 0;
+  if(require('./fish-goods').ON){u=natural;npc._t312U=natural;npc._t312Kg=mass;}
   let left = _lifeEcon().fishDemandLeft(vil.econ), take = 0, takenKg = 0;
   const selected = [];
   for (const h of hand) {
@@ -9433,7 +9435,7 @@ function _t312Deliver(vil, npc) {
   if (_d) { const records = []; if (got > 0) for (const h of selected) records.push(..._G.handRecs(npc,h.id,h.n,h.per)); _G.doorShut(vil.econ,'fish',records); }
   if (!(got > 0)) return 0;
   for (const h of selected) inv[h.id] -= h.n;
-  npc._t312U = +Math.max(0,u-got).toFixed(6);
+  npc._t312U = +Math.max(0,u-(require('./fish-goods').ON?take:got)).toFixed(6);
   npc._t312Kg = mass > 0 ? +Math.max(0,(npc._t312Kg||0)*(1-takenKg/mass)).toFixed(3) : 0;
   npc._t1180FullFish = false;
   vil._t312Deliv = +((vil._t312Deliv || 0) + got).toFixed(6);
@@ -9688,7 +9690,7 @@ function _t312Take(vil, day, key, want) {
 }
 function _t312Catch(vil,day,cx,cy,want,kg,now,npc) {
   const cap=_carryCfg()?.CFG?.CAP_KG||0;
-  if(npc && cap>0 && (npc._t312Kg||0)+kg>cap+1e-9){npc._t1180FullFish=(npc._t312Kg||0)>0;return 0;}   // T1180: 한 마리를 더 실을 수 없으면 잡지 않고 귀환
+  if(npc && cap>0 && (require('./fish-goods').ON?require('./carry').totalKg(npc):(npc._t312Kg||0))+kg>cap+1e-9){npc._t1180FullFish=(npc._t312Kg||0)>0;return 0;}   // T1180: 한 마리를 더 실을 수 없으면 잡지 않고 귀환
   const key=cx+','+cy,got=_t312Take(vil,day,key,want);
   if (!(got>0)) return 0;
   const draw=state.deps.t312DrawFishAt;
@@ -11905,7 +11907,7 @@ if (process.env.T694_GAME_MEAT !== '0' && require('./game-meat').on()) Object.as
 //   말린 것은 `dried_fish`(건어물) · 절인 것은 `pickled_veg`(절임) 칸으로 **열량으로** 접는다(곰고기 → 사슴·들짐승고기 꼴 · 단위 = `kcal.econUnitsOf`).
 //   ★순서가 계약이다: 두 칸의 대표 품목(`toEcon`)은 위 종전 줄(`dried_fish` · `pickled_veg`)이 그대로 맡는다(이 줄은 그 뒤에 선다).
 //   곳간 레코드는 넣은 그 품목을 든다(T768 `it`) — 꺼내면 넣은 그 품목 그대로 · 개수 그대로(T1128 문 10 · `playerVillageWithdraw`).
-{ const _FP = require('./fish-preserve'); if (_FP.ON) for (const [k, it] of Object.entries(_FP.items())) if (!PV_DEPOSIT_MAP[k]) PV_DEPOSIT_MAP[k] = it.kind === 'dry' ? 'dried_fish' : 'pickled_veg'; }
+{ const _FP = require('./fish-preserve'); if (_FP.ON) for (const [k, it] of Object.entries(_FP.items())) if(require('./fish-goods').ON)PV_DEPOSIT_MAP[k]=k;else if (!PV_DEPOSIT_MAP[k]) PV_DEPOSIT_MAP[k] = it.kind === 'dry' ? 'dried_fish' : 'pickled_veg'; }
 {const E=_lifeEcon();if(E.T1188_ORE_SPLIT)for(const k of E.OreGoods.ids)PV_DEPOSIT_MAP[k]=k;}
 const PV_DEPOSIT_RATE = (() => { const x = parseFloat(process.env.VILLAGE_DEPOSIT_RATE || '1'); return (isFinite(x) && x > 0) ? x : 1; })();
 // ★[T59] 열량 정본 — 늦게 부른다(맞물림 금지 · `forage`·`spoil` 과 같은 규약).
@@ -11931,7 +11933,7 @@ function playerVillageDeposit(vil, inventory, want, unitsOf) {
     const put = Math.min(q, have);
     if (put <= 0) continue;
     taken[item] = put;
-    const units = (typeof unitsOf === 'function') ? Number(unitsOf(item, put)) : put;
+    const units = require('./fish-goods').isItem(item) ? put : ((typeof unitsOf === 'function') ? Number(unitsOf(item, put)) : put);
     const u = Number.isFinite(units) && units > 0 ? units : put;
     moved[res] = +((moved[res] || 0) + u * PV_DEPOSIT_RATE).toFixed(_t1128On() ? 6 : 3);   // ★[T1128 문 10] 켬 = 여섯 자리(레코드 개수가 반올림에 안 깎인다 · 끔 = 종전 셋)
   }
@@ -11968,7 +11970,7 @@ function playerVillageWithdraw(vil, inventory, res, qty) {
   //   ⚠**남는 몫은 버리지 않는다**(로트 병합 금지와 같은 결) — 정수로 떨어지는 만큼만 옮기고
   //     나머지 단위는 **곳간에 그대로 둔다**. 조용히 사라지는 몫을 만들지 않는다.
   const _K = _kcal();
-  const conv = (_K && _K.kcalOf(item) > 0) ? _K.itemsOf(item, q) : { items: q, leftUnits: 0 };
+  const conv = require('./fish-goods').isItem(r) ? {items:q,leftUnits:0} : ((_K && _K.kcalOf(item) > 0) ? _K.itemsOf(item, q) : { items: q, leftUnits: 0 });
   const give = Math.floor(conv.items);
   if (give < 1) return { ok: false, err: `그 양으로는 ${item}이(가) 한 개도 나오지 않습니다. 더 청하십시오.` };
   let spend = +(q - (conv.leftUnits || 0)).toFixed(4);
@@ -11985,6 +11987,7 @@ function playerVillageWithdraw(vil, inventory, res, qty) {
 //   ⚠먹는 장부는 그대로 열량이다(식량 빚 · 굶주림 · T1074 — 먹는 문과 꺼내는 문은 다른 문).
 //   ⚠장부가 없거나 모자라면(로트 끔 · 감싸지 않은 칸 · 빚) · 상한 것 숨기기 판(`T789_DISCARD` — 문이 상한 레코드를 건너뛴다)이면 종전 셈(null).
 function _t1128WithdrawUnits(v, res, item, give, K) {
+  if(require('./fish-goods').isItem(res))return give;
   let GL = null; try { GL = require('./granary-lots'); } catch (e) { GL = null; }
   if (!GL || !GL.ON || GL.T789 || typeof GL.ledger !== 'function' || !GL.attached(v)) return null;
   const arr = GL.ledger(v, res); if (!arr || !arr.length) return null;
@@ -14458,11 +14461,12 @@ function npcLifeTick(npc, now) {   // zone.js decideNpcBehavior 훅(늑대 도�
           //      그 어부의 배율(숙련·도구)은 econ 이 제 자리에서 남겨 둔 `_t172mul` 을 **그대로** 쓴다(T172 규약 · 사본 0).
           const _K = _kcal();
           const _ec = _lifeEconNpc(vil, npc);
-          const _mul = (_ec && typeof _ec._t172mul === 'number' && _ec._t172mul > 0) ? _ec._t172mul : 1;
+          const _mul = require('./fish-goods').ON ? 1 : ((_ec && typeof _ec._t172mul === 'number' && _ec._t172mul > 0) ? _ec._t172mul : 1);
           const _units = _K ? (_t1128On() ? _t1128HandUnits(_K, _sp.id, _sp.kg) : (+_K.econUnitsOf('fish', 1, _sp.kg) || 0)) * _mul : 0;   // ★[T1128 9-b] 켬 = 그 종 한 마리의 표 열량(끔 = 종전 글자)
           //   ⓓ 셀 예산에서 **통째로** 꺼낸다 — 안 되면 그 셀은 오늘 비었다(이월 0).
           const _got = _t312Catch(vil,day,_cx,_cy,_units,_sp.kg,now,npc);
           if (_got > 0) {
+            require('./fish-goods').note(vil.econ,_sp.id,1);
             if (npc.inventory) { npc.inventory[_sp.id] = (npc.inventory[_sp.id] || 0) + 1; const _L = _t732Lots(); if (_L) _L.noteNow(npc, _sp.id, 1); }   // ★손에 — 플레이어와 **같은 칸**(`inventory`) · ★[T732] 낚은 순간
             npc._t312U = +((npc._t312U || 0) + _got).toFixed(6);                            // 손에 든 것의 장부값(귀환 때 곳간으로)
             npc._t312Kg = +((npc._t312Kg || 0) + _sp.kg).toFixed(3);

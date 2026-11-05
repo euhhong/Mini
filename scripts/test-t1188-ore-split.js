@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // @regress
 'use strict';
+process.env.T1192_FISH_SPECIES='0';
 const assert=require('assert'),fs=require('fs'),path=require('path'),{spawnSync}=require('child_process');
 const ROOT=path.resolve(__dirname,'..');let pass=0,fail=0;
 function test(n,f){try{f();pass++;console.log('PASS '+n);}catch(e){fail++;console.log('FAIL '+n+': '+e.stack);}}

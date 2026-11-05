@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // @regress
 'use strict';
+process.env.T1192_FISH_SPECIES='0';
 const assert=require('assert'),{spawnSync}=require('child_process'),fs=require('fs'),path=require('path');
 const root=path.resolve(__dirname,'..'),flags=['T435_GRANARY_ACT','T527_BRIDGE_ACT','T517_HUT_STONE','T419_STONE_REAL'];let pass=0,fail=0;
 function test(n,f){try{f();pass++;console.log('PASS '+n);}catch(e){fail++;console.log('FAIL '+n+': '+e.stack);}}

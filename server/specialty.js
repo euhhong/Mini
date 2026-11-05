@@ -819,6 +819,7 @@ const EXTRA_WEIGHT = {
   //   두 표에서 다르면 그게 버그의 씨앗이라 지운다 — 단일 진실은 RESOURCES 다(econ 도 그걸 쓴다).
 };
 function itemWeight(id) {
+  if(require('./fish-goods').ON&&(require('./fish-goods').bodyKg(id)>0||require('./fish-goods').isItem(id)))return require('./weights').kgOf(id);
   if(OreGoods.isOre(id))return require('./weights').kgOf(id);
   const r = RESOURCES[id];
   if (r && typeof r.weight === 'number') return r.weight;
@@ -1017,4 +1018,9 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 if (typeof window !== 'undefined') {
   window.Specialty = { RESOURCES };
+}
+
+if(require('./fish-goods').ON)for(const [id,it]of Object.entries(require('./fish-goods').items())){
+ const old=RESOURCES[it.kind==='dry'?'dried_fish':'pickled_veg'];
+ RESOURCES[id]={ko:it.ko,emoji:old.emoji,category:'preserved',get weight(){return require('./weights').kgOf(id);},get baseValue(){return old.baseValue*require('./fish-goods').factor(id)*require('./fish-preserve').ECON_YIELD;},utility:0,contributes:{},harvest:'crafting'};
 }

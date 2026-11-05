@@ -150,6 +150,7 @@ function _fp() { if (_FP === null) { try { _FP = require('./fish-preserve'); } c
 function kgOf(id, noFp) {
   if(OreGoods.isOre(id))return CORE_KG.ore;
   if (!id) return null;
+  const FG=require('./fish-goods');if(FG.ON){const b=FG.bodyKg(id);if(b>0)return b;if(!noFp&&FG.isItem(id)){const k=_fp().kgOf(id,kgOf);if(k>0)return k;}}
   const key = ITEM_ALIAS[id] || id;
   const sp = Specialty.RESOURCES && Specialty.RESOURCES[key];
   if (sp && sp.weight > 0) return sp.weight;

@@ -10157,7 +10157,7 @@ function tryFishCast(player) {
   // ★[T593 ②] 켬이면 무는 종을 **지금** 고른다 — 그 종의 kg(표)가 무게의 중앙값이다(끔 = null = 종전 대본 그대로).
   //   종 씨는 대본 씨를 레포가 이미 쓰는 섞는 수(0x85ebca6b · T312)로 한 번 비튼 것 — 대기·무게 굴림과 겹치지 않는다.
   const _spc = Fishing.T593_SEA ? _t593Pick(tgt.sp, tgt.x, tgt.y, _SEED.step(_seed ^ 0x85ebca6b), _day) : null;
-  const pl = Fishing.plan(tgt.sp, stock01, now, _SEED.seedRand(_seed), (_spc && Fishing.T593_KG) ? _spc.kg : undefined);   // ★[T593] `T593_KG=0` 이면 종전 무게 분포
+  const pl = Fishing.plan(tgt.sp, stock01, now, _SEED.seedRand(_seed), (_spc && (Fishing.T593_KG||require('./fish-goods').ON)) ? require('./fish-goods').ON?require('./fish-goods').bodyKg(_spc.id,_spc.kg):_spc.kg : undefined);   // ★[T593] `T593_KG=0` 이면 종전 무게 분포
   player._fish = {
     state: 'wait', x: tgt.x, y: tgt.y, cx, cy, sp: tgt.sp,
     biteAt: pl.biteAt, kg: pl.kg, windowMs: pl.windowMs, castAt: now, stock01,
@@ -10218,7 +10218,7 @@ function _fishLand(player, f, now) {
   // ★어장에서 **실제로 뺀 만큼만** 준다 — 없는 물고기를 주사위로 만들지 않는다.
   //   재고가 모자라면 잡히는 양도 그만큼 준다(빈 자리는 빈 바늘로 답한다).
   const wantStock = kg / Fishing.CFG.KG_PER_STOCK;
-  const took = Fishing.drawStock(f.cx, f.cy, wantStock, now, _fishSave);
+  const took = (require('./fish-goods').ON?Fishing.drawWholeStock:Fishing.drawStock)(f.cx, f.cy, wantStock, now, _fishSave);
   const gotKg = took <= 0 ? 0 : +(took * Fishing.CFG.KG_PER_STOCK).toFixed(3);
   player._fish = null;
   send(player.ws, { type: 'fish_state', state: 'idle' });
