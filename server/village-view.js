@@ -20,6 +20,7 @@
 // ★[T1116] 창고 탭(재민 11-01 "창고 · 각 물품별 시세")에 셀 수 있는 것을 더했다 — 곳간 줄 하루 수요 `use` · 값 래치 `priceUp`/`priceDown` ·
 //   모자란 것 / 남는 것 줄 `store.short` · `store.glut`(사건 장부 래치 · 곳간이 바닥난 물건 포함) · 값 오르내림 줄 `store.priceMoves`(이 마을 장부 링 ·
 //   지난 `PRICE_WIN` 날). 새 칸만 · 옛 이름 무변 · 새 수 0. 지난 날마다의 시세(30날 흐름)는 저장 칸이 없어 키가 없다(`보고/T1116_2026-11-03.md` · 회부).
+// ★[T1169 · K18] 촌장 「일 맡기기」 명부 `members.assign`(게시판 판 T1085 와 같은 `assignRoster` · 같은 술어 · 촌장에게만 · 아니면 키 없음).
 //
 // 보내는 때: 열 때 칸 전부(`full:true`) · 열려 있는 동안 **JSON 이 바뀐 칸만**(`full:false`) — 존의 5초 박자(아래 `TICK_MS`) +
 //   마을 장부 메시지(납품 · 교환 · 기부 · 꺼내기 …) 직후 한 번. 닫거나 끊기면 표지를 지운다.
@@ -179,6 +180,17 @@ function _members(vil, chiefId) {
   const byJob = [...tally].map(([job, n]) => ({ job, ko: (H.jobKo && H.jobKo[job]) || null, n })).sort((a, b) => (b.n - a.n) || (a.job < b.job ? -1 : 1));
   return { n: people.length, byJob, people };
 }
+// ★[T1169 · K18 · T1115 회부 2] 촌장 「일 맡기기」 명부 — 게시판 판(T1085 `_t1085Members`)이 싣던 **그 자료 그대로**(`SimVillages.assignRoster` 하나 · 사본 0).
+//   싣는 때도 같다: 사람이 세운 마을(`econ.founder`) · 이 사람이 촌장(`me.chief` = `membership.publicState().chief` = `chiefCached` — 게시판과 같은 술어).
+//   아니면 키가 없다(제2 규약). 한 줄 = econ 사람(몸 이름 없음 — 게시판과 같다): id · 지금 일 · 나이 · 남은 날 · 원정 중 · 촌장이 맡김. 고를 일 = 자리 있는 직업 · 빈자리.
+function _assign(vil, me) {
+  const V = H && H.SimVillages;
+  if (!me || !me.chief || !V || !V.assignRoster || !vil || !vil.econ || !vil.econ.founder) return null;
+  const R = V.assignRoster(vil);
+  if (!R) return null;
+  const k = (j) => (H.jobKo && H.jobKo[j]) || j;
+  return { rows: R.rows.map((x) => Object.assign(x, { jobKo: k(x.job) })), jobs: R.jobs.map((x) => Object.assign(x, { ko: k(x.job) })), cooldown: R.cooldown };
+}
 // 대시보드 — 옛 셋(`pop` · `toWinter` · `projectsN`) 그대로 + [T1105] 서버에 이미 있는 두 값(값이 없으면 키가 없다).
 //   `foodDays` = 곳간 스냅숏 정본(`villages.js playerVillageInventory().foodDays` = econ `totalFoodEquivalent ÷ 인구` — 한 사람 하루 1 이라 "며칠치")
 //     그대로. 새로 오는 사람 문(`newcomers.js` "자립 n일")과 같은 함수다. ⚠겨울 준비 **%** 가 아니다 — 분모(겨울 목표)가 없다(T779 가 걷었다 · 회부).
@@ -276,9 +288,10 @@ function build(player, vid, numeraire, memo) {
   const hd = _head(src, vil);
   const projects = _projects(src, vil, V.villageChronicle ? V.villageChronicle(vid | 0, player.x, player.y) : null);
   const inv = V.playerVillageInventory ? V.playerVillageInventory(vil) : null;   // 곳간 스냅숏 정본 — 창고 칸 · 먹을 것 며칠치가 같은 한 번을 읽는다
+  const me = _me(player, vil);
   const view = {
     head: hd.slot,
-    me: _me(player, vil),
+    me,
     dash: _dash(src, vil, projects, inv),
     requests: _requests(board),
     news: _news(board, src.day, vid),
@@ -288,6 +301,7 @@ function build(player, vid, numeraire, memo) {
     prices: null,
     gate: { near: true },
   };
+  { const A = _assign(vil, me); if (A) view.members.assign = A; }   // ★[T1169] 촌장에게만(없으면 키 없음 — 옛 바이트)
   const key = memo ? pricesKey(src, vil, player, numeraire, board) : null;
   if (memo && memo.key === key && memo.slot) { view.prices = memo.slot; ST.priceReuse++; }
   else { view.prices = _prices(player, vid, numeraire); if (memo) { memo.key = key; memo.slot = view.prices; } }

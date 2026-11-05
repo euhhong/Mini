@@ -19,7 +19,8 @@
 //   [T1103] 서버 자료(T1072 · T1084)는 왔다 — 옛 게시판 판 걷기는 PM 판정(회부).
 
 let vvData = null, vvVid = null, vvTab = 'dash', vvMemAll = false, vvWired = false;
-let vvRaw = null, vvSeq = 0, vvNum = null;   // ★[T1103] 서버 칸 덩어리(바뀐 칸만 오면 그 칸만 갈아 끼운다) · 마지막 seq · 고른 시세 기준(res id)
+let vvRaw = null, vvSeq = 0, vvNum = null;
+let vvAsgPick = {};   // ★[T1169] 「일 맡기기」에서 고른 일(econ 사람 id → 직업) — 명부 칸이 5초 박자로 다시 지어져도 고른 것을 잃지 않게   // ★[T1103] 서버 칸 덩어리(바뀐 칸만 오면 그 칸만 갈아 끼운다) · 마지막 seq · 고른 시세 기준(res id)
 
 function vvKnobOn() { try { return new URLSearchParams(location.search).get('T1070_VILLAGE_VIEW') !== '0'; } catch (e) { return true; } }   // ★[T1137] 켬 기본(`=0` 만 끔)
 
@@ -65,7 +66,12 @@ function vvAdapt(raw) {
     rows: rows(st).map((r) => ({ item: r.ko || r.res, res: r.res, qty: r.qty, plenty: (num(r.daysOf) != null && glut > 0) ? Math.min(1, r.daysOf / glut) : null,
       price: (near && pr[r.res]) ? pr[r.res].num : null, short: !!r.short, glut: !!r.glut })),
   };
-  S.short = rows(st).filter((r) => r.short).map((r) => ({ item: r.ko || r.res, why: num(r.daysOf) != null ? `${r.daysOf}일치 남았습니다` : '' }));
+  //   ★[T1169 · K18 · T1116 회부 3] 「모자란 것」= 서버 `store.short.rows`(장부 모자람 래치 전부 — **곳간이 바닥난 물건 포함** · qty 0 · daysOf 0).
+  //     종전은 곳간 줄 `rows[].short` 거르기라 곳간 스냅숏이 뺀 바닥난 물건(0.005 아래)을 못 봤다. 칸이 없는 옛 서버만 종전 거르기.
+  //     바닥난 줄(qty ≤ 0)은 "0일치" 대신 "곳간에 없습니다"(같은 서버 값 · 문장 틀만).
+  const shortRows = (st.short && Array.isArray(st.short.rows)) ? st.short.rows : rows(st).filter((r) => r.short);
+  S.short = shortRows.map((r) => ({ item: r.ko || r.res, res: r.res,
+    why: (num(r.qty) != null && r.qty <= 0) ? '곳간에 없습니다' : (num(r.daysOf) != null ? `${r.daysOf}일치 남았습니다` : '') }));
   return {
     vid: H.vid, name: H.name || '', region: H.region || null, chief: (H.chief && vvNm(H.chief.name)) || null, age: num(H.age),
     member: !!(Me && Me.member), contrib: (Me && num(Me.need) > 0) ? { n: Me.contrib | 0, need: Me.need | 0 } : null, left: Me ? num(Me.left) : null,
@@ -78,7 +84,11 @@ function vvAdapt(raw) {
     news: rows(raw.news).map((n) => ({ when: ago(n.ago) + (n.from ? ' · 들려온 소문' : ''), text: n.line || '' })).filter((n) => n.text),
     projects: { active: (pj.now || []).map(proj).filter(Boolean), next: Array.isArray(pj.next) ? pj.next : null, done: (pj.done || []).map((d) => ({ when: ago(d.ago), text: d.line || '' })).filter((d) => d.text) },
     members: { total: num(mem.n), delta: num(mem.delta), jobs: (mem.byJob || []).map((j) => ({ job: j.ko || j.job, n: j.n | 0 })),
-      people: (mem.people || []).map((p) => ({ name: vvNm(p.name), job: p.jobKo || null, chief: !!p.chief, act: p.act || '' })) },
+      people: (mem.people || []).map((p) => ({ name: vvNm(p.name), job: p.jobKo || null, chief: !!p.chief, act: p.act || '' })),
+      //   ★[T1169 · K18] 촌장 「일 맡기기」 명부(서버 `members.assign` — 게시판 판 T1085 와 같은 `assignRoster` · 촌장에게만 · 없으면 칸을 안 그린다)
+      assign: (mem.assign && Array.isArray(mem.assign.rows)) ? { cooldown: num(mem.assign.cooldown),
+        jobs: (mem.assign.jobs || []).map((j) => ({ job: j.job, ko: j.ko || j.job, open: !!j.open })),
+        rows: mem.assign.rows.map((r) => ({ id: String(r.id), job: r.job, jobKo: r.jobKo || r.job, age: num(r.age), left: r.left | 0, away: !!r.away, chief: !!r.chief })) } : null },
     store: S,
   };
 }
@@ -135,6 +145,7 @@ function vvPaneEl() {
     vvWired = true;
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && villageViewOpen()) closeVillageView(); });
     p.addEventListener('click', vvOnClick);
+    p.addEventListener('change', (e) => { const sel = e.target.closest && e.target.closest('[data-vv-job]'); if (sel) vvAsgPick[sel.dataset.vvJob] = sel.value; });   // ★[T1169] 고른 일을 쥔다
   }
   return p;
 }
@@ -175,6 +186,7 @@ function vvStyle() {
 #vvPane .vv-far{margin-bottom:12px}
 #vvPane .vv-fr{position:absolute;inset:0;border:1px solid #9a9a9a;box-sizing:border-box;pointer-events:none}
 #vvPane .vv-t{display:inline-block}
+#vvPane .vv-sel{font:inherit;font-size:18px;background:#3a3a3a;color:#e6e6e6;border:1px solid #9a9a9a;height:44px;padding:0 8px;min-width:0}
 `;
   document.head.appendChild(s);
 }
@@ -352,6 +364,27 @@ function vvMem(D) {
     + `<div class="vv-col">${vvT(p.name, 28, 'serif')}${vvT([p.chief ? '촌장' : null, p.job].filter(Boolean).join(' · '), 18)}</div></div>`
     + `${p.act ? `<div style="margin-top:14px">${vvT(p.act, 18)}</div>` : ''}</div>`).join('')}</div>`;
   if (more > 0) h += `<div class="vv-line" style="margin-top:auto;padding-top:20px"><span></span>${vvBtn(`${more}명 더 보기`, 'data-vv="more"')}</div>`;
+  return h + '</div>' + vvAssign(M.assign);
+}
+
+// ★[T1169 · K18 · T1115 회부 2] 촌장 「일 맡기기」 — 게시판 판(T1085 `boardMembersHtml`)과 같은 줄 · 같은 문(`assign_job`). 새 동작 0.
+//   한 줄: 지금 일 · 나이 · 형편(원정 중 · n일 뒤 · 촌장이 맡김) · 맡길 일 · 「일 맡기기」. 값은 전부 서버 것 — 된다 · 안 된다도 서버가 말한다(알림 한 줄).
+function vvAssign(A) {
+  if (!A || !A.rows.length) return '';
+  const cols = 'grid-template-columns:1fr .5fr 1fr 1.3fr auto';
+  let h = `<div class="vv-plate" id="vvAssign" style="margin-top:16px">${vvT('일 맡기기', 32, 'serif')}`
+    + `<div class="vv-row" style="${cols}">${vvT('지금 일', 18)}${vvT('나이', 18)}${vvT('형편', 18)}${vvT('맡길 일', 18)}<span></span></div>${vvRl()}`;
+  h += vvRows(A.rows.map((r) => {
+    const shut = r.away || r.left > 0;
+    const st = [r.away ? '원정 중' : r.left > 0 ? `${r.left}일 뒤` : '', r.chief ? '촌장이 맡김' : ''].filter(Boolean).join(' · ');
+    const pick = vvAsgPick[r.id];
+    const opts = A.jobs.filter((j) => j.job !== r.job)
+      .map((j) => `<option value="${vvEsc(j.job)}"${j.open ? '' : ' disabled'}${pick === j.job ? ' selected' : ''}>${vvEsc(j.ko)}${j.open ? '' : ' (자리 없음)'}</option>`).join('');
+    return `<div class="vv-row vv-asg" data-vv-npc="${vvEsc(r.id)}" style="${cols}">${vvT(r.jobKo, 20)}${r.age != null ? vvT(`${r.age}`, 20) : '<span></span>'}${st ? vvT(st, 18) : '<span></span>'}`
+      + `<select class="vv-sel" data-vv-job="${vvEsc(r.id)}"${shut ? ' disabled' : ''}>${opts}</select>`
+      + `${shut ? '<span></span>' : vvBtn('일 맡기기', `data-vv="assign" data-npc="${vvEsc(r.id)}"`)}</div>`;
+  }));
+  if (A.cooldown != null) h += `<div style="margin-top:12px">${vvT(`맡긴 사람은 ${A.cooldown}일 동안 스스로 일을 바꾸지 않습니다. 마을이 굶으면 먹을 것을 구하는 일로 먼저 돌아갑니다.`, 18)}</div>`;
   return h + '</div>';
 }
 
@@ -398,6 +431,10 @@ function vvOnClick(e) {
     }
     if (Object.keys(want).length) vvSend({ type: 'village_donate', vid: vvVid, want });
     else if (typeof showNotice === 'function') showNotice('가져올 재료가 짐에 없습니다.');
+  }
+  else if (a === 'assign') {   // ★[T1169] 촌장 일 맡기기 — 게시판 판 「일 맡기기」와 같은 문(T1085 `assign_job` · 그 줄의 사람 · 고른 일)
+    const sel = document.querySelector(`#vvPane [data-vv-job="${CSS.escape(b.dataset.npc)}"]`);
+    if (sel && sel.value) vvSend({ type: 'assign_job', vid: vvVid, npc: b.dataset.npc, job: sel.value });
   }
   else if (a === 'base') { vvNum = b.dataset.b; vvSend({ type: 'village_view', vid: vvVid, numeraire: vvNum }); }   // ★[T1103] 시세 기준 고르기 — 화면은 이름 · 보내는 값은 res id(T1072 문 `numeraire`) · 서버가 그 기준으로 통째 다시 보낸다(클라는 환산하지 않는다)
 }
