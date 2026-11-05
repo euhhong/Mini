@@ -1142,7 +1142,7 @@ async function sampleOnce() {
   const perf0 = await jget(`http://localhost:${ZPORT}/perf?reset=1`); void perf0;
 
   const { chromium } = require('playwright');
-  const browser = await chromium.launch({ headless: !HEADED, executablePath: require('playwright').chromium.executablePath() });
+  const browser = await chromium.launch({ headless: !HEADED, executablePath: process.env.MINI_CHROMIUM_EXECUTABLE || require('playwright').chromium.executablePath() });
   const ctx = await browser.newContext({ viewport: { width: VW, height: VH } });
   page = await ctx.newPage();
   page.on('pageerror', (e) => R.errors.push('page: ' + String(e.message).slice(0, 140)));
