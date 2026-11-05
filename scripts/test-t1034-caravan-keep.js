@@ -13,6 +13,9 @@
 //   ★값: 몸 없는 판(서버 기준선 · 캐러밴 0)엔 칸이 안 선다 — 서버 기준선 바이트 같음으로 따로 본다(보고/T1034).
 // 실행: node scripts/test-t1034-caravan-keep.js
 'use strict';
+// 종전 T661 일정 복원 대조 판. 실제 몸 좌표 보존은 T1182 하네스에서 별도 검증.
+process.env.T762_CARAVAN_BODY='0';
+process.env.T1136_ESCORT_CARRY='0';
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
