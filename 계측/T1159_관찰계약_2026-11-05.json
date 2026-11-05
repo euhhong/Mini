@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "purpose": "T1159 읽기 전용 관찰 보완. endPop은 마지막 각 마을 틱의 혼합 합 대신 실제 종료 시 세계 명부 합을 읽는다. 각 econ 날에는 마을별 틱 직후 인구 합·관찰된/기대 마을 수를 별도로 기록해 부분 날을 구분한다.",
+  "sourceProductHead": "26e14142b5e14a5c8a11503ff0b2f927a8b95627",
+  "beforeSha256": "31092b373dd163c671baf0dce053eea738f5ab4a9139319cfba3d0a13227e550",
+  "afterSha256": "257f70a3742ea1ead9d7c43471d241a22f5bc6e5e3f5c3237cdbb7f5fa1b0828",
+  "productChanges": false,
+  "appliesTo": [
+    "war-rollback",
+    "war-ten-off",
+    "war-ten-on",
+    "home-off",
+    "home-on"
+  ],
+  "note": "해당5판 시작 전 관찰기만 갱신. 이미 완료/실행 중인 다른 판은 이 관찰기를 프리로드하지 않는다. econEndPopulation은 각 마을 econ 틱 직후 합이며 하루 끝 전쟁 정산까지 지난 전체 인구와 구분한다."
+}
