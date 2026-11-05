@@ -1106,16 +1106,16 @@ const T100_HARVEST_PER_FARMER_YEAR = 90.88;
 //      뜻: 수확 한 번이 곳간에 넣는 식량등가. `k` 를 손으로 적으면 하네스가 빨개진다.
 const T100_K = T100_ANCHOR_N * DAILY_FOOD_CONSUMPTION * 365 / T100_HARVEST_PER_FARMER_YEAR;
 const T100_FIELD_YIELD = process.env.T100_FIELD_YIELD === '1';   // 되돌림: 끄면 T86 세계 **비트 동일**
-// ★★★[T312 2026-09-19] **어부 행위 이식 — 기본 끔.** 끄면 이 파일은 **넷째 판과 비트 동일**이다
+// ★★★[T312 2026-09-19] **어부 행위 이식 — T1180 켬 기본.** 끄면 이 파일은 **넷째 판과 비트 동일**이다
 //   (아래 세 자리가 전부 이 상수 뒤에 있다: 곳간 입구 · `addProduce('fish')` 게이트 · 장부 다리).
-//   켜기는 재민 — 이 카드는 값을 안 정한다.
-const T312_FISH_ACT = process.env.T312_FISH_ACT === '1';
-// ★★★[T325 2026-09-19] **나무꾼 행위 이식 — 기본 끔.** 끄면 이 파일은 **넷째 판과 비트 동일**이다
+//   T1180: 켬 기본으로 전환 · 기존 수식의 계수는 바꾸지 않는다.
+const T312_FISH_ACT = process.env.T312_FISH_ACT !== '0';   // T1180: 켬 기본 · 되돌림 =0
+// ★★★[T325 2026-09-19] **나무꾼 행위 이식 — T1180 켬 기본.** 끄면 이 파일은 **넷째 판과 비트 동일**이다
 //   (아래 네 자리가 전부 이 상수 뒤에 있다: 곳간 입구 · `addProduce('wood')` 게이트 · 배율 자리 · 장부 다리).
 //   ⚠어부(T312)와 **같은 문법**이다 — 새 규약 0. 다른 것은 품목 하나와 분모 하나뿐이다.
-//   켜기는 재민 — 이 카드는 값을 안 정한다.
-const T325_WOOD_ACT = process.env.T325_WOOD_ACT === '1';
-// ★★★[T347 2026-09-22] **채집 행위 이식 — 기본 끔.** 끄면 이 파일은 **넷째 판과 비트 동일**이다
+//   T1180: 켬 기본으로 전환 · 기존 수식의 계수는 바꾸지 않는다.
+const T325_WOOD_ACT = process.env.T325_WOOD_ACT !== '0';   // T1180: 켬 기본 · 되돌림 =0
+// ★★★[T347 2026-09-22] **채집 행위 이식 — T1180 켬 기본.** 끄면 이 파일은 **넷째 판과 비트 동일**이다
 //   (아래 네 자리가 전부 이 상수 뒤에 있다: 곳간 입구 · 채집 믹스 게이트 · 관측 칸 · 장부 다리).
 //   ⚠나무꾼(T325·T341)과 **같은 문법**이다 — 새 규약 0. 다른 것은 **품목이 여럿**이라는 점 하나뿐이다.
 //   ★★그 "여럿" 이 이 카드의 어려움이다: 군락 개체가 내는 품목과 채집 수식이 내는 품목이 **다르다**
@@ -1125,8 +1125,16 @@ const T325_WOOD_ACT = process.env.T325_WOOD_ACT === '1';
 //       그대로다(*"대체는 성능이 아니라 안전 조건이다"* · 얹지 않는다 · 없는 실체를 지어내지 않는다).
 //     ⇒ 그 목록은 이 파일이 **안 짓는다** — `world.forageActItems` 가 준다(주입 · `forageRealItems` 선례).
 //       주입이 없으면 켜도 게이트가 안 열린다(폴백이 곧 종전 = 비트 동일).
-//   켜기는 재민 — 이 카드는 값을 안 정한다.
-const T347_FORAGE_ACT = process.env.T347_FORAGE_ACT === '1';
+//   T1180: 켬 기본으로 전환 · 기존 수식의 계수는 바꾸지 않는다.
+const T347_FORAGE_ACT = process.env.T347_FORAGE_ACT !== '0';   // T1180: 켬 기본 · 되돌림 =0
+// T1180: 실제 생산 호스트는 현장이 아직 없거나 비어도 수식으로 메우지 않는다.
+// 헤드리스 랩은 이 문을 등록하지 않으므로 기존 경제 자를 그대로 쓴다.
+const _productionActHosts = new WeakSet();
+function bindProductionActs(world) { if (world && typeof world === 'object') _productionActHosts.add(world); }
+function productionFormulaOff(v, job) {
+  return !!(v && v._world && _productionActHosts.has(v._world) &&
+    ((job === 'fisher' && T312_FISH_ACT) || (job === 'lumberjack' && T325_WOOD_ACT) || (job === 'forager' && T347_FORAGE_ACT)));
+}
 // ★★★[T724 2026-10-13] **채굴 행위 이식 — 기본 끔.** 끄면 이 파일은 **오늘 main 과 비트 동일**이다
 //   (아래 네 자리가 전부 이 상수 뒤에 있다: 곳간 입구 `mineToGranary` · `addProduce('ore')` 게이트 · 수요 칸 `_oreOutLast` · 장부 다리).
 //   ⚠나무꾼(T325)과 **같은 문법**이다 — 새 규약 0. 다른 것 둘:
@@ -3632,7 +3640,8 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
     const _capM = npc.captive ? CAPTIVE_WORK_MUL : 1;
 
     // produceSpecial 분기 — 각 산출에 대해 세금 떼고 storage로
-    const addProduce = (r, amt) => {
+    const addProduce = (r, amt, actual = false) => {
+      if (!actual && productionFormulaOff(v, npc.currentJob)) return;   // T1180: 부산물·현장 0 폴백도 수식 생산이다
       const sm = satMul(r);
       _potA += amt; _actA += amt * sm;   // 여유노동 측정: 잠재(감산 전) vs 실제(감산 후)
       dailyProductionPotential[r] = (dailyProductionPotential[r] || 0) + amt;   // 잠재 생산(건강·포만 적용 전) — prodK용
@@ -3684,7 +3693,7 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
         //   숲이 못 대면 그만큼 덜 온다. 그게 공짜 점심을 걷어낸다는 뜻이다.
         if (_realFn && repShare > 0) {
           const got = _realFn(v, baseAmt * repShare) || null;
-          if (got) for (const r in got) { const a = got[r]; if (a > 0) addProduce(r, a); }
+          if (got) for (const r in got) { const a = got[r]; if (a > 0) addProduce(r, a, true); }   // T1180: 실제 자연물 출구만 통과
         }
         // ★S1 돌=채집 자원(광부 아님): 강가/돌밭(land.stone) 채집꾼이 돌을 *주 산출*로 가져옴(식량 믹스와 별개 가산).
         //   계수 0.9 ≈ 옛 광부(base1.5×land.stone) 스케일에 근접 → 돌밭 마을은 채집꾼만으로 돌 풍족(병목 없음).
@@ -6457,6 +6466,7 @@ module.exports = {
   RAW_GRAINS, RAW_GRAIN_FOOD_FACTOR,   // ★[T73] 계수를 하네스·계측기가 옮겨 적지 않게(사본 금지)
   farmFlowPerDay, farmLandBoost, harvestToGranary,   // ★[T100] 같은 이유 — 하네스·계측기가 앵커를 옮겨 적지 않는다
   fishToGranary, fishActOn, fishBudgetPerCell, T312_FISH_ACT,   // ★[T312] 어부 행위 — 생활층이 부르는 문 셋 + 손잡이(하네스가 옮겨 적지 않는다)
+  bindProductionActs, productionFormulaOff,   // T1180: 물리 생산 호스트 등록 · 수식 대체 문
   T452_KILN_ACT, kilnActOn, kilnWant, kilnDay, furnaceCharcoalTarget,   // ★[T452] 숯가마 행위
   T443_SMELT_FUEL, smeltFuelOn, smeltFuelPerOre, smeltFuelTake,   // ★[T443] 제련 연료 — 하네스·계측기가 표를 옮겨 적지 않게
   T419_STONE_REAL, stoneRealPer, stoneRealOn,   // ★[T419] 돌 쓰는 실물 — 하네스·계측기가 표·유도를 옮겨 적지 않게 내준다

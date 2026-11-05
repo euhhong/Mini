@@ -5896,6 +5896,7 @@ function init(deps) {
       villageCount: dbRows.length,          // 슬롯만 확보 — 아래서 전부 실지형 마을로 교체
       picker: 'rational', infoRange: 5000, raidPer100: 0.005, // 랩과 동일 옵션
     });
+    econ.bindProductionActs(world);   // T1180: 모든 마을에서 세 행위의 수식 폴백을 닫는다
     world.villages = [];
     world.events = [];
     // ★★[T135] 나무 층을 econ 에 꽂는다 — `priceFn` 과 같은 계약(econ 은 지형·청크를 모른다).
@@ -7316,7 +7317,7 @@ function _warForageMarch(w, body, day, bearers) {
   if (!w || !body || !bearers || !bearers.length || !dp.t347GrovesAtCell || !dp.t347PickAt) return 0;
   //   ★채집이 **행위인 세계**에서만 — `T347_FORAGE_ACT`(채집꾼이 걷고 군락이 T347 로지스틱으로 돌아오는 세계)가 켜져야 딴다.
   //     꺼진 세계에서 따면 딴 군락이 돌아올 문이 없다(되돌림 목록을 도는 것이 T347 하루다). 같은 손잡이를 **그 자리에서** 읽는다.
-  if (!(typeof process !== 'undefined' && process.env && process.env.T347_FORAGE_ACT === '1')) return 0;
+  if (!_lifeEcon().T347_FORAGE_ACT) return 0;   // T1180: 채집 기본값과 같은 정본 문
   const keep = _t347ActItems(); if (!keep || !keep.length) return 0;
   const R = _t347R(), sp = dp.moveSpeed || 0, dayR = dp.dayPhaseRatio || 0;
   const dayS = _tripDayMs() * dayR / 1000;   // ★[T627] 채집꾼의 하루 한도와 같은 낮 초(켬 = 정본 운영 하루)
@@ -9397,12 +9398,33 @@ const _lifeEconNpc = _t312EconNpc;
 function _t312Deliver(vil, npc) {
   const u = npc._t312U || 0;
   if (!(u > 0)) { npc._t312U = 0; npc._t312Kg = 0; return 0; }
+  // T1180: 마리째 받을 수 있는 몫만 고른다. 거절된 생선·짐·로트는 손에 남는다.
+  const K = _kcal(), inv = npc.inventory || {}, ids = new Set(_fresh().ids());
+  if (_t593SeaHand()) for (const id of _seaTbl().ids()) ids.add(id);
+  const hand = []; let natural = 0, mass = 0;
+  for (const id of ids) {
+    const n = inv[id] || 0, kg = _fresh().kgOf(id) || _seaTbl().kgOf(id) || 0;
+    const per = _t1128On() ? _t1128HandUnits(K, id, kg) : ((K && kg > 0) ? (+K.econUnitsOf('fish', 1, kg) || 0) : 0);
+    if (!(n > 0 && per > 0)) continue;
+    hand.push({id,n,kg,per}); natural += n * per; mass += n * kg;
+  }
+  if (!(natural > 0)) return 0;
+  let left = _lifeEcon().fishDemandLeft(vil.econ), take = 0, takenKg = 0;
+  const selected = [];
+  for (const h of hand) {
+    const per = h.per * u / natural;
+    const n = Math.min(Math.floor(h.n), left === Infinity ? Math.floor(h.n) : Math.floor((left + 1e-9) / per));
+    if (!(n > 0)) continue;
+    selected.push({...h,n,per}); take += n * per; takenKg += n * h.kg; left -= n * per;
+  }
+  if (!(take > 0)) return 0;
   const _G = _t748Gran(vil), _d = _G ? _G.doorOpen(vil.econ) : false;   // ★[T748] 켬이면 손의 생선 로트(낚은 순간)가 곳간 레코드로 간다(끄면 null — 아래 종전 줄 그대로)
-  const got = _lifeEcon().fishToGranary(vil.econ, u) || 0;
-  if (_d) _G.doorShut(vil.econ, 'fish', _t748FishRecs(_G, npc));   // ★[T748] 손을 비우기 전에 — 든 몫을 손의 로트(오래된 것부터 · 종마다 단위 무게)로 채운다
-  if (npc.inventory) for (const id of _fresh().ids()) if (npc.inventory[id]) npc.inventory[id] = 0;
-  if (npc.inventory && _t593SeaHand()) for (const id of _seaTbl().ids()) if (npc.inventory[id]) npc.inventory[id] = 0;   // ★[T593 ④] 바다 표 종도 손에서 비운다(켬만)
-  npc._t312U = 0; npc._t312Kg = 0;
+  const got = _lifeEcon().fishToGranary(vil.econ, take) || 0;
+  if (_d) { const records = []; if (got > 0) for (const h of selected) records.push(..._G.handRecs(npc,h.id,h.n,h.per)); _G.doorShut(vil.econ,'fish',records); }
+  if (!(got > 0)) return 0;
+  for (const h of selected) inv[h.id] -= h.n;
+  npc._t312U = +Math.max(0,u-got).toFixed(6);
+  npc._t312Kg = mass > 0 ? +Math.max(0,(npc._t312Kg||0)*(1-takenKg/mass)).toFixed(3) : 0;
   vil._t312Deliv = +((vil._t312Deliv || 0) + got).toFixed(6);
   return got;
 }
@@ -12672,11 +12694,11 @@ function _t720Settle(vil, npc, now, S) {
   }
   if (npc.inventory && (npc.inventory.stone > 0 || npc.inventory.pebble > 0) && T1146_STONE_RULE) _t1146HandIn(vil, npc);   // ★[T1146 ③] 손의 돌 · 자갈도 곳간에(손에 있을 때만 · 끔 = 손에 남는다 · 종전)
 }
-function _t720Step(vil, npc, now, fv, dayR, day) {
+function _t720Step(vil, npc, now, fv, dayR, day, fullFish = false) {
   let S = npc._t720;
   if (!S || !S.k) {
-    if (!(fv >= dayR)) return false;                       // 해 질 녘(현지)부터
-    if (S && S.dd === day) return false;                   // 그 날은 이미 나섰다
+    if (!(fv >= dayR) && !fullFish) return false;           // T1180: 가득 찬 생선도 같은 귀환·체류 문
+    if (S && S.dd === day && !fullFish) return false;
     if (!(_t720Held(vil, npc) > 0)) return false;
     let g = null, bd = Infinity;
     for (const x of (vil._granList || [])) { const L = _granLadder(x), d = Math.hypot(L.x - npc.x, L.y - npc.y); if (d < bd) { bd = d; g = x; } }
@@ -14096,7 +14118,8 @@ function npcLifeTick(npc, now) {   // zone.js decideNpcBehavior 훅(늑대 도�
   } else if (npc.hp != null && npc.hp > 0 && npc.hp < (npc.maxHp || 100) * SCH_REST_IN) {
     npc._rest = 1; _lifeDropTask(vil, npc); _lifeGoHome(npc, '요양'); return true;
   }
-  if (T720_LON_DAY && _t720Step(vil, npc, now, fv, dayR, bday)) return true;   // ★[T720 ③] 해 질 녘 곳간 정산(요양 뒤 · 잠 앞)
+  const _fishCap = _lifeEcon().T312_FISH_ACT && (npc._t312Kg||0)>0 ? _carryCfg()?.CFG?.CAP_KG : 0;
+  if (T720_LON_DAY && _t720Step(vil, npc, now, fv, dayR, bday, _fishCap>0 && npc._t312Kg>=_fishCap)) return true;   // T1180: 만재 어부도 실제 도착 뒤 정산
   // 기상 시차(랩 a._dOff): 개인 결정론 오프셋 0~하루 3%(43분) — 마을 일괄 기상의 프레임 스파이크 분산 + 유기적 출근 풍경
   if (npc._dOff === undefined) npc._dOff = ((_pidHash(npc.pid) % 997) / 997) * SCH_DOFF;
   if (fv >= dayR || fv < npc._dOff) { npc._workT = null; _lifeGoHome(npc, '취침'); return true; }
@@ -14384,7 +14407,7 @@ function npcLifeTick(npc, now) {   // zone.js decideNpcBehavior 훅(늑대 도�
         //   ⓔ **짐이 차면 돌아간다** — 상한은 `carry.js` 의 그 수다(사본 0). 낮 끝 귀환은 아래 일과가 이미 한다.
         const _cc = _carryCfg();
         const _cap = (_cc && _cc.CFG && _cc.CFG.CAP_KG) || 0;
-        if (_cap > 0 && (npc._t312Kg || 0) >= _cap) _t312Deliver(vil, npc);
+        if (!T720_LON_DAY && _cap > 0 && (npc._t312Kg || 0) >= _cap) _t312Deliver(vil, npc);   // T1180: 종전 시계 대조만 즉시 입고
       } else if (!npc._lastFishAt || now - npc._lastFishAt > 8000) {   // ★[T340] 끈 팔만 8초 박자(종전 비트)
         npc._lastFishAt = now;
         if (npc.inventory) { npc.inventory.fish = (npc.inventory.fish || 0) + 1; const _L = _t732Lots(); if (_L) _L.noteNow(npc, 'fish', 1); }   // 8초 1마리(구 ③-b 이관 — simJob 기준) · ★[T732] 손에 든 순간(곁 장부)
@@ -15785,6 +15808,7 @@ module.exports = { t1144Stat: () => Object.assign({ on: T1144_LIFE_EVENT, verify
     // ★[T495] 부분 수확 — 같은 규약(정본 함수를 그대로 부른다 · 상태는 `_t400Probe.setup` 으로 꽂는다)
     _t495Probe: { on: () => _t495On(), units: (r) => _t495Units(r), visit: (vil, c, e, order, worth, keep) => _t495Visit(vil, c, e, order, worth, keep) },
     _t544Probe: { put: (vil, h, u) => _t544PackPut(vil, h, u), packIn: (vil, keep) => _t544PackIn(vil, keep), sum: (vil) => _t544PackSum(vil), hold: (vil) => _t544Hold(vil), deliver: (vil, npc) => _t347Deliver(vil, npc) },
+    _t1180Probe: { fishDeliver: (v,p) => _t312Deliver(v,p), returnStep: (v,p,t,f,r,d,full) => _t720Step(v,p,t,f,r,d,full), storeMs: () => G_STOREW },
     // ★[T717 ②] 손·짐에 남는 통나무 — 같은 규약(최소 주입구 하나 · 정본 함수를 그대로 부른다 · 하네스가 남기는 규칙을 다시 적으면 그게 사본이다)
     _t717Probe: { deliver: (vil, npc) => _t325Deliver(vil, npc), put: (vil, u) => _t717PackPut(vil, u), packIn: (vil) => _t717PackIn(vil), newWood: (p) => _t717NewWood(p),
       handsIn: (vil) => _lifeHandsIn(vil), daily: (vil) => _lifeDaily(vil), get ON() { return T717_WOOD_HAND; } },

@@ -21,6 +21,11 @@
 //
 // 실행: node scripts/test-forage-act.js
 'use strict';
+// T1180: 기존 끔 대조를 명시한다. 새 기본값 계약은 test-t1180-produce-defaults가 잰다.
+process.env.T312_FISH_ACT='0';
+process.env.T325_WOOD_ACT='0';
+process.env.T347_FORAGE_ACT='0';
+
 process.env.ENABLE_VILLAGES = process.env.ENABLE_VILLAGES || '0';
 const path = require('path');
 const fs = require('fs');
@@ -38,11 +43,11 @@ const EP = JSON.stringify(path.join(ROOT, 'sim', 'economy-sim.js'));
 
 console.log('\n=== 채집 행위 이식 (T347) ===');
 
-// ── ① 손잡이 — 기본 끔 · 끄면 문이 하나도 안 열린다 ─────────────────────────────
-console.log('\n① 손잡이 — 기본 끔');
+// ── ① 손잡이 — 명시한 끔 대조 · 끄면 문이 하나도 안 열린다 ─────────────────────────────
+console.log('\n① 손잡이 — 명시한 끔 대조');
 {
   const E = require(path.join(ROOT, 'sim', 'economy-sim.js'));
-  ok(E.T347_FORAGE_ACT === false, '① ★★`T347_FORAGE_ACT` 가 **기본 끔**이다(켜기는 재민 — 카드가 값을 안 정한다)');
+  ok(E.T347_FORAGE_ACT === false, '① ★★`T347_FORAGE_ACT` 가 명시한 `=0` 대조에서 **끔**이다');
   ok(typeof E.forageActOn === 'function' && typeof E.forageToGranary === 'function'
     && typeof E.forageActItemsOf === 'function' && typeof E.forageRegrowR === 'function',
     '① 문 넷을 정본이 내준다(게이트 · 곳간 입구 · 걷는 목록 · 재생 r)');
@@ -1251,7 +1256,7 @@ console.log('\n㉑ [T561] 채집 일괄의 명부도 몸의 그날을 본다(나
      && /const _fg = _t449S \? 0 : _fgE;/.test(daily) && /const _cap = _trips \* _perLoad \* _fg;/.test(daily),
     '㉑ ★★끔 = econ 채집꾼 수(옛 줄) · 켬 = 그날 **나설 수 있는** 채집꾼 몸 — 관측 마을 줄(T449) · 한도의 꼴(짐 × 짐당 개체 × 명부) 무변');
   const VP = JSON.stringify(path.join(ROOT, 'server', 'villages.js'));
-  const run = (env, o) => probe(Object.assign({ T347_FORAGE_ACT: '1', T325_WOOD_ACT: '', T561_ROSTER_BODY: '', T374_DEMAND_STOP: '0', T490_FORAGE_REACH: '0', T449_BODY_DAY: '' }, env),
+  const run = (env, o) => probe(Object.assign({ T347_FORAGE_ACT: '1', T325_WOOD_ACT: '0', T561_ROSTER_BODY: '', T374_DEMAND_STOP: '0', T490_FORAGE_REACH: '0', T449_BODY_DAY: '' }, env),
    `const E=require(${EP}); const V=require(${VP}); const P=V.__labProbe;
     const ccx=100, ccy=100; const players=new Map();
     const b=(pid,x)=>Object.assign({pid,isNpc:true,simJob:'forager',hp:100,maxHp:100,inventory:{}},x||{});

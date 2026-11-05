@@ -13,6 +13,11 @@
 //
 // 실행: node scripts/test-fish-act.js
 'use strict';
+// T1180: 기존 끔 대조를 명시한다. 새 기본값 계약은 test-t1180-produce-defaults가 잰다.
+process.env.T312_FISH_ACT='0';
+process.env.T325_WOOD_ACT='0';
+process.env.T347_FORAGE_ACT='0';
+
 process.env.ENABLE_VILLAGES = process.env.ENABLE_VILLAGES || '0';
 process.env.DB_PATH = process.env.DB_PATH || `/tmp/t312-${process.pid}.db`;
 const path = require('path');
@@ -31,11 +36,11 @@ const EP = JSON.stringify(path.join(ROOT, 'sim', 'economy-sim.js'));
 
 console.log('\n=== 어부 행위 이식 (T312) ===');
 
-// ── ① 손잡이 — 기본 끔 · 끄면 문이 하나도 안 열린다 ─────────────────────────────
-console.log('\n① 손잡이 — 기본 끔');
+// ── ① 손잡이 — 명시한 끔 대조 · 끄면 문이 하나도 안 열린다 ─────────────────────────────
+console.log('\n① 손잡이 — 명시한 끔 대조');
 {
   const econ = require(path.join(ROOT, 'sim', 'economy-sim.js'));
-  ok(econ.T312_FISH_ACT === false, '① ★★기본이 **끔**이다', String(econ.T312_FISH_ACT));
+  ok(econ.T312_FISH_ACT === false, '① ★★명시한 `=0` 은 **끔**이다', String(econ.T312_FISH_ACT));
   ok(econ.fishActOn({ _t312Cells: 9 }) === false, '① 끈 판은 강가 셀이 있어도 **안 연다**');
   ok(econ.fishToGranary({ storage: {}, treasury: {} }, 5) === 0, '① ★끈 판은 곳간에 **한 톨도 안 넣는다**');
   ok(econ.fishBudgetPerCell({ _t312Cells: 0, _fishOutLast: 9 }) === 0, '① 강가 셀 0 이면 예산 0(내륙은 켜도 종전 수식)');
@@ -101,9 +106,9 @@ console.log('\n④ ⓓ 장부 = 손 · ⓔ 예산 소진 · 이월 0');
   ok(/function _t312Day\(vil, day\) \{ return _actDay\(vil, '_t312', day, _lifeEcon\(\)\.fishBudgetPerCell\(vil\.econ\)\); \}/.test(VC),
     '④ ★그리고 어부의 **분모는 그대로** 강가 셀 예산식이다(합치면서 값이 안 바뀌었다)');
   ok(/vil\._t312 = null;/.test(VC), '④ ★★하루가 끝나면 예산 장부를 **버린다**(이월 0 · 설계_민물고기 §2)');
-  ok(/npc\._t312U = 0; npc\._t312Kg = 0;/.test(VC), '④ ★★곳간에 넣으면 **손을 비운다**(이중 0)');
-  ok(/for \(const id of _fresh\(\)\.ids\(\)\) if \(npc\.inventory\[id\]\) npc\.inventory\[id\] = 0;/.test(VC),
-    '④ ★손의 물고기도 같이 비운다(`inventory` — 플레이어와 같은 칸)');
+  ok(VC.includes('npc._t312U = +Math.max(0,u-got).toFixed(6);'), '④ ★★받은 장부 몫만 손에서 뺀다(나머지 보존)');
+  ok(VC.includes('for (const h of selected) inv[h.id] -= h.n;'),
+    '④ ★받은 마리만 같은 inventory에서 뺀다(부분 입고·거절은 새 기능 자가 검증)');
   // 예산 자 — 같은 셀에서 예산보다 큰 것을 달라 하면 0, 예산 안이면 그만큼
   const on = probe({ T312_FISH_ACT: '1' },
     `const E=require(${EP});const v={_t312Cells:2,_fishOutLast:1};process.stdout.write(JSON.stringify({per:E.fishBudgetPerCell(v)}));`);
@@ -276,8 +281,8 @@ console.log('\n⑩ [T593] NPC 어부도 같은 물 — 바다 칸 물가 = 바�
      '⑩ ★★바다면 **바닷물고기 표**(`seafish.pick` — 플레이어가 쓰는 그 표) · 아니면 **종전 민물 줄 글자 그대로**(같은 해시 씨)');
   ok(/isSeaTileLocal,/.test(Z) && /SimVillages\.init\(\{[\s\S]*?isSeaTileLocal,[\s\S]*?\}\);/.test(Z),
      '⑩ ★바다 술어는 **존이 넘긴다**(`isSeaTileLocal` — look·자염·갯벌이 쓰는 그것 · 생활층 사본 0)');
-  ok(/if \(npc\.inventory && _t593SeaHand\(\)\) for \(const id of _seaTbl\(\)\.ids\(\)\) if \(npc\.inventory\[id\]\) npc\.inventory\[id\] = 0;/.test(V),
-     '⑩ ★곳간에 넣으면 바다 표 종도 **손에서 비운다**(이중 0 — 켬만)');
+  ok(V.includes('if (_t593SeaHand()) for (const id of _seaTbl().ids()) ids.add(id);') && V.includes('for (const h of selected) inv[h.id] -= h.n;'),
+     '⑩ ★바다 표 종도 같은 입고 선택·손 차감 문을 쓴다(거절된 마리는 보존)');
   // 물가 판정 — 정본 함수에 술어를 꽂아 묻는다(하네스가 판정을 다시 짜지 않는다)
   const SV = require(path.join(ROOT, 'server', 'villages.js'));
   const P = SV.__labProbe;

@@ -327,7 +327,7 @@ console.log('\n⑫ [T449] 결산 문 — 켬이면 관측 마을은 팔 켜진 �
   }
   //   ② 정본 `_lifeDaily` 를 도는 판 — 나무꾼 둘(손이 빈 채 — 오늘 몸이 든 통나무 0) · 셀 12 × 3그루 · 관측자 = 마을 가운데 300px 사람
   const PX = JSON.stringify(path.join(ROOT, 'server/zone.js'));
-  const day = (env, o) => probe(Object.assign({ T325_WOOD_ACT: '1', T347_FORAGE_ACT: '', T449_BODY_DAY: '', T374_DEMAND_STOP: '0' }, env),   // ★[T544 추신 ⓐ] 수요 문 기본 켬 — 이 판은 수요 문 없는 일괄을 잰다(끔 `'0'` 을 박는다)
+  const day = (env, o) => probe(Object.assign({ T325_WOOD_ACT: '1', T347_FORAGE_ACT: '0', T449_BODY_DAY: '', T374_DEMAND_STOP: '0' }, env),   // ★[T544 추신 ⓐ] 수요 문 기본 켬 — 이 판은 수요 문 없는 일괄을 잰다(끔 `'0'` 을 박는다)
    `const E=require(${EP}); const V=require(${VP}); const fs=require('fs'); const P=V.__labProbe;
     const aSrc=(fs.readFileSync(${PX},'utf8').match(/function anyViewerNear\\(center, r\\) \\{[\\s\\S]*?\\n\\}/)||[''])[0];
     const SZ=32, ccx=400, ccy=400; const players=new Map(), observers=new Map();
@@ -362,8 +362,8 @@ console.log('\n⑫ [T449] 결산 문 — 켬이면 관측 마을은 팔 켜진 �
     '⑫ ★★[실행] 이중 0 — 몸이 든 통나무가 있으면 **네 판 모두** 일괄 0 · 곳간엔 몸이 든 그 몫만(한 몸이 두 번 안 한다)', h.map((x) => `${x.cut}/${x.wood}`).join(' · '));
   //   ④ 나머지 직업은 일괄 그대로 — 관측 마을 · 켬 · 농부 팔 끔이면 헤드리스 작물 절이 돈다 · 농부 팔 켬(존 깸)이면 몸
   const zAw = "deps.zoneAwake=()=>true;";
-  const fa = (env) => day(Object.assign({ T449_BODY_DAY: '1', T325_WOOD_ACT: '' }, env), { obs: true, farm: true });
-  const fOff = fa({}), fOn = probe(Object.assign({ T449_BODY_DAY: '1', T325_WOOD_ACT: '', T368_FARM_ACT: '1' }), `const V=require(${VP}); const E=require(${EP}); const B=V.__farmBind(), P=V.__labProbe;
+  const fa = (env) => day(Object.assign({ T449_BODY_DAY: '1', T325_WOOD_ACT: '0' }, env), { obs: true, farm: true });
+  const fOff = fa({}), fOn = probe(Object.assign({ T449_BODY_DAY: '1', T325_WOOD_ACT: '0', T368_FARM_ACT: '1' }), `const V=require(${VP}); const E=require(${EP}); const B=V.__farmBind(), P=V.__labProbe;
     const pl=new Map([[3,{pid:3,simJob:'farmer'}]]); const deps={players:pl}; ${zAw} P._t374Probe.setDeps(deps);
     const ev=E.createVillage({initialPop:0,name:'x',fertility:1}); const farm=new Set(); for(let i=0;i<20;i++) farm.add((100+i)+',100');
     const vil={dbId:7,ccx:100,ccy:100,econ:ev,npcPids:[3],_farmSet:farm,_drySet:new Set(farm),_potSet:new Set(),_crop:new Map(),_cropClaim:new Set(),_terrSet:new Set(['100,100']),_site:null,_claim:new Set()};
