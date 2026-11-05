@@ -10538,7 +10538,7 @@ const T347_FORAGE_ACT = process.env.T347_FORAGE_ACT === '1';
 //     ⓑ 몸이 캔 kg 를 econ 단위로 바꾸는 것은 부르는 쪽(`server/villages.js`)이다 — `weights.kgOf('ore')` 정본(5.00 · 옮겨 적지 않는다).
 //   켜기는 재민 — 이 카드는 값을 안 정한다.
 const T724_MINE_ACT = (typeof process !== 'undefined' && process.env && process.env.T724_MINE_ACT !== '0');   // ★[PM 10-14] 켬 기본(몸이 치는 판에서만 갈림 · 헤드리스 바이트 같음) · 되돌림 `=0`
-const T815_DRAFT_FAMINE = (typeof process !== 'undefined' && process.env && process.env.T815_DRAFT_FAMINE === '1');   // ★[T815] 기본 끔(켜는 값 `'1'` 하나뿐) — 켜면 기근 죽음은 **죽일 몸을 고른 뒤에** 센다(전부 징발 중이면 `break` 앞에서 안 센다). 끔 = 종전 바이트
+const T815_DRAFT_FAMINE = !(typeof process !== 'undefined' && process.env && process.env.T815_DRAFT_FAMINE === '0');   // ★[T1183] 켬 기본(되돌림 `=0`) — 켜면 기근 죽음은 **죽일 몸을 고른 뒤에** 센다(전부 징발 중이면 `break` 앞에서 안 센다). 끔 = 종전 바이트
 // ★★[T924 2026-10-25 · 재민 10-24 "창고에 식량이 쌓여 있을 텐데 자유민이 그렇게 빨리 죽어..?" · PM: (나) 가드로 덮지 않는다]
 //   **몸이 없는 날엔 죽음 빚을 넘기지 않는다** — 손잡이 `T924_DEBT_CAP`(★[T935] 켬 기본 · 되돌림 `=0` = 종전 바이트).
 //   기근 사망 고리(아래 인구 갱신 6)는 남은 사람이 다 징발 중이면(`oldestIdx < 0`) 멈추는데 누적 압력 `_dPAccum` 은 그대로 남아

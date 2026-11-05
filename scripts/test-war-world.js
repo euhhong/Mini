@@ -39,6 +39,13 @@
 //
 // 실행: node scripts/test-war-world.js          (서버 절 건너뛰기: WAR_WORLD_NO_SERVER=1)
 'use strict';
+// [T1183] 아래 30초 목 판은 종전 틱 시계다. 정본 하루 팔은 별도 판으로 잰다.
+if (process.env.WW_PHYSICAL !== '1') {
+process.env.T790_NO_SNAP = '0'; // 옛 슬롯·정해진 시드 사상 픽스처. 새 걸음은 test-t1183-physical-war에서 검증한다.
+process.env.T502_ODDS_REAL = '0';
+process.env.T941_BATTLE_DAY = '0';
+process.env.T627_TRIP_DAY = '0';
+}
 // ★[T716 ⑥ · 2026-10-13] ⓧ① 은 **켬 세계**(T694 사냥 고기 · PM 10-13 켬 기본)의 단언이다 — PM 이 걸어 둔 끔 묶음(`T694_GAME_MEAT=0`)을 걷었다.
 //   곳간 대응표의 이름 다른 줄이 7 → 10(곰고기 → 들짐승고기 · 익힌 둘 → 조리식) · "같은 물건" 판정은 그대로 둘(곰고기 1,610 ≠ 1,200 kcal/kg).
 const path = require('path');
@@ -113,6 +120,12 @@ function _run(opts) {
     isWaterTileLocal: (px, py) => WATER.has(cellKey(px, py)),
     tickHz: 30,
   };
+  // [T1183] 물리 걸음 판에는 운영 존의 빈 칸 찾기 문도 그대로 주입한다.
+  if (process.env.WW_PHYSICAL === '1') {
+    deps.moveSpeed = Z_MOVE;
+    const standSrc = /function _standCellNear\(x0, y0, blocked\) \{[\s\S]*?\n\}/.exec(ZSRC);
+    deps.standCellNear = new Function('ZONE', '_BLOCKED_STAND', standSrc[0] + '\nreturn _standCellNear;')({ zoneWidth: 1e7, zoneHeight: 1e7 }, () => false);
+  }
   // ★[T295 후속] 나무 술어 — 존이 주입하는 그 자리(`deps.treeCellBlocked` · 셀 단위 · 관측자 무관).
   //   미주입 팔(opts.trees 없음)은 **빈 들판**이다 = 이 카드 전 동작(대조군).
   if (opts.trees) deps.treeCellBlocked = (cx, cy) => TREES.has(Math.floor(cx) * 65536 + Math.floor(cy));
@@ -255,7 +268,7 @@ function _run(opts) {
     const f = body && body.fight;
     if (f && f.ctx && f.ctx.sides && f.ctx.sides.A) { tr.aDead = f.ctx.sides.A.dead; tr.aStart = f.ctx.sides.A.start; let n = 0, m = 0; for (const u of f.ctx.units) if (u.side === 'A') { m++; if (u.hp <= 0) n++; } tr.aDown = n; tr.aUnits = m; }   // ★[T906] 판의 사상 셈(`sides.A.dead`) · 누운 공격 단위
     if (w._forceSortie && (w.op === 'camp' || w.op === 'siege') && w.phase === 'march' && !tr.sortied) { tr.sortied = t; w._sortie = true; H._warEngage(w, world.day, 'sortie'); }   // 출격 결단(war-core 문턱 대신 하네스가 곧바로)
-    if (process.env.WW_DEBUG && f && t % 30 === 0 && sc === 'sortie') { const st = {}; for (const u of f.ctx.units) { if (u.hp <= 0) continue; const k = u.side + (u.ctl ? 'c' : '') + ':' + u.st + (u.routing ? '!' : ''); st[k] = (st[k] || 0) + 1; } const ca = WL.centroid(f, 'A'), cb = WL.centroid(f, 'B'); console.log('dbg', t, f.state, w.phase, JSON.stringify(st), ca && cb ? Math.hypot(ca.x - cb.x, ca.y - cb.y).toFixed(1) : '-', f.adv ? f.adv.side + (f.adv.released ? 'R' : '') : ''); }
+    if (process.env.WW_DEBUG && f && t % 30 === 0 && sc === 'sortie') { const st = {}; for (const u of f.ctx.units) { if (u.hp <= 0) continue; const k = u.side + (u.ctl ? 'c' : '') + ':' + u.st + (u.routing ? '!' : ''); st[k] = (st[k] || 0) + 1; } const ca = WL.centroid(f, 'A'), cb = WL.centroid(f, 'B'); console.log('dbg', t, f.state, w.phase, JSON.stringify(st), ca && cb ? Math.hypot(ca.x - cb.x, ca.y - cb.y).toFixed(1) : '-', f.adv ? f.adv.side + (f.adv.released ? 'R' : '') + '/formed:' + !!f.adv.formed : '', body.defGroup ? { lag: body.defGroup.units.map(u => { const q=H._t790Place(body.defGroup,u); return [u.type,Math.hypot(q[0]-u.x,q[1]-u.y),u.x,u.y,q[0],q[1]]; }).sort((a,b)=>b[1]-a[1]).slice(0,3), ready: H._warGroupReady(body.defGroup), cmd: body.defGroup.cmd, units: body.defGroup.units.slice(0, 2).map(u => [u.x,u.y,u.slx,u.sly]) } : null); }
     if (f && f.state !== 'form') {
       tr.fightTicks++;
       let bad = false;
@@ -436,6 +449,7 @@ function _run(opts) {
 }
 
 (async () => {
+  if (process.env.WW_ONLY_SERVER === '1') { await serverPart(); say(`결과: ${pass} 통과 / ${fail} 실패`); process.exit(fail ? 1 : 0); }
   //   ★[T458] 절 하나만(개발 — 전 절은 7분) · WW_PART=ration,forage,berry
   if (process.env.WW_PART) { const P = { ration: rationActPart, forage: forageMarchPart, berry: berryArrowPart, loot: lootActPart, punitive: punitivePart, odds: oddsRealPart, arms: gangArmsPart, march: marchStallPart }; for (const k of process.env.WW_PART.split(',')) P[k](); say(`\n결과: ${pass} 통과 / ${fail} 실패`); process.exit(fail ? 1 : 0); }
   if (process.env.WW_ONLY) { const r = runScenario({ seed: parseInt(process.env.WW_SEED || '31', 10), viewer: false, scenario: process.env.WW_ONLY, trees: process.env.WW_TREES === '1', maxTicks: parseInt(process.env.WW_TICKS || '', 10) || 30 * 60 * 20 }); say(JSON.stringify({ ended: r.ended, counts: r.counts, stat: r.stat, fight: r.fightTicks, blocked: r.blockedTicks, box: [r._bx0, r._bx1, r._by0, r._by1] })); process.exit(0); }
@@ -1195,7 +1209,7 @@ function berryArrowPart() {
 function lootActPart() {
   const KEYS = ['T423_RATION_ACT', 'T441_FORAGE_MARCH', 'T347_FORAGE_ACT', 'T466_LOOT_ACT'];
   const keep = KEYS.map(k => [k, process.env[k]]);
-  const env = (v) => { KEYS.forEach((k, i) => { if (v[i]) process.env[k] = '1'; else if (k === 'T423_RATION_ACT' || k === 'T466_LOOT_ACT') process.env[k] = '0'; else delete process.env[k]; }); };   // ★[T1168] T466 켬 기본 — 끔 판은 `=0`
+  const env = (v) => { KEYS.forEach((k, i) => { if (v[i]) process.env[k] = '1'; else if (k === 'T423_RATION_ACT' || k === 'T466_LOOT_ACT' || k === 'T502_ODDS_REAL') process.env[k] = '0'; else delete process.env[k]; }); };   // ★[T1168] T466 켬 기본 — 끔 판은 `=0`
   const run = (v, o) => { env(v); groveReset(); try { return runScenario(o); } finally { env([0, 0, 0, 0]); } };
   const sig = (r) => JSON.stringify({ e: r.ended, h: r.posHash, s: r.stat, ph: r.phase, c: r.counts });
   const bkNo = (r) => { const b = Object.assign({}, r.book || {}); for (const k of Object.keys(b)) if (/^loot|^home|^fgLoot/.test(k)) delete b[k]; return JSON.stringify(b); };
@@ -1259,7 +1273,7 @@ function lootActPart() {
 function punitivePart() {
   const KEYS = ['T423_RATION_ACT', 'T441_FORAGE_MARCH', 'T347_FORAGE_ACT', 'T466_LOOT_ACT', 'T476_PUNITIVE'];
   const keep = KEYS.map(k => [k, process.env[k]]);
-  const env = (v) => { KEYS.forEach((k, i) => { if (v[i]) process.env[k] = '1'; else if (k === 'T423_RATION_ACT' || k === 'T466_LOOT_ACT') process.env[k] = '0'; else delete process.env[k]; }); };   // ★[T1168] T466 켬 기본 — 끔 판은 `=0`
+  const env = (v) => { KEYS.forEach((k, i) => { if (v[i]) process.env[k] = '1'; else if (k === 'T423_RATION_ACT' || k === 'T466_LOOT_ACT' || k === 'T502_ODDS_REAL') process.env[k] = '0'; else delete process.env[k]; }); };   // ★[T1168] T466 켬 기본 — 끔 판은 `=0`
   const run = (v, o) => { env(v); groveReset(); try { return runScenario(o); } finally { env([0, 0, 0, 0, 0]); } };
   const n3 = (a, b) => Math.abs((a || 0) - (b || 0)) <= 1e-6;
   const O = (den, x) => Object.assign({ seed: 11, viewer: true, untilHome: true, econFood: true, maxTicks: 30 * 60 * 20, den }, x || {});
@@ -1304,7 +1318,7 @@ function punitivePart() {
 function oddsRealPart() {
   const KEYS = ['T423_RATION_ACT', 'T441_FORAGE_MARCH', 'T347_FORAGE_ACT', 'T466_LOOT_ACT', 'T476_PUNITIVE', 'T502_ODDS_REAL'];
   const keep = KEYS.map(k => [k, process.env[k]]);
-  const env = (v) => { KEYS.forEach((k, i) => { if (v[i]) process.env[k] = '1'; else if (k === 'T423_RATION_ACT' || k === 'T466_LOOT_ACT') process.env[k] = '0'; else delete process.env[k]; }); };   // ★[T1168] T466 켬 기본 — 끔 판은 `=0`
+  const env = (v) => { KEYS.forEach((k, i) => { if (v[i]) process.env[k] = '1'; else if (k === 'T423_RATION_ACT' || k === 'T466_LOOT_ACT' || k === 'T502_ODDS_REAL') process.env[k] = '0'; else delete process.env[k]; }); };   // ★[T1168] T466 켬 기본 — 끔 판은 `=0`
   const run = (v, o) => { env(v); groveReset(); try { return runScenario(o); } finally { env([0, 0, 0, 0, 0, 0]); } };
   const O = (den) => ({ seed: 11, viewer: true, untilHome: true, econFood: true, maxTicks: 30 * 60 * 20, den });
   say("\n[ⓩ'] 토벌 승산 해부 — 어느 항이 갱을 부풀리나 · 팔 `T502_ODDS_REAL`(갱 = 몸 n · 직업 bandit · 무기 0 · 비축)");
@@ -1336,7 +1350,7 @@ function oddsRealPart() {
   ok(off9.noWar && !on9.noWar && on9.t476 && on9.t476.winner,
     "ⓩ'② 켬 — T476 이 승산으로 거절하던 9명 갱에도 간다", `끔 ${JSON.stringify(off9.t476Stat).slice(0, 40)} · 켬 ${on9.t476.winner}승 · 사상 ${on9.t476.atkCas}/${on9.t476.defCas} · 갱 ${on9.gangAfter.n}명 남음`);
   const VS = fs.readFileSync(path.join(ROOT, 'server/villages.js'), 'utf8');
-  ok((VS.match(/process\.env\.T502_ODDS_REAL === '1'/g) || []).length === 1 && !/T502/.test(fs.readFileSync(path.join(ROOT, 'sim/war-core.js'), 'utf8')),
+  ok((VS.match(/process\.env\.T502_ODDS_REAL === '0'/g) || []).length === 1 && !/T502/.test(fs.readFileSync(path.join(ROOT, 'sim/war-core.js'), 'utf8')),
     "ⓩ' 정적 — 팔 하나(villages 소굴 어댑터 자리) · war-core 식 무접촉(해부는 입력만 바꾼다)");
   for (const [k, v] of keep) { if (v == null) delete process.env[k]; else process.env[k] = v; }
 }
@@ -1346,7 +1360,7 @@ function oddsRealPart() {
 function gangArmsPart() {
   const KEYS = ['T423_RATION_ACT', 'T441_FORAGE_MARCH', 'T347_FORAGE_ACT', 'T466_LOOT_ACT', 'T476_PUNITIVE', 'T502_ODDS_REAL', 'T521_GANG_ARMS'];
   const keep = KEYS.map(k => [k, process.env[k]]);
-  const env = (v) => { KEYS.forEach((k, i) => { if (v[i]) process.env[k] = '1'; else if (k === 'T423_RATION_ACT' || k === 'T466_LOOT_ACT') process.env[k] = '0'; else delete process.env[k]; }); };   // ★[T1168] T466 켬 기본 — 끔 판은 `=0`
+  const env = (v) => { KEYS.forEach((k, i) => { if (v[i]) process.env[k] = '1'; else if (k === 'T423_RATION_ACT' || k === 'T466_LOOT_ACT' || k === 'T502_ODDS_REAL') process.env[k] = '0'; else delete process.env[k]; }); };   // ★[T1168] T466 켬 기본 — 끔 판은 `=0`
   const run = (v, o) => { env(v); groveReset(); try { return runScenario(o); } finally { env([0, 0, 0, 0, 0, 0, 0]); } };
   const O = (den) => ({ seed: 11, viewer: true, untilHome: true, econFood: true, maxTicks: 30 * 60 * 20, den });
   const B = R('server/bandits.js');
