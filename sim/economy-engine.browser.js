@@ -9926,7 +9926,25 @@ function seedReserveAvail(v, r) { return ((v.storage && v.storage[r]) || 0) - se
 // 채집물은 환산비가 낮아 농사보다 끼니로 비효율
 // ★[T423] 마을 식사 명부 — 원정 중 팩을 먹는 병사(`_warPack`)를 뺀 수. 표식이 없으면(끔 · 전쟁 없는 세계) 한 글자도 안 다르다.
 function _t423EatN(v, N) { let k = 0; for (const p of v.npcs) if (p._warPack && p._warDraft) k++; return k ? N - k : N; }
+// T1157 b: use public food only to cover today's private food shortage.
+const T1157_EAT_VAULT = typeof process !== 'undefined' && process.env && process.env.T1157_EAT_VAULT === '1';
+function t1157Food(v, need) {
+  if (!T1157_EAT_VAULT || !v.treasury) return;
+  let missing = Math.max(0, need - totalFoodEquivalent(v));
+  for (const r of Object.keys(v.treasury)) {
+    if (!(missing > 1e-9)) break;
+    const available = Math.max(0, v.treasury[r] || 0);
+    if (!(available > 0)) continue;
+    const storage = { food: 0, fish: 0, meat: 0, cooked_food: 0 }; storage[r] = 1;
+    const f = totalFoodEquivalent({ storage, _world: v._world });
+    if (!(f > 0)) continue;
+    const q = Math.min(available, missing / f);
+    v.treasury[r] -= q; v.storage[r] = (v.storage[r] || 0) + q;
+    missing -= q * f;
+  }
+}
 function consumeFood(v, need) {
+  if (T1157_EAT_VAULT) t1157Food(v, need);
   let remaining = need;
   // ★소비량 군별 기록(_foodEaten) — 이게 진짜 식단(자체생산+수입, 신선히 먹은 것 포함). 다양성 판정에 씀.
   const eaten = v._foodEaten || (v._foodEaten = {});
@@ -15694,6 +15712,7 @@ module.exports = {
 
   _LEGACY_CONTRIBUTES: LEGACY_CONTRIBUTES,
   T958_HOUSE_REAL,   // ★[T958] 집 행위 마을 econ 주거 = 지은 침상까지(★[T974] 켬 기본 · `=0` 되돌림 · ★[T966] 끔 기본이던 글자) — 방아쇠(서버 `villages.js`)가 읽는다
+  T1157_EAT_VAULT, t1157Food,
   T1148_FUEL_JOB, t1148Cold,   // ★[T1148] 추위 빚(끔 기본 · `'1'` 켬)
   T1135_FUEL_EQ, FIREWOOD_PC_SRC, woodShareD, woodFormulaOff,   // ★[T1135] 땔감 평형(끔 기본 · `'1'` 켬) · 고증 d · 나무꾼 분자 · 수식 목재 걷어냄
   T1046_WOOD_SHARE,   // ★[T1046] 나무꾼 안전망 = 출생 문과 같은 주거 상한(끔 기본 · `'1'` 켬)
@@ -16955,6 +16974,7 @@ function _exportCandidatesV2(a, N) {   // a = 마을 칸({ v }) — 몸통 줄�
         else if (r === 'tigerhide') { keep = Math.max(1, N * TIGERHIDE_KEEP_PC); thresh = Math.max(2, N * TIGERHIDE_KEEP_PC * 1.6); }   // ★호피(§9 3차): 한계 위신 포화점(CAP/W≈0.025/인)×1.2만 쥐고 잉여=순수출재 — 일반칙(0.4N)이면 희소 위신재는 영영 수출 불가. 금·은·보석은 위신 포화(2/인)가 일반칙 위라 기존 규칙 유지
         else if (r === 'tin') { keep = Math.max(3, N * TIN_EXPORT_KEEP_PC); thresh = keep + N * TIN_EXPORT_SURPLUS_PC; }   // ★청동 희소성: 주석=전략재. 산지 마을이 대량 비축(자체 청동 독점 + 위세) 후 얇은 잉여만 수출 → 무산지 마을은 만성 주석 기근(청동 편중 유지, 무산지는 석기)
         else { keep = target * 0.5; thresh = target * 0.8; }                // 그 외: 15일치
+        if (a.t1157Release && !(FOODR[r] && _t1149Wd(a.v) > 0)) { keep = 0; thresh = 0; } // T1157 c: preserve active winter rule, seed reserve, and food/debt guards
         if (FOODR[r] && _t1149Wd(a.v) > 0) {   // ★[T1149 ⓒ] (위 if/else 사슬 뒤 — 사슬에 끼우면 식량이 `else` 갈래로 떨어져 끔에도 keep · thresh 가 바뀐다) 가을 · 겨울 — 제 겨울 몫(하루 생존량 × 겨울에 남은 날 · 곳간 식량 환산)을 넘는 몫만 판다
           const _room = v1.totalFoodEquivalent(a.v) - (SUBSISTENCE_PER_NPC.food || 0) * N * _t1149Wd(a.v);
           if (!(_room > 0)) continue;
@@ -17037,7 +17057,8 @@ function _t1136Cv(cache, v, r, kind) {
   let M = cache ? cache.get(v) : null;
   const key = kind + r;
   if (M) { const C0 = M.get(key); if (C0) return C0; }
-  const P = kind === 's' ? _priceParamsV2(v, r) : _settleParamsV2(v, r);
+  const view = _t1157View(v);
+  const P = kind === 's' ? _priceParamsV2(view, r) : _settleParamsV2(view, r);
   const C = { P, S: _impactSegs(P) };
   if (cache) { if (!M) { M = new Map(); cache.set(v, M); } M.set(key, C); }
   return C;
@@ -17060,8 +17081,28 @@ function _t1136RvAdd(R, v, list, t) { if (!v || !list) return; let a = R.get(v);
 function _t1136Rv(R, v, r, tBy) { const a = R && R.get(v); if (!a) return 0; let s = 0; for (let i = 0; i < a.length; i += 3) if (a[i] === r && a[i + 2] <= tBy) s += a[i + 1]; return s; }
 // 내보낼 몫(바구니) — 종전 후보 함수 그대로 + 식량 빚 마을(T1074 · 켬 판에서만 빚이 선다)은 먹을 것(식량류 · 식량 환산이 있는 품목)을 못 낸다
 function _t1136DebtFood(v) { return !!(v1.foodDebtOf && v1.T1074_FOOD_DEBT && v1.foodDebtOf(v).max > 0); }
+// T1157: separate, default OFF. Only the basket reads public inventory.
+const T1157_SETTLE_VAULT = _T1152_ENV.T1157_SETTLE_VAULT === '1';
+const T1157_RELEASE_RESERVE = _T1152_ENV.T1157_RELEASE_RESERVE === '1';
+function _t1157Stock(v, r) {
+  return (v.storage[r] || 0) + (T1157_SETTLE_VAULT ? Math.max(0, (v.treasury || {})[r] || 0) : 0);
+}
+function _t1157View(v) {
+  if (!T1157_SETTLE_VAULT) return v;
+  const storage = { ...v.storage };
+  for (const r of TRADABLE) storage[r] = _t1157Stock(v, r);
+  return { ...v, storage };
+}
+// Move only the units actually sold. Public stock has no private lot record;
+// existing lot capture begins after the transfer and follows the normal path.
+function _t1157Fund(v, r, q) {
+  if (!T1157_SETTLE_VAULT) return;
+  const n = Math.min(Math.max(0, q - (v.storage[r] || 0)), Math.max(0, (v.treasury || {})[r] || 0));
+  if (n > 0) { v.treasury[r] -= n; v.storage[r] = (v.storage[r] || 0) + n; }
+}
 function _t1136Cands(v) {
-  const C = _exportCandidatesV2({ v }, v.npcs.length);
+  const view = _t1157View(v);
+  const C = _exportCandidatesV2({ v: view, t1157Release: T1157_RELEASE_RESERVE }, v.npcs.length);
   return _t1136DebtFood(v) ? C.filter((c) => !(EXPORT_FOODR[c.res] || _t825FoodPer(v, c.res) > 0)) : C;
 }
 // 물 채우기 — items[i] = { res, kg, max, at(k) → { g, cr, spend, c } }(k 번째 낱개). 다음 낱개 가운데 점수가 가장 큰 것(같으면 앞 차례)을 하나 싣는다.
@@ -17099,7 +17140,7 @@ function _t1136OutItems(ctx, av, bv, t0, tOut, risk) {
   for (const cand of ctx.candA) {
     const r = cand.res, kg = _t1136Kg(r);
     if (!(kg > 0) || kg > ctx.capKg) continue;
-    const max = Math.floor(Math.min(cand.surplus, av.storage[r] || 0) + 1e-9);
+    const max = Math.floor(Math.min(cand.surplus, _t1157Stock(av, r)) + 1e-9);
     if (max < 1) continue;
     const CA = _t1136Cv(ctx.cache, av, r, 'd'), CB = _t1136Cv(ctx.cache, bv, r, 's');   // 내 값 = 결정층 곡선 · B 장터에서 받을 값 = 정산 곡선(실제로 치르는 값 — 받아 올 짐을 사는 값과 같은 곡선이라 남는 값이 계획과 맞는다)
     const _phB = T1152_POOL ? _t825FoodPer(bv, r) : 0;   // ★[T1152 ① 측정 · 열량 시장] 열량 품목이면 먼저 닿을 짐의 열량 전부가 같은 곡선을 민다(그 밖 = 0 → 종전 줄)
@@ -17122,7 +17163,7 @@ function _t1136RetItems(cache, R, av, bv, sent, candB, capKg, t1, tBack, risk, f
     const kg = _t1136Kg(r);
     if (!(kg > 0) || kg > capKg) continue;
     const ro = R && R.out ? _t1136Rv(R.out, bv, r, t1) : 0;   // 먼저 닿을 캐러밴이 사 갈 몫(예약 ① 파는 쪽)
-    const max = Math.floor(Math.min(cand.surplus - ro, (bv.storage[r] || 0) - ro) + 1e-9);
+    const max = Math.floor(Math.min(cand.surplus - ro, _t1157Stock(bv, r) - ro) + 1e-9);
     if (max < 1) continue;
     const CB = _t1136Cv(cache, bv, r, kind), CA = _t1136Cv(cache, av, r, 'd');
     const _phA = T1152_POOL ? _t825FoodPer(av, r) : 0;   // ★[T1152 ① 측정 · 열량 시장] A 쪽 예약은 열량 합 · B 쪽 파는 몫(먼저 사 갈 짐)도 열량 합이 곡선을 민다(그 밖 = 종전 줄)
@@ -17232,6 +17273,7 @@ function _t1136Launch(world, a, P, lp, day, ctx) {
   let kg = 0, val = 0;
   for (const it of P.out) {
     const r = it.res, q = it.amt, kgU = _t1136Kg(r);
+    _t1157Fund(av, r, q);
     if (_LOTH) _LOTH.capBegin(av, r);
     av.storage[r] -= q;
     lots.push(_LOTH ? _LOTH.capEnd(av, r) : null);
@@ -17307,8 +17349,8 @@ function _t1136Arrive(world, c, t) {
   const L = c.basket.map((it) => {
     const q = it.amt * (1 - lossOut), f = _t1136F(it.res, c.departDay, t, _elevKmOf(B));
     const n = Math.floor(q + 1e-9), cum = [0];
-    for (let j = 1; j <= n; j++) cum.push(_impactSellV2(B, it.res, j) * f);
-    if (q - n > 1e-9) cum.push(_impactSellV2(B, it.res, q) * f);   // 약탈로 남은 끝 조각(낱개 밑)
+    for (let j = 1; j <= n; j++) cum.push(_impactSellV2(_t1157View(B), it.res, j) * f);
+    if (q - n > 1e-9) cum.push(_impactSellV2(_t1157View(B), it.res, q) * f);   // 약탈로 남은 끝 조각(낱개 밑)
     const pA = (_priceNowV2(A, it.res) || 0) * _t1136F(it.res, t, t + tBack, _elevKmOf(A));   // 집에 되가져가면 내 값(지금 값 × 귀로 신선도)
     return { it, q, n, cum, pA, sold: 0 };
   });
@@ -17372,6 +17414,7 @@ function _t1136Arrive(world, c, t) {
     if (!(n > 0)) return;
     const r = items[i].res, C = _t1136Cv(cache, B, r, 's');
     const cost = _t1136I(C, C.P.sEff) - _t1136I(C, C.P.sEff - n);   // n 낱개 값(곡선 적분 — 낱개 값의 합과 같다)
+    _t1157Fund(B, r, n);
     if (_LOTH) _LOTH.capBegin(B, r);
     B.storage[r] = (B.storage[r] || 0) - n;
     if (_LOTH) _LOTH.cargo(c, 'r:' + r, _LOTH.capEnd(B, r));
@@ -19009,6 +19052,8 @@ module.exports = {
   isSubsistenceFlow, subsGuard,   // ★[T416] subs 가드 술어 하나 — 가격 셋·게시판 하나가 같은 문을 부른다
   T659_WOOD_FLOW,   // ★[T659] 통나무 흐름 닻 손잡이(기본 끔) — 하네스·자가 읽는다
   T707_MARKET, settleMarketsV2,   // ★[T707] 장마당 떠날 때 정산 — 손잡이(기본 끔) · 정산 문(서버 하루 마감이 econ 조각 첫 자리에서 부른다 · 하네스가 같은 문을 부른다)
+  _t1157Probe: { stock: _t1157Stock, view: _t1157View, fund: _t1157Fund, cands: _t1136Cands },
+  T1157_SETTLE_VAULT, T1157_RELEASE_RESERVE,
   // 시장 충격 정산 헬퍼(1b) — 프로브·자가검증용 노출
   _priceParamsV2, _impactSegs, _impactF, _impactBuyV2, _impactSellV2,
   // ★[T726] 목표 한 함수(결정층 식 정본) — 하네스 · 관찰기가 같은 문을 부른다

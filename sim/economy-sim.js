@@ -626,7 +626,25 @@ function seedReserveAvail(v, r) { return ((v.storage && v.storage[r]) || 0) - se
 // 채집물은 환산비가 낮아 농사보다 끼니로 비효율
 // ★[T423] 마을 식사 명부 — 원정 중 팩을 먹는 병사(`_warPack`)를 뺀 수. 표식이 없으면(끔 · 전쟁 없는 세계) 한 글자도 안 다르다.
 function _t423EatN(v, N) { let k = 0; for (const p of v.npcs) if (p._warPack && p._warDraft) k++; return k ? N - k : N; }
+// T1157 b: use public food only to cover today's private food shortage.
+const T1157_EAT_VAULT = typeof process !== 'undefined' && process.env && process.env.T1157_EAT_VAULT === '1';
+function t1157Food(v, need) {
+  if (!T1157_EAT_VAULT || !v.treasury) return;
+  let missing = Math.max(0, need - totalFoodEquivalent(v));
+  for (const r of Object.keys(v.treasury)) {
+    if (!(missing > 1e-9)) break;
+    const available = Math.max(0, v.treasury[r] || 0);
+    if (!(available > 0)) continue;
+    const storage = { food: 0, fish: 0, meat: 0, cooked_food: 0 }; storage[r] = 1;
+    const f = totalFoodEquivalent({ storage, _world: v._world });
+    if (!(f > 0)) continue;
+    const q = Math.min(available, missing / f);
+    v.treasury[r] -= q; v.storage[r] = (v.storage[r] || 0) + q;
+    missing -= q * f;
+  }
+}
 function consumeFood(v, need) {
+  if (T1157_EAT_VAULT) t1157Food(v, need);
   let remaining = need;
   // ★소비량 군별 기록(_foodEaten) — 이게 진짜 식단(자체생산+수입, 신선히 먹은 것 포함). 다양성 판정에 씀.
   const eaten = v._foodEaten || (v._foodEaten = {});
@@ -6394,6 +6412,7 @@ module.exports = {
 
   _LEGACY_CONTRIBUTES: LEGACY_CONTRIBUTES,
   T958_HOUSE_REAL,   // ★[T958] 집 행위 마을 econ 주거 = 지은 침상까지(★[T974] 켬 기본 · `=0` 되돌림 · ★[T966] 끔 기본이던 글자) — 방아쇠(서버 `villages.js`)가 읽는다
+  T1157_EAT_VAULT, t1157Food,
   T1148_FUEL_JOB, t1148Cold,   // ★[T1148] 추위 빚(끔 기본 · `'1'` 켬)
   T1135_FUEL_EQ, FIREWOOD_PC_SRC, woodShareD, woodFormulaOff,   // ★[T1135] 땔감 평형(끔 기본 · `'1'` 켬) · 고증 d · 나무꾼 분자 · 수식 목재 걷어냄
   T1046_WOOD_SHARE,   // ★[T1046] 나무꾼 안전망 = 출생 문과 같은 주거 상한(끔 기본 · `'1'` 켬)
