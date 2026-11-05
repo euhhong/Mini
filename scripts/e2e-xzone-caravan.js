@@ -339,7 +339,7 @@ const dist = (a, b) => (a && b) ? Math.hypot(a.x - b.x, a.y - b.y) : Infinity;
         H2 = await perf('hanbando'); N2 = await perf('nippon');
         if (H2) home = (H2.trace || []).find((t) => t.k === 'home' && t.id === hid) || null;
         if (home) break;
-        if (N2 && N2.ready && N2.ready.includes('hanbando') && ready == null) { ready = Date.now(); until = Math.min(until, ready + Math.max(4, (tgt.xback || 0) - (tgt.depart || 0) + 4) * dm + 20000); }
+        if (N2 && N2.ready && N2.ready.includes('hanbando') && ready == null) { ready = Date.now(); if(!BODY)until = Math.min(until, ready + Math.max(4, (tgt.xback || 0) - (tgt.depart || 0) + 4) * dm + 20000); }
         await sleep(500);
       }
       const backs = N2 ? (N2.trace || []).filter((t) => t.k === 'back' && t.id === hid) : [];

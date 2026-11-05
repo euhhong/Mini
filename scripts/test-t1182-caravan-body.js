@@ -21,12 +21,16 @@ Object.assign(S,{world:w,ready:false,dayMs:W.dayLengthMs,deps:{players:new Map([
 const stock=a.storage.wood;
 for(let i=0;i<20;i++)E.tickWorldV2Parts(w).caravans();
 ok(a.storage.wood===stock && !c._done,'몸이 없으면 시계가 지나도 입금 0');
-const body={c,pid:p.pid,phase:'inbound',toV:b,_t1182:true,escorts:[],pinHunger:100,pinThirst:100,repairFailN:0,lastRepairAt:0,delayedDays:0};P.pts(body,[{x:0,y:0},{x:64,y:0}]);S.caravanBodies.set(c.id,body);
+const body={c,pid:p.pid,phase:'inbound',toV:b,_t1182:true,_t1182At:1000,escorts:[],pinHunger:100,pinThirst:100,repairFailN:0,lastRepairAt:0,delayedDays:0};P.pts(body,[{x:0,y:0},{x:64,y:0}]);S.caravanBodies.set(c.id,body);
 E.tickWorldV2Parts(w).caravans();ok(a.storage.wood===stock,'몸이 서 있어도 입금 0');
 const stamped=[];S.roads={stampEntityPx:(who,x,y)=>stamped.push([who.pid,x,y])};
 S.deps.isBlockedByWall=()=>true;P.tick(2000);ok(body.prog===0 && stamped.length===0,'벽에 막히면 실제 몸과 답압이 함께 선다');
 S.deps.isBlockedByWall=()=>false;P.tick(102000);ok(body.prog>0 && body.prog<body.len,'긴 서버 정지 뒤 한 틱으로 종점에 뛰지 않는다');
 E.tickWorldV2Parts(w).caravans();ok(a.storage.wood===stock,'아직 길 위면 입금 0');
+const newborn={...body,c:{...c,id:902},pid:'newborn',_t1182At:102000};P.pts(newborn,[{x:0,y:0},{x:64,y:0}]);S.deps.players.set('newborn',{pid:'newborn',x:0,y:0,hp:100});
+const liveBodies=S.caravanBodies,liveRoads=S.roads;S.caravanBodies=new Map([[902,newborn]]);S.roads=null;S._carTickAt=1000;P.tick(102001);
+ok(newborn.prog<=0.064+1e-9,'새 몸은 태어나기 전 서버 정지 시간을 걸음 예산으로 받지 않는다');S.caravanBodies=liveBodies;S.roads=liveRoads;
+
 P.tick(102500);ok(P.ready(c,'inbound'),'실제 몸이 종점에 닿았다');
 ok(stamped.length>0 && stamped.every(q=>q[0]===p.pid && q[1]<=body.prog),'답압은 실제 움직인 몸의 걸은 구간에만 찍힌다');S.roads=null;
 const endpointX=p.x;p.x+=10;ok(!P.ready(c,'inbound'),'진행도만 끝이고 실제 좌표가 다르면 입금 불가');p.x=endpointX+100;const displaced=p.x;P.walk(body,p,body.prog,500);ok(Math.abs(p.x-displaced)<=32 && !P.ready(c,'inbound'),'외부 이탈 뒤에도 종점으로 순간이동하지 않고 몸 속도로 복귀');p.x=endpointX;
@@ -67,9 +71,14 @@ ok(S.caravanBodies.has(convoy.id),'경계 귀환 기록을 보낸 뒤에도 인�
 const pend=new Map([[1,{id:1}],[2,{id:2}]]),calls=[];P.syncPending(pend,c=>{calls.push(c.id);return 'retry';});
 ok(calls.join(',')==='1' && pend.size===2,'첫 경로 retry 뒤 다른 쌍이 공유 경로 작업을 끊지 않는다');P.syncPending(pend,c=>calls.push(c.id));ok(calls.join(',')==='1,1,2' && pend.size===0,'같은 첫 경로가 끝난 뒤 다음 쌍을 처리한다');
 const transfer={id:901,state:'xzone',from:a,to:b},record={id:901,kind:'arrive',toZone:'nippon',giveRes:'wood',giveAmt:2};
-S.world.caravans=[transfer];S.caravanBodies=new Map();S.xzone={track:new Map(),trace:[],st:{sent:0,sentOk:0,crossArrive:0}};
+S.world.caravans=[transfer];S.caravanBodies=new Map();S.xzone={track:new Map(),trace:[],st:{sent:0,sentOk:0,crossArrive:0,bodyOut:0}};
+S.caravanBodies.set(901,{pid:p.pid,c:transfer,escorts:[]});
 let registered=false;S.deps.xzonePost=()=>{registered=S.xzone.track.has(901);return new Promise(()=>{});};P.sendXz(record,1,0,true);ok(registered,'출발 인수응답 전 귀환도 기록할 수 있도록 송신 전에 추적 등록');
-const track=S.xzone.track.get(901);track.back={amt:2};P.afterSendXz(record,901,true,null,true,0);ok(S.xzone.track.get(901)===track && track.back.amt===2,'늦은 출발 인수응답은 먼저 온 귀환 기록을 덮지 않는다');
+const track=S.xzone.track.get(901);track.back={amt:2};const returned={pid:'returned',x:900,y:900,hp:100};S.deps.players.set(returned.pid,returned);S.deps.despawnNpc=pid=>S.deps.players.delete(pid);S.deps.broadcast=()=>{};
+const returnedBody={pid:returned.pid,c:{state:'inbound'},escorts:[]};S.caravanBodies.set(901,returnedBody);const sentAt={x:Math.round(p.x),y:Math.round(p.y)};
+P.afterSendXz(record,901,true,null,true,0);ok(S.xzone.track.get(901)===track && track.back.amt===2,'늦은 출발 인수응답은 먼저 온 귀환 기록을 덮지 않는다');
+ok(S.caravanBodies.get(901)===returnedBody && S.deps.players.has(returned.pid),'늦은 출발 인수응답은 이미 귀환한 다른 몸을 지우지 않는다');
+const ackTrace=S.xzone.trace.find(t=>t.k==='out');ok(ackTrace.at.x===sentAt.x && ackTrace.at.y===sentAt.y,'출발 흔적은 응답 순간의 귀환 위치가 아닌 실제 송신 당시 경계 좌표');
 if(!process.argv.includes('--mutant')) {
  const m=spawnSync(process.execPath,[__filename,'--mutant'],{encoding:'utf8',env:process.env});
  ok(m.status!==0 && /몸이 없으면 시계가 지나도 입금 0/.test(m.stderr),'몸 가드를 뺀 미끼는 실제 입금 검사에서 실패한다');

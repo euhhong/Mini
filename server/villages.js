@@ -4250,7 +4250,7 @@ function _t1034Apply(body, now) {
   state._t1034Saved.delete(k);
   body.delayedDays = S.dd | 0; body._evSeenDelay = S.seen | 0; body.repairFailN = S.rf | 0;
   if(body._t1182 && S.act) {
-    const A=S.act;if(A.xzIn)body._xzInPts=A.xzIn.map(q=>({x:q[0],y:q[1]}));setBodyPts(body,A.pts.map(q=>({x:q[0],y:q[1]})));body.phase=S.ph;body.prog=Math.max(0,Math.min(body.len,A.pg));
+    body._t1182At=now;const A=S.act;if(A.xzIn)body._xzInPts=A.xzIn.map(q=>({x:q[0],y:q[1]}));setBodyPts(body,A.pts.map(q=>({x:q[0],y:q[1]})));body.phase=S.ph;body.prog=Math.max(0,Math.min(body.len,A.pg));
     body.lingerUntil=S.lg;body.departAt=S.da;body.arriveAt=S.aa;body.pxPerDay=S.ppd;body.nomPxMs=S.nom;
     const put=(p,q)=>{if(!p||!q)return;if(T1145_XY_COLS)BC.w(p,q[0],q[1]);else{p.x=q[0];p.y=q[1];}p.hp=q[2];p.vx=0;p.vy=0;};
     put(state.deps.players.get(body.pid),A.p);
@@ -4417,7 +4417,7 @@ function spawnCaravanBody(c, now, budgetMs) {
   const body = {
     id: c.id, pid: p.pid, c, phase: outbound ? 'outbound' : 'inbound', toV: c.to,
     delayedDays: 0, repairFailN: 0, lastRepairAt: 0,
-    _t1182: T762_CARAVAN_BODY, pinHunger: p.hunger, pinThirst: p.thirst, // 원정 중 게이지 고정(다게임일 이동 아사 방지 — canadia 동형)
+    _t1182: T762_CARAVAN_BODY, _t1182At: now, pinHunger: p.hunger, pinThirst: p.thirst, // 원정 중 게이지 고정(다게임일 이동 아사 방지 — canadia 동형)
   };
   setBodyPts(body, pts);
   body.departAt = now;
@@ -4771,7 +4771,7 @@ function _t1182Escort(body,dtMs,players) {
 }
 function tickCaravanBodies(now) {
   const bodies = state.caravanBodies;
-  const dtMs = Math.min(500, Math.max(1, now - (state._carTickAt || now)));
+  const frameDtMs = Math.min(500, Math.max(1, now - (state._carTickAt || now)));
   state._carTickAt = now;
   if (T775_RESUME && T661_ON && state.ready) _t775Resume(now);   // ★[T775] 다시 뜬 판 — 첫 경계를 기다리지 않는다(끔 = 이 줄 무동작)
   if (!bodies || !bodies.size) return;
@@ -4779,7 +4779,9 @@ function tickCaravanBodies(now) {
   for (const body of bodies.values()) {
     const p = players.get(body.pid);
     if (!p) continue; // 외부 소실(비정상) — 소멸 동기(syncCaravanBodies)가 회수
+    const dtMs=body._t1182?Math.min(500,Math.max(0,now-(body._t1182At??now))):frameDtMs;
     if(body._t1182)body._t1182At=now;
+    if(!(dtMs>0)){p.vx=0;p.vy=0;continue;}
     p.hunger = body.pinHunger; p.thirst = body.pinThirst; // 원정 중 아사 방지(스폰 시점 값 고정)
     if (p.hp <= 0) { p.vx = 0; p.vy = 0; continue; }      // 늑대 등 사망 — 부활 후 아래 경로 스냅으로 복귀
     if (body.phase === 'linger') {
@@ -5076,7 +5078,7 @@ function _xzMakeBody(key, c, pts, phase, now, arriveAt, toV, who) {
   const N = _caravanNpcs(c, pts[0].x, pts[0].y, who.tribeId, who.tribeName, who.simVid == null ? null : who.simVid);
   const legDays = Math.max(1, Math.round((arriveAt - now) / state.dayMs));
   const body = { id: key, pid: N.p.pid, c, phase, toV, delayedDays: 0, repairFailN: 0, lastRepairAt: 0,
-    _t1182: T762_CARAVAN_BODY, pinHunger: N.p.hunger, pinThirst: N.p.thirst, _xz: true };
+    _t1182: T762_CARAVAN_BODY, _t1182At: now, pinHunger: N.p.hunger, pinThirst: N.p.thirst, _xz: true };
   setBodyPts(body, pts);
   body.departAt = now;
   body.arriveAt = Math.max(now + 1, arriveAt);
@@ -5239,10 +5241,14 @@ function _xzWalkToBorder(body, r, now) {
   return true;
 }
 // 미는 문 — 받았다는 답을 듣고서야 몸을 지운다(그 사이 몸은 경계 칸에 선다 · 쓸기가 안 치운다).
+function _xzTransferBody(r,key) {
+  const b=state.caravanBodies.get(key)||null;
+  return T762_CARAVAN_BODY && r.kind==='arrive' && b && b.c && b.c.state!=='xzone'?null:b;
+}
 function _xzSend(r, g, tries, walked) {
   const X = state.xzone;
   const key = (r.kind === 'arrive') ? r.id : ('xz:' + r.toZone + ':' + r.id);
-  const body = state.caravanBodies.get(key) || null;
+  const body = _xzTransferBody(r,key);
   if (body) body._xzHanding = true;
   if (body && !walked && !body._xzSendWait && _xzWalkToBorder(body, r, Date.now())) {   // ★[T578 추신] 경계 칸까지 걷고 나서 민다
     body._xzSendWait = { r, g, tries, at: Date.now(), until: body.arriveAt + state.dayMs }; X.st.walkWait++;   // 기다림 상한 = 명목 빠르기로 닿을 시각 + 하루
@@ -5251,6 +5257,10 @@ function _xzSend(r, g, tries, walked) {
   if(T762_CARAVAN_BODY && r.kind==='arrive' && !X.track.has(r.id)) {
     const c=(state.world.caravans||[]).find(c=>c.id===r.id && c.state==='xzone' && !c._done);
     if(c)X.track.set(r.id,{c,res:r.giveRes,amt:r.giveAmt,sentDay:state.world.day});
+  }
+  if(T762_CARAVAN_BODY){
+    const D=X._t1182Depart||(X._t1182Depart=new WeakMap());
+    if(!D.has(r)){const p=body && state.deps.players.get(body.pid);D.set(r,{body:!!body,at:p?{x:Math.round(p.x),y:Math.round(p.y)}:null,walked:body?body._xzWalked||null:null});}
   }
   X.st.sent++;
   const payload = { kind: 'caravan', zone: state.zoneId, gday: g, rec: r };
@@ -5261,22 +5271,23 @@ function _xzSend(r, g, tries, walked) {
 }
 function _xzAfterSend(r, key, ok, why, answered, tries) {
   const X = state.xzone; if (!X) return;
-  const body = state.caravanBodies.get(key) || null;
+  const body = _xzTransferBody(r,key);
   if (ok) {
     X.st.sentOk++;
-    let at = null;
-    let walked = null;
-    if (body) { const P = state.deps.players.get(body.pid); at = P ? { x: Math.round(P.x), y: Math.round(P.y) } : null; walked = body._xzWalked || null; despawnCaravanNpc(body); state.caravanBodies.delete(key); X.st.bodyOut++; }
+    const departure=T762_CARAVAN_BODY && X._t1182Depart && X._t1182Depart.get(r);
+    let at = departure?departure.at:null, walked = departure?departure.walked:null;
+    if (body) { const P = state.deps.players.get(body.pid); if(!departure){at = P ? { x: Math.round(P.x), y: Math.round(P.y) } : null;walked = body._xzWalked || null;} despawnCaravanNpc(body); state.caravanBodies.delete(key); }
+    const hadBody=!!body || !!(departure && departure.body);if(hadBody)X.st.bodyOut++;
     if (r.kind === 'arrive') {
       X.st.crossArrive++;
       const c = (state.world.caravans || []).find((x) => x.id === r.id && x.state === 'xzone' && !x._done) || null;
       if (c && (!T762_CARAVAN_BODY || !X.track.has(r.id))) X.track.set(r.id, { c, res: r.giveRes, amt: r.giveAmt, sentDay: state.world.day });
-      _xzTrace('out', { id: r.id, to: r.to, toZone: r.toZone, res: r.giveRes, amt: r.giveAmt, res2: r.giveRes2 || null, amt2: r.giveAmt2 || 0, remain: r.remain, at, pt: r.ptHome || null, body: !!body, walked });
+      _xzTrace('out', { id: r.id, to: r.to, toZone: r.toZone, res: r.giveRes, amt: r.giveAmt, res2: r.giveRes2 || null, amt2: r.giveAmt2 || 0, remain: r.remain, at, pt: r.ptHome || null, body: hadBody, walked });
     } else {
       X.st.crossReturn++;
       if (r.row && !r.abandoned && !r.traderDead && !r.row.rerouted) X.st.soldOk++;   // 경계 교역 성사(이 존이 팔고 산 것 — T525 §4 '도착 존이 판 것')
       _xzTrace('back', { id: r.id, toZone: r.toZone, lastTo: r.lastTo, res: r.returningRes, amt: r.returningAmt, res2: r.returningRes2 || null, amt2: r.returningAmt2 || 0,
-        abandoned: !!r.abandoned, traderDead: !!r.traderDead, sold: r.row && r.row.sent ? r.row.sent : null, bought: r.row && r.row.bought ? r.row.bought : null, remain: r.remain, at, body: !!body, walked,
+        abandoned: !!r.abandoned, traderDead: !!r.traderDead, sold: r.row && r.row.sent ? r.row.sent : null, bought: r.row && r.row.bought ? r.row.bought : null, remain: r.remain, at, body: hadBody, walked,
         ...(_t1030On() ? { rowDay: r.row ? r.row.day : null } : {}) });   // ★[T1030] 켬만 — 그 교역 행의 날(정산한 날)
     }
     return;
@@ -5365,9 +5376,11 @@ function _xzBodyIn(r, g, peer) {
     console.log(`[${state.zoneId}] 🐂 캐러밴 ${key} 넘어옴: ${homeName}@${peer}→${vil.name} ${r.giveRes}×${Math.round(r.giveAmt)} — 경계 칸 (${Math.round(r.ptPeer.x)},${Math.round(r.ptPeer.y)})에서 이어 걷는다 ${Math.round(b.len)}px · 남은 ${r.remain}일`);
   } else {
     const key = r.id;
-    if (state.caravanBodies.has(key)) return;
+    const oldBody=state.caravanBodies.get(key);
+    if (oldBody && !T762_CARAVAN_BODY) return;
     const hc = (state.world.caravans || []).find((x) => x.id === r.id && x.state === 'xzone' && !x._done); if (!hc) return;
     const vil = state.byEcon.get(hc.from); if (!vil) return;
+    if(oldBody){despawnCaravanNpc(oldBody);state.caravanBodies.delete(key);} // 귀환 수신이 출발 인수도 증명한다.
     let sp = r.lastTo ? X.core.splitNames(vil.name, peer, r.lastTo) : null;
     if (!(sp && _xzSamePt(sp.ptLocal, r.ptPeer))) sp = X.core.splitNames(vil.name, peer, hc.to && hc.to.name);
     const pts = (sp && _xzSamePt(sp.ptLocal, r.ptPeer)) ? sp.ptsLocal.slice().reverse() : [r.ptPeer, center(vil)];
