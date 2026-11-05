@@ -1,5 +1,10 @@
 'use strict';
 // T1192: read-only catch, preservation, fisher body and village measurements.
+function bagKg(p){
+ const sample={inventory:{...p.inventory},kgLedger:JSON.parse(JSON.stringify(p.kgLedger||{})),lots:JSON.parse(JSON.stringify(p.lots||{})),_carryingKg:p._carryingKg,toolItems:p.toolItems,equipment:p.equipment,dishes:p.dishes};
+ return require('../server/carry').totalKg(sample);
+}
+module.exports={bagKg};
 if(require('worker_threads').isMainThread&&(process.env.T577_SEED||process.env.T17_JSON)){
  const fs=require('fs'),path=require('path'),crypto=require('crypto'),Module=require('module'),root=path.resolve(__dirname,'..'),server=!!process.env.T577_SEED;
  const st={mode:server?'server':'lab',seed:server?+process.env.T577_SEED:+process.argv[3],runtime:{node:process.version,v8:process.versions.v8,icu:process.versions.icu},flags:Object.fromEntries(['T1192_FISH_SPECIES','T1188_ORE_SPLIT','T312_FISH_ACT','T325_WOOD_ACT','T347_FORAGE_ACT','T435_GRANARY_ACT','T527_BRIDGE_ACT','T517_HUT_STONE','T419_STONE_REAL','T1179_CROP_SEASON','T368_FARM_ACT','T100_FIELD_YIELD'].map(k=>[k,process.env[k]])),source:{},catch:{},preserved:{},receipt:0,bodyReceipt:0,remoteReceipt:0,bagMaxKg:0,overCapacity:0,tickN:0,tickNs:0,worldN:0,worldNs:0,days:[],errors:[]};
@@ -10,7 +15,7 @@ if(require('worker_threads').isMainThread&&(process.env.T577_SEED||process.env.T
  let world=null;const tick=E.tickVillage;E.tickVillage=function(v,...a){const t=process.hrtime.bigint();try{return tick(v,...a);}finally{world=v._world||world;st.tickN++;st.tickNs+=Number(process.hrtime.bigint()-t);}};
  const receipt=E.fishToGranary;E.fishToGranary=function(...a){const n=receipt(...a);if(n>0){st.receipt+=n;if(O.actor){st.bodyReceipt+=n;const d=Math.hypot(O.actor.p.x-O.actor.x,O.actor.p.y-O.actor.y);if(!Number.isFinite(d)||d>44+1e-6)st.remoteReceipt+=n;}}return n;};
  const snapshot=w=>{world=w;const ps={},fishVillages=w.villages.filter(v=>(v.land?.water||0)>0);let heldKg=0,fishers=0,bodies=0;for(const v of w.villages){fishers+=v.counts?.fisher||0;for(const k of Object.keys(FP.items()))if(v.storage[k]>0)ps[k]=(ps[k]||0)+v.storage[k];}
-  if(server){const S=require.cache[path.join(root,'server/villages.js')]?.exports.__p3Bind({}).state;for(const p of S?.deps?.players?.values()||[]){if(p.simJob!=='fisher')continue;bodies++;let kg=0;for(const id of FG.species())kg+=(p.inventory?.[id]||0)*(W.kgOf(id)||0);kg=require('../server/carry').totalKg(p);heldKg+=kg;st.bagMaxKg=Math.max(st.bagMaxKg,kg);if(kg>require('../server/carry').CFG.CAP_KG+1e-6)st.overCapacity++;}}
+  if(server){const S=require.cache[path.join(root,'server/villages.js')]?.exports.__p3Bind({}).state;for(const p of S?.deps?.players?.values()||[]){if(p.simJob!=='fisher')continue;bodies++;let kg=0;for(const id of FG.species())kg+=(p.inventory?.[id]||0)*(W.kgOf(id)||0);kg=bagKg(p);heldKg+=kg;st.bagMaxKg=Math.max(st.bagMaxKg,kg);if(kg>require('../server/carry').CFG.CAP_KG+1e-6)st.overCapacity++;}}
   return{day:w.day,pop:w.villages.reduce((n,v)=>n+v.npcs.length,0),fishVillagePop:fishVillages.reduce((n,v)=>n+v.npcs.length,0),fishVillageN:fishVillages.length,empty:w.villages.filter(v=>!v.npcs.length).length,econStarved:w.villages.reduce((n,v)=>n+(v._deadTot||0),0),dissolved:w.villages.filter(v=>v._banditized).length,fishers,fisherBodies:bodies,heldKg,preserved:ps,receipt:st.receipt,bodyReceipt:st.bodyReceipt,remoteReceipt:st.remoteReceipt,catch:{...st.catch}};};
  if(server){const Events=require('../server/events'),create=Events.createLedger;Events.createLedger=function(...a){const L=create(...a),scan=L.scanDay;L.scanDay=function(w,...b){try{st.days.push(snapshot(w));}catch(e){st.errors.push(String(e));}return scan.call(this,w,...b);};return L;};}
  else{const V=require('../sim/economy-sim-v2'),tick=V.tickWorldV2;V.tickWorldV2=function(w,...a){const t=process.hrtime.bigint();try{return tick(w,...a);}finally{st.worldN++;st.worldNs+=Number(process.hrtime.bigint()-t);st.days.push(snapshot(w));}};}
