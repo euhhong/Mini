@@ -9,7 +9,8 @@ for(const name of fs.readdirSync(serverRoot).filter(n=>/-(plan|800)\.log$/.test(
  if(!dir||!fs.existsSync(dir))continue;
  for(const f of fs.readdirSync(dir).filter(n=>/^sbc-\d+\.json$/.test(n)).sort()){
   const p=path.join(dir,f),d=read(p),o=fs.existsSync(p+'.t1182.json')?read(p+'.t1182.json'):null;
-  server.push({mode:name.replace(/\.log$/,''),seed:d.seed,days:d.days,pop:d.eight.pop,empty:d.empty,starved:d.bodyExit?.died?.starve??null,econStarved:d.deadTot,dissolved:d.dissolved,trade:o?.trade??null,tradeNoBody:o?.tradeNoBody??null,arrive:o?.arrive??null,arriveNoBody:o?.arriveNoBody??null,deposit:o?.deposit??null,depositNoBody:o?.depositNoBody??null,moveUs:o?.moveUs??null,tickUs:o?.tickUs??null,meanBodies:o?.meanBodies??null,meanActors:o?.meanActors??null,errors:o?.errors??null,file:p});
+  const elapsed=(log.match(new RegExp('시드 '+d.seed+' '+d.days+'일 판 ([0-9]+)초'))||[])[1];
+  server.push({mode:name.replace(/\.log$/,''),seed:d.seed,days:d.days,elapsedSec:elapsed?+elapsed:null,elapsedUsPerDay:elapsed?+elapsed*1e6/d.days:null,pop:d.eight.pop,empty:d.empty,starved:d.bodyExit?.died?.starve??null,econStarved:d.deadTot,dissolved:d.dissolved,trade:o?.trade??null,tradeNoBody:o?.tradeNoBody??null,arrive:o?.arrive??null,arriveNoBody:o?.arriveNoBody??null,deposit:o?.deposit??null,depositNoBody:o?.depositNoBody??null,moveUs:o?.moveUs??null,tickUs:o?.tickUs??null,meanBodies:o?.meanBodies??null,meanActors:o?.meanActors??null,errors:o?.errors??null,file:p});
  }
 }
 for(const mode of fs.readdirSync(labRoot).sort()){
