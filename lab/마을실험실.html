@@ -1018,7 +1018,8 @@ module.exports = {
 // T1192: 몸 크기는 민물/바다 표, kcal 밀도는 T59. 낱개 묶음 무게는 몸 크기의 출처가 아니다.
 const ON=typeof process==='undefined'||!process.env||process.env.T1192_FISH_SPECIES!=='0';
 const Fresh=require('./freshfish'),Sea=require('./seafish');
-function bodyKg(id,fallback=0){const f=Fresh.kgOf(id);if(f>0)return f;const row=Sea.TABLE?.find(r=>r.id===id);if(row?.kg?.length===2)return(row.kg[0]+row.kg[1])/2;return fallback;}
+let SEA_BODY_IDS=null;
+function bodyKg(id,fallback=0){const f=Fresh.kgOf(id);if(f>0)return f;const row=Sea.TABLE?.find(r=>r.id===id);if(row?.kg?.length===2){if(!SEA_BODY_IDS){const ids=require('./fishing').FISH_ITEMS;if(!Array.isArray(ids))return fallback;SEA_BODY_IDS=new Set(ids);}if(SEA_BODY_IDS.has(id))return(row.kg[0]+row.kg[1])/2;}return fallback;}
 function species(){return require('./fish-preserve').species();}
 function items(){return require('./fish-preserve').items();}
 function isItem(id){return ON&&!!items()[id];}
