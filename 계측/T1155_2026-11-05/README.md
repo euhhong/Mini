@@ -2,7 +2,7 @@
 
 제품 dadba977, 선행 API T1154 1424a2c9. provenance.json은 제품 여섯 파일의 SHA256과 틀의 SHA256·mtime을 담는다. manifest.json/table.json은 실제 8회 실행의 원자료이며, comparison.json은 완료된 두 반복 창씩의 자기 시간과 npcStep 범위를 집계했다.
 
-raw/*.json.gz 및 raw/*.jsonl.gz: 각 실행 창과 V8 표본. move-off/on.log.gz 및 hot-columns-guard.log: 최종 제품의 검사 결과. retired-prototype.json: 도적 simJob 쓰기 누락을 발견해 제외한 초기 실행.
+raw/*.json.gz 및 raw/*.jsonl.gz: 각 실행 창과 V8 표본. move-off/on.log.gz 및 hot-columns-guard.log.gz: 최종 제품의 검사 결과. retired-prototype.json: 도적 simJob 쓰기 누락을 발견해 제외한 초기 실행.
 
 틀은 관측자만 연결해 만든 NPC 세계이며, 생성 제품은 bf0c3c93 OFF, t100 200일이다. tpl-t100.db.gz를 풀고 provenance.json의 template.mtimeMs를 T1155_TEMPLATE_MTIME_MS로 준다. 같은 파일의 모든 팔을 비교해야 한다.
 
