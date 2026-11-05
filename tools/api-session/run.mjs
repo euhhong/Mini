@@ -71,7 +71,7 @@ const KEYNAME = String(flag('key', '') || (RESUME && last.key && last.key !== '�
 const KEYFILE = process.env.MINI_API_KEYFILE || path.join(KEYDIR, KEYNAME ? `key-${KEYNAME}` : 'key');
 const KEYLABEL = KEYNAME || '기본';
 // 카드 번호 — `T1160` 낱말이거나, 말 속의 `T1160` · `1160 카드` · `1160번` 도 카드로 읽는다(★재민 11-04 "1160 카드 수행해" 가 말로 시킨 일로 빠졌다)
-const _cardM = RESUME ? null : (words.find((x) => /^T\d+$/i.test(x)) || (words.join(' ').match(/(?:^|[^A-Za-z0-9])T(\d{3,5})(?![0-9])/i) || [])[0] || (words.join(' ').match(/(?:^|\s)(\d{3,5})\s*(?:번|카드|card)/i) || [])[1]);
+const _cardM = RESUME ? null : (words.find((x) => /^T\d+$/i.test(x)) || (words.join(' ').match(/(?:^|[^A-Za-z0-9])T(\d{3,5})(?![0-9])/i) || [])[0] || (words.join(' ').match(/(?:^|\s)(\d{3,5})\s*(?:번|카드|card)/i) || [])[1] || (words.join(' ').trim().match(/^(\d{3,5})$/) || [])[1]);   // 숫자만 적어도 카드("1168")
 const cardArg = _cardM ? 'T' + String(_cardM).replace(/[^0-9]/g, '') : '';
 const card = RESUME ? last.card : (cardArg ? cardArg.toUpperCase() : 'API');
 const FREE = cardArg ? '' : words.join(' ').trim();
