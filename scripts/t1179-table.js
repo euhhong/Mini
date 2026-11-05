@@ -8,6 +8,7 @@
 //     곳간 며칠치(곳간 식량 환산 ÷ 인구) — 달마다 가운데 · 마을-해마다 가장 낮은 날(수확 직전 최저)의 가운데 · 10%
 //     밭에 선 먹을 것(`pool` ÷ 인구 · 달마다 가운데) · 보존식 재고(`pres` ÷ 인구 · 철마다 가운데)
 //     교역 — 오는 식량 캐러밴(철마다 마을-날 평균) · 누계 식량 수입 증가(철마다 마을-날 평균)
+//     목표 그림 칸(★재민 11-05) — 11월 1일 곳간 ÷ (인구 × 다음 6월 15일까지 날) · 마을-해 가운데 · 10% · 90% · 1 이상 몫
 //     인구(400 · 800날) · 빈 마을(800날) · 출생 누계
 'use strict';
 const fs = require('fs');
@@ -26,7 +27,7 @@ const yearOf = (d) => { const t = C.dateOf(d); return t.month >= 3 ? t.year : t.
 function one(run) {
   const o = { run, seeds: 0, deadSe: { spring: 0, summer: 0, autumn: 0, winter: 0 }, deadMo: Array(13).fill(0), dead: 0, born: 0, pop400: 0, pop800: 0, empty: 0,
     vW: [], vS: [], daysMo: Array.from({ length: 13 }, () => []), lowYr: [], poolMo: Array.from({ length: 13 }, () => []), presSe: { spring: [], summer: [], autumn: [], winter: [] },
-    carSe: { spring: [0, 0], summer: [0, 0], autumn: [0, 0], winter: [0, 0] }, impSe: { spring: [0, 0], summer: [0, 0], autumn: [0, 0], winter: [0, 0] } };
+    cover: [], carSe: { spring: [0, 0], summer: [0, 0], autumn: [0, 0], winter: [0, 0] }, impSe: { spring: [0, 0], summer: [0, 0], autumn: [0, 0], winter: [0, 0] } };
   for (const s of SEEDS) {
     const t = J(path.join(ROOT, 'run-' + run, `base-${s}.t1149.json`)); if (!t) continue;
     o.seeds++;
@@ -52,6 +53,7 @@ function one(run) {
         if (se === 'winter') { YY.wMax = Math.max(YY.wMax, Nn); YY.wMin = Math.min(YY.wMin, Nn); }
         if (se === 'spring') { const Yp = Y[k][y]; Yp.sMin = Math.min(Yp.sMin, Nn); }
       });
+      { const t0 = C.dateOf(d); if (t0.month === 11 && t0.dom === 1) { const span = C.dayOf(t0.year + 1, 6, 15) - d; vs.forEach((x) => { if (x[ix.pop] > 0) o.cover.push(x[ix.tfe] / x[ix.pop] / span); }); } }   // ★목표 그림 칸 — 11월 1일 곳간 ÷ 다음 6월 15일까지 먹을 몫
       if (d === 400) o.pop400 += vs.reduce((a, x) => a + x[ix.pop], 0);
       prev = vs; last = vs;
     }
@@ -76,12 +78,17 @@ function one(run) {
     daysMo: o.daysMo.slice(1).map((a) => r2(q(a, 0.5))), lowMed: r2(q(o.lowYr, 0.5)), lowP10: r2(q(o.lowYr, 0.1)),
     poolMo: o.poolMo.slice(1).map((a) => r2(q(a, 0.5))), presSe: Object.fromEntries(SE.map((s) => [s, r2(q(o.presSe[s], 0.5))])),
     carSe: Object.fromEntries(SE.map((s) => [s, r2(o.carSe[s][1] ? o.carSe[s][0] / o.carSe[s][1] : 0)])), impSe: Object.fromEntries(SE.map((s) => [s, r2(o.impSe[s][1] ? o.impSe[s][0] / o.impSe[s][1] : 0)])),
+    coverMed: r2(q(o.cover, 0.5)), coverP10: r2(q(o.cover, 0.1)), coverP90: r2(q(o.cover, 0.9)), coverOk: o.cover.filter((x) => x >= 1).length, coverN: o.cover.length,
     born: o.born, pop400: o.pop400, pop800: o.pop800, empty: o.empty };
 }
 const res = RUNS.map(one).filter((r) => r.seeds);
 console.log('| 판 | 시드 | 굶어 죽음 800날 | 봄 · 여름 · 가을 · 겨울 | 가장 많이 죽은 달 | 골짜기 겨울(평균 · 0.9 밑) | 골짜기 봄(평균 · 0.9 밑) | 곳간 가장 낮은 날(가운데 · 10%) | 출생 | 인구 400 · 800 | 빈 마을 |');
 console.log('|---|---|---:|---|---|---|---|---|---:|---|---:|');
 for (const r of res) console.log(`| ${r.run} | ${r.seeds} | ${r.dead} | ${SE.map((s) => r.deadSe[s]).join(' · ')} | ${r.worstMo}월 ${r.worstMoDead} | ${r.vWinter} · ${r.vWinter09}/${r.vWinterN} | ${r.vSpring} · ${r.vSpring09}/${r.vSpringN} | ${r.lowMed} · ${r.lowP10} | ${r.born} | ${r.pop400} · ${r.pop800} | ${r.empty} |`);
+console.log('\n### 목표 그림 칸 — 11월 1일 곳간 ÷ 다음 6월 15일까지 먹을 몫(마을-해)\n');
+console.log('| 판 | 가운데 | 10% | 90% | 1 이상 마을-해 |');
+console.log('|---|---:|---:|---:|---:|');
+for (const r of res) console.log(`| ${r.run} | ${r.coverMed} | ${r.coverP10} | ${r.coverP90} | ${r.coverOk}/${r.coverN} |`);
 console.log('\n### 달마다 — 곳간 며칠치(가운데) · 밭에 선 먹을 것(사람당 · 가운데) · 굶어 죽음\n');
 console.log('| 판 | 칸 | ' + [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2].map((m) => m + '월').join(' | ') + ' |');
 console.log('|---|---|' + '---:|'.repeat(12));
