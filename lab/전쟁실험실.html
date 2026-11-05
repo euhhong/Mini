@@ -10544,6 +10544,7 @@ const T347_FORAGE_ACT = process.env.T347_FORAGE_ACT !== '0';   // T1180: 켬 기
 // 헤드리스 랩은 이 문을 등록하지 않으므로 기존 경제 자를 그대로 쓴다.
 const _productionActHosts = new WeakSet();
 function bindProductionActs(world) { if (world && typeof world === 'object') _productionActHosts.add(world); }
+function productionActsBound(v) { return !!(v && v._world && _productionActHosts.has(v._world)); }
 function productionFormulaOff(v, job) {
   return !!(v && v._world && _productionActHosts.has(v._world) &&
     ((job === 'fisher' && T312_FISH_ACT) || (job === 'lumberjack' && T325_WOOD_ACT) || (job === 'forager' && T347_FORAGE_ACT)));
@@ -10825,7 +10826,7 @@ const T497_HUT_COST = (() => { const raw = (typeof process !== 'undefined' && pr
 function hutPillarsArm() { const H = _hutStages(); return (H && H.HUT_PILLARS_ATTESTED && H.HUT_PILLARS_ATTESTED.indexOf(T497_HUT_COST) >= 0) ? T497_HUT_COST : 0; }
 // ★[T517 2026-09-29] 주춧돌 팔 — 켜면 기둥 하나에 주춧돌 하나(`hut-stages.js plinthKg` · 대평리 실측) · 돌 단위 = `weights.kgOf('stone')`(석괴 한 덩이).
 //   끔(기본) = 표 그대로(석재 0 · 송국리형 고증과 같다). 기둥 수는 T497 팔이 있으면 그 수 · 없으면 표의 수. 손잡이 한 자리.
-const T517_HUT_STONE = (typeof process !== 'undefined' && process.env && process.env.T517_HUT_STONE === '1');
+const T517_HUT_STONE = (typeof process !== 'undefined' && process.env && process.env.T517_HUT_STONE !== '0');
 let _wtMod;
 function _weightsMod() { if (_wtMod === undefined) { try { _wtMod = require('../server/weights'); } catch (e) { _wtMod = null; } } return _wtMod; }
 function hutStoneUnits(i) {   // 단계 i 의 주춧돌(econ 돌 단위) — 팔이 꺼졌거나 표·무게를 못 읽으면 0
@@ -10890,7 +10891,7 @@ function woodSpare(v) {
 //   ① 석공 간석기 한 자루 = 돌 `EQUIP_MAT_QTY.tool` · ② 마제석검 한 자루 = 돌 `EQUIP_MAT_QTY.weapon` ·
 //   ③ 자급 막석기 한 자루 = 조잡한 석기 세 종 평균(econ 재화만 — 자갈·잔가지 · 풀은 econ 재화가 아니다) · 돌 0 ·
 //   ④ 철검의 돌 = 0(작업대 무기는 재료 **한 가지** — 철검에 돌이 안 든다 · 철 수는 이 카드 밖 · 회부).
-const T419_STONE_REAL = process.env.T419_STONE_REAL === '1';
+const T419_STONE_REAL = process.env.T419_STONE_REAL !== '0';
 let _stoneMod;
 function _stoneUses() { if (_stoneMod === undefined) { try { _stoneMod = require('../server/stone-uses'); } catch (e) { _stoneMod = null; } } return _stoneMod; }
 function stoneRealPer(kind) {   // 한 개당 재료(econ 재화만) — kind: 'tool' | 'stoneSword' | 'crude'
@@ -10901,26 +10902,29 @@ function stoneRealPer(kind) {   // 한 개당 재료(econ 재화만) — kind: '
 function stoneRealOn() { return T419_STONE_REAL && !!_stoneUses(); }
 // ══ ★★[T435 2026-09-27] 곳간 증설도 재료를 낸다 — 정본 `server/granary-stages.js`(판자 12·돌 8 → 통나무 6·돌 8) · 손잡이 기본 끔 ══
 //   켬이면 NPC 크루가 이 곳간 출구(`actFromGranary`)로 재료를 꺼내 곳간 터에 놓는다(villages.js `_t435GranaryDay`). 끔 = 한 줄도 안 돈다.
-const T435_GRANARY_ACT = process.env.T435_GRANARY_ACT === '1';
+const T435_GRANARY_ACT = process.env.T435_GRANARY_ACT !== '0';
 let _granMod;
 function _granaryStages() { if (_granMod === undefined) { try { _granMod = require('../server/granary-stages'); } catch (e) { _granMod = null; } } return _granMod; }
 function granaryEconMaterials() { const G = _granaryStages(); return G ? _econOnly(G.granaryRaw()) : null; }   // 한 동(econ 재화만)
 // ══ ★★[T527 2026-09-29] 다리도 행위다 — 정본 `server/bridge-stages.js`(테스트우드 청동기 다리 실측에서 유도) · 손잡이 기본 끔 ══
 //   켬이면 착공 후보(존 설정 `bridgeSites` — 계획기 v2 셀 그대로)를 그 섬 마을의 여유 크루가 이 곳간 출구로 자재를 꺼내 날라 짓는다
 //   (villages.js `_t527BridgeDay`). 끔 = 한 줄도 안 돈다 · 시딩 다리 비트 동일. econ 은 문만 연다(자재 표는 서버가 읽는다).
-const T527_BRIDGE_ACT = process.env.T527_BRIDGE_ACT === '1';
+const T527_BRIDGE_ACT = process.env.T527_BRIDGE_ACT !== '0';
 // ★[T537 추신2 · 재민 캐논 09-30] 지름길 다리 후보(존 설정 `bridgeShortcuts` — 계획기 v2 지름길 규칙)도 짓는 목록에 넣는다 · 기본 끔 · `T527_BRIDGE_ACT` 가 켜져야 뜻이 있다.
 const T537_SHORTCUT = process.env.T537_SHORTCUT === '1';
-function actFromGranary(v, item, units) {
+function actFromGranary(v, item, units, deferUse = false) {
   if (!(T400_BUILD_ACT || T435_GRANARY_ACT || T527_BRIDGE_ACT) || !v || !v.storage) return 0;   // ★[T527] 다리 크루도 같은 출구(셋 다 끔 = 종전 그대로 0)   // ★[T435] 곳간 증설 크루도 같은 출구를 쓴다(둘 다 끔 = 종전 그대로 0)
   const want = (typeof units === 'number' && units > 0) ? units : 0;
   const have = v.storage[item] || 0;
   const take = Math.min(want, have);
   if (!(take > 0)) return 0;
   v.storage[item] = have - take;
-  _cons(v, item, take);
+  if (!deferUse) _cons(v, item, take);
   return take;
 }
+// T1181: 운반 중 재료는 소비가 아니다. 현장에 놓은 양만 같은 소비 장부로.
+function actMaterialsPlaced(v,item,n) { if(v && n>0) _cons(v,item,n); }
+function returnActMaterials(v,item,n) { if(v && v.storage && n>0) v.storage[item]=(v.storage[item]||0)+n; }
 // ══ ★★[T1050 2026-11-01 · ★재민 11-01 "서버 집 규칙이 정본"] 집 크루 하루 — 정본 한 벌(서버 생활층 · 랩이 같은 함수) ══════════════
 //   서버 `villages.js _t400BuildDay` 의 몸통(곳간 → 손 → 왕복 → 집터 `mat` → 자재 · 시공이 차면 그 순간 단계)을 **글자 그대로** 여기로 옮겼다.
 //   서버는 몸(명부 앞 `LIFE_CREW` 명) · 걸음(`_t341TripsPerDay`) · 단계 올림(`_lifeAdvanceSite`)을 넘기고, 랩(몸 없는 마을 · 아래 `labHouseDay`)은
@@ -15879,13 +15883,13 @@ module.exports = {
   RAW_GRAINS, RAW_GRAIN_FOOD_FACTOR,   // ★[T73] 계수를 하네스·계측기가 옮겨 적지 않게(사본 금지)
   farmFlowPerDay, farmLandBoost, harvestToGranary,   // ★[T100] 같은 이유 — 하네스·계측기가 앵커를 옮겨 적지 않는다
   fishToGranary, fishActOn, fishBudgetPerCell, T312_FISH_ACT,   // ★[T312] 어부 행위 — 생활층이 부르는 문 셋 + 손잡이(하네스가 옮겨 적지 않는다)
-  bindProductionActs, productionFormulaOff,   // T1180: 물리 생산 호스트 등록 · 수식 대체 문
+  bindProductionActs, productionActsBound, productionFormulaOff,   // T1180: 물리 생산 호스트 등록 · 수식 대체 문
   T452_KILN_ACT, kilnActOn, kilnWant, kilnDay, furnaceCharcoalTarget,   // ★[T452] 숯가마 행위
   T443_SMELT_FUEL, smeltFuelOn, smeltFuelPerOre, smeltFuelTake,   // ★[T443] 제련 연료 — 하네스·계측기가 표를 옮겨 적지 않게
   T419_STONE_REAL, stoneRealPer, stoneRealOn,   // ★[T419] 돌 쓰는 실물 — 하네스·계측기가 표·유도를 옮겨 적지 않게 내준다
   T435_GRANARY_ACT, granaryEconMaterials,   // ★[T435] 곳간 증설 재료 — 생활층·하네스가 표를 옮겨 적지 않게
   T1050_LAB_HOUSE, crewPerLoad, houseCrewDay, labHouseAttach, labHouseDay, labHouseWorldDay, labSiteNew, labSiteCrewDay, labCrewDbg,   // ★[T1050] 집 크루 하루 정본(서버 생활층 · 랩 몸 없는 마을이 같은 함수) · 손잡이 · ★[T1056] 몸 없는 크루의 집터 하루(t17 · t176 · 랩 HTML 둘이 같은 함수)
-  T400_BUILD_ACT, T1054_DECAY_WOOD, T527_BRIDGE_ACT, T537_SHORTCUT, buildActOn, houseDayBuild, houseWoodShare, woodSpare, T497_HUT_COST, hutPillarsArm, T517_HUT_STONE, hutStoneUnits, actFromGranary, hutEconMaterials, hutEconStage, hutStageCount, hutCapPerHut, houseCostPerCap,   // ★[T400] 집 행위 — 하네스·생활층이 표·유도를 옮겨 적지 않게 내준다
+  T400_BUILD_ACT, T1054_DECAY_WOOD, T527_BRIDGE_ACT, T537_SHORTCUT, buildActOn, houseDayBuild, houseWoodShare, woodSpare, T497_HUT_COST, hutPillarsArm, T517_HUT_STONE, hutStoneUnits, actFromGranary, actMaterialsPlaced, returnActMaterials, hutEconMaterials, hutEconStage, hutStageCount, hutCapPerHut, houseCostPerCap,   // ★[T400] 집 행위 — 하네스·생활층이 표·유도를 옮겨 적지 않게 내준다
   actToGranary, woodToGranary, woodActOn, woodRegrowR, woodRegrowPerDay, T325_WOOD_ACT,
   T17_MSY, fishMsyDayClose,   // ★[T923] 어장 MSY 상한 켬 기본 — 자(t17)가 켬/끔을 글자로 다시 적지 않고 엔진에게 묻는다(사본 0) · 마을 하루 마감(V2 가 부른다)
   mineToGranary, mineDemandLeft, mineActOn, T724_MINE_ACT,

@@ -17,6 +17,8 @@
 //
 // 실행: node scripts/test-stone-real.js
 'use strict';
+// T1181: 기존 되돌림 계약. 새 기본값·실제 몸은 test-t1181-build-defaults에서 검사.
+for(const k of ['T435_GRANARY_ACT', 'T527_BRIDGE_ACT', 'T517_HUT_STONE', 'T419_STONE_REAL']) process.env[k]='0';
 process.env.ENABLE_VILLAGES = process.env.ENABLE_VILLAGES || '0';
 const path = require('path');
 const fs = require('fs');
@@ -29,7 +31,7 @@ const ZSRC = fs.readFileSync(path.join(ROOT, 'server', 'zone.js'), 'utf8');
 const USRC = fs.readFileSync(path.join(ROOT, 'server', 'stone-uses.js'), 'utf8');
 const codeOf = (s) => s.split('\n').map((l) => l.replace(/\/\/.*$/, '')).join('\n').replace(/\/\*[\s\S]*?\*\//g, ' ');
 const probe = (env, js) => JSON.parse(execFileSync(process.execPath, ['-e', js],
-  { env: Object.assign({}, process.env, { ENABLE_VILLAGES: '0', T419_STONE_REAL: '', T400_BUILD_ACT: '' }, env), stdio: ['ignore', 'pipe', 'pipe'] })
+  { env: Object.assign({}, process.env, { ENABLE_VILLAGES: '0', T419_STONE_REAL: '0', T400_BUILD_ACT: '' }, env), stdio: ['ignore', 'pipe', 'pipe'] })
   .toString().split('\n').filter((l) => l.startsWith('{')).pop());
 const EP = JSON.stringify(path.join(ROOT, 'sim', 'economy-sim.js'));
 const V2P = JSON.stringify(path.join(ROOT, 'sim', 'economy-sim-v2.js'));
@@ -62,7 +64,7 @@ console.log('\n① 정본 하나 — `server/stone-uses.js`');
 console.log('\n② 손잡이 — 기본 끔');
 {
   const E = require(path.join(ROOT, 'sim', 'economy-sim.js'));
-  ok(E.T419_STONE_REAL === false && E.stoneRealOn() === false, '② ★★기본이 **끔**이다');
+  ok(E.T419_STONE_REAL === false && E.stoneRealOn() === false, '② 명시적 되돌림이 **끔**이다');
   ok((SRC.match(/process\.env\.T419_STONE_REAL/g) || []).length === 1 && !/T419_STONE_REAL/.test(ZSRC), '② 손잡이 하나 — econ 한 자리에서만 읽는다(zone 은 모른다)');
   //   끈 판의 수가 종전 그 수인가 — 글자로(끈 갈래 식이 그대로 남았나)
   ok(/const _stCost = _t419 \? [^:]+: 0\.2 \* _toolTaper;/.test(SRC), '② 끈 판 석공 도구 돌 = `0.2 × taper`(종전 식)');

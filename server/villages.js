@@ -1093,7 +1093,7 @@ const _t740Stat = { restored: null };
 //   마을 클레임 그림자(`_claim` · `_clearCrew` · `_buildCrew` · `_psiteCrew` · `_cropClaim` · 광부 손 합 `_t724HeldKg`)는 되돌린 몸에서 다시 센다(하루 마감의 재대사 줄과 같은 식).
 //   몸 열쇠 = 마을 `npcPids` 자리(T728 `_t728HuntWk` 문법). 저장된 몸이 지금 몸보다 많으면 남은 손은 그 마을 첫 몸의 손에 더한다(소멸 0).
 const T747_BODY = process.env.T747_BODY_KEEP !== '0';   // ★[PM 10-14] 켬 기본(소멸 금지 · 다시 뜰 때만 — 손 · 진행 작업 · 자리) · 되돌림 `=0`
-const _T747_KEYS = ['simJob', 'x', 'y', 'hp', '_rest', 'inventory', '_t312U', '_t312Kg', '_t1180FullFish', '_t368H', '_t368N', '_t717L', '_t733F',
+const _T747_KEYS = ['simJob', 'x', 'y', 'hp', '_rest', 'inventory', '_t312U', '_t312Kg', '_t1180FullFish', '_t1181Haul', '_t368H', '_t368N', '_t717L', '_t733F',
   '_lifeTask', '_farmK', '_fOutD', '_workSite', '_jobN', '_fishSpotX', '_fishSpotY', '_t340N', '_t724Site', '_huntBud', '_huntKil',
   '_sh', '_hd', '_half'];   // 신원 해시 캐시(존 `_shOf` 가 `playerId` — 스폰마다 무작위 꼬리 — 로 먼저 세우면 다시 뜬 몸의 주사위 씨가 바뀐다) · 그날 반일 굴림(같은 날 다시 굴리지 않게)
 // ★★[T1133 2026-11-04 · ★PM 11-03 판정대기 문 17 ㄱ "몸 영속과 같이 저장"] 손잡이 `T1133_BAG_PERSIST`(★켬 기본 후보 · `=0` = 종전 글자).
@@ -12927,6 +12927,7 @@ function _t435Ready(vil) {
 function _t435GranaryDay(vil) {
   const E = _lifeEcon();
   const p = vil._granPend; if (!p || !E.T435_GRANARY_ACT || !vil.econ) return null;
+  if (E.productionActsBound(vil.econ)) return null;   // T1181: 몸의 도착이 재료를 놓는다
   const day = state.dayMs ? (T731_ON ? _ledgerDay(vil, _dayNow()) : gameDayOf(_dayNow())) : 0;
   const dbg = vil._t435Dbg = { day, crew: 0, trips: 0, took: 0, stall: 0, walkS: 0, jobs: {} };
   const need = E.granaryEconMaterials() || {};
@@ -13018,14 +13019,14 @@ function _t527Restore(sites) {
     let st = null; try { st = JSON.parse(r.state || 'null'); } catch (e) { st = null; }
     if (!st) continue;
     site.stage = st.stage | 0; site.mat = st.mat || {}; site.adv = st.adv || []; site.sum = st.sum || null; site.added = st.added || null;
-    site.done = !!r.done; site.day = r.done ? (r.day | 0) : null;
+    site.workMs = st.workMs || 0; site.done = !!r.done; site.day = r.done ? (r.day | 0) : null;
   }
 }
 function _t527Save(site) {
   try {
     if (!state.db || !state.db.upsertVillageBridge || !state.zoneId) return;
     state.db.upsertVillageBridge(state.zoneId, site.i, _t527Sig(site),
-      JSON.stringify({ v: site.v, span: site.span, cells: site.cells, stage: site.stage, mat: site.mat, adv: site.adv, sum: site.sum, added: site.added }), site.done, site.day || 0);
+      JSON.stringify({ v: site.v, span: site.span, cells: site.cells, stage: site.stage, mat: site.mat, workMs: site.workMs || 0, adv: site.adv, sum: site.sum, added: site.added }), site.done, site.day || 0);
   } catch (e) { console.error(`[${state.zoneId}] 🌉 다리 행 저장 실패:`, e.message); }
 }
 function _t527Crew(vil) {   // 여유 크루 — 집 크루(T400 · 집터가 있으면)·곳간 크루(T435 · 곳간 터가 있으면)가 먼저 가져간 뒤의 둘
@@ -13049,6 +13050,7 @@ function _t527BridgeDay(vil) {
   const E = _lifeEcon();
   const sites = _t527Sites(); if (!sites || !vil.econ) return null;
   const site = sites.find((s) => !s.done && s.v.indexOf(vil.name) >= 0); if (!site) return null;
+  if (E.productionActsBound(vil.econ)) { _t527Save(site); return null; }   // T1181: 몸의 운반·현장 노동만 진척
   const day = state.dayMs ? (T731_ON ? _ledgerDay(vil, _dayNow()) : gameDayOf(_dayNow())) : 0;
   const dbg = vil._t527Dbg = { day, site: site.i, crew: 0, trips: 0, took: 0, adv: 0, stall: 0, walkS: 0, jobs: {} };
   const crew = _t527Crew(vil); if (!crew.length) return dbg;
@@ -13102,6 +13104,40 @@ function _t527BridgeDay(vil) {
   T.days++; T.crewDays += dbg.crew; T.trips += dbg.trips; T.took = +(T.took + dbg.took).toFixed(4); T.walkS = +(T.walkS + dbg.walkS).toFixed(3); T.stallDays += dbg.stall;
   _t527Save(site);
   return dbg;
+}
+// T1181: 실제 호스트의 곳간·다리 크루. 재료 표·출구·짐 상한은 기존 정본.
+const _t1181Haul = require('./build-haul');
+function _t1181Task(vil,npc) {
+  const E=_lifeEcon();if(!E.productionActsBound(vil.econ))return null;
+  if(E.T435_GRANARY_ACT && vil._granPend && _t435Crew(vil).some(p=>p.pid===npc.pid)) {
+    const p=vil._granPend,target={x:p.cx*SZ+SZ/2,y:(p.cy+2)*SZ+SZ/2};
+    return {kind:'granary',key:'g/'+p.cx+','+p.cy+'/'+p.day,site:p,target,need:()=>E.granaryEconMaterials()||{}};
+  }
+  if(E.T527_BRIDGE_ACT && _t527Crew(vil).some(p=>p.pid===npc.pid)) {
+    const p=(_t527Sites()||[]).find(s=>!s.done&&s.v.includes(vil.name));if(!p)return null;
+    const candidates=[];for(let i=0;i<p.cells.length;i+=2){const x=p.cells[i]*SZ+SZ/2,y=p.cells[i+1]*SZ+SZ/2;if(!_t394Blocked(x,y))candidates.push({x,y});}
+    candidates.sort((a,b)=>Math.hypot(a.x-vil.ccx*SZ,a.y-vil.ccy*SZ)-Math.hypot(b.x-vil.ccx*SZ,b.y-vil.ccy*SZ));
+    if(!candidates.length)return null;
+    return {kind:'bridge',key:'b/'+p.i+'/'+_t527Sig(p),site:p,target:candidates[0],need:()=>_t527EconNeed(p,p.stage)||{}};
+  }
+  return null;
+}
+function _t1181Step(vil,npc,now,awake) {
+  const E=_lifeEcon();if(!E.productionActsBound(vil.econ))return false;
+  const t=_t1181Task(vil,npc);if(!t&&!npc._t1181Haul)return false;
+  if(t&&!npc._t1181Haul)_lifeDropTask(vil,npc);
+  if(t){let bd=Infinity,source={x:vil.ccx*SZ+SZ/2,y:vil.ccy*SZ+SZ/2};for(const g of(vil._granList||[])){const L=_granLadder(g),d=Math.hypot(L.x-t.target.x,L.y-t.target.y);if(d<bd){source=L;bd=d;}}t.source=source;}
+  const missing=()=>{if(!t)return[];const mat=t.site.mat||(t.site.mat={}),a=[];for(const[k,n]of Object.entries(t.need())){let reserved=0;for(const p of state.deps.players.values()){const s=p._t1181Haul;if(s&&s.key===t.key&&s.item===k)reserved+=Math.min(s.n,p.inventory?.[k]||0);}const left=n-(mat[k]||0)-reserved;if(left>1e-9)a.push([k,left]);}return a;};
+  const S=()=>{const k=t?.kind==='bridge'?'_t527Sum':'_t435Sum';return vil[k]||(vil[k]={days:0,crewDays:0,trips:0,took:0,placed:0,adv:0,stallDays:0,built:0,jobs:{}});};
+  return _t1181Haul.step(npc,t,{now,awake,reach:44,drawMs:G_DRAWW,storeMs:G_STOREW,maxGap:SCH_VG_STUCK,
+    move:(g,label)=>{npc.behavior='wander';npc.targetX=g.x;npc.targetY=g.y;npc.gatherTarget=null;_lifeAct(npc,label);},act:label=>_lifeAct(npc,label),home:()=>_lifeGoHome(npc,'취침'),
+    pick:()=>{for(const[item,left]of missing()){const W=_carryCfg(),kg=require('./weights').kgOf(item),room=kg>0?Math.max(0,Math.floor((W.CFG.CAP_KG-W.totalKg(npc))/kg)):0;const spare=item==='wood'&&t.kind==='bridge'?Math.max(0,E.woodSpare(vil.econ)):Infinity;const n=Math.min(left,_t400PerLoad(item),room,spare);if(n>0&&(vil.econ.storage[item]||0)>0)return{item,n};}return null;},
+    take:(k,n)=>{const q=E.actFromGranary(vil.econ,k,n,true);if(q>0){S().took+=q;S().trips++;}return q;},
+    refund:(k,n)=>E.returnActMaterials(vil.econ,k,n),
+    place:(k,n)=>{if(!(n>0))return;t.site.mat[k]=(t.site.mat[k]||0)+n;E.actMaterialsPlaced(vil.econ,k,n);S().placed=(S().placed||0)+n;if(t.kind==='bridge')_t527Save(t.site);},
+    needsLoad:()=>missing().length>0,
+    work:dt=>{if(!t||t.kind!=='bridge'||t.site.done)return;const need=t.need();if(Object.entries(need).some(([k,n])=>(t.site.mat[k]||0)+1e-9<n))return;const stageMs=_tripDayMs()*((state.deps&&state.deps.dayPhaseRatio)||0.7)/LIFE_STAGE_PDAY;t.site.workMs=(t.site.workMs||0)+Math.min(dt,SCH_VG_STUCK);if(t.site.workMs<stageMs)return;t.site.workMs-=stageMs;for(const[k,n]of Object.entries(need))t.site.mat[k]-=n;t.site.stage++;t.site.adv.push(state.world?.day||0);S().adv++;if(t.site.stage>=_t527StageCount(t.site)){_t527Complete(t.site,state.world?.day||0);S().built++;}_t527Save(t.site);}
+  });
 }
 const G_CAP = 2500, G_MAX = 8, G_BUILDD = 6;
 function _lifeGranAdd(vil) {
@@ -14130,10 +14166,11 @@ function npcLifeTick(npc, now) {   // zone.js decideNpcBehavior 훅(늑대 도�
   // 요양(랩 a.rest 6298·7526): hp<60% 진입 → 진행 작업 반납·자택 요양. 만피 해제(회복=zone.js 자연 리젠 — 히스테리시스 동형)
   if (npc._rest) {
     if ((npc.hp || 0) >= (npc.maxHp || 100)) npc._rest = 0;
-    else { _lifeDropTask(vil, npc); _lifeGoHome(npc, '요양'); return true; }
+    else { if(npc._t1181Haul)npc._t1181Haul.at=null; _lifeDropTask(vil, npc); _lifeGoHome(npc, '요양'); return true; }
   } else if (npc.hp != null && npc.hp > 0 && npc.hp < (npc.maxHp || 100) * SCH_REST_IN) {
-    npc._rest = 1; _lifeDropTask(vil, npc); _lifeGoHome(npc, '요양'); return true;
+    npc._rest = 1; if(npc._t1181Haul)npc._t1181Haul.at=null; _lifeDropTask(vil, npc); _lifeGoHome(npc, '요양'); return true;
   }
+  if (_t1181Step(vil,npc,now,fv<dayR&&fv>=(npc._dOff||0))) return true;
   const _fishCap = _lifeEcon().T312_FISH_ACT && (npc._t312Kg||0)>0 ? _carryCfg()?.CFG?.CAP_KG : 0;
   if (T720_LON_DAY && _t720Step(vil, npc, now, fv, dayR, bday, _fishCap>0 && (npc._t312Kg>=_fishCap || npc._t1180FullFish))) return true;   // T1180: 만재 어부도 실제 도착 뒤 정산
   // 기상 시차(랩 a._dOff): 개인 결정론 오프셋 0~하루 3%(43분) — 마을 일괄 기상의 프레임 스파이크 분산 + 유기적 출근 풍경
@@ -15807,6 +15844,7 @@ module.exports = { t1144Stat: () => Object.assign({ on: T1144_LIFE_EVENT, verify
     // ★[T374] 관측 갈래 퇴근 판정의 **그 함수 자체**를 내준다(같은 규약 · 최소 주입구 하나 — 손을 세려면 사람 목록이 있어야 한다).
     //   하네스가 "D − 오늘 − 손" 을 다시 적으면 그게 사본이다 — 정본 `_t374Done`·`_t374Held` 를 그대로 부른다.
     // ★[T400] 집 행위 하네스용 — 같은 규약(최소 주입구 하나). 하네스는 걸음·자재 규칙을 다시 적지 않는다 — 정본 함수를 그대로 부른다.
+    _t1181Probe: { step:(v,p,n,a)=>_t1181Step(v,p,n,a),task:(v,p)=>_t1181Task(v,p),drawMs:()=>G_DRAWW,storeMs:()=>G_STOREW },
     _t435Probe: { granAdd: (vil) => _lifeGranAdd(vil), day: (vil) => _t435GranaryDay(vil), ready: (vil) => _t435Ready(vil), crew: (vil) => _t435Crew(vil).map((p) => p.pid) },   // ★[T435] 하네스가 같은 함수를 부른다
     _t527Probe: { sites: () => _t527Sites(), reset: () => { state._t527Sites = null; }, sig: (site) => _t527Sig(site), day: (vil) => _t527BridgeDay(vil), crew: (vil) => _t527Crew(vil).map((p) => p.pid), need: (site, i) => _t527EconNeed(site, i), stages: (site) => _t527StageCount(site) },   // ★[T527] 하네스가 같은 함수를 부른다
     _t400Probe: { setup: (o) => { const k = { deps: state.deps, db: state.db, dayMs: state.dayMs, epoch: state.epoch, zoneId: state.zoneId };

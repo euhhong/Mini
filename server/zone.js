@@ -4952,7 +4952,7 @@ let _t316Econ = null;
 function _t316WalkAlways(npc) {
   if (!npc || !npc.simVillageId) return false;
   if (_t316Econ === null) { try { _t316Econ = require('../sim/economy-sim'); } catch (e) { _t316Econ = false; } }
-  if (_t316Econ && (_t316Econ.T312_FISH_ACT || (_t316Econ.T325_WOOD_ACT && npc.simJob === 'lumberjack') || (_t316Econ.T347_FORAGE_ACT && npc.simJob === 'forager') || (_t316Econ.T368_FARM_ACT && npc.simJob === 'farmer'))) return true;   // T1180: 단독 켬도 해당 몸의 결정·이동 문을 연다
+  if (_t316Econ && (_t316Econ.T312_FISH_ACT || _t316Econ.T435_GRANARY_ACT || _t316Econ.T527_BRIDGE_ACT || (_t316Econ.T325_WOOD_ACT && npc.simJob === 'lumberjack') || (_t316Econ.T347_FORAGE_ACT && npc.simJob === 'forager') || (_t316Econ.T368_FARM_ACT && npc.simJob === 'farmer'))) return true;   // T1180: 단독 켬도 해당 몸의 결정·이동 문을 연다
   //   ★★[T529] 인사하러 가는 촌장도 — 줄은 손잡이 켬에서만 생긴다(끔이면 거짓 · 술어는 여전히 이 하나).
   return !!(SimVillages.chiefWalking && SimVillages.chiefWalking(npc));
 }
