@@ -6352,7 +6352,7 @@ function _warDraftPids(vil, comp, seed, warId) {
   const { players, npcs } = state.deps;
   const WL = state.warLive;
   const pool = [];
-  for (const pid of vil.npcPids) { const p = players.get(pid); if (!p || p._muster || (p.hp != null && p.hp <= 0)) continue; pool.push(p); }
+  for (const pid of vil.npcPids) { const p = players.get(pid); if (!p || p._muster || (T1041_WAR_BODY && p._t1104W != null) || (p.hp != null && p.hp <= 0)) continue; pool.push(p); }
   if (!pool.length) return null;
   const taken = new Set(); const units = []; const pids = [];
   const order = ['archer', 'slinger', 'champion', 'dagger', 'greataxe', 'spear', 'pike', 'militia'];
