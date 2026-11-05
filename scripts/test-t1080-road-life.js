@@ -20,7 +20,7 @@ const ROOT = path.join(__dirname, '..');
 const R = (p) => require(path.join(ROOT, p));
 const SUB = process.env.T1080_SUB || '';
 // [T1183] 이 목의 하루는30초다. 기존 판은 T627=0, 아래 리허설 전용 아이는 명시적1.
-if (process.env.T627_TRIP_DAY == null) process.env.T627_TRIP_DAY = '0';
+if (SUB !== 'trip') process.env.T627_TRIP_DAY = '0';
 process.env.T577_CAND_WALK = '1';
 process.env.ENABLE_VILLAGES = process.env.ENABLE_VILLAGES || '0';
 const econ = R('sim/economy-sim');
