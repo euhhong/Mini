@@ -8846,6 +8846,43 @@
           "7": null,
           "42": null
         }
+      },
+      "flat-final": {
+        "cost": {
+          "tag": "flat-final",
+          "limitSec": 7200,
+          "args": [
+            "scripts/test-war-world.js"
+          ],
+          "env": {
+            "T790_NO_SNAP": "1",
+            "T1041_WAR_BODY": "1",
+            "T811_ARMS_BODY": "1",
+            "T449_BODY_DAY": "1",
+            "T491_BATCH_FROM_BODY": "1",
+            "T561_ROSTER_BODY": "1",
+            "T502_ODDS_REAL": "1",
+            "T815_DRAFT_FAMINE": "1",
+            "T941_BATTLE_DAY": "1",
+            "T627_TRIP_DAY": "1",
+            "T1076_ARMY_MORALE": "1",
+            "T466_LOOT_ACT": "1",
+            "T826_LOOT_BODY": "1",
+            "T1168_SORTIE_AMMO": "1",
+            "T1078_BANDIT_ALL": "0",
+            "T1079_BANDIT_CAMP": "0",
+            "T1104_BANDIT_WALK": "0",
+            "T1159_HOME_N": "0",
+            "WW_ONLY_SERVER": "1",
+            "WW_PHYSICAL": "1",
+            "T1183_FLAT_ENCOUNTER": "1",
+            "T1183_ZONE_OUT": "/tmp/act-followup-results/flat-final.json",
+            "NODE_OPTIONS": "-r /tmp/act-followup-code/scripts/t1183-zone-observe.js"
+          },
+          "exit": 0,
+          "wallSec": 106.338,
+          "cpuUs": 1270780
+        }
       }
     }
   },
@@ -8854,7 +8891,7 @@
   "expectedMainCommands": 60,
   "completedCorrectionCommands": 6,
   "expectedCorrectionCommands": 10,
-  "completedFollowupCommands": 1,
+  "completedFollowupCommands": 2,
   "expectedFollowupCommands": 27,
   "productHeads": {
     "individualUnaffected": "c58cd674",

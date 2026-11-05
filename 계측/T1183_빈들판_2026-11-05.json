@@ -2,7 +2,7 @@
   "node": "v22.23.0",
   "flatFixture": true,
   "source": {
-    "villages.js": "fd9fc84f8dec874dab269da72ecf111ffb6829ca885afef09163a1817086eda6",
+    "villages.js": "f7aab7b59d654c15084f7969a451d85d5d3731c49d3c53a9e46788c20e98f249",
     "war-live.js": "1e4a09514655e4c407b31b3fa118170ef8e617a872fd2f9e020e1a4a0b1707ff"
   },
   "fights": [
@@ -12,6 +12,10 @@
       "firstArrow": {
         "B": 0.06666666666666667,
         "A": 0.49999999999999994
+      },
+      "firstHit": {
+        "B": 0.5666666666666667,
+        "A": 0.9999999999999999
       },
       "firstContact": 0.06666666666666667,
       "initial": [
@@ -2191,6 +2195,9 @@
           "B": 0.06666666666666667,
           "A": 0.5
         },
+        "firstHit": {
+          "A": 0.9666666666666667
+        },
         "firstContact": 0.06666666666666667,
         "morale": [
           {
@@ -2315,24 +2322,18 @@
             }
           }
         ]
-      },
-      "comparison": {
-        "firstArrowSecServer": {
-          "B": 0.06666666666666667,
-          "A": 0.49999999999999994
-        },
-        "firstArrowSecLab": {
-          "B": 0.06666666666666667,
-          "A": 0.5
-        },
-        "firstContactSecServer": 0.06666666666666667,
-        "firstContactSecLab": 0.06666666666666667,
-        "maxMeanMoraleDifferenceFirst10Sec": 0.024721842905082614,
-        "note": "실제 존은 대형 제어·수비 역할을 유지한다. 랩 재생은 자유 교전이므로 사기 곡선 전체 동일을 주장하지 않는다."
       }
     }
   ],
-  "card": "T1183",
-  "date": "2026-11-05",
-  "base": "T1168 9df695c (main 착지 전)"
+  "actualServerCheck": {
+    "sourceHead": "26e14142b5e14a5c8a11503ff0b2f927a8b95627",
+    "exit": 0,
+    "pass": 6,
+    "fail": 0,
+    "logSha256": "7862d35806bef8110d3d67ce61c508f6fc89488e25c01d9a8b1fc2b979c62eeb",
+    "warTickP95Ms": 0.584,
+    "tickP95Ms": 16.955,
+    "dropN": 0,
+    "engageErr": 0
+  }
 }
