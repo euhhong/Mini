@@ -1,0 +1,174 @@
+{
+ "runs": [
+  {
+   "run": "off",
+   "seeds": 3,
+   "dead": 5705,
+   "deadSe": {
+    "spring": 222,
+    "summer": 391,
+    "autumn": 1123,
+    "winter": 3969
+   },
+   "deadMo": [
+    1603,
+    860,
+    132,
+    26,
+    64,
+    55,
+    132,
+    204,
+    297,
+    350,
+    476,
+    1506
+   ],
+   "worstMo": 1,
+   "worstMoDead": 1603,
+   "vWinter": 0.87,
+   "vWinter09": 148,
+   "vWinterN": 306,
+   "vSpring": 0.87,
+   "vSpring09": 142,
+   "vSpringN": 306,
+   "daysMo": [
+    34.78,
+    33.14,
+    32.92,
+    32.43,
+    35.67,
+    36.38,
+    34.42,
+    30.4,
+    30.29,
+    33.26,
+    37.65,
+    38.57
+   ],
+   "lowMed": 14.29,
+   "lowP10": 2.36,
+   "poolMo": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "presSe": {
+    "spring": 0,
+    "summer": 0,
+    "autumn": 0,
+    "winter": 0
+   },
+   "carSe": {
+    "spring": 0.32,
+    "summer": 0.33,
+    "autumn": 0.34,
+    "winter": 0.25
+   },
+   "impSe": {
+    "spring": 12.49,
+    "summer": 18.58,
+    "autumn": 20.07,
+    "winter": 17.47
+   },
+   "born": 22351,
+   "pop400": 11682,
+   "pop800": 16467,
+   "empty": 0
+  },
+  {
+   "run": "on",
+   "seeds": 3,
+   "dead": 8916,
+   "deadSe": {
+    "spring": 7199,
+    "summer": 3,
+    "autumn": 65,
+    "winter": 1649
+   },
+   "deadMo": [
+    330,
+    1182,
+    2540,
+    3271,
+    1388,
+    3,
+    0,
+    0,
+    0,
+    19,
+    46,
+    137
+   ],
+   "worstMo": 4,
+   "worstMoDead": 3271,
+   "vWinter": 0.9,
+   "vWinter09": 57,
+   "vWinterN": 240,
+   "vSpring": 0.52,
+   "vSpring09": 149,
+   "vSpringN": 240,
+   "daysMo": [
+    16.66,
+    3.92,
+    9.9,
+    0,
+    18.77,
+    40.08,
+    50.63,
+    40.72,
+    35.39,
+    34.28,
+    42.94,
+    33.17
+   ],
+   "lowMed": 0,
+   "lowP10": 0,
+   "poolMo": [
+    36.62,
+    49.57,
+    25.54,
+    56.82,
+    45.31,
+    28.72,
+    14.74,
+    17.67,
+    20.57,
+    17.95,
+    17.25,
+    25.15
+   ],
+   "presSe": {
+    "spring": 0,
+    "summer": 0,
+    "autumn": 0,
+    "winter": 0
+   },
+   "carSe": {
+    "spring": 0.08,
+    "summer": 0.29,
+    "autumn": 0.28,
+    "winter": 0.1
+   },
+   "impSe": {
+    "spring": 3.5,
+    "summer": 15.32,
+    "autumn": 16.03,
+    "winter": 8.57
+   },
+   "born": 13870,
+   "pop400": 3510,
+   "pop800": 4751,
+   "empty": 72
+  }
+ ]
+}
