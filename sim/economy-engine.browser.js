@@ -17018,9 +17018,9 @@ function _t1136M() {
 }
 function _t1136Kg(r) { const k = +_t1136M().W.kgOfOrDefault(r); return k > 0 ? k : 0; }   // 낱개 하나의 kg(정본 · 표에 없으면 정본 기본값)
 function _t1136CapKg() { return _t1136M().C.CFG.CAP_KG; }   // 짐 상한 = 몸 짐 정본 × 사람 1(상인) — 호위 · 짐승 몫은 회부
-// ★[T1136 · 회부 판 · 기본 끔] `T1136_ESCORT_CARRY`('1' 만) — 사람 = 상인 + 호위: 호위 수 = 종전 만재(100 낱개) 호위 식(`_escortOfV2` · 그 길 위험 · 갱 · 전사 수 상한) ·
-//   짐 상한 = 몸 짐 × (1 + 호위). 끔(기본) = 상인 하나(호위는 손을 비운다). 카드 "25 kg × 사람"의 사람이 누구인가는 판정(회부) — 두 읽기를 같은 자로 재려고 둔다(새 수 0).
-const T1136_ESCORT_CARRY = (typeof process !== 'undefined' && process.env && process.env.T1136_ESCORT_CARRY === '1');
+// ★[T1182 · 기본 켬 · =0 되돌림] `T1136_ESCORT_CARRY` — 사람 = 상인 + 호위: 호위 수 = 종전 만재(100 낱개) 호위 식(`_escortOfV2` · 그 길 위험 · 갱 · 전사 수 상한) ·
+//   짐 상한 = 몸 짐 × (1 + 호위). 끔 = 상인 하나(호위는 손을 비운다). 카드 "25 kg × 사람"의 사람이 누구인가는 판정(회부) — 두 읽기를 같은 자로 재려고 둔다(새 수 0).
+const T1136_ESCORT_CARRY = (typeof process !== 'undefined' && process.env && process.env.T1136_ESCORT_CARRY !== '0');
 function _t1136Days(dist) { return Math.max(0, +dist || 0) / CARAVAN_DAY_SPEED; }   // 다리 날(소수 그대로)
 // 길 위 신선도(t0 → t1 · 소수 날) — T784 곡선 · T812 노출 정본(`_t812Exp` 의 누적 차) · T840 고도. 늙지 않는 품목 1.
 function _t1136F(res, t0, t1, elevKm) {
@@ -17278,8 +17278,9 @@ function basketFlush(world, tEnd, inclusive) {
     let best = null, bt = Infinity;
     for (const c of world.caravans) {
       if (!c.basket || c._done) continue;
-      const t = _t1136Next(c);
-      if (!(inclusive ? t <= tEnd : t < tEnd)) continue;
+      if (!caravanBodyAllows(world, c, c.state)) continue;
+      const t = typeof world.caravanBodyReady === 'function' ? tEnd : _t1136Next(c);
+      if (typeof world.caravanBodyReady !== 'function' && !(inclusive ? t <= tEnd : t < tEnd)) continue;
       if (t < bt || (t === bt && c.id < best.id)) { bt = t; best = c; }
     }
     if (!best) break;
@@ -17915,6 +17916,7 @@ function _raidMeet(world, c, day) {
 }
 function _raidTaken(c, leg) { const L = c._raidLoss; if (!L) return 0; const v = L[leg] || 0; delete L[leg]; if (!L.outbound && !L.inbound) delete c._raidLoss; return v; }   // ★[T1104] 길 위에서 치른 몫 — 읽고 지운다(되돌아 다른 마을로 가는 다음 구간이 새로 셈하게)
 function _caravanArrive(world, c, day) {
+    if (!caravanBodyAllows(world, c, 'outbound')) return;
     // ★★[T525] 목적지가 이웃 존 스텁 — 도착은 그 존이 치른다(약탈도 그쪽 호스트가 정한다). 팔이 꺼졌거나 호스트가 빠졌으면 짐을 되돌린다.
     if (c.to && c.to._xz) { if (_xzOn(world)) _xzHandOff(world, c, day); else _xzBounce(world, c, day); return; }
     // ★[de-abstract] 약탈 (가는 길) = per-entity 실전투(주사위 제거): 길목에 실제 갱 있으면 호위+상인 vs 갱 라운드 스크럼
@@ -18178,12 +18180,13 @@ function _caravanTrade(world, c, day, deliveredGive, outboundLoss, pricesTo, pri
 // ★★[T707] 떠날 때 정산 — 찍어 둔 장(`c._t707`)을 `world.caravans` 차례로 한 번에 정산한다(같은 마을 같은 날 둘째는 첫째 정산 뒤 곳간을 본다 = 종전 차례).
 //   부르는 자리: `tickWorldV2Parts.head` — 날을 올린 바로 뒤 · 마을 틱 앞(교역 기록의 날 = 장부에 든 날).
 //   두 번 불려도 한 번(정산한 장은 지운다). 끔이면 찍힌 장이 없어 0.
-function settleMarketsV2(world) {
+function settleMarketsV2(world, only) {
   if (!world || !world.caravans || !world.caravans.length) return 0;
   let n = 0;
   for (const c of world.caravans) {
     const P = c._t707;
-    if (!P) continue;
+    if (!P || (only && c !== only)) continue;
+    if (!caravanBodyAllows(world,c,'market')) continue;
     c._t707 = null;
     _caravanTrade(world, c, world.day, P.give, P.loss, P.pricesTo, P.pricesFrom, P.pTo);   // 날 = 장부에 든 날(오늘 econ 날) — 장부 사건(`events.js` FIRST_GOODS)·마지막 교역일이 오늘 줄로 읽는다
     if (T1030_XZ_MARKET && c._xzHome) _t1030Settled(world, c);   // ★[T1030] 이웃 존 캐러밴 — 방금 선 교역 행을 'return' 이 실을 행으로(끔 = 이 줄 무동작)
@@ -18222,35 +18225,46 @@ function _homeDepositV2(c, res, received, slot, unsold) {   // unsold(바구니 
     c.from.tradeStats.woodImported = (c.from.tradeStats.woodImported || 0) + received;   // ★fuelK(리비히 연료)용 — 목재 수입도 부양력에 반영(교역이 숲빈약 마을 부양)
   }
 }
+// T1182: 실체 호스트가 있는 세계는 실제 몸 도착만 입금/경계 통과를 허락한다.
+// 헤드리스 econ 자에는 호스트가 없으며 기존 사건 시계를 사용한다.
+function caravanBodyAllows(world, c, leg) {
+  return typeof world.caravanBodyReady !== 'function' || !!world.caravanBodyReady(c, leg);
+}
 function tickCaravansV2(world, day) {
   // ★★[T525] 이웃 존에서 온 기록 먼저(그 존 캐러밴의 도착 · 이 존 캐러밴의 귀환) — 팔 켬 + 호스트가 꽂았을 때만.
   if (_xzOn(world) && world.xzone.inbox && world.xzone.inbox.length) _xzInbox(world, day);
   if (!world.caravans || !world.caravans.length) return;
-  for (const c of world.caravans) {
-    if (c._done) continue;
-    if (world.banditMeet) { _raidMeet(world, c, day); if (c._done) continue; }   // ★[T1104] 길 위 만남(호스트 문이 꽂힌 판만 · 끔 = 이 줄 무동작) — 행상이 길에서 죽었으면 그 캐러밴은 여기서 끝
-    if (c.basket) continue;   // ★[T1136] 바구니 캐러밴 — 도착 · 집 도착은 사건 처리기(`basketFlush`)가 몸이 닿은 시각대로 치른다(여기선 위 길 위 만남만 · 끔 = 바구니 없음 = 무동작)
+  for (const c of world.caravans) _caravanStepV2(world,c,day);
+  world.caravans = world.caravans.filter(c => !c._done);
+}
+function caravanBodyDue(world,c,leg,clockDue) {
+  return typeof world.caravanBodyReady === 'function' ? caravanBodyAllows(world,c,leg) : clockDue;
+}
+function _caravanStepV2(world,c,day) {
+    if (c._done) return;
+    if (world.banditMeet) { _raidMeet(world, c, day); if (c._done) return; }   // ★[T1104] 길 위 만남(호스트 문이 꽂힌 판만 · 끔 = 이 줄 무동작) — 행상이 길에서 죽었으면 그 캐러밴은 여기서 끝
+    if (c.basket) return;   // ★[T1136] 바구니 캐러밴 — 도착 · 집 도착은 사건 처리기(`basketFlush`)가 몸이 닿은 시각대로 치른다(여기선 위 길 위 만남만 · 끔 = 바구니 없음 = 무동작)
 
     // ★★[T533] 경계 칸에 서는 날(스텁이 목적지) — 몸과 기록이 함께 넘어간다(`_xzCross` 가 없는 캐러밴은 이 갈래를 안 탄다 = 종전).
-    if (c._xzCross && c.state === 'outbound' && c.to && c.to._xz && day >= c._xzCross.day) {
+    if (c._xzCross && c.state === 'outbound' && c.to && c.to._xz && caravanBodyDue(world,c,'outbound',day>=c._xzCross.day)) {
       if (_xzOn(world)) _xzHandOff(world, c, day); else _xzBounce(world, c, day);
     }
 
-    else if (c.state === 'outbound' && day >= c.arriveDay) {
+    else if (c.state === 'outbound' && caravanBodyDue(world,c,'outbound',day>=c.arriveDay)) {
       if (c._xzHome) { if (!_t1030Hold(world, c)) _xzArriveLoop(world, c, day); }   // ★[T525·T533] 이웃 존 캐러밴의 도착(이 존 몫을 걸어 왔다 · 우회 뒤 도착도 여기) · ★[T1030] 켬 + 호스트 전이면 하루 미룸(끔 = 종전)
       else _caravanArrive(world, c, day);
     }
 
     // ★★[T533] 이웃 존 캐러밴의 귀환 구간 — 집은 스텁이라 이 존 곳간에 넣지 않는다: 제 몫을 걸어 경계 칸에 선 날 집 존으로 넘긴다.
     else if (c._xzHome && c.state === 'inbound') {
-      if (c._xzBack && day >= c._xzBack.day && !_t1030Hold(world, c)) _xzHandBack(world, c, day, c._xzRow || null, c._xzBack.remain);   // ★[T1030] 켬 + 호스트 전이면 하루 미룸(끔 = 종전)
+      if (c._xzBack && caravanBodyDue(world,c,'inbound',day>=c._xzBack.day) && !_t1030Hold(world, c)) _xzHandBack(world, c, day, c._xzRow || null, c._xzBack.remain);   // ★[T1030] 켬 + 호스트 전이면 하루 미룸(끔 = 종전)
     }
 
-    else if (c.state === 'inbound' && day >= c.returnArriveDay && !c._t707) {   // ★[T707] 정산 전 장은 귀환을 안 닫는다(머리에서 정산되니 실제로는 안 닿는다 · 끔이면 `_t707` 없음 = 종전)
+    else if (c.state === 'inbound' && !c._t707 && caravanBodyDue(world,c,'inbound',day>=c.returnArriveDay)) {   // ★[T707] 정산 전 장은 귀환을 안 닫는다(머리에서 정산되니 실제로는 안 닿는다 · 끔이면 `_t707` 없음 = 종전)
       // ★[de-abstract] 약탈 (귀환) = per-entity 실전투: 왕복 같은 길목 갱 vs 호위+상인 · ★[T1104] 만남 문이 꽂혔으면 길 위에서 치른 몫만(`_raidMeet` · 끔 = 종전 글자)
       const gangI = world.banditMeet ? null : (world.banditGang ? world.banditGang(c.from, c.to) : null);
       let inboundLoss = world.banditMeet ? _raidTaken(c, 'inbound') : _raidIn(world, c, day, gangI);
-      if (c._done) continue;   // 행상 사망 → 캐러밴 종료(자원 입금 X)
+      if (c._done) return;   // 행상 사망 → 캐러밴 종료(자원 입금 X)
 
       if (c._returningRes && c._returningAmt > 0) {
         _homeDepositV2(c, c._returningRes, c._returningAmt * (1 - inboundLoss), 'ret');   // ★[T1136] 이름만 올렸다(위 함수 · 값 · 차례 무변)
@@ -18265,10 +18279,8 @@ function tickCaravansV2(world, day) {
       }
       c._done = true;
     }
-  }
-  world.caravans = world.caravans.filter(c => !c._done);
-}
 
+}
 // ═══ ★★[T525] 존 경계 넘기 — 몸의 기록 둘('arrive' · 'return') · 전부 팔 켬 + 호스트가 `world.xzone` 을 꽂았을 때만 닿는다 ═══
 //   기록은 호스트가 옮긴다(존 서버 = 안 문 핸드오프 · 자 = 워커 사이 전달). econ 은 `out` 에 쓰고 `inbox` 에서 읽을 뿐이다.
 // 이 존 캐러밴이 경계 칸에 섰다(`_xzCross`) 또는 스텁에 닿았다(T525 뼈대 · `split` 없음) — 몸을 넘긴다.
