@@ -24,3 +24,6 @@ E.tickVillage=function(v,day){
   return result;
 };
 process.on('exit',()=>{rec.endPop=lastWorld&&lastWorld.villages?lastWorld.villages.reduce((a,v)=>a+v.npcs.length,0):[...lastPop.values()].reduce((a,b)=>a+b,0);rec.endDay=lastWorld?lastWorld.day:null;rec.lastCompleteEconDay=[...rec.rows].reverse().find(r=>r.expectedVillages!=null&&r.observedVillages===r.expectedVillages)?.day??null;const out=process.env.T577_OUT;if(out)fs.writeFileSync(out.replace(/\.json$/,'.t1159.json'),JSON.stringify(rec));});
+
+// 몸∞ 비교에서는 기존 도적 관찰도 함께 읽는다. 집 N의 두 갈래에 같은 관찰을 적용한다.
+if(process.env.T1078_BANDIT_ALL==='1')for(const file of ['t1078-observe','t1079-observe','t1104-observe'])require('./'+file);
