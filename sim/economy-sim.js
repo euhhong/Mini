@@ -560,12 +560,17 @@ function _t1192Preserve(v,from,take,addProduce){
   const recs=captured?G.capEnd(v,from):[],out=[];let accounted=0;
   for(const r of recs){const src=FishGoods.species().includes(r.it)?r.it:(FishGoods.species().includes(from)?from:null);if(!src)continue;
     const n=G.countOf(r,src,K.kcalOf,K.DAY_KCAL);if(!(n>0))continue;
-    const id=FP.driedId(src),row=G.preserveRecord(r,src,id,n);out.push({id,n,row});accounted+=r.u;
+    const id=FP.driedId(src),row=G.preserveRecord(r,src,id,n);out.push({id,n,row,src,r0:r});accounted+=r.u;
   }
   // Headless typed catches have an identity; generic historical stock does not.
   const left=Math.max(0,take-accounted);
-  if(left>1e-9){if(FishGoods.species().includes(from)){const n=left*_t860Unit(from)/FishGoods.factor(from);out.push({id:FP.driedId(from),n});}
+  if(left>1e-9){if(FishGoods.species().includes(from)){const n=left*_t860Unit(from)/FishGoods.factor(from);out.push({id:FP.driedId(from),n,src:from});}
     else out.push({id:'dried_fish',n:left*PRESERVE_YIELD});}
+  // Existing pickle recipe and its salt cost decide feasibility. Keep the already-defined daily salt need; no invented dry/pickle ratio.
+  const saltPer=require('../server/spoil').PRESERVE.pickle_fish.needs.salt||0;
+  let saltLeft=Math.max(0,(v.storage.salt||0)-(v.npcs.length||1)*SALT_DAILY_PC),saltUsed=0;
+  for(const x of out)if(x.src&&saltPer>0&&saltLeft+1e-9>=x.n*saltPer){const cost=x.n*saltPer;saltLeft-=cost;saltUsed+=cost;x.id=FP.pickledId(x.src);if(x.r0)x.row=G.preserveRecord(x.r0,x.src,x.id,x.n);}
+  if(saltUsed>0){v.storage.salt-=saltUsed;_cons(v,'salt',saltUsed);}
   for(const x of out){if(x.row)G.pushIn(v,x.id,[x.row]);addProduce(x.id,x.n,true);if(x.row)G.clearIn(v,x.id);}
 }
 function _t860Begin(v, from, potA, actA) {
