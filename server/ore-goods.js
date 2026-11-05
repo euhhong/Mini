@@ -13,5 +13,5 @@ function total(store){let n=0;for(const k of ids)n+=Math.max(0,store?.[k]||0);re
 function heldMix(store){const m={};for(const k of ids)if(store?.[k]>0)m[mineralOf(k)]=store[k];return shares(m);}
 function add(store,n,mix){const q=split(n,mix);for(const k in q)store[k]=(store[k]||0)+q[k];return Object.values(q).reduce((a,b)=>a+b,0);}
 function take(store,n){const have=total(store),use=Math.min(Math.max(0,n||0),have),out={};if(!(use>0))return out;let left=use;const ks=ids.filter(k=>store[k]>0);ks.forEach((k,i)=>{const q=i===ks.length-1?Math.min(store[k],left):Math.min(store[k],use*store[k]/have);store[k]-=q;out[k]=q;left-=q;});return out;}
-function descriptors(catalog){const out={};for(const m of minerals){const ko=catalog[m]?.ko||(m==='jade_raw'?catalog.jade?.ko:m)||m;out[idOf(m)]={ko:m==='jade_raw'?ko:m==='obsidian'?ko+' 원석':ko+' 광석',econGroup:'ore',category:'mineral'};}return out;}
+function descriptors(catalog){const out={};for(const m of minerals){const ko=catalog[m]?.ko||(m==='jade_raw'?catalog.jade?.ko:m)||m;const id=idOf(m);out[id]={ko:m==='jade_raw'?ko:m==='obsidian'?ko+' 원석':ko+' 광석',econGroup:'ore',category:'mineral',get weight(){return require('./weights').kgOf(id);}};}return out;}
 module.exports={ON,configure,minerals,ids,idOf,mineralOf,isOre:k=>!!mineralOf(k),shares,split,total,heldMix,add,take,descriptors,POOL};
