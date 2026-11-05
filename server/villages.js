@@ -9852,12 +9852,7 @@ function _villageCropFor(vil, field, mo, par) {   // 랩 villageCropFor 동형: 
   //     (그 불변이 곧 "연출만"의 증거다 · 이 카드의 안전 근거).
   const seed = vil.dbId | 0, ck = field + '_' + mo + '_' + par + '_' + seed;
   if (ck in _vcfCache) return _vcfCache[ck];
-  const cand = _Crops().sowableMonth(field, mo);
-  if (!cand.length) return (_vcfCache[ck] = null);
-  const pick = (salt) => { const h = (Math.imul(seed ^ salt, 2654435761) ^ Math.imul(mo + 1, 40503)) >>> 0; return cand[h % cand.length]; };
-  let res; if (field !== '밭') res = pick(101);
-  else { const c1 = pick(211); if (cand.length < 2) res = c1; else { let c2 = pick(307); if (c2 === c1) c2 = cand[(cand.indexOf(c1) + 1) % cand.length]; res = par ? c2 : c1; } }
-  return (_vcfCache[ck] = res);
+  return (_vcfCache[ck] = _Crops().villageCropPick(seed, field, mo, par));   // ★[T1179] 고르는 산수는 작물 정본으로 옮겼다(글자 그대로 · econ 작물 철이 같은 함수를 부른다)
 }
 // ★[T350] `_pidHash` 정의는 `server/seed-rand.js` 로 옮겼다(머리에서 require · 사본 0).
 function _lifeAct(npc, s) {   // ★[액션 라벨 가시화] 행동 라벨 세터 — 변경 시 타임스탬프(zone.js makeEntry가 변경 후 1.2s 윈도우+최초가시에만 전송: 무상태 델타)

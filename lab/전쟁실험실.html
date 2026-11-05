@@ -4563,6 +4563,16 @@ function sowableMonth(field, month) {
   const out = IDS.filter((id) => fitsField(id, field) && sowMonthsOf(id).includes(month | 0));
   return (_smCache[k] = out);
 }
+// ★[T1179] 마을 특산물 고르기 — 시드 · 달 · 자리(논 1종 · 밭 2종 분담)의 순수 함수. 몸은 `server/villages.js` `_villageCropFor` 에서
+//   **글자 그대로 옮겼다**(그쪽은 이 함수를 부른다 · 결과 바이트 같음) — econ 작물 철(`T1179_CROP_SEASON`)이 같은 고르기를 부른다(사본 0).
+function villageCropPick(seed, field, mo, par) {
+  const cand = sowableMonth(field, mo);
+  if (!cand.length) return null;
+  const pick = (salt) => { const h = (Math.imul(seed ^ salt, 2654435761) ^ Math.imul(mo + 1, 40503)) >>> 0; return cand[h % cand.length]; };
+  let res; if (field !== '밭') res = pick(101);
+  else { const c1 = pick(211); if (cand.length < 2) res = c1; else { let c2 = pick(307); if (c2 === c1) c2 = cand[(cand.indexOf(c1) + 1) % cand.length]; res = par ? c2 : c1; } }
+  return res;
+}
 // ★결정론 해시 — `wildSeedAt` 이 쓰는 그 함수를 **그대로 내준다**(부르는 쪽이 사본을 만들지 않게).
 function h32(a, b, c) { return _h32(a, b, c); }
 
@@ -4609,7 +4619,7 @@ module.exports = {
   keepDaysOf, seedKeepDaysOf, hungerOf, tastyOf, growDaysOf, kgOf, koOf, emojiOf,
   T594_CROP_CAL, calDaysOf,   // ★[T594] 작물 철 고증 — 손잡이 · 고증 활동일(순수 유도 · 표에 없으면 null)
   seasonOfDay, sowSeasons, canSowOn, sowableIn, sowableOn, wildSeedAt, WILD_SEED_CHANCE,
-  monthOf, sowMonthsOf, fitsField, sowableMonth, h32, MONTHS_PER_YEAR, ANCHOR_MONTH,
+  monthOf, sowMonthsOf, fitsField, sowableMonth, villageCropPick, h32, MONTHS_PER_YEAR, ANCHOR_MONTH,
   lifecycleOf, isPerennial, isWinterCrop, LC_WINTER, LC_PERENNIAL,
   dormantAt, vernalDay, VERNAL, CARE_PAUSE, PER_DORMANT, T1041_CROP_MEMO, t1041Stat: () => Object.assign({ on: T1041_CROP_MEMO }, _t1041Stat), _grownDays0,   // ★[T1041] 활동일 · 계절 기억 손잡이(하네스가 읽는다) · ★[T99] 휴면 술어 하나 · 춘화일 — 마을·플레이어가 같이 부른다
   rainedOn, RAIN_WATER,   // ★[T112] 비 온 날은 물 준 날 — 상태기 셋이 같이 부른다
@@ -11102,6 +11112,55 @@ function t1149WinterNeed(v, day) {
   const N = v.npcs.length; if (!(N > 0)) return 0;
   return Math.max(0, N * DAILY_FOOD_CONSUMPTION * t1149WinterDays(day) - totalFoodEquivalent(v));
 }
+// ★★[T1179 2026-11-05 · ★재민 11-05 "겨울에 식량 수확이 있어? 작물별로 수확 기간이 다 다르고 겨울에는 아예 작물이 없지 않아?"] **작물 철** — 손잡이 `T1179_CROP_SEASON`
+//   (끔 기본 · `=1` 켬 · 끔 = 아래 갈래를 아무도 안 탄다 = 종전 바이트).
+//   농부의 하루 일(식 무변 — `JOBS.farmer.base` × 비옥도 × 철 배수 × 숙련 · 도구 …)은 그대로 하고, 그 식량(`food` · 생곡 셋)을
+//   **곳간이 아니라 밭에 선 작물**에 쌓는다. 그 작물이 익는 날(작물 정본 `crops.readyDay` — 고증 철 `crop-cal` · 휴면 · 춘화 T99) 그 몫이 곳간에 든다.
+//   밭 = 자리 셋(논 1 · 밭 2 — 생활층 `_villageCropFor` 와 같은 분담) · 무엇을 심나 = 작물 정본 `crops.villageCropPick`(생활층과 같은 고르기 · 사본 0).
+//   비어 있는 자리는 그 달에 심을 수 있는 것이 있으면 그날 심는다(겨울엔 월동 작물만 · 없으면 빈 채로). 그날 일은 **서 있는 작물에** 고르게 나눈다
+//   (서 있는 것이 없으면 자리 셋 모두에 — 갈이 · 다음 작물 몫). 세금 · 잠재 생산(prodK) · 볏짚 · 하루 생산 장부는 종전 그대로 날마다 선다.
+//   ⇒ 한 해 총량 = 종전 식의 한 해 합(세계 크기 무변 · 새 수 0) · 바뀌는 것은 **곳간에 드는 때**뿐이다.
+const T1179_CROP_SEASON = (typeof process !== 'undefined' && process.env) ? process.env.T1179_CROP_SEASON === '1' : false;
+const T1179_SLOTS = [['논', 0], ['밭', 0], ['밭', 1]];
+const T1179_ITEMS = { food: 1, wheat: 1, rice: 1, barley: 1 };   // 농부가 내는 먹을 것(주산출 + 생곡 부산물 셋 — `RAW_GRAINS`)
+// 고르기 시드 — 마을 이름의 결정론 해시(생활층 시드 `dbId` 는 econ 이 모른다 · 같은 후보 · 같은 산수 · 시드만 다르다 — 보고 회부)
+function _t1179Seed(v) { const t = String((v && v.name) || ''); let h = 0; for (let i = 0; i < t.length; i++) h = (Math.imul(h, 31) + t.charCodeAt(i)) | 0; return h >>> 0; }
+function _t1179Field(v) {
+  let F = v._t1179F;
+  if (!F) F = v._t1179F = { seed: _t1179Seed(v), s: T1179_SLOTS.map(([f, p]) => ({ f, p, c: null, pd: -1, rd: -1, pool: {} })), acc: 0, inTot: 0, harv: 0 };
+  return F;
+}
+// 하루 앞(생산 루프 앞) — 익은 자리를 거둬 곳간에 넣고, 빈 자리에 그 달 작물을 심는다
+function t1179FieldDay(v, day) {
+  const C = _crops(); if (!C || !C.villageCropPick || !C.readyDay) return;
+  const F = _t1179Field(v), mo = C.monthOf(day);
+  v._t1179InToday = 0;
+  for (const s of F.s) {
+    if (s.c && day >= s.rd) {
+      for (const r in s.pool) { const a = s.pool[r]; if (a > 0) { v.storage[r] = (v.storage[r] || 0) + a; const e = a * (r === 'food' ? 1 : (_t86Factor(r) || 0)); F.inTot += e; v._t1179InToday += e; } }
+      s.pool = {}; s.c = null; F.harv++;
+    }
+    if (!s.c) {
+      const c = C.villageCropPick(F.seed, s.f, mo, s.p);
+      const rd = c ? C.readyDay(c, day) : null;
+      if (c && rd != null) { s.c = c; s.pd = day; s.rd = rd; }
+    }
+  }
+}
+// 농부의 먹을 것 한 몫(세금 뗀 뒤) — 서 있는 작물에 고르게(없으면 자리 셋 모두에)
+function t1179Accrue(v, r, amt) {
+  const F = _t1179Field(v);
+  let n = 0; for (const s of F.s) if (s.c) n++;
+  const all = n === 0, k = all ? F.s.length : n;
+  F.acc += amt * (r === 'food' ? 1 : (_t86Factor(r) || 0));   // 계측(밭에 든 먹을 것 누계 · 식량 환산)
+  for (const s of F.s) if (all || s.c) s.pool[r] = (s.pool[r] || 0) + amt / k;
+}
+// 밭에 서 있는 먹을 것(식량 환산 · 계측 — 곳간 밖)
+function t1179Standing(v) {
+  const F = v && v._t1179F; if (!F) return 0;
+  let t = 0; for (const s of F.s) for (const r in s.pool) t += (s.pool[r] || 0) * (r === 'food' ? 1 : (_t86Factor(r) || 0));
+  return t;
+}
 function farmFlowPerDay(v, fN) {
   const fert = (v.land && v.land.fertility) || 0;
   if (!T100_FIELD_YIELD) return fN * JOBS.farmer.base * fert;
@@ -12926,6 +12985,7 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
   //   ⚠읽는 쪽이 손잡이 뒤(`forageRegrow…`)라 끈 팔은 이 수를 **안 본다**(관측 칸).
   v._forageOutLast = _forageRaw * _forageScale;
   v._forageScale = _forageScale;   // ★저장(§9): 채집 한계가치(픽커·기회비용)가 임연부 MSY 포화를 보게 — 포화 임연부에 herb 가격이 채집꾼을 무한 유인(공유지 비극)하는 것 차단
+  if (T1179_CROP_SEASON) t1179FieldDay(v, day);   // ★[T1179] 익은 밭을 거두고 빈 자리에 심는다(생산 앞 · 끔 = 무동작)
   for (const npc of v.npcs) {
     if (npc._tradingUntil && npc._tradingUntil > day) continue;   // ★교역 원정 중 → 생산 안 함(기회비용 실현). 저숙련자라 손실 작음.
     // ★★[T295 2026-09-19] **징발자는 생산에서 빠진다** — 걷는 병사(존 pid)와 1:1 로 묶인 이 NPC 는
@@ -12994,7 +13054,8 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
       if (amt <= 0) return;
       if (r === 'food') v._grainToday = (v._grainToday || 0) + amt;   // ★오늘 곡물 실생산 → 볏짚 연료(아래 연료 블록)
       const tax = amt * TAX_RATE;
-      v.storage[r] = (v.storage[r] || 0) + (amt - tax);
+      if (T1179_CROP_SEASON && T1179_ITEMS[r] && npc.currentJob === 'farmer') t1179Accrue(v, r, amt - tax);   // ★[T1179] 켬 = 밭에 선 작물로(익는 날 곳간에 · 위 `T1179_CROP_SEASON` 주석)
+      else v.storage[r] = (v.storage[r] || 0) + (amt - tax);
       v.treasury[r] = (v.treasury[r] || 0) + tax;
       dailyProduction[r] = (dailyProduction[r] || 0) + amt;   // ★NaN 가드(유령 감사서 발견): 버퍼 리셋은 v1 RESOURCES 키만 돌아 specialty 부산물(wheat 등)이 undefined+amt=NaN 영구 오염 — 흐름 진단·식량환산 편입의 지뢰였음
     };
@@ -15784,6 +15845,7 @@ function computeVillagePrices(v) {
 
 module.exports = {
   T1149, t1149LeanDays, t1149WinterDays, t1149WinterNeed,   // ★[T1149] 겨울 골짜기 — 손잡이 갈래 · 달력 셈 · 다가오는 겨울에 모자랄 식량(v2 가을 사 모으기가 읽는다)
+  T1179_CROP_SEASON, t1179FieldDay, t1179Standing,   // ★[T1179] 작물 철 — 손잡이 · 밭 하루 · 밭에 선 먹을 것(계측)
   assignNPCJob, assignableJobs, JOB_SWITCH_COOLDOWN,
   t1113On, t1113Unhappy, t1113Happy, t1113LowMul, t1113IsFood, T1113_HAPPY_MID,   // ★[T1113] 행복 낮을 때 효과 셋 — war-core · 서버 · 하네스가 같은 술어를 읽는다(사본 0)   // ★[T1085] 촌장 지정 — 서버 동사 `assign_job` 이 부른다(규칙 사본 0)
   _autoSwitchJobForTest: autoSwitchJob, _switchNPCJobForTest: switchNPCJob,   // ★[T1085] 하네스가 자율 전환 그 함수를 부른다(시험 이름 · 사본 0)
