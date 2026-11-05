@@ -25,7 +25,7 @@ def run(tag,args,env):
  rec['runs'].append(row);save(); print('DONE',tag,code,row['wallSec'],flush=True)
  if code not in (0,1) or (code==1 and args[0]!='scripts/server-baseline-check.js'):sys.exit(code or 2)
 for v in variants:
- env={k:'0' for k in KEYS};env.update({k:'1' for k in ['T1076_ARMY_MORALE','T466_LOOT_ACT','T826_LOOT_BODY','T1168_SORTIE_AMMO']})
+ env={k:'0' for k in KEYS};env.update({k:'0' for k in ['T1078_BANDIT_ALL','T1079_BANDIT_CAMP','T1104_BANDIT_WALK','T1159_HOME_N']});env.update({k:'1' for k in ['T1076_ARMY_MORALE','T466_LOOT_ACT','T826_LOOT_BODY','T1168_SORTIE_AMMO']})
  if v=='all':env.update({k:'1' for k in KEYS})
  elif v!='off':env[v]='1'
  dest=OUT/v;dest.mkdir(exist_ok=True)

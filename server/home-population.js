@@ -4,13 +4,14 @@
 function homePopulation(vil, players, cellSize) {
   const total = vil && vil.econ && vil.econ.npcs ? vil.econ.npcs.length : 0;
   if (!vil || !vil._terrSet || !players) return total;
+  const drafted = new Set(vil.econ.npcs.filter(n => n._warDraft && n._warPid != null).map(n => n._warPid));
   let away = 0;
   const seen = new Set();
   for (const pid of vil.npcPids || []) {
     if (seen.has(pid)) continue;
     seen.add(pid);
     const p = players.get(pid);
-    if (!p || !(p._muster || p._t1104W != null) || !Number.isFinite(p.x) || !Number.isFinite(p.y)) continue;
+    if (!p || p.hp <= 0 || !((p._muster && drafted.has(pid)) || p._t1104W != null) || !Number.isFinite(p.x) || !Number.isFinite(p.y)) continue;
     // 좌표는 존의 픽셀, 영토는 존의 셀 정본이다.
     if (!vil._terrSet.has(Math.floor(p.x / cellSize) + ',' + Math.floor(p.y / cellSize))) away++;
   }
