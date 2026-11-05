@@ -30,5 +30,7 @@ _homeDepositV2=function(c,...a){O.st.deposit++;if(!O.ready(c,'inbound'))O.st.dep
  };
  const Ev=require(path.join(ROOT,'server/events')),mk=Ev.createLedger;
  Ev.createLedger=function(...a){const L=mk.apply(this,a),scan=L.scanDay;L.scanDay=function(w,day,...b){try{const s=state();st.days.push({day:w.day,trade:w.tradeLog.length,caravans:w.caravans.length,bodies:s&&s.caravanBodies?s.caravanBodies.size:0});}catch(e){st.errors.push(String(e));}return scan.call(this,w,day,...b);};return L;};
- process.on('exit',()=>{st.tickUs=st.tickN?st.tickNs/st.tickN/1000:0;st.meanBodies=st.tickN?st.bodySamples/st.tickN:0;st.meanActors=st.tickN?st.actorSamples/st.tickN:0;st.moveUs=st.moveN?st.moveNs/st.moveN/1000:0;fs.writeFileSync(out,JSON.stringify(st));});
+ const dump=()=>{st.tickUs=st.tickN?st.tickNs/st.tickN/1000:0;st.meanBodies=st.tickN?st.bodySamples/st.tickN:0;st.meanActors=st.tickN?st.actorSamples/st.tickN:0;st.moveUs=st.moveN?st.moveNs/st.moveN/1000:0;fs.writeFileSync(out,JSON.stringify(st));};
+ process.on('exit',dump);
+ if(process.env.T1182_OBSERVE_DIR)setInterval(dump,5000).unref();
 }

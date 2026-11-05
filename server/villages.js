@@ -12960,7 +12960,7 @@ function _t707Linger(body, c, p) {   // 상인 머묾 = 장 끝 · 남문 앞 �
   const vil = state.byEcon && state.byEcon.get(c.to), rec = vil && vil._mkt;
   if (rec && rec.cars.has(c.id)) body.lingerUntil = rec.end;
   const rp = (T661_ON && body._t661) ? body._t661.path.pts : _t661ReturnPts(body);
-  if (rp && rp.length) { setBodyPts(body, rp); if (p) { if (T1145_XY_COLS) BC.w(p, rp[0].x, rp[0].y); else { p.x = rp[0].x; p.y = rp[0].y; } } }
+  if (!body._t1182 && rp && rp.length) { setBodyPts(body, rp); if (p) { if (T1145_XY_COLS) BC.w(p, rp[0].x, rp[0].y); else { p.x = rp[0].x; p.y = rp[0].y; } } }
   _t707Stat.linger++;
 }
 function _t707Walk(vil, npc, k) {   // 장 명부의 몸 — 제 자리로 걷고 선다(목표만 · 길은 존 걸음 · 사냥꾼은 두뇌 주도권을 내려놓는다 — `_lifeGoHome` 꼴)
@@ -16018,7 +16018,7 @@ module.exports = { t1144Stat: () => Object.assign({ on: T1144_LIFE_EVENT, verify
       get L_WATERGAP() { return L_WATERGAP; },
       get TASKS_PER_FARMER() { return _lifeTasksPerFarmerDay(); },
     },
-    _caravanBodyProbe: { on: T762_CARAVAN_BODY, pack: _t1034Pack, restore: _t1034Apply, ready: _t1182BodyReady, tick: tickCaravanBodies, pts: setBodyPts, walk: _t1182Walk, returnLeg: startReturnLeg },
+    _caravanBodyProbe: { on: T762_CARAVAN_BODY, pack: _t1034Pack, restore: _t1034Apply, ready: _t1182BodyReady, tick: tickCaravanBodies, pts: setBodyPts, walk: _t1182Walk, returnLeg: startReturnLeg, linger: _t707Linger },
     _distProbe: {
       compute: (reason, opts) => computeAndInjectDistMatrix(reason, opts),
       gen: (reason, opts) => _distMatrixGen(reason, opts),   // ★[T957] 하네스가 한 양보씩 민다(`test-distmatrix` ⑥)

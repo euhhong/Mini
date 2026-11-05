@@ -42,7 +42,10 @@ S._t1034Saved=new Map([[String(cb.id||convoy.id),saved.b[String(cb.id||convoy.id
 p.x=9999;guard.x=9999;cb.prog=0;P.restore(cb,Date.now()+86400000);
 ok(p.x===x && guard.x===g && cb.prog===pg,'상인과 호위는 저장한 실제 위치로 복원, 꺼진 동안 순간이동 0');
 cb._xz=true;cb._xzInPts=[{x:1,y:2},{x:64,y:0}];const xzSaved=P.pack();ok(!!xzSaved.b['3'].act && xzSaved.b['3'].act.xzIn[0][0]===1,'경계 캐러밴도 실제 몸과 넘어온 길을 저장한다');
-cb.phase='linger';cb.lingerUntil=0;p.x=64;guard.x=64;cb.prog=cb.len;ok(!P.ready(convoy,'market'),'머묾 상태만으로 실제 마당 밖 몸이 정산할 수 없다');
+cb.phase='linger';cb.lingerUntil=0;P.pts(cb,[{x:0,y:0},{x:64,y:0}]);p.x=64;guard.x=64;cb.prog=cb.len;
+S.byEcon=new Map([[convoy.to,{_mkt:{cars:new Set([convoy.id]),end:0}}]]);const marketPts=cb.pts;P.linger(cb,convoy,p);
+ok(cb.pts===marketPts && P.ready(convoy,'market'),'머묾은 도착한 왕로 끝에서 유지한다(준비한 귀로로 바꾸어 정산이 막히지 않는다)');
+p.x+=10;ok(!P.ready(convoy,'market'),'머묾 상태만으로 실제 마당 밖 몸이 정산할 수 없다');p.x=64;
 cb.c._t707={give:1};S._t731={};S.econV2={settleMarketsV2:()=>{throw new Error('혼합 마감 중 정산');}};
 P.returnLeg(cb,Date.now());ok(cb.phase==='linger' && !!cb.c._t707,'현지 자정 창에서는 몸 틱이 장 정산을 앞당기지 않는다');
 S._t731=null;S.tickJobs=[()=>{}];P.returnLeg(cb,Date.now());ok(!!cb.c._t707,'마감 조각 중에도 장 정산 대기');S.tickJobs=null;S.econV2=E;

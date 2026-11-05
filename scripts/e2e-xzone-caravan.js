@@ -42,6 +42,10 @@ const CS = require(path.join(ROOT, 'server', 'chunk')).CHUNK_SIZE;
 const CPORT = 3010;
 const ZIDS = ['hanbando', 'nippon'];
 const DAYMS = process.env.XZ_DAYMS || '3000';
+// T1182: 물리 속도의 빠른 하루 환산, 이전 페이싱 판은 =0으로 그대로 잰다.
+const BODY = process.env.T762_CARAVAN_BODY !== '0';
+const FRAME_MS = 1000 / 30;
+const BODY_PX_MS = require('../public/move-model').DEFAULTS.baseSpeed / 1000 * require('../server/zone-config').WORLD.dayLengthMs / +DAYMS;
 const WAIT_S = parseInt(process.env.XZ_WAIT_S || '600', 10);
 
 let pass = 0, fail = 0;
@@ -136,7 +140,7 @@ const dist = (a, b) => (a && b) ? Math.hypot(a.x - b.x, a.y - b.y) : Infinity;
       const home = H.trace.find((t) => t.k === 'home' && t.id === pick.id);
       if (home) { done = home; break; }
     }
-    await sleep(500);
+    await sleep(BODY ? FRAME_MS : 500);
   }
   ok(!!pick, 'ⓒ0 전제: 한반도 캐러밴이 **몸을 가진 채** 경계를 넘었다(넘는 순간의 몸 자리가 있다)', pick ? `#${pick.id} → ${pick.to}@${pick.toZone} ${pick.res}×${Math.round(pick.amt)} · 남은 ${pick.remain}일` : '없음');
   const key = pick ? `xz:hanbando:${pick.id}` : null;
@@ -154,7 +158,7 @@ const dist = (a, b) => (a && b) ? Math.hypot(a.x - b.x, a.y - b.y) : Infinity;
     if (a.phase !== b.phase || a.dep !== b.dep) { legs++; continue; }   // 구간이 바뀌었다(머묾 → 귀환) — 새 길의 첫 점은 옛 길의 끝(같은 마을)
     const dp = b.prog - a.prog, dt = Math.max(0, b.t - a.t);
     if (d > Math.max(0, dp) + 2) offPath++;
-    const cap = (b.nom || 0) * 4 * dt + 2;
+    const cap = BODY ? BODY_PX_MS * (dt + FRAME_MS) + 2 : (b.nom || 0) * 4 * dt + 2;
     if (dp > cap) overPace++;
     worst = Math.max(worst, cap > 0 ? dp / cap : 0);
   }
@@ -222,7 +226,7 @@ const dist = (a, b) => (a && b) ? Math.hypot(a.x - b.x, a.y - b.y) : Infinity;
       ok(longer.length > 0, 'ⓘ3 자명 통과 금지 — 적어도 한 몸은 종전 1게임시간보다 오래 머문다(장 끝 − 머묾을 연 시각)', `${longer.length}/${rows.length}`);
       const md = pick ? mktOf.get(`xz:hanbando:${pick.id}`) : undefined;
       const want = (back && md != null) ? (back.abandoned ? md : md + 1) : null;
-      ok(!!back && md != null && back.rowDay === want, "ⓘ4 ★'return' 의 교역 행 날 = 장이 선 날 + 1(다음 econ 틱 머리 정산 · 빈손이면 그날) — 값은 ⓓ 가 잰 같은 계약", back ? `장 날 ${md} · 행 날 ${back.rowDay}${back.abandoned ? ' (빈손)' : ''}` : '-');
+      ok(!!back && md != null && (BODY ? back.rowDay >= md && back.rowDay <= back.day : back.rowDay === want), BODY ? "ⓘ4 몸 정본 — 실제 시장 정산 행의 날은 장이 선 날 이후·경계 출발 날 이전(실제 도착 증거는 T1182 관측기)" : "ⓘ4 일정 판 — 교역 행 날 = 장이 선 날 + 1(빈손이면 그날)", back ? `장 날 ${md} · 행 날 ${back.rowDay}${back.abandoned ? ' (빈손)' : ''}` : '-');
     } else {
       ok(rows.length > 0 && rows.every((r) => r.mk === undefined) && (!back || back.rowDay === undefined), 'ⓘ1 끔 — 장 칸이 안 선다(덤프 `mk` · `rowDay` 없음 · 종전 계약)', `${rows.filter((r) => r.mk === undefined).length}/${rows.length}`);
     }
@@ -339,7 +343,7 @@ const dist = (a, b) => (a && b) ? Math.hypot(a.x - b.x, a.y - b.y) : Infinity;
       console.log(`  · [표 · T1030 ⓗ] | 판 | 죽인 창 | 넘긴 짐 | 닛폰 다시 뜸: 이은 캐러밴 · 못 이은 | 닛폰 'return'(판 짐 · 돌려보낸 짐) | 한반도 곳간 | 한반도 그 캐러밴 | 생성 | 소멸 |`);
       console.log(`  · [표 · T1030 ⓗ] | ${ON ? '켬' : '끔'} | ${ON ? '장 중(정산 전)' : '판 뒤(귀환 구간)'} | ${tgt.res}×${sent.toFixed(2)} | ${m728 ? `${m728[1]} · ${lost}` : '-'} | ${backs.length ? backs.map((b) => `${b.sold ? `${b.sold.res}×${b.sold.amt}` : '-'} · ${b.res}×${(b.amt || 0).toFixed(2)}`).join(' / ') : '없음'} | ${homes.length ? homes.map((h) => `${h.res}×${(h.amt || 0).toFixed(2)}`).join(' / ') : '안 듦'} | ${hc ? hc.state : '없음(끝남)'} | ${made.toFixed(2)} | ${goneAmt == null ? '?' : (+goneAmt).toFixed(2)} |`);
       console.log(`  · [표 · T1030 ⓗ] 죽인 뒤 닛폰 다시 뜨기 ${((Date.now() - tKill) / 1000).toFixed(0)}s 안 · 걸음표 다시 ${ready ? `${((ready - tKill) / 1000).toFixed(0)}s` : '안 섬'}`);
-      if (ON) {
+      if (ON || BODY) {
         ok(lost === 0, 'ⓗ3 ★켬 — 다시 뜬 닛폰이 이웃 존 캐러밴을 잇는다(메타 행 · 못 이은 0)', m728 ? m728[0].slice(0, 120) : 'T728 줄 없음');
         ok(backs.length === 1 && backs[0].sold && backs[0].sold.res === tgt.res && Math.abs(backs[0].sold.amt - sent) < 0.01, "ⓗ4 ★켬 — 다시 뜬 닛폰이 한 번 정산해 'return' 하나(판 짐 = 넘긴 짐)", backs.map((b) => JSON.stringify(b.sold)).join(' · ') || '없음');
         ok(homes.length === 1 && Math.abs((homes[0].amt || 0) - retAmt) < 1e-9 && made === 0, 'ⓗ5 ★★켬 — 한반도 곳간에 하나 든다 = 돌려보낸 짐(생성 0 · 소멸 0)', homes.length ? `${homes[0].res}×${(homes[0].amt || 0).toFixed(4)} = ${retAmt.toFixed(4)}` : '안 듦');
