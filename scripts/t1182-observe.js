@@ -23,7 +23,7 @@ _t1136Arrive=function(w,c,...a){O.st.basketTrade++;if(!O.ready(c,'outbound'))O.s
 _xzHandOff=function(w,c,...a){O.st.xzone++;if(!O.ready(c,'outbound'))O.st.xzoneNoBody++;return xo.call(this,w,c,...a);};
 _xzHandBack=function(w,c,...a){O.st.xzone++;if(!O.ready(c,'inbound'))O.st.xzoneNoBody++;return xb.call(this,w,c,...a);};
 _caravanArrive=function(w,c,...a){const had=O.ready(c,'outbound'),s=c.state,to=c.to;O.proofs.set(c,had);const r=arr.call(this,w,c,...a);if(c.state!==s||c.to!==to||c._done){O.st.arrive++;if(!had)O.st.arriveNoBody++;O.proofs.set(c,had);}return r;};
-_caravanTrade=function(w,c,...a){O.st.trade++;if(!O.proofs.get(c))O.st.tradeNoBody++;return tr.call(this,w,c,...a);};
+_caravanTrade=function(w,c,...a){O.st.trade++;if(!O.ready(c,'market') && !O.ready(c,'outbound'))O.st.tradeNoBody++;return tr.call(this,w,c,...a);};
 _homeDepositV2=function(c,...a){O.st.deposit++;if(!O.ready(c,'inbound'))O.st.depositNoBody++;return dep.call(this,c,...a);};})();`;
    return compile.call(this,src,name);
   };return old(m,file);
