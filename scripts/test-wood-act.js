@@ -233,16 +233,10 @@ console.log('\n⑦ 끄면 비트 동일 — 새 줄이 전부 손잡이 뒤에 �
 console.log('\n⑧ 안 만진 것 — T324 이동 문 · 어부 값');
 {
   const ZC = codeOf(ZSRC);
-  //   ★[T368 2026-09-25] 술어에 **농부 항**이 하나 붙었다(`T368_FARM_ACT && simJob === 'farmer'`) — 나무꾼 항은 여전히 **없다**.
-  //     이 절이 지키는 것은 "T325 는 걷기 문을 안 열었다(빚)" 이고, 그 뜻은 그대로다 — 이름으로 못 박는다.
-  //   ★[T561 추신 ⓪ 2026-09-30] T529(촌장 인사)가 **셋째 항**(`SimVillages.chiefWalking` — 줄은 손잡이 켬에서만 선다)을 넣었다 — 코드가 정본이다.
-  //     계약만 셋으로 고친다: 항 셋(T312 · T368 농부 · T529 촌장) 모두 글자로 · 나무꾼 항은 **여전히 없다**(술어 몸통에 `lumberjack` 0 — 이 줄이 지키는 빚 그대로).
+  // T1180: 세 생산의 관측자 없는 이동을 켠다. 실제 조건식의 역할별 진리표는 새 자가 잰다.
   const _walkFn = (ZC.match(/function _t316WalkAlways\(npc\) \{[\s\S]*?\n\}/) || [''])[0];
-  ok(/if \(_t316Econ && \(_t316Econ\.T312_FISH_ACT \|\| \(_t316Econ\.T368_FARM_ACT && npc\.simJob === 'farmer'\)\)\) return true;/.test(_walkFn)
-     && /return !!\(SimVillages\.chiefWalking && SimVillages\.chiefWalking\(npc\)\);/.test(_walkFn)
-     && !/lumberjack|T325/.test(_walkFn),
-    '⑧ ★★걷기 술어(`_t316WalkAlways`)의 항은 **T312 · ★T368(농부) · ★T529(촌장 · 켬에서만)** 셋이다 — 나무꾼 항은 안 넣었다(T324 정본 · T325 빚 그대로)');
-  ok(!/T325_WOOD_ACT/.test(ZC), '⑧ ★`zone.js` 에 T325 손잡이 이름이 **없다**(문을 안 열었다 — 보고 §회부의 빚)');
+  ok(_walkFn.includes("(_t316Econ.T325_WOOD_ACT && npc.simJob === 'lumberjack')") && _walkFn.includes("(_t316Econ.T347_FORAGE_ACT && npc.simJob === 'forager')"), '⑧ T1180 단독 생산 켬도 해당 몸의 이동 문을 연다');
+  ok(/return !!\(SimVillages\.chiefWalking && SimVillages\.chiefWalking\(npc\)\);/.test(_walkFn) && _walkFn.includes("(_t316Econ.T368_FARM_ACT && npc.simJob === 'farmer')"), '⑧ 종전 농부·촌장 이동 문도 유지한다');
   ok(!/t325.*path|pathCache/i.test(ZC.split('\n').filter((l) => /t325/i.test(l)).join('\n')),
     '⑧ ★길 캐시도 안 만졌다(T324 몫)');
 }
@@ -581,7 +575,7 @@ console.log('\n⑫ [T561] 명부가 몸의 그날을 본다 · 몸이 하루 1�
   ok(/const _t561W = T561_ROSTER_BODY \? _t561Crew\(vil, 'lumberjack'\) : null;/.test(daily)
      && /const _t561F = T561_ROSTER_BODY \? _t561Crew\(vil, 'forager'\) : null;/.test(daily)
      && /const _fgE = _t561F \? _t561F\.length : \(\(vil\.econ\.counts && vil\.econ\.counts\.forager\) \|\| 0\);/.test(daily)
-     && /const _ln = _t449S \? 0 : _lnE;/.test(daily) && /const _fg = _t449S \? 0 : _fgE;/.test(daily),
+     && daily.includes('const _ln = (_t449S || _bodyOnly) ? 0 : _lnE;') && daily.includes("const _fg = (_t449S || _lifeEcon().productionFormulaOff?.(vil.econ,'forager')) ? 0 : _fgE;"),
     '⑫ ★★끔 = 옛 줄(나무꾼 = T491 명부 또는 econ 수 · 채집 = econ 수) — 켬만 **두 절**(나무꾼·채집)의 명부가 몸이 된다 · 관측 마을 줄(T449) 무변');
   const tick = (VC.match(/function npcLifeTick\([\s\S]*?\n\}/) || [''])[0];
   ok(/if \(_T561_BODY\) \{ best = _t561Standing\(_tr, npc, h, best\); if \(!best\) \{ npc\._t325Site = \{ none: 1, day \}; _lifeGoHome\(npc, '휴식'\); return true; \} \}/.test(tick)

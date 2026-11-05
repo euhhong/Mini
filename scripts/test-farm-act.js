@@ -223,10 +223,10 @@ console.log('\n⑦ 걷기 술어 — `_t316WalkAlways` 에 **농부 항 하나**
 {
   const walk = bodyOf(ZC, '_t316WalkAlways');
   //   ★[T540 ⓪] T529 가 셋째 항(인사하러 가는 촌장)을 붙이며 몸통이 두 줄이 됐다 — 술어는 여전히 **하나**, 항은 **셋**이다.
-  ok(/if \(_t316Econ && \(_t316Econ\.T312_FISH_ACT \|\| \(_t316Econ\.T368_FARM_ACT && npc\.simJob === 'farmer'\)\)\) return true;/.test(walk)
+  ok(walk.includes('if (_t316Econ && (_t316Econ.T312_FISH_ACT ||') && walk.includes("(_t316Econ.T368_FARM_ACT && npc.simJob === 'farmer')")
      && /return !!\(SimVillages\.chiefWalking && SimVillages\.chiefWalking\(npc\)\);/.test(walk) && (walk.match(/return /g) || []).length === 3,
-    '⑦ ★★★술어는 **하나**이고 항은 셋 — T312(주민 전부) · ★T368(농부만 · 생활층이 심는 `simJob`) · T529(인사하러 가는 촌장 · 손잡이 끔이면 거짓)');
-  ok(!/T325_WOOD_ACT|T347_FORAGE_ACT/.test(walk), '⑦ 나무꾼·채집꾼 항은 **없다**(그 카드들의 빚은 그대로)');
+    '⑦ T1180 뒤에도 이동 술어 하나·세 반환 문과 종전 어부·농부·촌장을 유지한다');
+  ok(walk.includes("(_t316Econ.T325_WOOD_ACT && npc.simJob === 'lumberjack')") && walk.includes("(_t316Econ.T347_FORAGE_ACT && npc.simJob === 'forager')"), '⑦ T1180 나무꾼·채집꾼 단독 켬도 같은 이동 문을 연다');
   // ★[T499 ⓪] 넷째 글자는 **이동 문의 거울**이다 — T461 WASM 팔의 앞문(`_wwPre`)이 이동 문과 **같은 거름을 같은 차례로 먼저** 돌고
   //   켬이면 이동 문은 그 답(갈래 표)을 읽는다(같은 몸에 문이 둘이 되지 않는다 · 끔이면 `_WW` 가 없어 앞문 자체가 안 돈다).
   //   ⇒ 문은 여전히 **둘**(결정 · 이동). 셈은 글자 넷 = 정의 1 + 결정 1 + 이동 1 + 이동의 거울 1. 거울은 **글자로** 건다:
@@ -312,7 +312,7 @@ console.log('\n⑫ [T449] 결산 문 — 켬이면 관측 마을은 팔 켜진 �
     '⑫ ★★켬 = 그 술어를 **점 · 반경 그 수**로 묻는다(옛 줄의 두 식 그대로) · 끔 = 옛 줄 그대로(수 셋 — 늘 거짓)');
   ok(/const _t449S = T449_BODY_DAY && _t449Seen\(vil\);/.test(daily) && (daily.match(/_t449Seen\(vil\)/g) || []).length === 1,
     '⑫ 관측 마을인가는 하루 경계에 **한 번** 묻는다(끔이면 묻지도 않는다 — `&&` 앞이 거짓)');
-  ok(/const _ln = _t449S \? 0 : _lnE;/.test(daily) && /const _fg = _t449S \? 0 : _fgE;/.test(daily),
+  ok(daily.includes('const _ln = (_t449S || _bodyOnly) ? 0 : _lnE;') && daily.includes("const _fg = (_t449S || _lifeEcon().productionFormulaOff?.(vil.econ,'forager')) ? 0 : _fgE;"),
     '⑫ ★★나무꾼·채집 — 관측 마을은 **일괄 명부에서 빠진다**(명부 한 칸 · 절의 글자는 그대로 — `test-wood-act ⑦`)');
   ok(!/_t449/.test(bodyOf(VC, '_lifeHeadlessDay')), '⑫ 헤드리스 결산 함수는 **무변**(팔로 직업을 이미 가른다 — ⑤ 글자 그대로)');
   //   ① 옛 줄이 왜 늘 거짓인가 — zone.js 의 정본 술어를 글자 그대로 돌린다(사람을 마을 한가운데 세워도 거짓)

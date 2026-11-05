@@ -53,7 +53,7 @@ console.log('\n① 정적');
   ok(on.length > 0, 'ⓑ ★★켬 — 넣기 **전에** T717 ② 술어(`_t717NewWood`)로 묻고 새로 벤 손만 도장 · 넣기는 그대로(같은 `_t325Deliver`)');
   ok(/const nw = _t717NewWood\(p\); _t325Deliver\(vil, p\); if \(nw\) n\+\+;/.test(hands) && /const nw = _t717NewWood\(p\); if \(!T720_LON_DAY\) _t325Deliver\(vil, p\); if \(nw\) _walked\+\+;/.test(daily) && on.length > 0,
     'ⓑ ★★★세 자리(틱 앞 손 입고 · 하루 손 경계 셈 · 해 질 녘 도장) 모두 같은 술어 `_t717NewWood`(켬)');
-  ok(VC.includes('if (T720_LON_DAY && _t720Step(vil, npc, now, fv, dayR, bday, _fishCap>0 && npc._t312Kg>=_fishCap)) return true;')
+  ok(VC.includes('if (T720_LON_DAY && _t720Step(vil, npc, now, fv, dayR, bday, _fishCap>0 && (npc._t312Kg>=_fishCap || npc._t1180FullFish))) return true;')
      && /if \(E\.T325_WOOD_ACT && E\.woodActOn\(vil\.econ\) && _t720Logger\(vil, npc\) && npc\.inventory && \(npc\.inventory\.wood \|\| 0\) > 0\) \{/.test(settle),
     'ⓔ 부르는 자리는 T720 귀환 정산 하나(목재는 해 질 녘 · 생선은 만재 때도)(T720 켬 · 행위 층 켬 · 나무꾼 손 — 문은 종전 그대로)');
   ok(!/(?:npc|p)\._t743\w* =/.test(VC) && /if \(npc\._t561Wd !== d\) vil\._t743G = \(vil\._t743G \| 0\) \+ 1;/.test(gap)

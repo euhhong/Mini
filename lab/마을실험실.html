@@ -13054,8 +13054,8 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
     const _capM = npc.captive ? CAPTIVE_WORK_MUL : 1;
 
     // produceSpecial 분기 — 각 산출에 대해 세금 떼고 storage로
-    const addProduce = (r, amt, actual = false) => {
-      if (!actual && productionFormulaOff(v, npc.currentJob)) return;   // T1180: 부산물·현장 0 폴백도 수식 생산이다
+    const addProduce = (r, amt) => {
+      if (productionFormulaOff(v, npc.currentJob)) return;   // T1180: 부산물·현장 0 폴백도 수식 생산이다
       const sm = satMul(r);
       _potA += amt; _actA += amt * sm;   // 여유노동 측정: 잠재(감산 전) vs 실제(감산 후)
       dailyProductionPotential[r] = (dailyProductionPotential[r] || 0) + amt;   // 잠재 생산(건강·포만 적용 전) — prodK용
@@ -13105,9 +13105,9 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
         }
         // ★그 자리를 **실물**이 채운다 — 채집꾼 하루가 그 마을 숲에서 실제로 딸 수 있는 만큼만.
         //   숲이 못 대면 그만큼 덜 온다. 그게 공짜 점심을 걷어낸다는 뜻이다.
-        if (_realFn && repShare > 0) {
+        if (_realFn && repShare > 0 && !productionFormulaOff(v, npc.currentJob)) {
           const got = _realFn(v, baseAmt * repShare) || null;
-          if (got) for (const r in got) { const a = got[r]; if (a > 0) addProduce(r, a, true); }   // T1180: 실제 자연물 출구만 통과
+          if (got) for (const r in got) { const a = got[r]; if (a > 0) addProduce(r, a); }   // T1180: 헤드리스 대조 경로 · 서버의 켠 채집은 몸이 운반한다
         }
         // ★S1 돌=채집 자원(광부 아님): 강가/돌밭(land.stone) 채집꾼이 돌을 *주 산출*로 가져옴(식량 믹스와 별개 가산).
         //   계수 0.9 ≈ 옛 광부(base1.5×land.stone) 스케일에 근접 → 돌밭 마을은 채집꾼만으로 돌 풍족(병목 없음).

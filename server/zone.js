@@ -4952,7 +4952,7 @@ let _t316Econ = null;
 function _t316WalkAlways(npc) {
   if (!npc || !npc.simVillageId) return false;
   if (_t316Econ === null) { try { _t316Econ = require('../sim/economy-sim'); } catch (e) { _t316Econ = false; } }
-  if (_t316Econ && (_t316Econ.T312_FISH_ACT || (_t316Econ.T368_FARM_ACT && npc.simJob === 'farmer'))) return true;
+  if (_t316Econ && (_t316Econ.T312_FISH_ACT || (_t316Econ.T325_WOOD_ACT && npc.simJob === 'lumberjack') || (_t316Econ.T347_FORAGE_ACT && npc.simJob === 'forager') || (_t316Econ.T368_FARM_ACT && npc.simJob === 'farmer'))) return true;   // T1180: 단독 켬도 해당 몸의 결정·이동 문을 연다
   //   ★★[T529] 인사하러 가는 촌장도 — 줄은 손잡이 켬에서만 생긴다(끔이면 거짓 · 술어는 여전히 이 하나).
   return !!(SimVillages.chiefWalking && SimVillages.chiefWalking(npc));
 }
@@ -5585,6 +5585,9 @@ SimVillages.init({ spawnNpc, players, npcs, broadcast, isTerrainBlockedLocal, is
   t325CutTreeAt: (cx, cy) => _t325CutTreeAt(cx, cy),
   // ★[T325] 전리품 표는 존이 쥔다 — 생활층은 "이 그루가 목재 몇 낱개냐"만 묻는다(사본 0)
   t325LootOf: (r) => lootOfResource(r),
+  t312DrawFishAt: (cx,cy,kg,now) => { const want=kg/Fishing.CFG.KG_PER_STOCK;return Fishing.drawWholeStock(cx,cy,want,now,_fishSave)>=want-1e-12; },   // T1180: 사람과 같은 어장·환산·저장 문
+  t312FishTargetAt: (p,spot) => _castTargetFor(p,spot),
+  t312FishSpotAt: (x,y) => Fishing.spotAt(_terrain,ZONE_ID,x,y,_fishSea()),
   // ★[T347] 채집 행위 — 문 둘 + 전리품 표 하나. 재생 문(`t341Unharvest`)은 **위 그것을 그대로 쓴다**(사본 0).
   //   ⚠`t347LootOf` 는 `{ day }` 를 넘긴다 — 야생 채종이 계절 정본을 지나게(주사위 0 · `_t347PickAt` 과 같은 ctx).
   t347GrovesAtCell: (cx, cy, raw) => _t347GrovesAtCell(cx, cy, raw),
@@ -10101,7 +10104,7 @@ function _t593Pick(sp, x, y, h, day) {
   return Fresh.pick(_t593Water(sp), day, h, _ch, ZONE_ID);   // ★[T609] 존(위와 같다)
 }
 // 던질 자리 — 플레이어 주변에서 **가장 좋은 물 칸**을 서버가 고른다(클라가 자리를 못 속인다).
-function _castTargetFor(player) {
+function _castTargetFor(player, spotAt) {
   const R = Fishing.CFG.REACH_PX;
   const _sea = _fishSea();   // ★[T593] 켬이면 바다 칸도 자리다(끔 = undefined)
   let best = null, bestScore = -1;
@@ -10110,7 +10113,7 @@ function _castTargetFor(player) {
       if (dx * dx + dy * dy > R * R) continue;
       const x = player.x + dx, y = player.y + dy;
       if (!isWaterTileLocal(x, y)) continue;
-      const sp = Fishing.spotAt(_terrain, ZONE_ID, x, y, _sea);
+      const sp = spotAt ? spotAt(x,y) : Fishing.spotAt(_terrain, ZONE_ID, x, y, _sea);
       if (!sp.water) continue;
       const sc = Fishing.spotScore(sp);
       const v = sc.rate * sc.size;

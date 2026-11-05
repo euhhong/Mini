@@ -1093,7 +1093,7 @@ const _t740Stat = { restored: null };
 //   마을 클레임 그림자(`_claim` · `_clearCrew` · `_buildCrew` · `_psiteCrew` · `_cropClaim` · 광부 손 합 `_t724HeldKg`)는 되돌린 몸에서 다시 센다(하루 마감의 재대사 줄과 같은 식).
 //   몸 열쇠 = 마을 `npcPids` 자리(T728 `_t728HuntWk` 문법). 저장된 몸이 지금 몸보다 많으면 남은 손은 그 마을 첫 몸의 손에 더한다(소멸 0).
 const T747_BODY = process.env.T747_BODY_KEEP !== '0';   // ★[PM 10-14] 켬 기본(소멸 금지 · 다시 뜰 때만 — 손 · 진행 작업 · 자리) · 되돌림 `=0`
-const _T747_KEYS = ['simJob', 'x', 'y', 'hp', '_rest', 'inventory', '_t312U', '_t312Kg', '_t368H', '_t368N', '_t717L', '_t733F',
+const _T747_KEYS = ['simJob', 'x', 'y', 'hp', '_rest', 'inventory', '_t312U', '_t312Kg', '_t1180FullFish', '_t368H', '_t368N', '_t717L', '_t733F',
   '_lifeTask', '_farmK', '_fOutD', '_workSite', '_jobN', '_fishSpotX', '_fishSpotY', '_t340N', '_t724Site', '_huntBud', '_huntKil',
   '_sh', '_hd', '_half'];   // 신원 해시 캐시(존 `_shOf` 가 `playerId` — 스폰마다 무작위 꼬리 — 로 먼저 세우면 다시 뜬 몸의 주사위 씨가 바뀐다) · 그날 반일 굴림(같은 날 다시 굴리지 않게)
 // ★★[T1133 2026-11-04 · ★PM 11-03 판정대기 문 17 ㄱ "몸 영속과 같이 저장"] 손잡이 `T1133_BAG_PERSIST`(★켬 기본 후보 · `=0` = 종전 글자).
@@ -9425,6 +9425,7 @@ function _t312Deliver(vil, npc) {
   for (const h of selected) inv[h.id] -= h.n;
   npc._t312U = +Math.max(0,u-got).toFixed(6);
   npc._t312Kg = mass > 0 ? +Math.max(0,(npc._t312Kg||0)*(1-takenKg/mass)).toFixed(3) : 0;
+  npc._t1180FullFish = false;
   vil._t312Deliv = +((vil._t312Deliv || 0) + got).toFixed(6);
   return got;
 }
@@ -9475,11 +9476,12 @@ const T677_LIFE_SCAN = process.env.T677_LIFE_SCAN !== '0';   // ★10-11 PM 착�
 const _t677SpotM = new Map(); let _t677SpotT = null, _t677SpotZ = null;
 function _t677Spot(F, cx, cy) {
   const T = _terrainMod(), z = state.zoneId, t = T.ZONE_TERRAIN ? T.ZONE_TERRAIN[z] : null;
+  const at=()=>state.deps.t312FishSpotAt ? state.deps.t312FishSpotAt(cx*SZ+SZ/2,cy*SZ+SZ/2) : F.spotAt(T,z,cx*SZ+SZ/2,cy*SZ+SZ/2);
   if (t !== _t677SpotT || z !== _t677SpotZ) { _t677SpotM.clear(); _t677SpotT = t; _t677SpotZ = z; }
-  if (!(cx >= 0 && cx < 65536 && cy >= 0 && cy < 65536)) return F.spotAt(T, z, cx * SZ + SZ / 2, cy * SZ + SZ / 2);   // 정수 열쇠 밖(존 밖 칸) — 종전 그대로
+  if (!(cx >= 0 && cx < 65536 && cy >= 0 && cy < 65536)) return at();   // 정수 열쇠 밖(존 밖 칸) — 종전 그대로
   const k = cx * 65536 + cy;   // 셀 키 정수(위 범위 안에서 겹침 0)
   let v = _t677SpotM.get(k);
-  if (v === undefined) { v = F.spotAt(T, z, cx * SZ + SZ / 2, cy * SZ + SZ / 2); _t677SpotM.set(k, v); }
+  if (v === undefined) { v = at(); _t677SpotM.set(k, v); }
   return v;
 }
 // ★★[T750 2026-10-14 · 세션4] 손잡이 `T750_CAST_SLICE`(기본 끔 · `=1` 켬) — **어부 던짐의 지형 자리를 미리 센다.**
@@ -9521,18 +9523,16 @@ function t750CastPre(budgetMs) {
 }
 function _t340Try(vil, npc, now, day, h, ws) {
   const F = _fishingMod(); if (!F) return false;
-  const cx = Math.floor((npc._fishSpotX != null ? npc._fishSpotX : ws.x) / SZ);
-  const cy = Math.floor((npc._fishSpotY != null ? npc._fishSpotY : ws.y) / SZ);
-  const key = cx + ',' + cy;
   let c = npc._t340;
-  if (c && (c.key !== key || c.day !== day)) { c = null; npc._t340 = null; vil._t340Abort = (vil._t340Abort || 0) + 1; }   // 자리를 옮겼다 = 안 물림
+  if (c && (c.day !== day || Math.hypot(npc.x-c.x,npc.y-c.y)>F.CFG.REACH_PX || (state.deps.isWaterTileLocal && !state.deps.isWaterTileLocal(c.x,c.y)))) { c = null; npc._t340 = null; vil._t340Abort = (vil._t340Abort || 0) + 1; }   // 자리를 옮겼다 = 안 물림
   if (!c) {
     // 한 자리에 한 번만 던진다 — 던지고 나면 아래 `wait` 로 빠진다
     // ── 던짐 ── 자리·재고는 플레이어가 쓰는 그 술어로 묻는다(사본 0)
-    let sp = null, stock01 = 1;
-    try { sp = T677_LIFE_SCAN ? _t677Spot(F, cx, cy) : F.spotAt(_terrainMod(), state.zoneId, cx * SZ + SZ / 2, cy * SZ + SZ / 2); } catch (e) { sp = null; }   // ★[T677 ②] 켬 = 같은 칸은 한 번만
+    const target=state.deps.t312FishTargetAt?.(npc,T677_LIFE_SCAN?(x,y)=>_t677Spot(F,Math.floor(x/SZ),Math.floor(y/SZ)):undefined);
+    if(!target || !target.sp?.water)return 'none';   // T1180: 몸이 서는 마른 물가와 낚을 물 칸을 나눈다
+    const cx=Math.floor(target.x/SZ),cy=Math.floor(target.y/SZ),key=cx+','+cy,sp=target.sp;
+    let stock01=1;
     try { stock01 = F.stockRatioAt(cx, cy, now); } catch (e) { stock01 = 1; }
-    if (!sp) return 'wait';
     // ★[T574] 존 특산 프로필 + 경계 혼용(정본 `region-profiles`) — 켬일 때만 고르는 함수를 넘긴다(끄면 옛 줄 그대로).
     const _RP = _regionMod();
     const _ch = (_RP && _RP.on()) ? (ids, u) => _RP.chooseSpecies('fishFresh', state.zoneId, cx * SZ + SZ / 2, cy * SZ + SZ / 2, u, null, ids) : undefined;
@@ -9544,7 +9544,7 @@ function _t340Try(vil, npc, now, day, h, ws) {
     if (!_sp) return 'none';   // 그 물·그 철엔 사는 종이 없다(종전 `!_sp` 자리 — 라벨 '드리움')
     const n = (npc._t340N = (npc._t340N || 0) + 1);
     const pl = F.plan(sp, stock01, now, _t340Rng(h ^ Math.imul(n, 0x9e3779b9) ^ Math.imul(day, 0x85ebca6b)));
-    npc._t340 = { key, day, biteAt: pl.biteAt, windowMs: F.windowMsFor(_sp.kg), sp: _sp.id, kg: _sp.kg, castAt: now };
+    npc._t340 = { key, day, x:target.x,y:target.y,cx,cy,biteAt: pl.biteAt, windowMs: F.windowMsFor(_sp.kg), sp: _sp.id, kg: _sp.kg, castAt: now };
     vil._t340Cast = (vil._t340Cast || 0) + 1;
     vil._t340WaitSum = (vil._t340WaitSum || 0) + (pl.biteAt - now);
     vil._t340WinSum = (vil._t340WinSum || 0) + npc._t340.windowMs;
@@ -9558,7 +9558,7 @@ function _t340Try(vil, npc, now, day, h, ws) {
     return 'miss';
   }
   npc._t340 = null; vil._t340Hook = (vil._t340Hook || 0) + 1;
-  return { id: c.sp, kg: c.kg };                        // ── 걸림 — 던질 때 정해진 그 종 그대로
+  return { id: c.sp, kg: c.kg, cx:c.cx,cy:c.cy };                        // ── 걸림 — 던질 때 정해진 그 종 그대로
 }
 // ★★[T316] **관측 창구** — `/perf` 가 그대로 내준다(회계 아님 · 손잡이가 꺼져 있으면 null).
 //   이 자가 없으면 §3(세계 위 자)이 "걷는 어부가 몇이냐 · 첫날 합이 수식과 같으냐"를 **소스에만** 물을 수 있다.
@@ -9670,7 +9670,22 @@ function woodPerf() {
            walkers, hands, handKg: +handKg.toFixed(2), handU: +handU.toFixed(4),
            delivered: +deliv.toFixed(4), formulaPerDay: +formula.toFixed(4), formulaAll: +formulaAll.toFixed(4), rows };
 }
-function _t312Take(vil, day, key, want) { return _actTake(_t312Day(vil, day), key, want); }
+function _t312Take(vil, day, key, want) {
+  const B = _t312Day(vil, day), cap = B.per * Math.max(0,vil.econ._t312Cells||0);
+  if (!(want>0) || B.took+want>cap+1e-9) return 0;   // T1180: 셀별 소수 예산 대신 같은 마을 총량 안에서 한 마리씩
+  B.took+=want;B.n++;B.cell.set(key,(B.cell.get(key)||0)+want);
+  return want;
+}
+function _t312Catch(vil,day,cx,cy,want,kg,now,npc) {
+  const cap=_carryCfg()?.CFG?.CAP_KG||0;
+  if(npc && cap>0 && (npc._t312Kg||0)+kg>cap+1e-9){npc._t1180FullFish=(npc._t312Kg||0)>0;return 0;}   // T1180: 한 마리를 더 실을 수 없으면 잡지 않고 귀환
+  const key=cx+','+cy,got=_t312Take(vil,day,key,want);
+  if (!(got>0)) return 0;
+  const draw=state.deps.t312DrawFishAt;
+  if(draw && draw(cx,cy,kg,now))return got;
+  const B=_t312Day(vil,day);B.took=Math.max(0,B.took-got);B.n--;B.cell.set(key,Math.max(0,(B.cell.get(key)||0)-got));
+  return 0;
+}
 // ★★[T325] **귀환하면 곳간에.** 회계는 econ 정본 한 함수(`woodToGranary` → `actToGranary`)가 한다.
 //   ⚠단위 환산이 **없다** — 목재는 낱개 = econ 단위다(`weights.js wood 3.00kg` 이 "장작·목재 단(段)" 하나).
 //     그래서 손에 든 낱개 수가 그대로 단위다(환산식 0 · 새 수 0). 물고기와 다른 점은 이 한 줄뿐이다.
@@ -13735,12 +13750,13 @@ function* _lifeDailySteps(vil) {   // 게임일 경계: 크루·클레임 재대
     //   ⚠**`return` 을 쓰지 않는다** — 이 절은 `_lifeDaily` 의 중간이고, 여기서 돌아가면 뒤의 하루 경계
     //     일과(작물 클레임 리셋 · 사냥꾼 링크 · 현장 캐시 비우기)가 통째로 안 돈다(자기수리 — 한 번 그렇게 썼다).
     const _on = _lifeEcon().woodActOn(vil.econ);
+    const _bodyOnly=!!_lifeEcon().productionFormulaOff?.(vil.econ,'lumberjack');
     const _pl = state.deps.players;
     let _walked = 0; if (vil._t325PreWalked) { _walked = vil._t325PreWalked; vil._t325PreWalked = 0; }   // ★[T475 ②] 손은 econ 틱 앞에서 이미 곳간에(`_lifeHandsIn`) — 사람 수만 이어 받는다
     if (_on) for (const pid of (vil.npcPids || [])) { const p = _pl && _pl.get(pid); if (p && p.inventory && (p.inventory.wood || 0) > 0) { const nw = _t717NewWood(p); if (!T720_LON_DAY) _t325Deliver(vil, p); if (nw) _walked++; }   /* ★[PM 10-14 합침] T717 ② 셈 + T720 ③ 켬 = 손은 든 채 */ }   // ★[T717 ②] 켬 = 남긴 몫만 든 손은 "걸은 몸"이 아니다(끔 = 옛 줄)
     //   ★★[T717 ②] 어제 곳간이 안 받은 짐(헤드리스가 벤 그루의 나머지)을 **오늘 먼저** 넣는다(베기 전 · 같은 입구 · 그날 몫만큼) — 채집 `_t544PackIn` 과 같은 자리.
-    if (T717_WOOD_HAND && _on) _t717PackIn(vil);
-    if (T733_FELL_LOOT && _on) _t733PackIn(vil);                   // ★[T733 ①] 어제 곳간이 안 받은 잔가지 · 도토리 짐도 같은 자리에서 먼저(끔 = 칸이 없다)
+    if (T717_WOOD_HAND && _on && !_bodyOnly) _t717PackIn(vil);
+    if (T733_FELL_LOOT && _on && !_bodyOnly) _t733PackIn(vil);                   // ★[T733 ①] 어제 곳간이 안 받은 잔가지 · 도토리 짐도 같은 자리에서 먼저(끔 = 칸이 없다)
     //   ★[T449 ⓑ] 관측 마을(켬)의 나무꾼은 **몸 명부** — 일괄 명부에서 빠진다(T423 문법 · 끔이면 종전 명부 그대로)
     //   ★★[T491 ⓐ] 켬이면 명부 = 그날 일한 **나무꾼 몸**(`_t491Crew`) · 끔 = econ 나무꾼 수(옛 줄 그대로)
     const _t491C = T491_BATCH_FROM_BODY ? _t491Crew(vil) : null;
@@ -13748,7 +13764,7 @@ function* _lifeDailySteps(vil) {   // 게임일 경계: 크루·클레임 재대
     //     한도의 꼴(그루 · 단)은 T491 손잡이가 그대로 정한다 — 이 손잡이는 **누가** 나섰는지만 바꾼다.
     const _t561W = T561_ROSTER_BODY ? _t561Crew(vil, 'lumberjack') : null;
     const _lnE = _t561W ? _t561W.length : (_t491C ? _t491C.length : ((vil.econ.counts && vil.econ.counts.lumberjack) || 0));
-    const _ln = _t449S ? 0 : _lnE;
+    const _ln = (_t449S || _bodyOnly) ? 0 : _lnE;
     if (_t449S && _on && _walked === 0 && _lnE > 0 && _tr.length) _t449T.woodBody++;   // 계측 — 종전이면 일괄이 돌았을 날
     const _S = vil._t325Trees || {};
     // ★[T341 계측 전용] 걸음이 정한 한도와 실제 벌목을 밖에서 보이게 — 회계 아님(카운터만)
@@ -13837,7 +13853,7 @@ function* _lifeDailySteps(vil) {   // 게임일 경계: 크루·클레임 재대
     const _in = _t1135DeadAccrue(vil, _S);
     const _fl = T561_ROSTER_BODY ? _t561Crew(vil, 'forager') : null;
     const _fgE = _fl ? _fl.length : ((vil.econ.counts && vil.econ.counts.forager) || 0);
-    const _fg = _t449S ? 0 : _fgE;
+    const _fg = (_t449S || _lifeEcon().productionFormulaOff?.(vil.econ,'lumberjack')) ? 0 : _fgE;
     const D = vil._t1135Dbg = { a: _t1135DenseArea(vil), in: +_in.toFixed(4), fg: _fg, cap: 0, got: 0, pool: 0 };
     if (_fg > 0 && (vil._t1135Dead || 0) > 0 && _tr.length) {
       let _bd = Infinity;
@@ -13887,12 +13903,12 @@ function* _lifeDailySteps(vil) {   // 게임일 경계: 크루·클레임 재대
       if (u > 0) { const nf = _t733NewForage(p, u); if (!T720_LON_DAY) _t347Deliver(vil, p); if (nf) _walked++; _t733o++; }   // ★[T720 ③] 켬 = 손은 든 채(걸은 몸으로만 센다) · ★[T733 ②] 켬 = 남긴 몫만 든 손은 안 센다
     }
     //   ★★[T544] 어제 곳간이 안 받은 짐을 **오늘 먼저** 넣는다(따기 전 · 같은 입구 · 그날 몫만큼) — 게이트가 선 마을만.
-    const _pkIn = (_on && _keep.length) ? _t544PackIn(vil, _keep) : 0;
+    const _pkIn = (_on && _keep.length && !_lifeEcon().productionFormulaOff?.(vil.econ,'forager')) ? _t544PackIn(vil, _keep) : 0;
     //   ★[T449 ⓑ] 관측 마을(켬)의 채집꾼도 **몸 명부**(나무꾼 절과 같은 한 칸)
     //   ★★[T561 ①] 켬이면 명부 = 그날 **나설 수 있는** 채집꾼 몸(나무꾼 절과 같은 한 함수 · 새 수 0) · 끔 = econ 수(옛 줄)
     const _t561F = T561_ROSTER_BODY ? _t561Crew(vil, 'forager') : null;
     const _fgE = _t561F ? _t561F.length : ((vil.econ.counts && vil.econ.counts.forager) || 0);
-    const _fg = _t449S ? 0 : _fgE;
+    const _fg = (_t449S || _lifeEcon().productionFormulaOff?.(vil.econ,'forager')) ? 0 : _fgE;
     if (_t449S && _on && _walked === 0 && _fgE > 0 && _gv.length && _keep.length) _t449T.forageBody++;   // 계측 — 종전이면 일괄이 돌았을 날
     const _S = vil._t347Groves || {};
     vil._t347Dbg = { on: _on ? 1 : 0, walked: _walked, fg: _fg, cells: _gv.length,
@@ -14119,7 +14135,7 @@ function npcLifeTick(npc, now) {   // zone.js decideNpcBehavior 훅(늑대 도�
     npc._rest = 1; _lifeDropTask(vil, npc); _lifeGoHome(npc, '요양'); return true;
   }
   const _fishCap = _lifeEcon().T312_FISH_ACT && (npc._t312Kg||0)>0 ? _carryCfg()?.CFG?.CAP_KG : 0;
-  if (T720_LON_DAY && _t720Step(vil, npc, now, fv, dayR, bday, _fishCap>0 && npc._t312Kg>=_fishCap)) return true;   // T1180: 만재 어부도 실제 도착 뒤 정산
+  if (T720_LON_DAY && _t720Step(vil, npc, now, fv, dayR, bday, _fishCap>0 && (npc._t312Kg>=_fishCap || npc._t1180FullFish))) return true;   // T1180: 만재 어부도 실제 도착 뒤 정산
   // 기상 시차(랩 a._dOff): 개인 결정론 오프셋 0~하루 3%(43분) — 마을 일괄 기상의 프레임 스파이크 분산 + 유기적 출근 풍경
   if (npc._dOff === undefined) npc._dOff = ((_pidHash(npc.pid) % 997) / 997) * SCH_DOFF;
   if (fv >= dayR || fv < npc._dOff) { npc._workT = null; _lifeGoHome(npc, '취침'); return true; }
@@ -14370,8 +14386,8 @@ function npcLifeTick(npc, now) {   // zone.js decideNpcBehavior 훅(늑대 도�
       if (_lifeEcon().fishActOn(vil.econ)) {
         const _hook = _t340Try(vil, npc, now, day, h, ws);   // 'wait' | 'none' | 'miss' | {id, kg}
         //   ⓐ 어느 셀인가 — 지금 드리우고 있는 그 자리(셀 키는 좌표를 셀로 내린 것 · 새 수 0).
-        const _cx = Math.floor((npc._fishSpotX != null ? npc._fishSpotX : ws.x) / SZ);
-        const _cy = Math.floor((npc._fishSpotY != null ? npc._fishSpotY : ws.y) / SZ);
+        const _cx = _hook && typeof _hook==='object' ? _hook.cx : 0;
+        const _cy = _hook && typeof _hook==='object' ? _hook.cy : 0;
         const _key = _cx + ',' + _cy;
         //   ⓑ 무엇이 물리나 — 던질 때 정해진 그 종이다(주사위 0 · `freshfish.pick` · `_t340Try` 안).
         if (_hook === 'wait') _lifeAct(npc, '드리움');        // ★[T358] **던지는 순간** — 대본의 첫 칸(소리는 `cast`)
@@ -14396,7 +14412,7 @@ function npcLifeTick(npc, now) {   // zone.js decideNpcBehavior 훅(늑대 도�
           const _mul = (_ec && typeof _ec._t172mul === 'number' && _ec._t172mul > 0) ? _ec._t172mul : 1;
           const _units = _K ? (_t1128On() ? _t1128HandUnits(_K, _sp.id, _sp.kg) : (+_K.econUnitsOf('fish', 1, _sp.kg) || 0)) * _mul : 0;   // ★[T1128 9-b] 켬 = 그 종 한 마리의 표 열량(끔 = 종전 글자)
           //   ⓓ 셀 예산에서 **통째로** 꺼낸다 — 안 되면 그 셀은 오늘 비었다(이월 0).
-          const _got = _t312Take(vil, day, _key, _units);
+          const _got = _t312Catch(vil,day,_cx,_cy,_units,_sp.kg,now,npc);
           if (_got > 0) {
             if (npc.inventory) { npc.inventory[_sp.id] = (npc.inventory[_sp.id] || 0) + 1; const _L = _t732Lots(); if (_L) _L.noteNow(npc, _sp.id, 1); }   // ★손에 — 플레이어와 **같은 칸**(`inventory`) · ★[T732] 낚은 순간
             npc._t312U = +((npc._t312U || 0) + _got).toFixed(6);                            // 손에 든 것의 장부값(귀환 때 곳간으로)
@@ -15808,7 +15824,7 @@ module.exports = { t1144Stat: () => Object.assign({ on: T1144_LIFE_EVENT, verify
     // ★[T495] 부분 수확 — 같은 규약(정본 함수를 그대로 부른다 · 상태는 `_t400Probe.setup` 으로 꽂는다)
     _t495Probe: { on: () => _t495On(), units: (r) => _t495Units(r), visit: (vil, c, e, order, worth, keep) => _t495Visit(vil, c, e, order, worth, keep) },
     _t544Probe: { put: (vil, h, u) => _t544PackPut(vil, h, u), packIn: (vil, keep) => _t544PackIn(vil, keep), sum: (vil) => _t544PackSum(vil), hold: (vil) => _t544Hold(vil), deliver: (vil, npc) => _t347Deliver(vil, npc) },
-    _t1180Probe: { fishDeliver: (v,p) => _t312Deliver(v,p), returnStep: (v,p,t,f,r,d,full) => _t720Step(v,p,t,f,r,d,full), storeMs: () => G_STOREW },
+    _t1180Probe: { fishDeliver: (v,p) => _t312Deliver(v,p), fishTake: (v,d,k,u) => _t312Take(v,d,k,u), fishCatch: (v,d,cx,cy,u,kg,t,p) => _t312Catch(v,d,cx,cy,u,kg,t,p), cast: (v,p,t,d,h,w) => _t340Try(v,p,t,d,h,w), returnStep: (v,p,t,f,r,d,full) => _t720Step(v,p,t,f,r,d,full), storeMs: () => G_STOREW },
     // ★[T717 ②] 손·짐에 남는 통나무 — 같은 규약(최소 주입구 하나 · 정본 함수를 그대로 부른다 · 하네스가 남기는 규칙을 다시 적으면 그게 사본이다)
     _t717Probe: { deliver: (vil, npc) => _t325Deliver(vil, npc), put: (vil, u) => _t717PackPut(vil, u), packIn: (vil) => _t717PackIn(vil), newWood: (p) => _t717NewWood(p),
       handsIn: (vil) => _lifeHandsIn(vil), daily: (vil) => _lifeDaily(vil), get ON() { return T717_WOOD_HAND; } },
