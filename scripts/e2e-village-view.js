@@ -172,7 +172,7 @@ async function enterAndGo(page, V) {
   ok((await tab('store')) === 'store', '④ 창고 탭');
   S0 = srv();   // 가진 것 주기(③)로 곳간이 움직였다 — 지금 서버 값과 대조
   const storeT = await page.evaluate(() => [...document.querySelectorAll('#vvBody .vv-tabbody[data-k="store"] .vv-store')].map((r) => [...r.children].map((c) => { const t = c.matches('.vv-t') ? c : c.querySelector('.vv-t'); return t ? (t.getAttribute('aria-label') || t.textContent).trim() : ''; })));
-  ok(storeT.length === S0.store.rows.length && storeT.every((r, i) => r[0] === S0.store.rows[i].ko && r[1] === String(S0.store.rows[i].qty)), '④ 곳간 줄 = 서버 `store.rows`(품목 이름 · 양)', storeT.map((r) => `${r[0]} ${r[1]}`).slice(0, 4).join(' · '));
+  ok(storeT.length === S0.store.rows.length && storeT.every((r, i) => r[0] === S0.store.rows[i].ko && r[1] === `${S0.store.rows[i].qty}개`), '④ 곳간 줄 = 서버 `store.rows`(품목 이름 · 양 — ★T1189 ⑦ 낱개 "n개" · 그 아래 kg)', storeT.map((r) => `${r[0]} ${r[1]}`).slice(0, 4).join(' · '));
   const P0 = S0.prices || {};
   const basisB = await page.evaluate(() => [...document.querySelectorAll('[data-vv="base"]')].map((b) => ({ res: b.dataset.b, label: b.getAttribute('data-label') })));
   ok(basisB.length === (P0.basis || []).length && basisB.every((b, i) => b.res === P0.basis[i].res && b.label === P0.basis[i].ko), '④ 시세 기준 단추 = 서버 `prices.basis`(보이는 것 = 이름 · 단추 값 = res id)', basisB.map((b) => `${b.label}=${b.res}`).join(' · '));
@@ -276,13 +276,13 @@ async function enterAndGo(page, V) {
     await tab('proj');
     const names = await page.evaluate(() => [...document.querySelectorAll('#vvBody .vv-tabbody[data-k="proj"] .vv-proj')].map((c) => { const t = c.querySelector('.vv-t'); return (t.getAttribute('aria-label') || t.textContent).trim(); }));
     ok(JSON.stringify(names) === JSON.stringify(['움집 짓기', '갈매가 맡긴 움집', '밭 일구기', '임업2로 가는 행상']), '⑨ 공사 줄 넷 — 이름은 서버 `kind` 로(서버가 이름을 안 싣는다 · 설계 §3)', names.join(' · '));
-    ok((await txts('#vvBody .vv-tabbody[data-k="proj"] .vv-t')).includes('다 지으면 침상이 6 늘어납니다.'), '⑨ 집터 `bedsGain` → "다 지으면 침상이 n 늘어납니다."(T1084)');
+    ok(!(await txts('#vvBody .vv-tabbody[data-k="proj"] .vv-t')).some((t) => /다 지으면/.test(t)), '⑨ ★T1189 ④ "다 되면 좋아지는 것"은 문장 없이 — 집터 `bedsGain` 줄을 안 그린다(문 24 ④ ㄱ)');
     await page.evaluate(() => window.__sendPrimary({ type: '__e2e_give', items: { wood: 3 } }));   // 앞 ③ "가진 것 주기"가 짐의 나무를 다 바쳤을 수 있다(부탁 양은 세계마다 다르다)
     await sleep(700);
     sent.length = 0;
     await page.click('[data-vv="bring"]');
     await sleep(400);
-    ok(sent.some((m) => m.type === 'village_donate' && m.want && m.want.wood === 2), '⑨ "재료 가져오기" = 기부(`village_donate`) · 서버 `give` 키(내 물건 id)로 · 모자란 만큼(4 − 2)', JSON.stringify(sent.filter((m) => m.type === 'village_donate')));
+    ok(sent.some((m) => m.type === 'village_site_give' && m.want && m.want.wood === 2), '⑨ ★T1189 ⑤ "재료 가져오기" = 그 집터에(`village_site_give`) · 서버 `give` 키(내 물건 id)로 · 모자란 만큼(4 − 2)', JSON.stringify(sent.filter((m) => /village_(site_give|donate)/.test(m.type))));
     await page.evaluate(() => closeVillageView());
   }
   ok(!errs.length, '페이지 오류 0', errs.slice(0, 3).join(' | '));

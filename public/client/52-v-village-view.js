@@ -49,7 +49,7 @@ function vvAdapt(raw) {
       o.status = q.stageLabel || '';
       if (num(q.stages) && q.stages > 0) o.frac = (q.stage | 0) / q.stages;
       o.needs = (q.need || []).map((x) => ({ item: x.ko || x.res, res: x.res, have: x.have, need: x.need, give: Array.isArray(x.give) ? x.give : [] }));
-      if (num(q.bedsGain) && q.bedsGain > 0) o.after.push(`다 지으면 침상이 ${q.bedsGain} 늘어납니다.`);
+      //   ★[T1189 ④ · 문 24 ④ ㄱ] "다 되면 좋아지는 것"은 문장 없이 — 종전 "다 지으면 침상이 n 늘어납니다." 줄을 걷었다(서버 `bedsGain` 칸은 그대로 · 그리지 않는다).
     } else if (q.kind === 'clear') {
       o.name = '밭 일구기'; o.status = '하는 중';
       if (num(q.fields) != null) o.after.push(`지금 밭 ${q.fields}칸`);
@@ -63,23 +63,29 @@ function vvAdapt(raw) {
   const S = {
     near, pick: !!P.pick, base: P.numeraireKo || null, baseRes: P.numeraire || null,
     baseOptions: (P.basis || []).map((b) => ({ res: b.res, ko: b.ko || b.res })),
-    rows: rows(st).map((r) => ({ item: r.ko || r.res, res: r.res, qty: r.qty, plenty: (num(r.daysOf) != null && glut > 0) ? Math.min(1, r.daysOf / glut) : null,
-      price: (near && pr[r.res]) ? pr[r.res].num : null, short: !!r.short, glut: !!r.glut })),
+    rows: rows(st).map((r) => ({ item: r.ko || r.res, res: r.res, qty: r.qty, kg: num(r.kg), plenty: (num(r.daysOf) != null && glut > 0) ? Math.min(1, r.daysOf / glut) : null,
+      price: (near && pr[r.res]) ? pr[r.res].num : null, short: !!r.short, glut: !!r.glut, up: r.priceUp === true,
+      //   ★[T1189 ⑥] 시세 흐름 — 서버 `prices.trend`(30날 고리 · 고른 기준으로 나눈 값)의 그 품목 점들. 가까이 있을 때만(시세 칸과 같은 문).
+      trend: (near && P.trend && Array.isArray(P.trend.rows)) ? ((P.trend.rows.find((t) => t.res === r.res) || {}).pts || null) : null })),
+    trendDays: (P.trend && num(P.trend.days)) || null,
   };
   //   ★[T1169 · K18 · T1116 회부 3] 「모자란 것」= 서버 `store.short.rows`(장부 모자람 래치 전부 — **곳간이 바닥난 물건 포함** · qty 0 · daysOf 0).
   //     종전은 곳간 줄 `rows[].short` 거르기라 곳간 스냅숏이 뺀 바닥난 물건(0.005 아래)을 못 봤다. 칸이 없는 옛 서버만 종전 거르기.
   //     바닥난 줄(qty ≤ 0)은 "0일치" 대신 "곳간에 없습니다"(같은 서버 값 · 문장 틀만).
   const shortRows = (st.short && Array.isArray(st.short.rows)) ? st.short.rows : rows(st).filter((r) => r.short);
+  //   ★[T1189 ⑧ · 문 24 ⑧ ㄴ] 모자란 까닭은 쓰임새 문장 없이 — 며칠치 + 값 ▲(곳간 줄의 장부 값 래치 `priceUp` 이 선 물건만).
+  const upOf = {}; for (const r of rows(st)) if (r.priceUp === true) upOf[r.res] = true;
   S.short = shortRows.map((r) => ({ item: r.ko || r.res, res: r.res,
-    why: (num(r.qty) != null && r.qty <= 0) ? '곳간에 없습니다' : (num(r.daysOf) != null ? `${r.daysOf}일치 남았습니다` : '') }));
+    why: [(num(r.qty) != null && r.qty <= 0) ? '곳간에 없습니다' : (num(r.daysOf) != null ? `${r.daysOf}일치 남았습니다` : ''), upOf[r.res] ? '값 ▲' : ''].filter(Boolean).join(' · ') }));
   return {
-    vid: H.vid, name: H.name || '', region: H.region || null, chief: (H.chief && vvNm(H.chief.name)) || null, age: num(H.age),
+    vid: H.vid, name: H.name || '', region: H.region || null, kind: H.kindKo || null,   // ★[T1189 ②] 부제 = 지역 이름 + 마을 꼴 chief: (H.chief && vvNm(H.chief.name)) || null, age: num(H.age),
     member: !!(Me && Me.member), contrib: (Me && num(Me.need) > 0) ? { n: Me.contrib | 0, need: Me.need | 0 } : null, left: Me ? num(Me.left) : null,
     //   ★[T1137] 가입 문(서버 `me.open` 이 있을 때만) — 인정 · 다시 들기 남은 분 · 촌장(탈퇴 단추를 안 그린다) · 수수료율(서버 값 그대로 · 퍼센트로만 바꾼다)
     open: !!(Me && Me.open), recognized: !!(Me && Me.recognized), coolMin: Me ? (num(Me.coolMin) || 0) : 0, chiefMe: !!(Me && Me.chief),
     fee: (Me && num(Me.fee) != null) ? { now: Me.fee, base: num(Me.feeBase), member: num(Me.feeMember) } : null,
     stats: { pop: num(Da.pop), popDelta: num(Da.popDelta), season: (H.cal && H.cal.seasonKo) || null, toWinter: num(Da.toWinter),
-      winter: Array.isArray(Da.winter) ? Da.winter : null, workN: num(Da.projectsN), workNext: Da.workNext || null },
+      winter: Array.isArray(Da.winter) ? Da.winter : null, workN: num(Da.projectsN), workNext: Da.workNext || null,
+      fuel: num(Da.fuelCov), fuelShort: Da.fuelShort === true },   // ★[T1189 ①] 오늘 땔감(겨울 준비 줄과 따로 — 문 24 ① ㄱ)
     requests: rows(raw.requests).map((r) => ({ item: r.ko || r.res, res: r.res, qty: r.qty, filled: r.filled | 0, rew: r.rewKo ? `${r.rewKo} ${r.rewQty}` : null })),
     news: rows(raw.news).map((n) => ({ when: ago(n.ago) + (n.from ? ' · 들려온 소문' : ''), text: n.line || '' })).filter((n) => n.text),
     projects: { active: (pj.now || []).map(proj).filter(Boolean), next: Array.isArray(pj.next) ? pj.next : null, done: (pj.done || []).map((d) => ({ when: ago(d.ago), text: d.line || '' })).filter((d) => d.text) },
@@ -264,7 +270,7 @@ function vvRender() {
   if (vvDirty.has('head')) {
     vvDirty.delete('head');
     head.innerHTML = `<div class="vv-col">${vvT(D.name, 52, 'serif', 'vvName')}`
-      + `${vvT([D.region, D.chief ? `촌장 ${D.chief}` : null, D.age != null ? `${D.age}일째` : null].filter(Boolean).join(' · '), 18)}</div>`
+      + `${vvT([[D.region, D.kind].filter(Boolean).join(' ') || null, D.chief ? `촌장 ${D.chief}` : null, D.age != null ? `${D.age}일째` : null].filter(Boolean).join(' · '), 18)}</div>`
       + `<div class="vv-tabs">${tabs.map(([k, l]) => `<button class="vv-tab" data-vv="tab" data-k="${k}">${vvT(l, 24, 'sansm')}${vvRl()}</button>`).join('')}</div>`
       + `<div class="vv-meter">${((D.open ? (!D.recognized && C && C.n < C.need) : !D.member) && C && C.need > 0) ? `<div><div class="vv-line">${vvT(D.open ? '구성원으로 인정되기까지' : '마을 사람이 되기까지', 20)}${vvT(`${Math.min(C.n, C.need)} / ${C.need}`, 24, 'sans', 'vvContrib')}</div><div style="width:290px;margin-top:8px">${vvBar(Math.min(1, C.n / C.need))}</div></div>` : ''}`
       + `${closeBtn}</div>`;
@@ -299,7 +305,10 @@ function vvDash(D) {
   const cards = [];
   if (S.pop != null) cards.push(`<div class="vv-plate vv-col">${vvT('사는 사람', 20)}${vvT(`${S.pop}명`, 56, 'serif', 'vvPop')}${S.popDelta ? vvT(`이번 철에 ${Math.abs(S.popDelta)}명 ${S.popDelta > 0 ? '늘었습니다' : '줄었습니다'}`, 18) : ''}</div>`);
   if (S.season) cards.push(`<div class="vv-plate vv-col">${vvT('지금은', 20)}${vvT(S.season, 56, 'serif', 'vvSeason')}${S.toWinter > 0 ? vvT(`겨울까지 ${S.toWinter}일 남았습니다`, 18, 'sansm', 'vvToWinter') : ''}</div>`);
-  if (S.winter && S.winter.length) cards.push(`<div class="vv-plate">${vvT('겨울 준비', 20)}${S.winter.map((w) => `<div class="vv-line" style="margin-top:10px">${vvT(w.short ? `${w.label}${vvJosa(w.label, '이', '가')} 모자랍니다` : w.label, 18)}${vvT(`${Math.round(w.frac * 100)}%`, 18)}</div>${vvBar(w.frac)}`).join('')}</div>`);
+  //   ★[T1189 ①] 겨울 준비 = 서버 `dash.winter`(먹을 것 며칠치 ÷ 겨울 끝까지 남은 날) · 오늘 땔감 = 서버 `fuelCov`(따로 한 줄 — 겨울 준비 %에 섞지 않는다)
+  if ((S.winter && S.winter.length) || S.fuel != null) cards.push(`<div class="vv-plate" id="vvWinter">${vvT('겨울 준비', 20)}${(S.winter || []).map((w) => `<div class="vv-line" style="margin-top:10px">${vvT(w.short ? `${w.label}${vvJosa(w.label, '이', '가')} 모자랍니다` : w.label, 18)}${vvT(`${Math.round(w.frac * 100)}%`, 18)}</div>${vvBar(w.frac)}`
+      + `${w.days != null && w.need != null ? `<div style="margin-top:4px">${vvT(`${w.days}일치 · 겨울 끝까지 ${w.need}일`, 18)}</div>` : ''}`).join('')}`
+    + `${S.fuel != null ? `<div class="vv-line" style="margin-top:10px">${vvT(S.fuelShort ? '오늘 땔감이 모자랍니다' : '오늘 땔감', 18)}${vvT(`${Math.round(Math.min(1, S.fuel) * 100)}%`, 18)}</div>${vvBar(Math.min(1, S.fuel))}` : ''}</div>`);
   if (S.workN != null) cards.push(`<div class="vv-plate vv-col">${vvT('하고 있는 일', 20)}${vvT(`${S.workN}가지`, 56, 'serif', 'vvWorkN')}${S.workNext ? vvT(S.workNext, 18) : ''}</div>`);
   if (cards.length) h += `<div class="vv-grid4" style="grid-template-columns:repeat(${cards.length},1fr)">${cards.join('')}</div>`;
   h += `<div class="vv-grow" style="display:grid;grid-template-columns:1.7fr 1fr;gap:16px">`;
@@ -391,13 +400,13 @@ function vvAssign(A) {
 function vvStore(D) {
   const S = D.store || {};
   const far = vvFar(), showPrice = !far && !S.pick && S.base;
-  const cols = 'grid-template-columns:1fr .8fr 1.2fr 1fr';
+  const cols = 'grid-template-columns:1fr 1fr 1.1fr .9fr 1fr';   // ★[T1189] 물건 · 가진 양(낱개 · kg) · 넉넉함 · 시세 · 30날 흐름
   let h = `<div class="vv-grow" style="display:grid;grid-template-columns:2fr 1fr;gap:16px"><div class="vv-plate">${vvT('곳간에 있는 것', 32, 'serif')}`;
   if (far) h += `<div class="vv-far" id="vvFar">${vvFr}${vvT('시세는 가까이 가야 볼 수 있습니다.', 20)}</div>`;
   else if (S.pick || !S.base) h += `<div class="vv-far" id="vvPick">${vvFr}${vvT('시세 기준을 고르면 시세가 나옵니다.', 20)}</div>`;
-  h += `<div class="vv-row" style="${cols}">${vvT('물건', 18)}${vvT('가진 양', 18)}${vvT('넉넉함', 18)}${vvT(showPrice ? `시세 (${S.base} 기준)` : '시세', 18)}</div>${vvRl()}`;
-  h += vvRows((S.rows || []).map((r) => `<div class="vv-row vv-store" style="${cols}">${vvT(r.item, 22)}${vvT(`${r.qty}`, 20)}${r.plenty != null ? vvBar(r.plenty) : '<span></span>'}`
-    + `<span>${showPrice && r.price != null ? vvT(`${r.price}`, 20) : ''}</span></div>`)) || vvEmpty('곳간이 비었습니다.');
+  h += `<div class="vv-row" style="${cols}">${vvT('물건', 18)}${vvT('가진 양', 18)}${vvT('넉넉함', 18)}${vvT(showPrice ? `시세 (${S.base} 기준)` : '시세', 18)}${vvT(S.trendDays ? `지난 ${S.trendDays}일` : '흐름', 18)}</div>${vvRl()}`;
+  h += vvRows((S.rows || []).map((r) => `<div class="vv-row vv-store" style="${cols}">${vvT(r.item, 22)}<span class="vv-col" style="gap:0">${vvT(`${r.qty}개`, 20)}${r.kg != null ? vvT(`${r.kg}kg`, 18) : ''}</span>${r.plenty != null ? vvBar(r.plenty) : '<span></span>'}`
+    + `<span>${showPrice && r.price != null ? vvT(`${r.price}`, 20) : ''}</span><span class="vv-trend">${showPrice ? vvSpark(r.trend, S.trendDays) : ''}</span></div>`)) || vvEmpty('곳간이 비었습니다.');
   h += `</div><div style="display:flex;flex-direction:column;gap:16px"><div class="vv-plate">${vvT('시세 기준', 32, 'serif')}`;
   h += (S.baseOptions || []).length
     ? `<div style="display:flex;gap:12px;flex-wrap:wrap;margin:12px 0 16px">${S.baseOptions.map((b) => vvBtn(b.ko, `data-vv="base" data-b="${vvEsc(b.res)}" style="flex:1"`, b.res === S.baseRes)).join('')}</div>`
@@ -406,6 +415,16 @@ function vvStore(D) {
     + `<div class="vv-plate">${vvT('모자란 것', 32, 'serif')}${vvRows((S.short || []).map((x) => `<div class="vv-row vv-short" style="grid-template-columns:.8fr 1.6fr">${vvT(x.item, 22)}${x.why ? vvT(x.why, 20) : '<span></span>'}</div>`)) || vvEmpty('지금 모자란 것이 없습니다.')}`
     + `<div style="margin-top:16px">${vvBtn('부탁 보기', 'data-vv="req"', true)}</div></div></div></div>`;
   return h;
+}
+
+// ★[T1189 ⑥] 시세 흐름 선 — 서버 점(`{ ago, num }`)을 그대로 잇는다(가로 = 며칠 전 · 세로 = 그 점들의 최소 ~ 최대). 점이 둘 아래면 안 그린다.
+//   그림 크기는 칸 폭에 맞춘 판 꼴(가로 120 · 세로 36 px — 화면 배치 값 · 세계 값 아님).
+function vvSpark(pts, days) {
+  if (!Array.isArray(pts) || pts.length < 2) return '';
+  const W = 120, Hh = 36, D = Math.max(1, (days || 0) - 1, ...pts.map((p) => p.ago));
+  const lo = Math.min(...pts.map((p) => p.num)), hi = Math.max(...pts.map((p) => p.num)), span = hi - lo || 1;
+  const xy = pts.map((p) => `${(W * (1 - p.ago / D)).toFixed(1)},${(Hh - 2 - (Hh - 4) * (p.num - lo) / span).toFixed(1)}`).join(' ');
+  return `<svg width="${W}" height="${Hh}" viewBox="0 0 ${W} ${Hh}" aria-label="지난 시세 흐름" style="color:#d6d6d6"><polyline points="${xy}" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>`;
 }
 
 // 버튼 — 전부 이미 있는 길(제2 규약)
@@ -429,7 +448,8 @@ function vvOnClick(e) {
       let left = Math.ceil(Math.max(0, n.need - n.have));
       for (const it of (n.give || [])) { if (left <= 0) break; const q = Math.min(Math.floor(inv[it] || 0), left); if (q >= 1) { want[it] = (want[it] || 0) + q; left -= q; } }
     }
-    if (Object.keys(want).length) vvSend({ type: 'village_donate', vid: vvVid, want });
+    //   ★[T1189 ⑤ · 문 24 ⑤ ㄱ] 집터(`kind:'house'`)는 **그 집터에** 놓는다(`village_site_give` — 짐 → 집터 실물 · 단계 자재를 다 채우면 기여 +1). 그 밖은 종전 기부.
+    if (Object.keys(want).length) vvSend(p.kind === 'house' ? { type: 'village_site_give', vid: vvVid, want } : { type: 'village_donate', vid: vvVid, want });
     else if (typeof showNotice === 'function') showNotice('가져올 재료가 짐에 없습니다.');
   }
   else if (a === 'assign') {   // ★[T1169] 촌장 일 맡기기 — 게시판 판 「일 맡기기」와 같은 문(T1085 `assign_job` · 그 줄의 사람 · 고른 일)

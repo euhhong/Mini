@@ -23,6 +23,8 @@
 //     값 수 싣지 않음 · 30날 시세 흐름은 키 없음(회부) · 고정 자료 같은 모양
 //  ⑧ [T1169] 촌장 「일 맡기기」 칸 `members.assign` = `assignRoster`(촌장에게만 · 아니면 키 없음) · 진짜 문 `assign_job` 뒤 마을 화면 칸만(게시판 판 0) ·
 //     화면 `vvAdapt` 「모자란 것」 = `store.short.rows`(바닥난 물건 포함) · `vvAssign` 판(고정 자료 · vm)
+//  ⑨ [T1189 · 문 24] 겨울 준비(먹을 것 ÷ 겨울 끝까지 남은 날) · 마을 꼴 · kg · 시세 30날 고리(하루 한 줄 · 기준으로 나눔 · 멀면 없음 · econ 행 칸) ·
+//     공사에 재료 가져오기(`village_site_give` — 짐 → 집터 실물 · 남은 몫까지 · 단계를 다 채우면 기여 +1 · 멀면 거절) · 화면 꼴(vm)
 //
 // 실행: node scripts/test-village-view.js   (존 한 벌을 이 프로세스 안에서 띄운다 · 마을 2곳)
 'use strict';
@@ -262,9 +264,9 @@ const ITEM_KEYS = (view) => {   // 품목이 서는 자리 전부(④)
     vil.econ._fuelCov = fc;
     ok(vs.fuelCov === 0.5 && vs.fuelShort === true, '땔감을 반만 땐 날이면 몫 0.5 · 모자람', JSON.stringify({ fuelCov: vs.fuelCov, fuelShort: vs.fuelShort }));
     ok(!('fuelCov' in vn) && !('fuelShort' in vn), 'econ 이 아직 몫을 안 남겼으면(첫 날 전) 두 키가 없다');
-    const DASH_KEYS = ['foodDays', 'fuelCov', 'fuelShort', 'pop', 'projectsN', 'toWinter'];
-    ok(Object.keys(view.dash).every((k) => DASH_KEYS.includes(k)) && !('popDelta' in view.dash) && !('winter' in view.dash) && !('workNext' in view.dash),
-      '회부 칸(인구 증감 · 겨울 준비 % · 다음 일 한 줄)은 여전히 키가 없다 — 지어내지 않는다', Object.keys(view.dash).join(','));
+    const DASH_KEYS = ['foodDays', 'fuelCov', 'fuelShort', 'pop', 'projectsN', 'toWinter', 'winter'];   // ★[T1189 ①] 겨울 준비 줄(아래 ⑨)
+    ok(Object.keys(view.dash).every((k) => DASH_KEYS.includes(k)) && !('popDelta' in view.dash) && !('workNext' in view.dash),
+      '회부 칸(인구 증감 · 다음 일 한 줄)은 여전히 키가 없다 — 지어내지 않는다(겨울 준비는 T1189 ① 부터 선다)', Object.keys(view.dash).join(','));
     ok(view.dash.projectsN === view.projects.now.length, '지금 일 수 = 공사 줄 수 그대로(T1084 밭 일구기 줄 포함 · 이름 무변)', String(view.dash.projectsN));
     const FD = FIX.view.dash, FH = FIX.view.head;
     ok(typeof FH.region === 'string' && Number.isFinite(FD.foodDays) && Number.isFinite(FD.fuelCov) && typeof FD.fuelShort === 'boolean' && FD.fuelShort === (FD.fuelCov < 1)
@@ -486,7 +488,7 @@ const ITEM_KEYS = (view) => {   // 품목이 서는 자리 전부(④)
     const A = F.vvAdapt(FIX.view), FS2 = FIX.view.store;
     ok(JSON.stringify(A.store.short.map((x) => x.res)) === JSON.stringify(FS2.short.rows.map((r) => r.res)) && FS2.short.rows.some((r) => r.qty === 0 && !FS2.rows.some((q) => q.res === r.res)),
       '★화면 「모자란 것」 = 서버 `store.short.rows`(곳간 줄에 없는 바닥난 물건 포함 — 종전 `rows[].short` 거르기는 못 봤다)', A.store.short.map((x) => `${x.item}:${x.why}`).join(' · '));
-    ok(A.store.short.find((x) => x.res === 'hide').why === '곳간에 없습니다' && A.store.short.find((x) => x.res === 'stone').why === '3.1일치 남았습니다', '바닥난 줄 = "곳간에 없습니다" · 나머지 = "n일치 남았습니다"(서버 값 그대로)');
+    ok(A.store.short.find((x) => x.res === 'hide').why === '곳간에 없습니다' && A.store.short.find((x) => x.res === 'stone').why === '3.1일치 남았습니다 · 값 ▲', '바닥난 줄 = "곳간에 없습니다" · 나머지 = "n일치 남았습니다"(서버 값 그대로 · ★T1189 ⑧ 값 래치가 선 물건은 " · 값 ▲")');
     const noShort = JSON.parse(JSON.stringify(FIX.view)); delete noShort.store.short;
     ok(JSON.stringify(F.vvAdapt(noShort).store.short.map((x) => x.res)) === JSON.stringify(FS2.rows.filter((r) => r.short).map((r) => r.res)), '칸이 없는 옛 서버면 종전 거르기(`rows[].short`)');
     const h = F.vvAssign(A.members.assign), FA = FIX.view.members.assign;
@@ -494,6 +496,94 @@ const ITEM_KEYS = (view) => {   // 품목이 서는 자리 전부(④)
     ok(rowsH === FA.rows.length && btnH === FA.rows.filter((r) => !r.away && !r.left).length && /자리 없음/.test(h) && /원정 중/.test(h) && /12일 뒤 · 촌장이 맡김/.test(h) && /30일 동안/.test(h),
       '「일 맡기기」 판 — 줄 = 명부 · 단추 = 맡길 수 있는 사람만 · 형편(원정 중 · n일 뒤 · 촌장이 맡김) · 빈자리 없음 표시 · 쿨다운 = 서버 값', `줄 ${rowsH} · 단추 ${btnH}`);
     ok(F.vvAssign(null) === '' && F.vvAdapt(Object.assign({}, FIX.view, { members: Object.assign({}, FIX.view.members, { assign: undefined }) })).members.assign === null, '키가 없으면 판을 안 그린다');
+  }
+
+  // ── ⑨ [T1189 · 문 24] 마을 화면 빈칸 — 겨울 준비 · 부제 · 재료 가져오기 · 시세 30날 · 단위 ──
+  say('\n⑨ [T1189] 마을 화면 빈칸(겨울 준비 · 마을 꼴 · 재료 가져오기 · 시세 30날 · kg)');
+  {
+    p.x = AX; p.y = AY;
+    const v9 = VV.build(p, VID, 'wood').view, d9 = V.villageViewSrc(VID).day;
+    // ① 겨울 준비 = 먹을 것 며칠치 ÷ 겨울 끝까지 남은 날(달력 정본으로 따로 셈)
+    const c9 = Ev.calendarOf(d9);
+    const need = c9.season === 'winter' ? c9.seasonDays - c9.dayOfSeason + 1 : VV.toWinter(d9) + Ev.calendarOf(d9 + VV.toWinter(d9)).seasonDays;
+    const w = (v9.dash.winter || [])[0];
+    ok(!!w && w.need === need && w.days === v9.dash.foodDays && w.frac === +Math.min(1, v9.dash.foodDays / need).toFixed(2) && w.short === (v9.dash.foodDays < need) && w.label === '먹을 것',
+      '① 겨울 준비 = 먹을 것 며칠치(`foodDays`) ÷ 겨울 끝까지 남은 날(달력 정본) · 1 에서 멈춤 · 모자람', JSON.stringify(w));
+    ok(!(v9.dash.winter || []).some((x) => /땔감/.test(x.label)), '① 땔감은 겨울 준비 줄에 안 섞는다(오늘 땔감 `fuelCov` 따로)');
+    // ② 마을 꼴 = 회관 행 꼬리표 낱말
+    ok(typeof v9.head.kindKo === 'string' && ['농촌', '어촌', '광산', '임업'].includes(v9.head.kindKo) && v9.head.kindKo === vil._kindKo,
+      '② 마을 꼴 = 회관 행 꼬리표(`t593`/`seedType`)의 이름 낱말(지금 이름이 쓰는 넷)', `${v9.head.region} ${v9.head.kindKo} · ${vil.name}`);
+    // ⑦ 단위 = 낱개 · kg(무게 정본)
+    const W9 = require(path.join(ROOT, 'server', 'weights.js'));
+    const kgOk = v9.store.rows.filter((r) => W9.kgOf(r.res) > 0);
+    ok(kgOk.length > 0 && kgOk.every((r) => r.kg === +(r.qty * W9.kgOf(r.res)).toFixed(1)), '⑦ 곳간 줄 kg = 낱개 × 무게 정본 `weights.kgOf`', kgOk.slice(0, 3).map((r) => `${r.ko} ${r.qty}개 ${r.kg}kg`).join(' · '));
+    // ⑥ 시세 30날 고리 — 하루 한 줄(거래소 정본 값) · 고른 기준으로 나눔 · 멀면 없음
+    const E9 = vil.econ;
+    delete E9._t1189Px;
+    V.t1189PxRecord();
+    const ring = E9._t1189Px || [];
+    const P9 = Ev.pricesFresh(require(path.join(ROOT, 'sim', 'economy-sim-v2.js')), E9);
+    ok(ring.length === 1 && ring[0].d === d9 && Object.keys(ring[0].p).length > 0 && Object.entries(ring[0].p).every(([r, x]) => x === +(+P9[r]).toPrecision(4)),
+      '⑥ 하루 한 줄 = 그날 거래소 정본 시세(`pricesFresh`) 받아 적기(유효 숫자 넷)', `${ring.length}줄 · 품목 ${ring[0] ? Object.keys(ring[0].p).length : 0}`);
+    V.t1189PxRecord();
+    ok(ring.length === 1, '⑥ 같은 날 두 번 적으면 그날 줄을 갈아 끼운다(한 날 한 줄)');
+    for (let i = 1; i <= 34; i++) ring.unshift({ d: d9 - i, p: Object.assign({}, ring[0].p) });
+    V.t1189PxRecord();   // 적을 때 창을 넘는 옛 줄을 덜어 낸다
+    ok(ring.length === Ev.CFG.PRICE_WIN && ring[ring.length - 1].d === d9, `⑥ 고리 길이 = 장부 30날 창(\`PRICE_WIN\` ${Ev.CFG.PRICE_WIN} — 새 수 0)`, String(ring.length));
+    const v9b = VV.build(p, VID, 'wood').view, T9 = require(path.join(ROOT, 'server', 'trade.js'));
+    const tr = v9b.prices.trend, n9 = v9b.prices.numeraire;
+    const r0 = tr && tr.rows[0], want0 = r0 ? ring.filter((x) => x.p[n9] > 0 && x.p[r0.res] > 0).map((x) => ({ ago: d9 - x.d, num: T9.sig(x.p[r0.res] / x.p[n9]) })) : null;
+    ok(!!tr && tr.days === Ev.CFG.PRICE_WIN && tr.rows.every((t) => v9b.prices.rows.some((q) => q.res === t.res)) && JSON.stringify(r0.pts) === JSON.stringify(want0),
+      '⑥ `prices.trend` = 고리 ÷ 고른 기준(거래소 `num` 과 같은 나눗셈 · `trade.sig`) · 시세 칸 품목만 · 오래된 것부터', r0 ? `${r0.res} ${r0.pts.length}점 · 기준 ${n9}` : '없음');
+    const last = r0 && r0.pts[r0.pts.length - 1], cur = r0 && v9b.prices.rows.find((q) => q.res === r0.res);
+    ok(!!last && last.ago === 0 && !!cur, '⑥ 마지막 점 = 오늘', last ? `${last.num} (지금 시세 ${cur && cur.num})` : '-');
+    const pf = { x: p.x, y: p.y }; p.x = AX + 4000; p.y = AY + 4000;
+    const far9 = VV.build(p, VID, 'wood'); p.x = pf.x; p.y = pf.y;
+    ok(!!far9.far && !(far9.view && far9.view.prices && far9.view.prices.trend), '⑥ 멀면 시세 흐름도 없다(원격 시세 0)');
+    const P3 = V.__p3Bind ? V.__p3Bind() : null, ser = P3 && P3.serializeEcon ? (((x) => typeof x === 'string' ? x : JSON.stringify(x))(P3.serializeEcon(E9))) : null;
+    const back = ser ? P3.restoreEcon(ser, require(path.join(ROOT, 'sim', 'economy-sim.js'))) : null;
+    ok(!!back && Array.isArray(back._t1189Px) && back._t1189Px.length === ring.length && JSON.stringify(back._t1189Px) === JSON.stringify(ring), '⑥ 고리는 econ 행 칸 — 저장 문(`serializeEcon`) → 복원 문(`restoreEcon`) 왕복에 그대로 남는다(재기동을 넘는다)', back ? `${back._t1189Px.length}줄` : '저장 문을 못 불렀다');
+    // ⑤ 공사에 재료 가져오기 — 짐 → 집터 실물 · 단계 자재를 다 채우면 기여 +1
+    const E5 = V.villageViewSrc(VID).E, site = vil._site;
+    ok(!!site && !!E5.T400_BUILD_ACT, '[자명 통과 금지] 집 행위가 켜진 세계에 집터가 실제로 있다', site ? `단계 ${site.stage}` : '없음');
+    if (site) {
+      const need5 = E5.hutEconStage(site.stage | 0) || {}, DM = V.playerVillageDepositMap();
+      if (!site.mat) site.mat = {};
+      const k5 = Object.keys(need5).find((k) => Object.keys(DM).some((it) => DM[it] === k));
+      const it5 = k5 && (DM[k5] === k5 ? k5 : Object.keys(DM).find((it) => DM[it] === k5));
+      for (const k of Object.keys(need5)) if (k !== k5) site.mat[k] = need5[k];   // 다른 자재는 이미 찼다고 둔다(이 절이 재는 것은 그 한 줄)
+      site.mat[k5] = 0;
+      const M = require(path.join(ROOT, 'server', 'membership.js'));
+      const c0 = M.contribOf(p.playerId);
+      p.inventory[it5] = 1;
+      send({ type: 'village_site_give', vid: VID, want: { [it5]: 1 } });
+      await sleep(30);
+      const m1 = site.mat[k5], c1 = M.contribOf(p.playerId);
+      ok(m1 > 0 && (p.inventory[it5] || 0) === 0 && c1 === c0, '⑤ 재료 하나 — 짐에서 빠지고 집터 자재가 는다 · 단계가 안 찼으면 기여 그대로', `${it5} → ${k5} ${m1}/${need5[k5]} · 기여 ${c0} → ${c1}`);
+      let rem = 0; for (let i = site.stage | 0; i < E5.hutStageCount(); i++) rem += ((E5.hutEconStage(i) || {})[k5] || 0);   // 이 집에 남은 몫(지금 단계 ~ 끝)
+      const nt0 = msgs('notice').length, gs = Math.ceil((rem - m1) / m1) + 3;   // 남은 몫보다 셋 더 든다(넘는 낱개는 짐에 남아야 한다)
+      p.inventory[it5] = gs;
+      send({ type: 'village_site_give', vid: VID, want: { [it5]: gs } });
+      await sleep(30);
+      const c2 = M.contribOf(p.playerId), nt = msgs('notice').slice(nt0).map((m) => m.text);
+      ok(site.mat[k5] >= need5[k5] && c2 === c0 + 1 && nt.some((t) => /다 찼습니다/.test(t) && /니다\.$/.test(t)), '⑤ 그 단계 자재를 다 채운 한 번 = 기여 +1(부탁 하나와 같은 꼴 · 계량기 하나) · 알림 하십시오체', `${site.mat[k5]}/${need5[k5]} · 기여 ${c2} · ${nt.slice(-1)[0]}`);
+      ok(site.mat[k5] <= rem + 1e-6 && (p.inventory[it5] || 0) > 0, '⑤ 이 집에 남은 몫을 넘게는 안 받는다(넘는 낱개는 짐에 남는다 — 집터에서 사라지는 자재 0)', `놓인 ${site.mat[k5]} ≤ 남은 몫 ${rem} · 짐에 ${p.inventory[it5]}`);
+      p.x = AX + 4000; p.y = AY + 4000; const nf = msgs('notice').length;
+      send({ type: 'village_site_give', vid: VID, want: { [it5]: 1 } }); await sleep(20);
+      p.x = AX; p.y = AY;
+      ok(msgs('notice').length > nf && site.mat[k5] >= need5[k5], '⑤ 멀면 거절(곳간 · 게시판과 같은 근접 술어)', msgs('notice').slice(-1)[0].text);
+    }
+    // 화면 — 고정 자료로(vm): 부제 · 오늘 땔감 · 단위 · 흐름 · 값 ▲ · 다 되면 문장 0
+    const vm = require('vm');
+    const C = vm.createContext({ location: { search: '' }, URLSearchParams, document: {}, CSS: { escape: (x) => x } });
+    const F = vm.runInContext(fs.readFileSync(path.join(ROOT, 'public', 'client', '52-v-village-view.js'), 'utf8') + '\n;({ vvAdapt, vvSpark })', C);
+    const A = F.vvAdapt(FIX.view);
+    ok(A.kind === '어촌' && A.stats.fuel === FIX.view.dash.fuelCov && A.stats.fuelShort === true && A.stats.winter[0].need === 124, '화면 꼴 — 마을 꼴 · 오늘 땔감 · 겨울 준비 줄(서버 칸 그대로)');
+    ok(A.store.rows.find((r) => r.res === 'wood').kg === 255 && A.store.rows.find((r) => r.res === 'salt').trend.length === 5 && A.store.trendDays === 30, '화면 꼴 — kg · 시세 흐름 점(그 품목) · 며칠');
+    ok(/값 ▲/.test(A.store.short.find((x) => x.res === 'stone').why) && !/값 ▲/.test(A.store.short.find((x) => x.res === 'hide').why), '⑧ 모자란 까닭 = 며칠치 + 값 ▲(래치가 선 물건만) · 쓰임새 문장 0', A.store.short.map((x) => x.why).join(' / '));
+    ok(A.projects.active.every((q) => !(q.after || []).some((t) => /다 지으면/.test(t))), '④ 다 되면 좋아지는 것 = 문장 없이(침상 줄 0)');
+    const sp = F.vvSpark(A.store.rows.find((r) => r.res === 'salt').trend, 30);
+    ok(/<polyline points="[^"]+"/.test(sp) && F.vvSpark([{ ago: 0, num: 1 }], 30) === '' && F.vvSpark(null, 30) === '', '⑥ 흐름 선 — 점 둘 이상만 그린다');
   }
 
   say(`\n결과: PASS ${pass} · FAIL ${fail}`);

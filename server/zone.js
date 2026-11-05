@@ -7537,6 +7537,7 @@ const VILLAGE_BOOK_MSG = new Set([
   'village_inventory', 'village_deposit', 'village_brief', 'village_board', 'village_deliver',
   'village_trade', 'village_trade_exec', 'village_trade_quote', 'village_withdraw',   // ★[T11] 인출도 마을 장부다
   'village_donate',   // ★[T769] 기부도 마을 장부다(켬에서만 오는 메시지 · 끔 = 아무도 안 보낸다)
+  'village_site_give',   // ★[T1189 ⑤] 공사에 재료 가져오기도 마을 몸(집터)을 만진다
   'village_welcome',   // ★[T19] 이방인 받기 스위치도 마을 장부다
   'village_view',   // ★[T1072] 마을 화면 자료도 마을 장부를 읽는다(마감 중이면 줄을 선다)
   'sell_relic', 'shop_info', 'craft_buy', 'craft_sell',
@@ -7729,7 +7730,8 @@ function handlePlayerInput(player, raw) {
   else if (msg.type === 'village_deliver') tryVillageDeliver(player, msg.vid, msg.item, msg.want);
   else if (msg.type === 'village_withdraw') tryVillageWithdraw(player, msg.vid, msg.res, msg.qty);   // ★[T11] 곳간 인출 · ★[T779] 촌장만
   else if (msg.type === 'assign_job') tryAssignJob(player, msg.vid, msg.npc, msg.job);   // ★[T1085] 촌장이 구성원에게 일을 맡긴다
-  else if (msg.type === 'village_donate' && T769) tryVillageDonate(player, msg.vid, msg.want);   // ★[T769] 기부 — 누구나 · 상시 · 받는 것 없음(켬에서만)
+  else if (msg.type === 'village_donate' && T769) tryVillageDonate(player, msg.vid, msg.want);
+  else if (msg.type === 'village_site_give') tryVillageSiteGive(player, msg.vid, msg.want);   // ★[T1189 ⑤] 공사에 재료 가져오기 — 짐 → 집터(실물) · 단계 자재를 다 채우면 기여 +1   // ★[T769] 기부 — 누구나 · 상시 · 받는 것 없음(켬에서만)
   else if (msg.type === 'onboarding_state' || msg.type === 'onboarding_greet' || msg.type === 'onboarding_day') Onboarding.handleMsg(player, msg);   // ★[온보딩 v2] 대본 상태·촌장 첫 마디·하루 정산
   else if (msg.type === 'village_trade') tryVillageTrade(player, msg.vid, msg.numeraire);                     // ★[거래소] 시세표(T69 기준 품목)
   else if (msg.type === 'village_trade_exec') tryVillageTradeExec(player, msg.vid, msg.give, msg.take, msg.qty, msg.want, msg.numeraire);  // ★[거래소] 교환(T69 받을 양)
@@ -12880,6 +12882,29 @@ function tryVillageDonate(player, vid, want) {
   if (g.err) { send(player.ws, { type: 'notice', text: `🏘️ ${g.err}` }); return; }
   return tryVillageDeposit(player, null, want || {}, g.vil);   // 회관과 같은 본문(사본 0)
 }
+// ★★[T1189 ⑤ · ★재민 11-05 문 24 ⑤ ㄱ] 공사에 재료 가져오기 — 누구나 · 근접(곳간 · 게시판과 같은 술어 `villageWithdrawGate`) · 짐 → 지금 짓는 집터.
+//   실물 길 = `SimVillages.playerSiteGive`(곳간 넣기와 같은 물건 → 재화 표 · 환산) · 낸 개체를 짐 무게 장부에서 뺀다(회관 넣기와 같은 두 줄).
+//   상한 것은 안 받는다(회관과 같은 문 `_spoiledGuardItems`). 그 한 번으로 지금 단계 자재가 다 차면 기여 +1(`Onboarding.onSiteGive` — 계량기 하나).
+function tryVillageSiteGive(player, vid, want) {
+  if (!SimVillages.villageWithdrawGate || !SimVillages.playerSiteGive) return null;
+  const g = SimVillages.villageWithdrawGate(vid | 0, player.x, player.y);
+  if (g.err) { send(player.ws, { type: 'notice', text: g.err }); return { ok: false, err: g.err }; }
+  const _map = SimVillages.playerVillageDepositMap() || {};
+  const _sp = _spoiledGuardItems(player, Object.keys(want || {}).filter((it) => _map[it] && Number(want[it]) >= 1));
+  if (_sp) { send(player.ws, { type: 'notice', text: _sp }); return { ok: false, err: _sp }; }
+  for (const it of Object.keys(want || {})) if (Lots.isLot(it)) delete want[it];   // 집 자재는 상하지 않는 물건 — 로트 품목은 집터 길이 없다(곳간 문이 받는다)
+  const r = SimVillages.playerSiteGive(g.vil, player.inventory, want || {}, _unitsOfFor(player));
+  if (!r.ok) { send(player.ws, { type: 'notice', text: r.err }); return r; }
+  for (const [it, n] of Object.entries(r.taken || {})) Carry.takeKg(player, it, n);
+  Carry.reconcile(player, player.inventory);
+  if (SimVillages.t983Save) SimVillages.t983Save(g.vil);   // 집터 자재 · 마을 행을 이 순간에(곳간 넣기와 같은 자리)
+  savePlayer(player);
+  sendInventory(player);
+  const kv = Object.entries(r.taken).map(([k, q]) => `${ITEM_LABEL_SERVER[k] || k} ${q}개`).join(', ');
+  send(player.ws, { type: 'notice', text: `${g.vil.name ? g.vil.name + ' ' : ''}집터에 ${kv}를 놓았습니다.${r.done ? ' 이번 단계 재료가 다 찼습니다. 마을 기여가 1 늘었습니다.' : ''}` });
+  if (r.done) Onboarding.onSiteGive(player, true, vid | 0);
+  return r;
+}
 // ═══[2026-08-25 사건 레이어] 촌장 브리핑 · 마을 게시판 · 납품 ═══════════════
 //   설계 §3.2: **대시보드 UI 금지 — 촌장 대사·게시판 의뢰로 번역**한다.
 //   서버가 하는 일: 거리 게이트 + 자기 마을 것만. 나머지 판정은 villages.js→events.js 정본.
@@ -13398,7 +13423,7 @@ function tryFurnaceSmelt(player, buildingId) {
 //     지어 봐야 안다 — 실제로 이 하네스가 "노를 아예 못 짓는다"를 처음 잡아냈다.
 function __testBind() {
   return {
-    claims, buildings, players, BUILDING_SIZE, Specialty, tryAssignJob, tryVillageBoard, JOB_KR_NPC,   // ★[T1085] 촌장 일 맡기기(하네스가 진짜 문을 부른다)
+    claims, buildings, players, BUILDING_SIZE, Specialty, tryAssignJob, tryVillageBoard, JOB_KR_NPC, tryVillageSiteGive,   // ★[T1189 ⑤]   // ★[T1085] 촌장 일 맡기기(하네스가 진짜 문을 부른다)
     _t738Adopt, _t738: () => _t738, observers, isPositionActive: (x, y) => isPositionActive(x, y), _t774: () => ({ X: _t774X, Y: _t774Y, n: _t774N, src: _t774Src, ref: _spInc.ref, act: _spInc.act, hit: _t774Stat.hit, miss: _t774Stat.miss, same: _t774Src === activeChunkKeys }),   // ★[T774] 활성 열 증인(읽기)
       // ★[T738] SoA x·y 증인(`scripts/t738-witness.js` · 읽기 · 부르기만)
     FURNACE_STAGES, FURNACE_KINDS, FURNACE_FUEL_PER_ORE, CHARCOAL_KILN_STAGES, CHARCOAL_KILN_YIELD, CHARCOAL_KILN_WOOD,

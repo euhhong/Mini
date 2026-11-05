@@ -109,3 +109,5 @@
 * [T1116] 창고 탭 새 칸 — `store.short.rows` 는 `rows[].short` 로 거르는 것보다 넓다(곳간이 바닥난 물건이 든다) · `priceUp`/`priceDown` · `priceMoves` 는 키가 있을 때만 그린다 · 날마다의 시세 선 · 어제보다는 그리지 않는다(키 없음).
 * [T1169] 화면 「모자란 것」 = `store.short.rows`(바닥난 줄 = "곳간에 없습니다") — 칸이 없는 옛 서버만 `rows[].short` 거르기 · 구성원 탭 아래 「일 맡기기」 판 = `members.assign`(키가 있을 때만 · 단추 = `assign_job` · 맡긴 뒤 서버는 열린 마을 화면의 칸만 다시 보낸다 — 게시판 판을 띄우지 않는다).
 * 아직 서버에 없는 칸(T1105 가 셀 것) — 키가 오면 그린다: `head.region` · `dash.popDelta` · `dash.winter[] { label, frac, short }` · `dash.workNext` · `members.delta` · `projects.next[]`(문장 줄).
+
+* [T1189 · 문 24 권고대로] 새 칸 — `head.kindKo`(마을 꼴 · 회관 행 꼬리표 낱말 농촌 · 어촌 · 광산 · 임업 · 부제 = `region` + `kindKo`) · `dash.winter[] { label:'먹을 것', frac, short, days, need }`(먹을 것 며칠치 ÷ 겨울 끝까지 남은 날 — T1179 수확창이 서면 "다음 수확까지"로) · `store.rows[].kg`(낱개 × `weights.kgOf`) · `prices.trend { days, rows[] { res, pts[] { ago, num } } }`(econ 행 칸 `_t1189Px` 30날 고리 ÷ 고른 기준 · 시세 칸 안 — 멀면 없음). 화면: 오늘 땔감 줄(`fuelCov`)은 겨울 준비 판 안 따로 · 「다 되면」 문장 없음(`bedsGain` 안 그림) · 「모자란 것」 = 며칠치 + 값 ▲ · 「재료 가져오기」(집터) = `village_site_give` `{ vid, want }`(짐 → 집터 `_site.mat` · 남은 몫까지 · 단계 자재를 다 채운 한 번 = 기여 +1).
