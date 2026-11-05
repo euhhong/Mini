@@ -111,7 +111,7 @@
   //   랩에서 처음 호출돼 즉사했다 — CLI 하네스는 못 잡는 브라우저 전용 지뢰라 여기서 구조적으로 막는다.
   var process=(typeof root.process!=='undefined'&&root.process)?root.process:{env:{}};
   function req(p){ for(var k of ["freshfish","seafish","fish-goods","fish-preserve","sustain","fishing","kcal"])if(p.endsWith('/'+k))return modules[k]; if(/hanbando-minerals$/.test(p))return modules.oreKinds; if(/ore-goods$/.test(p))return modules.oreGoods; if(/move-model/.test(p))return modules.movem; if(/equilibrium/.test(p))return modules.equil; if(/(^|[/])carry$/.test(p))return modules.carry; if(/(^|[/])weather$/.test(p))return modules.weather; if(/(^|[/])salt$/.test(p))return modules.salt; if(/(^|[/])tidal$/.test(p))return modules.tidal; if(/(^|[/])animals$/.test(p))return modules.animals; if(/(^|[/])game-meat$/.test(p))return modules.gmeat; if(/(^|[/])spoil$/.test(p))return modules.spoil; if(/(^|[/])lots$/.test(p))return modules.lots; if(/crops[.]json$/.test(p))return modules.cropsData; if(/crop-cal/.test(p))return modules.cropcal; if(/(^|[/])events$/.test(p))return modules.events; if(/(^|[/])crops$/.test(p))return modules.crops; if(/calendar/.test(p))return modules.cal; if(/zone-config/.test(p))return modules.zcfg; if(/weights$/.test(p))return modules.wts; if(/hut-stages/.test(p))return modules.hut; if(/stone-uses/.test(p))return modules.stoneu; if(/granary-stages/.test(p))return modules.granst; if(/smelt-uses/.test(p))return modules.smeltu; if(/village-layout/.test(p))return modules.vlayout; if(/era/.test(p))return modules.era; if(/specialty/.test(p))return modules.specialty; if(/economy-sim-v2/.test(p))return modules.v2; if(/economy-sim/.test(p))return modules.v1; return {}; }
-  modules["cal"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["cal"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["cal"];},set:function(v){modules["cal"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 // === server/calendar.js — 달력 정본 하나: 그레고리력 (T570 · 재민 10-02) ================================
 //
 // ★재민 10-02: *"지금 날짜가 12월제가 아니던데 제대로 고쳐야 한다 · 윤년도 세고 · 정확하게 · 시작은 3월 1일"*
@@ -245,7 +245,7 @@ module.exports = {
 };
 
 ;return module.exports;})();
-  modules["era"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;
+  modules["era"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["era"];},set:function(v){modules["era"]=v;}});module.exports={};var exports=module.exports;var require=req;
 // === server/era.js — 시대. "이 세계에서 지금 무엇이 **널리** 가능한가"를 정하는 단 하나의 자리 ===
 //
 // ★[재민 확정 2026-08-01]
@@ -487,7 +487,7 @@ module.exports = {
 };
 
 ;return module.exports;})();
-  modules["oreKinds"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;
+  modules["oreKinds"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["oreKinds"];},set:function(v){modules["oreKinds"]=v;}});module.exports={};var exports=module.exports;var require=req;
 'use strict';
 // === server/hanbando-minerals.js — 광종 배분 (지역 무관 · 골고루) ===
 //
@@ -623,7 +623,7 @@ const POLY = Object.freeze({
 module.exports = { POOL, POLY, mineralAt, balanceMajors, MIN_MAJOR };
 
 ;return module.exports;})();
-  modules["oreGoods"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;
+  modules["oreGoods"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["oreGoods"];},set:function(v){modules["oreGoods"]=v;}});module.exports={};var exports=module.exports;var require=req;
 'use strict';
 // T1188: 지도에 이미 있는 광물의 생광석. 철 정광 iron_ore와 구분한다.
 const {POOL}=require('./hanbando-minerals');
@@ -643,7 +643,7 @@ function descriptors(catalog){const out={};for(const m of minerals){const ko=cat
 module.exports={ON,configure,minerals,ids,idOf,mineralOf,isOre:k=>!!mineralOf(k),shares,split,total,heldMix,add,take,descriptors,POOL};
 
 ;return module.exports;})();
-  modules["freshfish"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["freshfish"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["freshfish"];},set:function(v){modules["freshfish"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 // === server/freshfish.js — 민물고기 10종 정본 (T312 · 설계_민물고기.md §1 을 코드로) ==========
 //
 // ★왜 한 파일인가 — 종 이름·무게·물·계절을 **여러 자리에 적으면 사본**이다. 무게 표(`weights.js`)에
@@ -753,7 +753,7 @@ module.exports = { WATERS, SPECIES: T609_FRESH_TABLE ? SPECIES_T609 : SPECIES, s
   T609_FRESH_TABLE, T603, SPECIES_T609, CANDIDATES };   // ★[T609] 손잡이 · T603 칸 · 켬 판 표 · 새 후보(표만)
 
 ;return module.exports;})();
-  modules["seafish"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["seafish"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["seafish"];},set:function(v){modules["seafish"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 // === server/seafish.js — 바닷물고기 표 정본 (T593 · `freshfish.js` 꼴 그대로 · T602 고증 채움) ======================
 //
 // ★왜 따로 있나 — T593 전엔 낚시 종을 **존 바이옴 목록 하나**(`fishing.js SPECIES_BY_BIOME`)에서 뽑았다.
@@ -1012,7 +1012,7 @@ module.exports = {
 };
 
 ;return module.exports;})();
-  modules["fish-goods"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["fish-goods"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["fish-goods"];},set:function(v){modules["fish-goods"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 'use strict';
 // T1192: 몸 크기는 민물/바다 표, kcal 밀도는 T59. 낱개 묶음 무게는 몸 크기의 출처가 아니다.
 const ON=typeof process==='undefined'||!process.env||process.env.T1192_FISH_SPECIES!=='0';
@@ -1029,7 +1029,7 @@ function audit(){const Sp=require('./specialty'),W=require('./weights');return s
 module.exports={ON,bodyKg,species,items,isItem,factor,note,shares,reserve,audit};
 
 ;return module.exports;})();
-  modules["fish-preserve"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["fish-preserve"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["fish-preserve"];},set:function(v){modules["fish-preserve"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 'use strict';
 // === server/fish-preserve.js — 어종별 건어물 · 생선 절임 정본 [T1128 · ★재민 11-03 문 9-a ㄱ] ==============================
 //
@@ -1144,7 +1144,7 @@ const ECON_YIELD=0.4; // 기존 econ PRESERVE_YIELD를 이 정본으로 이동(�
 module.exports = { ECON_YIELD, ON, NAME_DRY, NAME_PICKLE, species, isSpecies, koOf, driedId, pickledId, items, isItem, outBy, rawKgOf, kgOf, kcalPerKgOf, table };
 
 ;return module.exports;})();
-  modules["sustain"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["sustain"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["sustain"];},set:function(v){modules["sustain"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 // === server/sustain.js — 랩 「공간 자원 층」의 econ 접점 이식 ===
 //
 // ★[11차 재민 지시] "한 번에 다 해" — econ 엔진이 읽는데 서버가 안 주던 land.* 키를 채운다.
@@ -1289,7 +1289,7 @@ module.exports = {
 };
 
 ;return module.exports;})();
-  modules["fishing"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["fishing"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["fishing"];},set:function(v){modules["fishing"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 // === server/fishing.js — 낚시 v2: 판단·위험·손맛 ================================
 //
 // ★[재민 확정 2026-08-26] 재미 층 첫 시제품. 설계 근거: `설계_게임성_사건레이어_TODO.md` §2·§10.1.
@@ -1805,7 +1805,7 @@ module.exports = {
 Object.defineProperty(module.exports, 'DAY_MS', { get() { return DAY_MS; }, enumerable: true, configurable: true });
 
 ;return module.exports;})();
-  modules["specialty"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;
+  modules["specialty"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["specialty"];},set:function(v){modules["specialty"]=v;}});module.exports={};var exports=module.exports;var require=req;
 // === server/specialty.js — 자원 196종 catalog ===
 // Phase 5-5-A
 //
@@ -3699,7 +3699,7 @@ if(require('./fish-goods').ON)for(const [id,it]of Object.entries(require('./fish
   }
  }
 };
-  modules["cropcal"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["cropcal"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["cropcal"];},set:function(v){modules["cropcal"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 // === server/crop-cal.js — 작물 철 고증 표 (T594 · 농사로 1차) ======================================
 //
 // ★왜 있나 — 달력(T570)이 생기자 작물 철이 드러났다(T583 · 족보 548): 카탈로그 `성장일(활동)` 이
@@ -3843,7 +3843,7 @@ function ids() { return ROWS.map((r) => r.id); }
 module.exports = { ROWS, NOT_IN_TABLE, rowOf, ids, parseSpan, spanOf };
 
 ;return module.exports;})();
-  modules["events"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["events"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["events"];},set:function(v){modules["events"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 // === server/events.js — 사건 장부(event ledger) ================================
 //
 // ★설계 근거: `설계_게임성_사건레이어_TODO.md` §3.1/§3.2/§3.3 [재민 확정 2026-08-25]
@@ -5396,7 +5396,7 @@ module.exports = { createLedger, CFG, TYPES, DEED_TYPES, DEED_FOREIGN, briefLine
   buildDeliverable, deliverToVillage, pricesOf, pricesFresh, payableQty };
 
 ;return module.exports;})();
-  modules["crops"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["crops"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["crops"];},set:function(v){modules["crops"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 // === server/crops.js — 작물 정본 [재민 확정 2026-08-31] ==========================
 //
 // 재민 질문: *"작물별로 포만감·부패속도·수확량당 무게·자라는 기간·수확 계절·난이도가
@@ -5959,7 +5959,7 @@ module.exports = {
 };
 
 ;return module.exports;})();
-  modules["wts"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["wts"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["wts"];},set:function(v){modules["wts"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 // === server/weights.js — 소지품 kg 정본 [재민 확정 2026-08-27] ==================
 //
 // 재민 원문: *"모든 아이템은 좀보이드처럼 무게를 가져야 해."*
@@ -6145,7 +6145,7 @@ function allIds() { return Object.keys(catalog()); }
 module.exports = { CORE_KG, ITEM_ALIAS, DERIVED_KG, DEFAULT_KG, kgOf, kgOfOrDefault, catalog, allIds };
 
 ;return module.exports;})();
-  modules["hut"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;
+  modules["hut"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["hut"];},set:function(v){modules["hut"]=v;}});module.exports={};var exports=module.exports;var require=req;
 // === server/hut-stages.js — 움집 한 채의 공정·자재 정본 [T400 2026-09-26] ==================
 //
 // ★왜 이 파일이 있나 [재민 #51 ⓐ "집도 행위" · PM 권고 #61 "서버 `HUT_STAGES` 가 정본"]
@@ -6242,7 +6242,7 @@ module.exports = { HUT_STAGES, HUT_RECIPES, PSITE_COST, rawOfNeed, stageRaw, hut
   HUT_PLINTH_SRC, plinthKg, stageStoneKg };
 
 ;return module.exports;})();
-  modules["stoneu"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;
+  modules["stoneu"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["stoneu"];},set:function(v){modules["stoneu"]=v;}});module.exports={};var exports=module.exports;var require=req;
 // =============================================================================
 // stone-uses.js — ★★[T419 2026-09-26] 돌을 재료로 받는 물건 중 **econ 이 같은 물건을 만드는 자리**의 정본
 //
@@ -6288,7 +6288,7 @@ function perCrudeTool() {
 module.exports = { EQUIP_MAT_QTY, CRUDE_TOOLS, perTool, perStoneSword, perCrudeTool };
 
 ;return module.exports;})();
-  modules["granst"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;
+  modules["granst"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["granst"];},set:function(v){modules["granst"]=v;}});module.exports={};var exports=module.exports;var require=req;
 // =============================================================================
 // granary-stages.js — ★★[T435 2026-09-27] 곳간(5×3 고상 창고) 짓는 재료 — 정본 하나
 //
@@ -6325,7 +6325,7 @@ function granaryRaw() {
 module.exports = { GRANARY_STAGES, GRANARY_RECIPES, GRANARY_COST, granaryRaw };
 
 ;return module.exports;})();
-  modules["smeltu"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;
+  modules["smeltu"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["smeltu"];},set:function(v){modules["smeltu"]=v;}});module.exports={};var exports=module.exports;var require=req;
 // =============================================================================
 // smelt-uses.js — ★★[T443 2026-09-27] 노(爐)·숯가마·제련 연료 — 정본 하나
 //
@@ -6384,7 +6384,7 @@ module.exports = { FURNACE_STAGES, FURNACE_KINDS, FURNACE_FUEL_PER_ORE, CHARCOAL
   KILN_BURN_MS, KILN_BATCH_MS_PER, SMELT_RECIPES, fuelPerOre, woodPerCharcoal, woodPerCharcoalKiln, kilnBatchesPerDay, kilnBuildCost };
 
 ;return module.exports;})();
-  modules["zcfg"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["zcfg"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["zcfg"];},set:function(v){modules["zcfg"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 // === Phase 14.46-a v8: 26 zone, 게이밍 인구 비례 + 지리 사실성 ===
 // 한반도가 가장 크게 (91M, Korean dev 우선). 인기 zone 모두 mid-north에 13000 height로.
 // 러시아 가로띠 (시바라+베링), 한·일 북쪽 = 러시아, 호주·NZ 통합, 양극 ICE_BAND 1500.
@@ -7120,7 +7120,7 @@ module.exports = {
 };
 
 ;return module.exports;})();
-  modules["vlayout"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["vlayout"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["vlayout"];},set:function(v){modules["vlayout"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 // =============================================================================
 // village-layout.js — 마을 레이아웃 생성기 (게임 서버 + 실험실 HTML 공유)
 //   순수 함수. 지형은 terrain 인터페이스로 주입 → 같은 코드가 게임/샌드박스 양쪽에서 100% 동일 동작.
@@ -7593,7 +7593,7 @@ module.exports = {
 })();
 
 ;return module.exports;})();
-  modules["salt"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["salt"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["salt"];},set:function(v){modules["salt"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 // === server/salt.js — 자염(煮鹽) 정본 [재민 확정 2026-09-01 ①] ==================
 //
 // 재민 확정: **자염** — 갯벌·바닷물을 끓여 소금을 얻는다. 청동기 한반도 서해·남해안 고증
@@ -7754,7 +7754,7 @@ module.exports = {
 };
 
 ;return module.exports;})();
-  modules["tidal"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["tidal"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["tidal"];},set:function(v){modules["tidal"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 // === server/tidal.js — 갯벌(潮間帶) 채집 정본 [재민 확정 2026-09-02 · T52] ==========
 //
 // T3 자염이 **갯벌을 열었다**(바다에 접한 뭍 = `salt.isTidalFlat`). 그때 그 자리에서 할 수 있는 건
@@ -7973,7 +7973,7 @@ module.exports = { CFG, CATCH, phaseAt, levelAt, isOpen, untilOpenMs, tideKo, __
   FRESH, VESSELS, DRINK_THIRST, usesVessel, DRY, DRY_RESIDUE, driedOf, driedEffects, weightMap };
 
 ;return module.exports;})();
-  modules["animals"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["animals"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["animals"];},set:function(v){modules["animals"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 // === server/animals.js — 동물 mob 카탈로그 36종 ===
 // Phase 5-6
 //
@@ -8460,7 +8460,7 @@ if (typeof window !== 'undefined') {
 }
 
 ;return module.exports;})();
-  modules["gmeat"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["gmeat"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["gmeat"];},set:function(v){modules["gmeat"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 // === server/game-meat.js — 사냥 고기 마무리 [T694 · 2026-10-11 · 손잡이 `T694_GAME_MEAT=1` · 없음 = 끔 = main 바이트] ===
 //
 // ★왜 [T647 회부 · 재민 칸 ①~④] T647 이 도살 드롭 `meat_game`(사슴·들짐승고기)을 손에서 먹게 했지만
@@ -8568,7 +8568,7 @@ function install(tables) {
 module.exports = { LB_G, RAW, ALIAS, on, yieldOf, weightMap, shelfMap, lotItems, foodMap, labelMap, cookMap, install };
 
 ;return module.exports;})();
-  modules["spoil"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["spoil"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["spoil"];},set:function(v){modules["spoil"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 // === server/spoil.js — 부패 곡선 + 보존 가공 정본 [재민 확정 2026-08-31] =========
 //
 // 재민 확정(병행 트랙 4): ① 식품 로트의 **부패 곡선**(취득일에서 유도 — 냉장고 없는 청동기)
@@ -9219,7 +9219,7 @@ module.exports = {
 };
 
 ;return module.exports;})();
-  modules["lots"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["lots"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["lots"];},set:function(v){modules["lots"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 // === server/lots.js — 식품 로트 장부(취득일) [재민 확정 2026-08-27] ============
 //
 // ★★인벤 3층 구조의 가운데 층. 재민 확정:
@@ -9774,7 +9774,7 @@ module.exports = { CFG, LOT_CORE, _day, isLot, all, of, sum, note, reconcile, co
   settle, setPlace, moveOut, moveIn, settleRecs };
 
 ;return module.exports;})();
-  modules["weather"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["weather"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["weather"];},set:function(v){modules["weather"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 // === server/weather.js — 연중 연속 온도 곡선 =====================================
 //
 // ★★[재민 확정 2026-08-31] 이 모듈이 있는 이유 한 줄:
@@ -10214,7 +10214,7 @@ module.exports = {
 };
 
 ;return module.exports;})();
-  modules["carry"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["carry"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["carry"];},set:function(v){modules["carry"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 // === server/carry.js — 소지 무게 · 용량 · 과적 [재민 확정 2026-08-27] ===========
 //
 // 재민 원문: *"모든 아이템은 좀보이드처럼 무게를 가져야 해."*
@@ -10574,7 +10574,7 @@ module.exports = { CFG, MOVE_CURVE, STAGE_AT, R1,
   CARRIER_SLOT, carrierOf, carrierBonus, carrierWorking };
 
 ;return module.exports;})();
-  modules["movem"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["movem"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["movem"];},set:function(v){modules["movem"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 // =============================================================================
 // public/move-model.js — **플레이어 이동 모델 정본**(서버·클라 공용) [재민 확정 2026-08-30]
 //
@@ -10712,7 +10712,7 @@ module.exports = { CFG, MOVE_CURVE, STAGE_AT, R1,
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 
 ;return module.exports;})();
-  modules["equil"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["equil"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["equil"];},set:function(v){modules["equil"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 // === sim/equilibrium.js — 평형 회귀 한 곳(★재민 11-02 "현재가 높으면 기본 변화량이 마이너스, 낮으면 플러스") ===
 //   T1076(원정 사기)이 처음 쓰고, T1075(마을 행복 평형)가 같은 함수를 쓴다 — 사본 0.
 //   값 x(0~1)는 그날 조건이 정한 평형 x* 쪽으로 하루마다 반감기 h(날)의 비율로 다가간다:
@@ -10744,7 +10744,7 @@ module.exports = { CFG, MOVE_CURVE, STAGE_AT, R1,
 })(typeof window !== 'undefined' ? window : null);
 
 ;return module.exports;})();
-  modules["kcal"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;var window=undefined;
+  modules["kcal"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["kcal"];},set:function(v){modules["kcal"]=v;}});module.exports={};var exports=module.exports;var require=req;var window=undefined;
 // === server/kcal.js — 열량 정본 [재민 확정 2026-09-03 · T59] =======================
 //
 // 재민 확정: ★**식량의 단위는 열량이다 — 포만감은 적는 게 아니라 kg × kcal/kg 에서 유도한다.**
@@ -10995,7 +10995,7 @@ module.exports = {
 };
 
 ;return module.exports;})();
-  modules["v1"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;
+  modules["v1"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["v1"];},set:function(v){modules["v1"]=v;}});module.exports={};var exports=module.exports;var require=req;
 /**
  * NPC 마을 자율 경제 시뮬레이션
  *
@@ -17644,7 +17644,7 @@ module.exports = {
 };
 
 ;return module.exports;})();
-  modules["v2"]=(function(){var module={exports:{}};var exports=module.exports;var require=req;
+  modules["v2"]=(function(){var module={exports:{}};Object.defineProperty(module,"exports",{get:function(){return modules["v2"];},set:function(v){modules["v2"]=v;}});module.exports={};var exports=module.exports;var require=req;
 // =============================================================================
 // economy-sim-v2.js — 경제학 모델 기반 시뮬 (튜닝용 격리 파일)
 //
