@@ -1424,6 +1424,52 @@ function _t1136Plan(world, ctx, a, bv, dist) {
   if (PB && PB.gain > PA.gain) { PB.how = 'cr'; return PB; }
   PA.how = 'kg'; return PA;
 }
+// T1156: quote a production window through the SAME basket plan, including
+// reachable destinations, their actual exportable stock, prices, losses and travel.
+// This is a forecast, never a deposit, order, RNG draw or promise of credit.
+const _t1156Quotes = new WeakMap();
+function _t1156Specialty(v, world) {
+  if (!world || !v.coord) return [];
+  const cached = _t1156Quotes.get(v);
+  if (cached && cached.day === world.day) return cached.rows;
+  const days = 30; // the famine block's existing food horizon
+  const base = v1.JOBS.miner.base;
+  const ore = base * (v.land.ore || 0) * (1 - (v._metalGlut || 0));
+  const forecasts = [
+    ['miner', { obsidian: base * (v.land.obsidian || 0) * (1 - (v._obsGlut || 0)), jade: base * (v.land.jade || 0) * (1 - (v._jadeGlut || 0)), salt: ore * 0.05, clay: ore * 0.08 }],
+    ['lumberjack', { wood: v1.JOBS.lumberjack.base * (v.land.wood || 0) }],
+  ];
+  const prices = computeShadowPrices(v), mv = lowestProducer(v, prices, world.day).mv;
+  const rows = [];
+  for (const [job, yields] of forecasts) {
+    const storage = { ...v.storage }, candA = [];
+    for (const r in yields) if (yields[r] > 0 && !_oreBanned(r)) {
+      const q = yields[r] * days;
+      storage[r] = (storage[r] || 0) + q; candA.push({ res: r, surplus: q });
+    }
+    if (!candA.length) continue;
+    const av = { ...v, storage }, a = { v: av, prices };
+    let best = 0;
+    for (const bv of world.villages) {
+      if (bv === v || bv._xz || !bv.npcs.length || !bv.coord || _destBlockedV2({v}, {v:bv}, world.day)) continue;
+      const dist = v1.villageDist(v, bv);
+      if (dist > (world.infoRange || 400)) continue;
+      // Only purchasable food belongs in a famine job comparison.
+      const candB = new Map([[bv, _t1136Cands(bv).filter(c => _t825FoodPer(v, c.res) > 0)]]);
+      const ctx = {t0:world.day + days, fwd:FORWARD_PRICE_MARGIN_NEV, capKg:_t1136CapKg(), cache:new Map(), candB, R:_t1136Resv(world), candA, mv:Number.isFinite(mv)?mv:0};
+      const plan = _t1136Plan(world, ctx, a, bv, dist);
+      if (!plan || !(plan.gain > 0)) continue;
+      let food = 0;
+      for (const it of plan.ret) food += it.amt * _t825FoodPer(v, it.res);
+      // Include production time AND the existing round trip; no instantaneous import.
+      best = Math.max(best, food / (days + plan.tOut + plan.tBack));
+    }
+    if (best > 0) rows.push({ job, foodPerDay:best });
+  }
+  _t1156Quotes.set(v, {day:world.day, rows});
+  return rows;
+}
+if (v1.T1156_SPECIALTY_JOB) v1.setT1156Quote(_t1156Specialty);
 // 마을 하나의 하루 발주(바구니) — 종전 고리와 같은 문(여유 노동 · 가장 값싼 생산자 · 목적지 거름 · 정보 반경 · 기회비용 관문) · 다리는 목적지마다 계획해 이득 최대(같으면 앞 목적지)
 function _t1136Village(world, a, evToData, nbList, spareCap, currentlyTrading, day, fwd, stepCache) {
   let launched = 0;
@@ -3241,6 +3287,7 @@ module.exports = {
   isSubsistenceFlow, subsGuard,   // ★[T416] subs 가드 술어 하나 — 가격 셋·게시판 하나가 같은 문을 부른다
   T659_WOOD_FLOW,   // ★[T659] 통나무 흐름 닻 손잡이(기본 끔) — 하네스·자가 읽는다
   T707_MARKET, settleMarketsV2,   // ★[T707] 장마당 떠날 때 정산 — 손잡이(기본 끔) · 정산 문(서버 하루 마감이 econ 조각 첫 자리에서 부른다 · 하네스가 같은 문을 부른다)
+  _t1156Specialty,
   _t1157Probe: { stock: _t1157Stock, view: _t1157View, fund: _t1157Fund, cands: _t1136Cands },
   T1157_SETTLE_VAULT, T1157_RELEASE_RESERVE,
   // 시장 충격 정산 헬퍼(1b) — 프로브·자가검증용 노출
