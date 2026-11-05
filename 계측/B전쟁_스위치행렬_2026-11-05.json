@@ -13523,6 +13523,11 @@
           "payloadSha256": "2a8845620e3c40306287e66e17ef4fae5416efe7c7cfa0a19939d252d5c05118",
           "sameAsT1168ReferenceExceptObserver": false,
           "referencePayloadSha256": "fea3a42f4c22ec864429eaeef05b478b14a160820edfbed5ebcaa3664cd12a2a"
+        },
+        "sameConditionBandOffByteEqual": true,
+        "labCondition": {
+          "T400_BUILD_ACT": "0",
+          "standardLabReferenceIsSameCondition": false
         }
       },
       "band-all-body-lab-7": {
@@ -13583,6 +13588,11 @@
           "payloadSha256": "2f19d5d4ae39388a588dbde02433d0e4bdeca4864f5e5cea0fc263b99a8beae2",
           "sameAsT1168ReferenceExceptObserver": false,
           "referencePayloadSha256": "40f8d02cea912c2856ad87b1a5033503e9bdbc45543f467211aa7d40aeb86448"
+        },
+        "sameConditionBandOffByteEqual": true,
+        "labCondition": {
+          "T400_BUILD_ACT": "0",
+          "standardLabReferenceIsSameCondition": false
         }
       },
       "band-all-body-lab-42": {
@@ -13643,6 +13653,11 @@
           "payloadSha256": "9697e638e5935ea161dcf25361d172caf19fa411f31a5e3a4e90435e736ef9e7",
           "sameAsT1168ReferenceExceptObserver": false,
           "referencePayloadSha256": "13ba389e05410ee91651c4186a73ba78455af7cfd2bf1c0b673b95d7e8eade62"
+        },
+        "sameConditionBandOffByteEqual": true,
+        "labCondition": {
+          "T400_BUILD_ACT": "0",
+          "standardLabReferenceIsSameCondition": false
         }
       },
       "band-camp-server800": {
@@ -14891,6 +14906,11 @@
           "payloadSha256": "2a8845620e3c40306287e66e17ef4fae5416efe7c7cfa0a19939d252d5c05118",
           "sameAsT1168ReferenceExceptObserver": false,
           "referencePayloadSha256": "fea3a42f4c22ec864429eaeef05b478b14a160820edfbed5ebcaa3664cd12a2a"
+        },
+        "sameConditionBandOffByteEqual": true,
+        "labCondition": {
+          "T400_BUILD_ACT": "0",
+          "standardLabReferenceIsSameCondition": false
         }
       },
       "band-off-server800": {
@@ -15607,6 +15627,331 @@
             "stat": null,
             "sups": 0
           }
+        }
+      },
+      "band-camp-lab-7": {
+        "cost": {
+          "tag": "band-camp-lab-7",
+          "limitSec": 7200,
+          "args": [
+            "scripts/t17-metrics.js",
+            "800",
+            "7"
+          ],
+          "env": {
+            "T790_NO_SNAP": "1",
+            "T1041_WAR_BODY": "1",
+            "T811_ARMS_BODY": "1",
+            "T449_BODY_DAY": "1",
+            "T491_BATCH_FROM_BODY": "1",
+            "T561_ROSTER_BODY": "1",
+            "T502_ODDS_REAL": "1",
+            "T815_DRAFT_FAMINE": "1",
+            "T941_BATTLE_DAY": "1",
+            "T627_TRIP_DAY": "1",
+            "T1076_ARMY_MORALE": "1",
+            "T466_LOOT_ACT": "1",
+            "T826_LOOT_BODY": "1",
+            "T1168_SORTIE_AMMO": "1",
+            "T1078_BANDIT_ALL": "1",
+            "T1079_BANDIT_CAMP": "1",
+            "T1104_BANDIT_WALK": "0",
+            "T1159_HOME_N": "0",
+            "T577_PORT_BASE": "57000",
+            "T400_BUILD_ACT": "0",
+            "VILLAGE_CARAVAN_MAX": "0",
+            "NODE_OPTIONS": "-r /tmp/act-route-code/scripts/t1078-observe.js -r /tmp/act-route-code/scripts/t1079-observe.js -r /tmp/act-route-code/scripts/t1104-observe.js",
+            "T577_DIR": "/tmp/act-route-followup-results/band-camp/server800",
+            "T577_PAR": "1",
+            "T577_TAG": "band-camp",
+            "T17_JSON": "/tmp/act-route-followup-results/band-camp/lab-7.json",
+            "LAB_SEEDCACHE": "/tmp/act-route-followup-results/band-camp/lab-7.seedcache.json",
+            "DB_PATH": "/tmp/act-route-followup-results/band-camp/lab-7.db"
+          },
+          "exit": 0,
+          "wallSec": 224.0,
+          "cpuUs": 250362490
+        },
+        "data": {
+          "population": 6113,
+          "empty": 0,
+          "starvationDeaths": 283,
+          "base": {
+            "pop": 6113,
+            "dead": 0,
+            "ever": 51,
+            "weapQ": 721,
+            "expand": 3727,
+            "trades": 5000
+          },
+          "payloadSha256": "2f19d5d4ae39388a588dbde02433d0e4bdeca4864f5e5cea0fc263b99a8beae2",
+          "sameAsT1168ReferenceExceptObserver": false,
+          "referencePayloadSha256": "40f8d02cea912c2856ad87b1a5033503e9bdbc45543f467211aa7d40aeb86448"
+        },
+        "sameConditionBandOffByteEqual": true,
+        "labCondition": {
+          "T400_BUILD_ACT": "0",
+          "standardLabReferenceIsSameCondition": false
+        }
+      },
+      "band-off-lab-1020": {
+        "cost": {
+          "tag": "band-off-lab-1020",
+          "limitSec": 7200,
+          "args": [
+            "scripts/t17-metrics.js",
+            "800",
+            "1020"
+          ],
+          "env": {
+            "T790_NO_SNAP": "1",
+            "T1041_WAR_BODY": "1",
+            "T811_ARMS_BODY": "1",
+            "T449_BODY_DAY": "1",
+            "T491_BATCH_FROM_BODY": "1",
+            "T561_ROSTER_BODY": "1",
+            "T502_ODDS_REAL": "1",
+            "T815_DRAFT_FAMINE": "1",
+            "T941_BATTLE_DAY": "1",
+            "T627_TRIP_DAY": "1",
+            "T1076_ARMY_MORALE": "1",
+            "T466_LOOT_ACT": "1",
+            "T826_LOOT_BODY": "1",
+            "T1168_SORTIE_AMMO": "1",
+            "T1078_BANDIT_ALL": "0",
+            "T1079_BANDIT_CAMP": "0",
+            "T1104_BANDIT_WALK": "0",
+            "T1159_HOME_N": "0",
+            "T577_PORT_BASE": "55000",
+            "T400_BUILD_ACT": "0",
+            "VILLAGE_CARAVAN_MAX": "0",
+            "NODE_OPTIONS": "-r /tmp/act-route-code/scripts/t1078-observe.js -r /tmp/act-route-code/scripts/t1079-observe.js -r /tmp/act-route-code/scripts/t1104-observe.js",
+            "T577_DIR": "/tmp/act-route-followup-results/band-off/server800",
+            "T577_PAR": "1",
+            "T577_TAG": "band-off",
+            "T17_JSON": "/tmp/act-route-followup-results/band-off/lab-1020.json",
+            "LAB_SEEDCACHE": "/tmp/act-route-followup-results/band-off/lab-1020.seedcache.json",
+            "DB_PATH": "/tmp/act-route-followup-results/band-off/lab-1020.db"
+          },
+          "exit": 0,
+          "wallSec": 228.703,
+          "cpuUs": 254059904
+        },
+        "data": {
+          "population": 6165,
+          "empty": 0,
+          "starvationDeaths": 299,
+          "base": {
+            "pop": 6165,
+            "dead": 0,
+            "ever": 51,
+            "weapQ": 860,
+            "expand": 4734,
+            "trades": 5000
+          },
+          "payloadSha256": "2a8845620e3c40306287e66e17ef4fae5416efe7c7cfa0a19939d252d5c05118",
+          "sameAsT1168ReferenceExceptObserver": false,
+          "referencePayloadSha256": "fea3a42f4c22ec864429eaeef05b478b14a160820edfbed5ebcaa3664cd12a2a"
+        },
+        "sameConditionBandOffByteEqual": true,
+        "labCondition": {
+          "T400_BUILD_ACT": "0",
+          "standardLabReferenceIsSameCondition": false
+        }
+      },
+      "band-off-lab-7": {
+        "cost": {
+          "tag": "band-off-lab-7",
+          "limitSec": 7200,
+          "args": [
+            "scripts/t17-metrics.js",
+            "800",
+            "7"
+          ],
+          "env": {
+            "T790_NO_SNAP": "1",
+            "T1041_WAR_BODY": "1",
+            "T811_ARMS_BODY": "1",
+            "T449_BODY_DAY": "1",
+            "T491_BATCH_FROM_BODY": "1",
+            "T561_ROSTER_BODY": "1",
+            "T502_ODDS_REAL": "1",
+            "T815_DRAFT_FAMINE": "1",
+            "T941_BATTLE_DAY": "1",
+            "T627_TRIP_DAY": "1",
+            "T1076_ARMY_MORALE": "1",
+            "T466_LOOT_ACT": "1",
+            "T826_LOOT_BODY": "1",
+            "T1168_SORTIE_AMMO": "1",
+            "T1078_BANDIT_ALL": "0",
+            "T1079_BANDIT_CAMP": "0",
+            "T1104_BANDIT_WALK": "0",
+            "T1159_HOME_N": "0",
+            "T577_PORT_BASE": "55000",
+            "T400_BUILD_ACT": "0",
+            "VILLAGE_CARAVAN_MAX": "0",
+            "NODE_OPTIONS": "-r /tmp/act-route-code/scripts/t1078-observe.js -r /tmp/act-route-code/scripts/t1079-observe.js -r /tmp/act-route-code/scripts/t1104-observe.js",
+            "T577_DIR": "/tmp/act-route-followup-results/band-off/server800",
+            "T577_PAR": "1",
+            "T577_TAG": "band-off",
+            "T17_JSON": "/tmp/act-route-followup-results/band-off/lab-7.json",
+            "LAB_SEEDCACHE": "/tmp/act-route-followup-results/band-off/lab-7.seedcache.json",
+            "DB_PATH": "/tmp/act-route-followup-results/band-off/lab-7.db"
+          },
+          "exit": 0,
+          "wallSec": 214.798,
+          "cpuUs": 241357879
+        },
+        "data": {
+          "population": 6113,
+          "empty": 0,
+          "starvationDeaths": 283,
+          "base": {
+            "pop": 6113,
+            "dead": 0,
+            "ever": 51,
+            "weapQ": 721,
+            "expand": 3727,
+            "trades": 5000
+          },
+          "payloadSha256": "2f19d5d4ae39388a588dbde02433d0e4bdeca4864f5e5cea0fc263b99a8beae2",
+          "sameAsT1168ReferenceExceptObserver": false,
+          "referencePayloadSha256": "40f8d02cea912c2856ad87b1a5033503e9bdbc45543f467211aa7d40aeb86448"
+        },
+        "sameConditionBandOffByteEqual": true,
+        "labCondition": {
+          "T400_BUILD_ACT": "0",
+          "standardLabReferenceIsSameCondition": false
+        }
+      },
+      "band-off-lab-42": {
+        "cost": {
+          "tag": "band-off-lab-42",
+          "limitSec": 7200,
+          "args": [
+            "scripts/t17-metrics.js",
+            "800",
+            "42"
+          ],
+          "env": {
+            "T790_NO_SNAP": "1",
+            "T1041_WAR_BODY": "1",
+            "T811_ARMS_BODY": "1",
+            "T449_BODY_DAY": "1",
+            "T491_BATCH_FROM_BODY": "1",
+            "T561_ROSTER_BODY": "1",
+            "T502_ODDS_REAL": "1",
+            "T815_DRAFT_FAMINE": "1",
+            "T941_BATTLE_DAY": "1",
+            "T627_TRIP_DAY": "1",
+            "T1076_ARMY_MORALE": "1",
+            "T466_LOOT_ACT": "1",
+            "T826_LOOT_BODY": "1",
+            "T1168_SORTIE_AMMO": "1",
+            "T1078_BANDIT_ALL": "0",
+            "T1079_BANDIT_CAMP": "0",
+            "T1104_BANDIT_WALK": "0",
+            "T1159_HOME_N": "0",
+            "T577_PORT_BASE": "55000",
+            "T400_BUILD_ACT": "0",
+            "VILLAGE_CARAVAN_MAX": "0",
+            "NODE_OPTIONS": "-r /tmp/act-route-code/scripts/t1078-observe.js -r /tmp/act-route-code/scripts/t1079-observe.js -r /tmp/act-route-code/scripts/t1104-observe.js",
+            "T577_DIR": "/tmp/act-route-followup-results/band-off/server800",
+            "T577_PAR": "1",
+            "T577_TAG": "band-off",
+            "T17_JSON": "/tmp/act-route-followup-results/band-off/lab-42.json",
+            "LAB_SEEDCACHE": "/tmp/act-route-followup-results/band-off/lab-42.seedcache.json",
+            "DB_PATH": "/tmp/act-route-followup-results/band-off/lab-42.db"
+          },
+          "exit": 0,
+          "wallSec": 207.922,
+          "cpuUs": 232642327
+        },
+        "data": {
+          "population": 5959,
+          "empty": 1,
+          "starvationDeaths": 668,
+          "base": {
+            "pop": 5959,
+            "dead": 1,
+            "ever": 51,
+            "weapQ": 707,
+            "expand": 3413,
+            "trades": 5000
+          },
+          "payloadSha256": "9697e638e5935ea161dcf25361d172caf19fa411f31a5e3a4e90435e736ef9e7",
+          "sameAsT1168ReferenceExceptObserver": false,
+          "referencePayloadSha256": "13ba389e05410ee91651c4186a73ba78455af7cfd2bf1c0b673b95d7e8eade62"
+        },
+        "sameConditionBandOffByteEqual": true,
+        "labCondition": {
+          "T400_BUILD_ACT": "0",
+          "standardLabReferenceIsSameCondition": false
+        }
+      },
+      "band-camp-lab-42": {
+        "cost": {
+          "tag": "band-camp-lab-42",
+          "limitSec": 7200,
+          "args": [
+            "scripts/t17-metrics.js",
+            "800",
+            "42"
+          ],
+          "env": {
+            "T790_NO_SNAP": "1",
+            "T1041_WAR_BODY": "1",
+            "T811_ARMS_BODY": "1",
+            "T449_BODY_DAY": "1",
+            "T491_BATCH_FROM_BODY": "1",
+            "T561_ROSTER_BODY": "1",
+            "T502_ODDS_REAL": "1",
+            "T815_DRAFT_FAMINE": "1",
+            "T941_BATTLE_DAY": "1",
+            "T627_TRIP_DAY": "1",
+            "T1076_ARMY_MORALE": "1",
+            "T466_LOOT_ACT": "1",
+            "T826_LOOT_BODY": "1",
+            "T1168_SORTIE_AMMO": "1",
+            "T1078_BANDIT_ALL": "1",
+            "T1079_BANDIT_CAMP": "1",
+            "T1104_BANDIT_WALK": "0",
+            "T1159_HOME_N": "0",
+            "T577_PORT_BASE": "57000",
+            "T400_BUILD_ACT": "0",
+            "VILLAGE_CARAVAN_MAX": "0",
+            "NODE_OPTIONS": "-r /tmp/act-route-code/scripts/t1078-observe.js -r /tmp/act-route-code/scripts/t1079-observe.js -r /tmp/act-route-code/scripts/t1104-observe.js",
+            "T577_DIR": "/tmp/act-route-followup-results/band-camp/server800",
+            "T577_PAR": "1",
+            "T577_TAG": "band-camp",
+            "T17_JSON": "/tmp/act-route-followup-results/band-camp/lab-42.json",
+            "LAB_SEEDCACHE": "/tmp/act-route-followup-results/band-camp/lab-42.seedcache.json",
+            "DB_PATH": "/tmp/act-route-followup-results/band-camp/lab-42.db"
+          },
+          "exit": 0,
+          "wallSec": 194.121,
+          "cpuUs": 220108192
+        },
+        "data": {
+          "population": 5959,
+          "empty": 1,
+          "starvationDeaths": 668,
+          "base": {
+            "pop": 5959,
+            "dead": 1,
+            "ever": 51,
+            "weapQ": 707,
+            "expand": 3413,
+            "trades": 5000
+          },
+          "payloadSha256": "9697e638e5935ea161dcf25361d172caf19fa411f31a5e3a4e90435e736ef9e7",
+          "sameAsT1168ReferenceExceptObserver": false,
+          "referencePayloadSha256": "13ba389e05410ee91651c4186a73ba78455af7cfd2bf1c0b673b95d7e8eade62"
+        },
+        "sameConditionBandOffByteEqual": true,
+        "labCondition": {
+          "T400_BUILD_ACT": "0",
+          "standardLabReferenceIsSameCondition": false
         }
       }
     },
@@ -18065,6 +18410,11 @@
           "payloadSha256": "2a8845620e3c40306287e66e17ef4fae5416efe7c7cfa0a19939d252d5c05118",
           "sameAsT1168ReferenceExceptObserver": false,
           "referencePayloadSha256": "fea3a42f4c22ec864429eaeef05b478b14a160820edfbed5ebcaa3664cd12a2a"
+        },
+        "sameConditionBandOffByteEqual": true,
+        "labCondition": {
+          "T400_BUILD_ACT": "0",
+          "standardLabReferenceIsSameCondition": false
         }
       },
       "band-all-body-lab-7": {
@@ -18125,6 +18475,11 @@
           "payloadSha256": "2f19d5d4ae39388a588dbde02433d0e4bdeca4864f5e5cea0fc263b99a8beae2",
           "sameAsT1168ReferenceExceptObserver": false,
           "referencePayloadSha256": "40f8d02cea912c2856ad87b1a5033503e9bdbc45543f467211aa7d40aeb86448"
+        },
+        "sameConditionBandOffByteEqual": true,
+        "labCondition": {
+          "T400_BUILD_ACT": "0",
+          "standardLabReferenceIsSameCondition": false
         }
       },
       "band-all-body-lab-42": {
@@ -18185,6 +18540,11 @@
           "payloadSha256": "9697e638e5935ea161dcf25361d172caf19fa411f31a5e3a4e90435e736ef9e7",
           "sameAsT1168ReferenceExceptObserver": false,
           "referencePayloadSha256": "13ba389e05410ee91651c4186a73ba78455af7cfd2bf1c0b673b95d7e8eade62"
+        },
+        "sameConditionBandOffByteEqual": true,
+        "labCondition": {
+          "T400_BUILD_ACT": "0",
+          "standardLabReferenceIsSameCondition": false
         }
       },
       "band-camp-server800": {
@@ -19433,6 +19793,11 @@
           "payloadSha256": "2a8845620e3c40306287e66e17ef4fae5416efe7c7cfa0a19939d252d5c05118",
           "sameAsT1168ReferenceExceptObserver": false,
           "referencePayloadSha256": "fea3a42f4c22ec864429eaeef05b478b14a160820edfbed5ebcaa3664cd12a2a"
+        },
+        "sameConditionBandOffByteEqual": true,
+        "labCondition": {
+          "T400_BUILD_ACT": "0",
+          "standardLabReferenceIsSameCondition": false
         }
       },
       "band-camp-lab-7": {
@@ -19493,6 +19858,11 @@
           "payloadSha256": "2f19d5d4ae39388a588dbde02433d0e4bdeca4864f5e5cea0fc263b99a8beae2",
           "sameAsT1168ReferenceExceptObserver": false,
           "referencePayloadSha256": "40f8d02cea912c2856ad87b1a5033503e9bdbc45543f467211aa7d40aeb86448"
+        },
+        "sameConditionBandOffByteEqual": true,
+        "labCondition": {
+          "T400_BUILD_ACT": "0",
+          "standardLabReferenceIsSameCondition": false
         }
       },
       "band-camp-lab-42": {
@@ -19553,6 +19923,11 @@
           "payloadSha256": "9697e638e5935ea161dcf25361d172caf19fa411f31a5e3a4e90435e736ef9e7",
           "sameAsT1168ReferenceExceptObserver": false,
           "referencePayloadSha256": "13ba389e05410ee91651c4186a73ba78455af7cfd2bf1c0b673b95d7e8eade62"
+        },
+        "sameConditionBandOffByteEqual": true,
+        "labCondition": {
+          "T400_BUILD_ACT": "0",
+          "standardLabReferenceIsSameCondition": false
         }
       },
       "band-off-server800": {
@@ -20324,6 +20699,11 @@
           "payloadSha256": "2f19d5d4ae39388a588dbde02433d0e4bdeca4864f5e5cea0fc263b99a8beae2",
           "sameAsT1168ReferenceExceptObserver": false,
           "referencePayloadSha256": "40f8d02cea912c2856ad87b1a5033503e9bdbc45543f467211aa7d40aeb86448"
+        },
+        "sameConditionBandOffByteEqual": true,
+        "labCondition": {
+          "T400_BUILD_ACT": "0",
+          "standardLabReferenceIsSameCondition": false
         }
       },
       "band-off-lab-1020": {
@@ -20384,6 +20764,11 @@
           "payloadSha256": "2a8845620e3c40306287e66e17ef4fae5416efe7c7cfa0a19939d252d5c05118",
           "sameAsT1168ReferenceExceptObserver": false,
           "referencePayloadSha256": "fea3a42f4c22ec864429eaeef05b478b14a160820edfbed5ebcaa3664cd12a2a"
+        },
+        "sameConditionBandOffByteEqual": true,
+        "labCondition": {
+          "T400_BUILD_ACT": "0",
+          "standardLabReferenceIsSameCondition": false
         }
       },
       "band-off-lab-42": {
@@ -20444,6 +20829,11 @@
           "payloadSha256": "9697e638e5935ea161dcf25361d172caf19fa411f31a5e3a4e90435e736ef9e7",
           "sameAsT1168ReferenceExceptObserver": false,
           "referencePayloadSha256": "13ba389e05410ee91651c4186a73ba78455af7cfd2bf1c0b673b95d7e8eade62"
+        },
+        "sameConditionBandOffByteEqual": true,
+        "labCondition": {
+          "T400_BUILD_ACT": "0",
+          "standardLabReferenceIsSameCondition": false
         }
       },
       "band-walk-plan": {
@@ -20881,12 +21271,135 @@
       "afterServer800Sha256": "c5bc1e1c2af1d56002858e28a0c83a780620abece3794dbb922883e2f9251ac7"
     }
   },
+  "standardBanditLabCrossCheck": {
+    "sourceHead": "c2bec2b4adaa17eb39c8eed723d169efc8ab0d59",
+    "sourceSha256": {
+      "sim/economy-sim.js": "93e7b9860e98e415dad5905d9e810b53bdbbae009c647f03db07bc15efed4249",
+      "scripts/t17-metrics.js": "38a8a9eeef7fd840db0fa03accbc68d09c3ea41e21abf7ff8dc08b32f5536661"
+    },
+    "node": "v22.23.0",
+    "condition": "Standard lab house-on T400_BUILD_ACT=1, TEN+FOUR+BAND=1, HOME=0; compare original T1168 standard-lab reference after removing only added fdDeadTot field. Prefix lab house-off is a separate world.",
+    "status": "complete",
+    "runs": [
+      {
+        "seed": 7,
+        "days": 800,
+        "exit": 0,
+        "env": {
+          "T790_NO_SNAP": "1",
+          "T1041_WAR_BODY": "1",
+          "T811_ARMS_BODY": "1",
+          "T449_BODY_DAY": "1",
+          "T491_BATCH_FROM_BODY": "1",
+          "T561_ROSTER_BODY": "1",
+          "T502_ODDS_REAL": "1",
+          "T815_DRAFT_FAMINE": "1",
+          "T941_BATTLE_DAY": "1",
+          "T627_TRIP_DAY": "1",
+          "T1076_ARMY_MORALE": "1",
+          "T466_LOOT_ACT": "1",
+          "T826_LOOT_BODY": "1",
+          "T1168_SORTIE_AMMO": "1",
+          "T1078_BANDIT_ALL": "1",
+          "T1079_BANDIT_CAMP": "1",
+          "T1104_BANDIT_WALK": "1",
+          "T400_BUILD_ACT": "1",
+          "T1159_HOME_N": "0",
+          "T17_JSON": "/tmp/t1184-standard-lab-results/7.json",
+          "LAB_SEEDCACHE": "/tmp/t1184-standard-lab-results/7.seedcache.json",
+          "DB_PATH": "/tmp/t1184-standard-lab-results/7.db"
+        },
+        "wallSec": 245.224,
+        "cpuUs": 260260110,
+        "payloadSha256": "ef45a36f6a232243adf9fb8d60ad373c4f29698ba93197ca7738df0227d4da96",
+        "referenceSha256": "40f8d02cea912c2856ad87b1a5033503e9bdbc45543f467211aa7d40aeb86448",
+        "sameAsReferenceExceptAddedObserver": true,
+        "population": 6008,
+        "starvationDeaths": 86,
+        "empty": 0
+      },
+      {
+        "seed": 42,
+        "days": 800,
+        "exit": 0,
+        "env": {
+          "T790_NO_SNAP": "1",
+          "T1041_WAR_BODY": "1",
+          "T811_ARMS_BODY": "1",
+          "T449_BODY_DAY": "1",
+          "T491_BATCH_FROM_BODY": "1",
+          "T561_ROSTER_BODY": "1",
+          "T502_ODDS_REAL": "1",
+          "T815_DRAFT_FAMINE": "1",
+          "T941_BATTLE_DAY": "1",
+          "T627_TRIP_DAY": "1",
+          "T1076_ARMY_MORALE": "1",
+          "T466_LOOT_ACT": "1",
+          "T826_LOOT_BODY": "1",
+          "T1168_SORTIE_AMMO": "1",
+          "T1078_BANDIT_ALL": "1",
+          "T1079_BANDIT_CAMP": "1",
+          "T1104_BANDIT_WALK": "1",
+          "T400_BUILD_ACT": "1",
+          "T1159_HOME_N": "0",
+          "T17_JSON": "/tmp/t1184-standard-lab-results/42.json",
+          "LAB_SEEDCACHE": "/tmp/t1184-standard-lab-results/42.seedcache.json",
+          "DB_PATH": "/tmp/t1184-standard-lab-results/42.db"
+        },
+        "wallSec": 251.392,
+        "cpuUs": 267372648,
+        "payloadSha256": "3848ca037367600dcc5595ce46c82e9c0ee363b4174bd68e53a6c960e01caeda",
+        "referenceSha256": "13ba389e05410ee91651c4186a73ba78455af7cfd2bf1c0b673b95d7e8eade62",
+        "sameAsReferenceExceptAddedObserver": true,
+        "population": 6299,
+        "starvationDeaths": 73,
+        "empty": 0
+      },
+      {
+        "seed": 1020,
+        "days": 800,
+        "exit": 0,
+        "env": {
+          "T790_NO_SNAP": "1",
+          "T1041_WAR_BODY": "1",
+          "T811_ARMS_BODY": "1",
+          "T449_BODY_DAY": "1",
+          "T491_BATCH_FROM_BODY": "1",
+          "T561_ROSTER_BODY": "1",
+          "T502_ODDS_REAL": "1",
+          "T815_DRAFT_FAMINE": "1",
+          "T941_BATTLE_DAY": "1",
+          "T627_TRIP_DAY": "1",
+          "T1076_ARMY_MORALE": "1",
+          "T466_LOOT_ACT": "1",
+          "T826_LOOT_BODY": "1",
+          "T1168_SORTIE_AMMO": "1",
+          "T1078_BANDIT_ALL": "1",
+          "T1079_BANDIT_CAMP": "1",
+          "T1104_BANDIT_WALK": "1",
+          "T400_BUILD_ACT": "1",
+          "T1159_HOME_N": "0",
+          "T17_JSON": "/tmp/t1184-standard-lab-results/1020.json",
+          "LAB_SEEDCACHE": "/tmp/t1184-standard-lab-results/1020.seedcache.json",
+          "DB_PATH": "/tmp/t1184-standard-lab-results/1020.db"
+        },
+        "wallSec": 254.526,
+        "cpuUs": 268717769,
+        "payloadSha256": "3ebfc005af1e4dc689d38faf477abe978ce220900773d0a81e86328baad63661",
+        "referenceSha256": "fea3a42f4c22ec864429eaeef05b478b14a160820edfbed5ebcaa3664cd12a2a",
+        "sameAsReferenceExceptAddedObserver": true,
+        "population": 6436,
+        "starvationDeaths": 2,
+        "empty": 0
+      }
+    ]
+  },
   "status": "running",
   "completedMainCommands": 60,
   "expectedMainCommands": 60,
   "completedCorrectionCommands": 10,
   "expectedCorrectionCommands": 10,
-  "completedFollowupCommands": 12,
+  "completedFollowupCommands": 17,
   "expectedFollowupCommands": 27,
   "productHeads": {
     "individualUnaffected": "c58cd674",

@@ -96,6 +96,7 @@ def measureBand(pair):
  env=dict(env,T400_BUILD_ACT='0',VILLAGE_CARAVAN_MAX='0',NODE_OPTIONS=' '.join('-r '+str(SRC/'scripts'/s) for s in ['t1078-observe.js','t1079-observe.js','t1104-observe.js']),T577_DIR=str(d/'server800'),T577_PAR='1',T577_TAG=variant)
  run(variant+'-server800',['scripts/t577-server-run.js','800','1020'],env)
  def lab(seed):
+  # This lab inherits T400_BUILD_ACT=0: compare with band-off at the same condition. Standard house-on lab is separate.
   labenv=dict(env,T17_JSON=str(d/f'lab-{seed}.json'),LAB_SEEDCACHE=str(d/f'lab-{seed}.seedcache.json'),DB_PATH=str(d/f'lab-{seed}.db'))
   run(variant+f'-lab-{seed}',['scripts/t17-metrics.js','800',str(seed)],labenv)
  with ThreadPoolExecutor(max_workers=3) as pool:list(pool.map(lab,[1020,7,42]))
