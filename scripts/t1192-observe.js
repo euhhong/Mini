@@ -1,14 +1,13 @@
 'use strict';
 // T1192: read-only catch, preservation, fisher body and village measurements.
 function bagKg(p){
- const sample={inventory:{...p.inventory},kgLedger:JSON.parse(JSON.stringify(p.kgLedger||{})),lots:JSON.parse(JSON.stringify(p.lots||{})),_carryingKg:p._carryingKg,toolItems:p.toolItems,equipment:p.equipment,dishes:p.dishes};
- return require('../server/carry').totalKg(sample);
+ return require('../server/carry').npcTotalKg(p);
 }
 module.exports={bagKg};
 if(require('worker_threads').isMainThread&&(process.env.T577_SEED||process.env.T17_JSON)){
  const fs=require('fs'),path=require('path'),crypto=require('crypto'),Module=require('module'),root=path.resolve(__dirname,'..'),server=!!process.env.T577_SEED;
  const st={mode:server?'server':'lab',seed:server?+process.env.T577_SEED:+process.argv[3],runtime:{node:process.version,v8:process.versions.v8,icu:process.versions.icu},flags:Object.fromEntries(['T1192_FISH_SPECIES','T1188_ORE_SPLIT','T312_FISH_ACT','T325_WOOD_ACT','T347_FORAGE_ACT','T435_GRANARY_ACT','T527_BRIDGE_ACT','T517_HUT_STONE','T419_STONE_REAL','T1179_CROP_SEASON','T368_FARM_ACT','T100_FIELD_YIELD'].map(k=>[k,process.env[k]])),source:{},catch:{},preserved:{},receipt:0,bodyReceipt:0,remoteReceipt:0,bagMaxKg:0,overCapacity:0,tickN:0,tickNs:0,worldN:0,worldNs:0,days:[],errors:[]};
- for(const f of ['sim/economy-sim.js','sim/economy-sim-v2.js','server/villages.js','server/zone.js','server/fishing.js','server/specialty.js','server/weights.js','server/fish-goods.js','server/fish-preserve.js','server/granary-lots.js'])st.source[f]=crypto.createHash('sha256').update(fs.readFileSync(path.join(root,f))).digest('hex');
+ for(const f of ['sim/economy-sim.js','sim/economy-sim-v2.js','server/villages.js','server/zone.js','server/fishing.js','server/specialty.js','server/weights.js','server/fish-goods.js','server/fish-preserve.js','server/granary-lots.js','server/carry.js'])st.source[f]=crypto.createHash('sha256').update(fs.readFileSync(path.join(root,f))).digest('hex');
  const O=globalThis.__t1192Observe={st,actor:null},ext=Module._extensions['.js'];
  Module._extensions['.js']=function(m,file){if(file!==path.join(root,'server/villages.js'))return ext(m,file);let src=fs.readFileSync(file,'utf8');src+=`\n;(()=>{const f=_t312Deliver,O=globalThis.__t1192Observe;_t312Deliver=function(v,p,...a){const old=O.actor,S=p._t720,t=p._granTask,g=S&&S.k?{x:S.tx,y:S.ty}:t?_granLadder(t):{x:v.ccx*SZ+SZ/2,y:v.ccy*SZ+SZ/2};O.actor={p,...g};try{return f(v,p,...a)}finally{O.actor=old;}};})();`;m._compile(src,file);};
  const E=require('../sim/economy-sim'),FG=E.FishGoods,W=require('../server/weights'),FP=require('../server/fish-preserve'),f=FG.note;FG.note=function(v,id,n){const r=f(v,id,n);if(n>0)st.catch[id]=(st.catch[id]||0)+n;return r;};

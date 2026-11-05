@@ -9690,7 +9690,7 @@ function _t312Take(vil, day, key, want) {
 }
 function _t312Catch(vil,day,cx,cy,want,kg,now,npc) {
   const cap=_carryCfg()?.CFG?.CAP_KG||0;
-  if(npc && cap>0 && (require('./fish-goods').ON?require('./carry').totalKg(npc):(npc._t312Kg||0))+kg>cap+1e-9){npc._t1180FullFish=(npc._t312Kg||0)>0;return 0;}   // T1180: 한 마리를 더 실을 수 없으면 잡지 않고 귀환
+  if(npc && cap>0 && (require('./fish-goods').ON?require('./carry').npcTotalKg(npc):(npc._t312Kg||0))+kg>cap+1e-9){npc._t1180FullFish=(npc._t312Kg||0)>0;return 0;}   // T1180: 한 마리를 더 실을 수 없으면 잡지 않고 귀환
   const key=cx+','+cy,got=_t312Take(vil,day,key,want);
   if (!(got>0)) return 0;
   const draw=state.deps.t312DrawFishAt;
