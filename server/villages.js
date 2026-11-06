@@ -9793,6 +9793,41 @@ function _stoneHeld(npc) {
   const inv = npc.inventory || {};
   return Math.max(0, inv.stone || 0) + Math.max(0, inv.pebble || 0);
 }
+// 채집 돌 수식을 닫은 실제 몸은 같은 생활권의 살아 있는 바위를 고른다.
+// 직업·수율을 새로 만들지 않는다. 타격과 자원 인출은 zone.npcStep의 기존 사람/NPC 공통 문이다.
+function _physicalStoneWork(vil, npc, now, fv, dayR, day, bodyDay = day) {
+  const E = _lifeEcon();
+  if (npc.simJob !== 'forager' || !E.productionFormulaOff(vil.econ, 'forager')) return false;
+  const N = vil.econ.npcs.length, target = Math.max((E.RESERVE_PC.stone || 0) * N, E.derivedInputTarget(vil.econ, 'stone'));
+  let held = 0;
+  for (const pid of vil.npcPids || []) held += state.deps.players?.get(pid)?.inventory?.stone || 0;
+  if (!((vil.econ.storage.stone || 0) + held < target)) return false;
+  const qt = state.deps.qtResources && state.deps.qtResources();
+  const cx = vil.ccx*SZ+SZ/2, cy = vil.ccy*SZ+SZ/2, R = Math.max(vil._maxRPx || 800,800)+400;
+  const rocks = (qt ? qt.queryCircle(cx,cy,R) : []).filter(r => r.type === 'rock' && r.hp > 0);
+  rocks.sort((a,b) => Math.hypot(a.x-npc.x,a.y-npc.y)-Math.hypot(b.x-npc.x,b.y-npc.y));
+  let rock = null;
+  for (const r of rocks) {
+    const reach = _t427On() ? _t427Reach(vil,npc,r.x,r.y,day,state.deps.decBudgetOver||null) : true;
+    if (reach === null) return true;
+    if (reach) { rock=r;break; }
+  }
+  if (!rock) return false;
+  const C = require('./carry'), W = require('./weights');
+  let nextKg = W.kgOf('stone');
+  if (rock.hp <= 1 && state.deps.t325LootOf) {
+    const loot = state.deps.t325LootOf(rock) || {};
+    nextKg = Math.max(nextKg,Object.entries(loot).reduce((n,[k,q])=>n+(W.kgOf(k)||0)*q,0));
+  }
+  if (C.npcTotalKg(npc) + nextKg > C.CFG.CAP_KG + 1e-9) {
+    if (!_t720Step(vil,npc,now,fv,dayR,bodyDay,true)) { npc.behavior='wander';npc.targetX=npc.x;npc.targetY=npc.y;npc.gatherTarget=null;_lifeAct(npc,'휴식'); }
+    return true;
+  }
+  if (npc._jobT && now < npc._jobT) { npc.behavior='wander';npc.targetX=npc.x;npc.targetY=npc.y;npc.gatherTarget=null;_lifeAct(npc,'채석');return true; }
+  npc.behavior='gather';npc.targetX=rock.x;npc.targetY=rock.y;npc.gatherTarget=rock.id;
+  npc._jobT=now+6000+(_pidHash(npc.pid)%5)*1000;_lifeAct(npc,'채석');
+  return true;
+}
 function _t1146HandIn(vil, npc) {
   if (!_stoneHandInOn(vil) || !vil || !vil.econ) return 0;
   if (_lifeEcon().productionFormulaOff(vil.econ, 'forager')) {
@@ -12741,7 +12776,8 @@ function _t720Settle(vil, npc, now, S) {
 function _t720Step(vil, npc, now, fv, dayR, day, fullFish = false) {
   if (!fullFish && _stoneHandInOn(vil) && _stoneHeld(npc) > 0) {
     const C = require('./carry');
-    fullFish = C.npcTotalKg(npc) >= C.CFG.CAP_KG;
+    const kg = C.npcTotalKg(npc);
+    fullFish = kg >= C.CFG.CAP_KG || (npc.inventory.stone > 0 && kg + require('./weights').kgOf('stone') > C.CFG.CAP_KG + 1e-9);
   }
   let S = npc._t720;
   if (!S || !S.k) {
@@ -14324,6 +14360,7 @@ function npcLifeTick(npc, now) {   // zone.js decideNpcBehavior 훅(늑대 도�
   //     멈추는 것이 아니라 **아무 자원이나** 따는 것이다(손에 든 것은 `_lifeDaily` 가 그대로 곳간에 넣는다).
   //   ⚠행위 층이 켜진 마을·그 직업만(`_t374Done` 안) — 안 켜진 마을은 수식이 내고 걸음은 그림이다(무접촉).
   //   끄면 `_t374Done` 이 첫 줄에서 false 다(비트 동일 · 손 합도 안 센다).
+  if (_physicalStoneWork(vil,npc,now,fv,dayR,day,bday)) return true;
   if (_t374Done(vil, job)) { _lifeGoHome(npc, '휴식'); return true; }
   // ★★★[T325 2026-09-19 · 설계_생산_실체 §1] **베는 순간 손에, 귀환하면 곳간에** — 어부(T312)와 같은 문법.
   //   손잡이가 꺼져 있으면 이 블록은 **통째로 안 돈다**(아래 종전 갈래가 그대로 · 비트 동일).
@@ -15909,7 +15946,7 @@ module.exports = { t1144Stat: () => Object.assign({ on: T1144_LIFE_EVENT, verify
       deliver: (vil, npc) => _t325Deliver(vil, npc), fdeliver: (vil, npc) => _t347Deliver(vil, npc), settle: (vil, npc, now, S) => _t720Settle(vil, npc, now, S),
       handsIn: (vil) => _lifeHandsIn(vil), daily: (vil) => _lifeDaily(vil), get ON() { return T733_FELL_LOOT; }, get T720() { return T720_LON_DAY; } },
     // ★[T1146 ③] NPC 손의 돌 · 자갈 → 곳간 — 같은 규약(최소 주입구 하나 · 정본 함수를 그대로 부른다 · 하네스가 넣는 규칙을 다시 적으면 그게 사본이다)
-    _t1146Probe: { keys: () => _T1146_KEYS.slice(), handIn: (vil, npc) => _t1146HandIn(vil, npc), settle: (vil, npc, now, S) => _t720Settle(vil, npc, now, S),
+    _t1146Probe: { stoneWork:(v,p,t,f,r,d)=>_physicalStoneWork(v,p,t,f,r,d), keys: () => _T1146_KEYS.slice(), handIn: (vil, npc) => _t1146HandIn(vil, npc), settle: (vil, npc, now, S) => _t720Settle(vil, npc, now, S),
       get ON() { return T1146_STONE_RULE; }, get T720() { return T720_LON_DAY; } },
     // ★[T743] 해 질 녘 통나무 도장 — 같은 규약(최소 주입구 하나 · 정본 함수를 그대로 부른다 · 하네스가 도장 규칙을 다시 적으면 그게 사본이다)
     _t743Probe: { settle: (vil, npc, now, S) => _t720Settle(vil, npc, now, S), daily: (vil) => _lifeDaily(vil), handsIn: (vil) => _lifeHandsIn(vil), newWood: (p) => _t717NewWood(p),

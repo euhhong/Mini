@@ -35,5 +35,23 @@ check('standing-tree selection skips an empty nearest cell',()=>{
  const W=V.__labProbe._t561Probe,{p}=fixture(),trees=[{cx:0,cy:0,x:16,y:16},{cx:1,cy:0,x:48,y:16}];p.x=p.y=16;
  state.deps.t325TreesAtCell=(x)=>x===1?[{}]:[];assert.strictEqual(W.standing(trees,p,0,trees[0]),trees[1]);state.deps.t325TreesAtCell=()=>[];assert.strictEqual(W.standing(trees,p,0,trees[0]),null);
 });
+check('stone bag returns when another whole stone cannot fit, even before25kg',()=>{const {v,p}=fixture();p.inventory={stone:6};assert.strictEqual(require('../server/carry').npcTotalKg(p),24);assert.strictEqual(P.returnStep(v,p,10000,.3,.7,1),true);assert.strictEqual(p.targetX,16);});
+check('forager selects a real rock without creating stock or changing jobs',()=>{
+ const {v,p}=fixture();v.econ.npcs=new Array(6).fill({});p.simJob='forager';p.inventory={};
+ const rock={id:'real-rock',type:'rock',hp:200,x:16,y:16};state.deps.qtResources=()=>({queryCircle:()=>[rock]});
+ assert.strictEqual(H.stoneWork(v,p,10000,.3,.7,1),true);assert.strictEqual(p.gatherTarget,rock.id);assert.strictEqual(p.simJob,'forager');assert.deepStrictEqual(p.inventory,{});assert.strictEqual(v.econ.storage.stone,0);assert.strictEqual(rock.hp,200);
+});
+check('stone gathering stops at actual demand or when no real rock exists',()=>{
+ const {v,p}=fixture();v.econ.npcs=new Array(6).fill({});p.simJob='forager';p.inventory={};v.econ.storage.stone=10000;
+ assert.strictEqual(H.stoneWork(v,p,10000,.3,.7,1),false);v.econ.storage.stone=0;state.deps.qtResources=()=>({queryCircle:()=>[]});assert.strictEqual(H.stoneWork(v,p,10000,.3,.7,1),false);assert.deepStrictEqual(p.inventory,{});
+});
+check('another whole stone must fit before any quarry hit is requested',()=>{
+ const {v,p}=fixture();v.econ.npcs=new Array(6).fill({});p.simJob='forager';p.inventory={stone:6};const rock={id:'r',type:'rock',hp:200,x:16,y:16};state.deps.qtResources=()=>({queryCircle:()=>[rock]});
+ assert.strictEqual(H.stoneWork(v,p,10000,.3,.7,1),true);assert.strictEqual(p.gatherTarget,null);assert.strictEqual(p._t720.k,1);assert.strictEqual(p.inventory.stone,6);assert.strictEqual(rock.hp,200);
+});
+check('finishing-rock byproducts also fit within the same body limit',()=>{
+ const {v,p}=fixture();v.econ.npcs=new Array(6).fill({});p.simJob='forager';p.inventory={stone:5};const rock={id:'r',type:'rock',hp:1,x:16,y:16};state.deps.qtResources=()=>({queryCircle:()=>[rock]});state.deps.t325LootOf=()=>({stone:1,pebble:2});
+ assert.strictEqual(H.stoneWork(v,p,10000,.3,.7,1),true);assert.strictEqual(p.gatherTarget,null);assert.strictEqual(p._t720.k,1);assert.strictEqual(p.inventory.stone,5);assert.strictEqual(rock.hp,1);
+});
 state.deps=old;
 console.log(`PASS ${pass} / FAIL ${fail}`);process.exitCode=fail?1:0;

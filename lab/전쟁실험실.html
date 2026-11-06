@@ -16178,6 +16178,13 @@ function derivedInputTarget(v, r) {
     return deficit * (stoneRealPer('tool').stone || 0) + ((v.counts && v.counts.mason) || 0) * stoneWorkStock(v);
   }
 
+  if (stoneRealOn() && v && v.storage && v.npcs && v.npcs.length) {
+    const cost = (stoneRealPer('crude') || {})[r] || 0;
+    if (cost > 0) {
+      const tools = (v.storage.tool || 0) + (v.storage.bronze_tool || 0) + (v.storage.iron_tool || 0);
+      return Math.max(0, toolDepCount(v) * SELF_TOOL_COV - tools) * cost;
+    }
+  }
   // ★★[T463 2026-09-27] **숯도 파생수요다** — 노가 있는 마을(캐는 마을이거나 녹일 원석이 있는 마을 · `_trySmelt` 의 그 문)은
   //   숯을 **쓸 데가 실제로 있다**. 그런데 T443 연료는 곳간에 숯이 있을 때만 `_cons(charcoal)` 를 적는다 — 숯이 없는 광산 마을은
   //   노천 탄화(통나무)로 때우니 숯 흐름(flowT)이 **0** 이고, 값이 바닥(0.02)이라 캐러밴이 숯을 안 싣는다(보고 §ⓐ: 800일 숯 leg 1건).
