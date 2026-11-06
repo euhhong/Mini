@@ -12,8 +12,8 @@ if A.card=='T1157' and not A.reference:P.error('T1157 requires the merged-prereq
 if A.reference:A.reference=A.reference.resolve()
 if A.workers<1:P.error('--workers must be positive')
 A.out.mkdir(parents=True,exist_ok=True)
-FILES=['sim/economy-sim.js','sim/economy-sim-v2.js','server/villages.js','scripts/t17-metrics.js']
-def hashes(root):return {f:hashlib.sha256((root/f).read_bytes()).hexdigest() for f in FILES}
+FILES=['sim/economy-sim.js','sim/economy-sim-v2.js','server/villages.js','server/weights.js','server/specialty.js','scripts/t17-metrics.js','scripts/t1157-observe.js','scripts/t1156-flow-observe.js','scripts/t115x-observe.js']
+def hashes(root):return {f:hashlib.sha256((root/f).read_bytes()).hexdigest() for f in FILES if (root/f).exists()}
 base={'T1136_BASKET':'1','T1152_MARKET':'1'}
 if A.card=='T1157':
  variants={'off':{},'basket':base,'settle':dict(base,T1157_SETTLE_VAULT='1'),'eat':dict(base,T1157_EAT_VAULT='1'),'release':dict(base,T1157_RELEASE_RESERVE='1'),'all':dict(base,T1157_SETTLE_VAULT='1',T1157_EAT_VAULT='1',T1157_RELEASE_RESERVE='1'),'reference':{}}
@@ -25,8 +25,9 @@ def run(job):
  for k in list(env):
   if k.startswith(('T1152_','T1156_','T1157_')) or k in ['T1136_BASKET','NODE_OPTIONS','T17_JSON','T17_BASKET','T17_MARKET']:env.pop(k)
  env.update(variants[mode]);env.update(T17_JSON=str(output),T17_BASKET=str(output)+'.basket.json',T17_MARKET=str(output)+'.market.json')
- observer=root/'scripts/t1157-observe.js'
+ observer=root/'scripts/t115x-observe.js'
  if observer.exists():env['NODE_OPTIONS']='--require '+str(observer)
+ elif mode!='reference':raise RuntimeError('missing corrected t115x-observe.js')
  cmd=[A.node,'scripts/t17-metrics.js','800',str(seed)];start=time.monotonic()
  with (A.out/f'{mode}-{seed}.log').open('w') as log:r=subprocess.run(cmd,cwd=root,env=env,stdout=log,stderr=subprocess.STDOUT)
  changed=before!=hashes(root)
