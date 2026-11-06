@@ -25,8 +25,10 @@ def run(job):
  for k in list(env):
   if k.startswith(('T1152_','T1156_','T1157_')) or k in ['T1136_BASKET','NODE_OPTIONS','T17_JSON','T17_BASKET','T17_MARKET']:env.pop(k)
  env.update(variants[mode]);env.update(T17_JSON=str(output),T17_BASKET=str(output)+'.basket.json',T17_MARKET=str(output)+'.market.json')
- observer=root/'scripts/t1157-observe.js'
- if observer.exists():env['NODE_OPTIONS']='--require '+str(observer)
+ observers=[root/'scripts/t1157-observe.js']
+ if A.card=='T1156':observers.append(root/'scripts/t1156-flow-observe.js')
+ observers=[p for p in observers if p.exists()]
+ if observers:env['NODE_OPTIONS']=' '.join('--require '+str(p) for p in observers)
  cmd=[A.node,'scripts/t17-metrics.js','800',str(seed)];start=time.monotonic()
  with (A.out/f'{mode}-{seed}.log').open('w') as log:r=subprocess.run(cmd,cwd=root,env=env,stdout=log,stderr=subprocess.STDOUT)
  changed=before!=hashes(root)
