@@ -11,3 +11,10 @@ function plan(stock){
 assert.equal(plan(.225),E.T419_STONE_REAL?'forager':'mason','material recovery must not stop at obsolete .2 stock');
 assert.equal(plan(E.stoneWorkStock({npcs:[]})),'mason','funded tool production remains selectable');
 console.log('PASS stone recipe planning T419='+E.T419_STONE_REAL);
+
+{
+ const v={npcs:[],counts:{farmer:10,mason:0},storage:{tool:0}};
+ assert.equal(E.derivedInputTarget(v,'stone'),E.T419_STONE_REAL?E.toolDesiredStock(v)*E.stoneRealPer('tool').stone:0);
+ v.storage.tool=E.toolDesiredStock(v);assert.equal(E.derivedInputTarget(v,'stone'),0);
+ console.log('PASS raw stone demand follows actual missing tools, including when production is blocked');
+}

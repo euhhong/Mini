@@ -16035,6 +16035,7 @@ function toolDepCount(v) {
 //   도구(석기) 수요: 사용마모+감가를 메우는 흐름(구 smithTarget 로직) — 인구·도구의존 비례.
 //   무기 수요: 청동/철 없는 마을(금속 미보유)에서 전사·사냥꾼용 마제석검·활을 석공이 공급(저티어 자급 무기).
 //   석공 있으면 도구·무기 대량 공급 → 농부가 자급에 시간 안 써 농사 전념(분업).
+function toolDesiredStock(v) { return toolDepCount(v) * 1.15; }
 function masonTarget(v) {
   const N = v.npcs.length || 1;
   const toolStock = (v.storage.tool || 0) + (v.storage.bronze_tool || 0) + (v.storage.iron_tool || 0);
@@ -16044,7 +16045,7 @@ function masonTarget(v) {
   const wearPerDay = farmerTD * DAILY_TOOL_WEAR_PER_FARMER + otherTD * DAILY_TOOL_WEAR_PER_OTHER
     + (v.npcs.length || 0) * 0.005 + toolStock * 0.0006;   // 사용마모 + subsistence(0.005/인, v2) + 재고감가
   const perMasonOut = 0.5;   // 석공 1인 일일 석기 산출(≈base 0.4×숙련) 근사
-  const desired = td * 1.15;   // 목표 도구재고(커버리지 1 + 버퍼)
+  const desired = toolDesiredStock(v);   // 목표 도구재고(커버리지 1 + 버퍼)
   const deficit = Math.max(0, desired - toolStock);
   let need = wearPerDay / perMasonOut + deficit / (perMasonOut * 50);   // 도구: 마모 보충 + 결손 catchup(50일)
   // ★무기 수요분 — 금속(구리/주석/철) *없는* 마을만 석공이 무기 공급(있으면 대장장이가 청동검). ★전사만 1.2배 목표(석공=전사 마제석검 담당). 사냥꾼 활은 자가제작(archery)으로 자급하므로 석공 노동목표서 제외.
@@ -16169,6 +16170,13 @@ const COPPER_DERIV_ON = (typeof process !== 'undefined' && process.env && proces
 const COPPER_DERIV_DAYS = (typeof process !== 'undefined' && process.env && process.env.COPPER_DERIV_DAYS != null)
   ? Number(process.env.COPPER_DERIV_DAYS) : 30;
 function derivedInputTarget(v, r) {
+  // 재료가 없어 작업을 못 해도 도구 결손의 실제 레시피 투입은 수요다(숯 파생수요와 같은 문).
+  if (r === 'stone' && stoneRealOn() && v && v.storage) {
+    const tools = (v.storage.tool || 0) + (v.storage.bronze_tool || 0) + (v.storage.iron_tool || 0);
+    const deficit = Math.max(0, toolDesiredStock(v) - tools);
+    return deficit * (stoneRealPer('tool').stone || 0) + ((v.counts && v.counts.mason) || 0) * stoneWorkStock(v);
+  }
+
   // ★★[T463 2026-09-27] **숯도 파생수요다** — 노가 있는 마을(캐는 마을이거나 녹일 원석이 있는 마을 · `_trySmelt` 의 그 문)은
   //   숯을 **쓸 데가 실제로 있다**. 그런데 T443 연료는 곳간에 숯이 있을 때만 `_cons(charcoal)` 를 적는다 — 숯이 없는 광산 마을은
   //   노천 탄화(통나무)로 때우니 숯 흐름(flowT)이 **0** 이고, 값이 바닥(0.02)이라 캐러밴이 숯을 안 싣는다(보고 §ⓐ: 800일 숯 leg 1건).
@@ -17658,7 +17666,7 @@ module.exports = {
   setRngState: (o) => { if (!o) return; if (o.seed != null) _seed = o.seed >>> 0; if (Number.isFinite(o.npc)) _nextNpcId = o.npc; if (Number.isFinite(o.vil)) _nextVillageId = o.vil; if (T731_LOCAL_MIDNIGHT && Number.isFinite(o.s0)) _seed0 = o.s0 >>> 0; },
   useVillageStream, T731_LOCAL_MIDNIGHT,   // ★[T731] 마을 흐름 쥐기(v2 의 마을 조각 · 날씨 · 흉풍이 부른다) · 손잡이
   // ★S2 계측/랩 노출 — 노동목표 함수(석공·대장장이)
-  masonTarget, smithTarget, weaponsmithTarget, armorsmithTarget, warriorTarget,
+  toolDesiredStock, masonTarget, smithTarget, weaponsmithTarget, armorsmithTarget, warriorTarget,
   // ★S4 명장 견습(세대 전승)
   apprenticeInherit, villageMasterSkill,
 };
