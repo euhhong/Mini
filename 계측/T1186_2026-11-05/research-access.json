@@ -21,5 +21,20 @@
     "api.crossref.org",
     "doi.org",
     "digilib.phil.muni.cz"
-  ]
+  ],
+  "primarySourceRetries": [
+    {
+      "url": "https://exarc.net/issue-2026-2/rev/life-stone-axe",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "url": "https://tidsskrift.dk/jda/article/download/126138/172511/265779",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "url": "https://www.emuseum.go.kr/",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    }
+  ],
+  "retryDateKST": "2026-11-06"
 }
