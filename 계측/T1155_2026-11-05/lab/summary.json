@@ -1,0 +1,50 @@
+[
+  {
+    "mode": "0",
+    "seed": 1020,
+    "rc": 0,
+    "seconds": 584.2885234360001,
+    "byteEqualCanonical": true,
+    "jsonEqualCanonical": true
+  },
+  {
+    "mode": "0",
+    "seed": 7,
+    "rc": 0,
+    "seconds": 378.6668192510115,
+    "byteEqualCanonical": true,
+    "jsonEqualCanonical": true
+  },
+  {
+    "mode": "0",
+    "seed": 42,
+    "rc": 0,
+    "seconds": 435.31680648100155,
+    "byteEqualCanonical": true,
+    "jsonEqualCanonical": true
+  },
+  {
+    "mode": "1",
+    "seed": 1020,
+    "rc": 0,
+    "seconds": 474.89577804799774,
+    "byteEqualCanonical": true,
+    "jsonEqualCanonical": true
+  },
+  {
+    "mode": "1",
+    "seed": 7,
+    "rc": 0,
+    "seconds": 421.2279759170051,
+    "byteEqualCanonical": true,
+    "jsonEqualCanonical": true
+  },
+  {
+    "mode": "1",
+    "seed": 42,
+    "rc": 0,
+    "seconds": 466.5893418479973,
+    "byteEqualCanonical": true,
+    "jsonEqualCanonical": true
+  }
+]
