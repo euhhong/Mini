@@ -24,7 +24,7 @@ def run(job):
  mode,seed=job;root=A.reference if mode=='reference' else A.source;before=hashes(root);output=A.out/f'{mode}-{seed}.json';env=os.environ.copy()
  for k in list(env):
   if k.startswith(('T1152_','T1156_','T1157_')) or k in ['T1136_BASKET','NODE_OPTIONS','T17_JSON','T17_BASKET','T17_MARKET']:env.pop(k)
- env.update(variants[mode]);env.update(T17_JSON=str(output),T17_BASKET=str(output)+'.basket.json',T17_MARKET=str(output)+'.market.json')
+ env.update(variants[mode]);env.update(T17_JSON=str(output))
  observer=root/'scripts/t115x-observe.js'
  if observer.exists():env['NODE_OPTIONS']='--require '+str(observer)
  elif mode!='reference':raise RuntimeError('missing corrected t115x-observe.js')
