@@ -12,7 +12,7 @@ if A.card=='T1157' and not A.reference:P.error('T1157 requires the merged-prereq
 if A.reference:A.reference=A.reference.resolve()
 if A.workers<1:P.error('--workers must be positive')
 A.out.mkdir(parents=True,exist_ok=True)
-FILES=['sim/economy-sim.js','sim/economy-sim-v2.js','server/villages.js','server/weights.js','server/specialty.js','scripts/t17-metrics.js','scripts/t1157-observe.js','scripts/t1156-flow-observe.js','scripts/t115x-observe.js']
+FILES=['sim/economy-sim.js','sim/economy-sim-v2.js','server/villages.js','server/weights.js','server/specialty.js','scripts/t17-metrics.js','scripts/t1157-observe.js','scripts/t1156-flow-observe.js','scripts/t115x-observe.js','scripts/t1157-off-kg-observe.js']
 def hashes(root):return {f:hashlib.sha256((root/f).read_bytes()).hexdigest() for f in FILES if (root/f).exists()}
 base={'T1136_BASKET':'1','T1152_MARKET':'1'}
 if A.card=='T1157':
@@ -28,6 +28,10 @@ def run(job):
  observer=root/'scripts/t115x-observe.js'
  if observer.exists():env['NODE_OPTIONS']='--require '+str(observer)
  elif mode!='reference':raise RuntimeError('missing corrected t115x-observe.js')
+ if A.card=='T1157' and mode=='off':
+  kgObserver=root/'scripts/t1157-off-kg-observe.js'
+  if not kgObserver.exists():raise RuntimeError('missing OFF arrival-kg observer')
+  env['NODE_OPTIONS']+=' --require '+str(kgObserver)
  cmd=[A.node,'scripts/t17-metrics.js','800',str(seed)];start=time.monotonic()
  with (A.out/f'{mode}-{seed}.log').open('w') as log:r=subprocess.run(cmd,cwd=root,env=env,stdout=log,stderr=subprocess.STDOUT)
  changed=before!=hashes(root)
