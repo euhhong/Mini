@@ -15,7 +15,8 @@
     "scripts/t1157-observe.js": "939fa76eb8cedcd1ad816aa50a1101523fa85b022e34d5d01f69d5c828d5f687"
   },
   "observerInvalidFields": {
-    "starvingDays": "historical observer read nonexistent v._fdDay; raw zero is invalid and excluded from summary; famineDeaths reads cumulative canonical _deadTot"
+    "starvingDays": "historical observer read nonexistent v._fdDay; raw zero is invalid and excluded from summary; famineDeaths reads cumulative canonical _deadTot",
+    "famineDeaths": "former summary mislabeled _deadTot as famine deaths; renamed econDeaths. Explicit food-debt deaths are _fdDeadTot and corrected observations are pending."
   },
   "outboundKgDefinition": "mean departed cargo kg over arrived outbound basket legs; OFF not observed by basket callback, prior canonical metric is separately labeled and only reused after full JSON equality",
   "runs": [
@@ -24,7 +25,6 @@
       "seed": 1020,
       "days": 800,
       "population": 6436,
-      "famineDeaths": 1420,
       "empty": 0,
       "eventDensity": 1.48,
       "valueEventDensity": 1.54,
@@ -409,14 +409,14 @@
         "p90": 300,
         "mean": 143.543
       },
-      "outboundKgPriorSource": "계측/T1152_판/off_1020_b.json"
+      "outboundKgPriorSource": "계측/T1152_판/off_1020_b.json",
+      "econDeaths": 1420
     },
     {
       "mode": "off",
       "seed": 7,
       "days": 800,
       "population": 6008,
-      "famineDeaths": 1466,
       "empty": 0,
       "eventDensity": 1.59,
       "valueEventDensity": 1.67,
@@ -800,14 +800,14 @@
         "p90": 400,
         "mean": 147.496
       },
-      "outboundKgPriorSource": "계측/T1152_판/off_7_b.json"
+      "outboundKgPriorSource": "계측/T1152_판/off_7_b.json",
+      "econDeaths": 1466
     },
     {
       "mode": "off",
       "seed": 42,
       "days": 800,
       "population": 6299,
-      "famineDeaths": 1609,
       "empty": 0,
       "eventDensity": 1.46,
       "valueEventDensity": 1.52,
@@ -1195,14 +1195,14 @@
         "p90": 344.8355,
         "mean": 146.17
       },
-      "outboundKgPriorSource": "계측/T1152_판/off_42_b.json"
+      "outboundKgPriorSource": "계측/T1152_판/off_42_b.json",
+      "econDeaths": 1609
     },
     {
       "mode": "on",
       "seed": 1020,
       "days": 800,
       "population": 6696,
-      "famineDeaths": 1331,
       "empty": 0,
       "eventDensity": 1.36,
       "valueEventDensity": 1.41,
@@ -1583,14 +1583,14 @@
         },
         "output": "/tmp/t1156-results/on-1020.json"
       },
-      "rawSHA256": "fbdf8a28b8d08b398dbc0c297a5a7b47b8ed83ee354b1c6a730c98bd97373793"
+      "rawSHA256": "fbdf8a28b8d08b398dbc0c297a5a7b47b8ed83ee354b1c6a730c98bd97373793",
+      "econDeaths": 1331
     },
     {
       "mode": "on",
       "seed": 7,
       "days": 800,
       "population": 6683,
-      "famineDeaths": 1080,
       "empty": 0,
       "eventDensity": 1.35,
       "valueEventDensity": 1.4,
@@ -1963,14 +1963,14 @@
         },
         "output": "/tmp/t1156-results/on-7.json"
       },
-      "rawSHA256": "592fc34da19cdd1e32ed11d4730413f4cfc4051a1b8a5a071669cb0951c1508c"
+      "rawSHA256": "592fc34da19cdd1e32ed11d4730413f4cfc4051a1b8a5a071669cb0951c1508c",
+      "econDeaths": 1080
     },
     {
       "mode": "on",
       "seed": 42,
       "days": 800,
       "population": 6672,
-      "famineDeaths": 1231,
       "empty": 0,
       "eventDensity": 1.46,
       "valueEventDensity": 1.52,
@@ -2340,21 +2340,22 @@
         },
         "output": "/tmp/t1156-results/on-42.json"
       },
-      "rawSHA256": "75abb469e247450697ab1a7e06da0c19b70335fc6a768dcd17b49adbe84d3bee"
+      "rawSHA256": "75abb469e247450697ab1a7e06da0c19b70335fc6a768dcd17b49adbe84d3bee",
+      "econDeaths": 1231
     }
   ],
   "totals": {
     "off": {
       "population": 18743,
       "empty": 0,
-      "famineDeaths": 4495,
-      "completedSeeds": 3
+      "completedSeeds": 3,
+      "econDeaths": 4495
     },
     "on": {
       "population": 20051,
       "empty": 0,
-      "famineDeaths": 3642,
-      "completedSeeds": 3
+      "completedSeeds": 3,
+      "econDeaths": 3642
     }
   }
 }
