@@ -13,8 +13,9 @@ assert.equal(plan(E.stoneWorkStock({npcs:[]})),'mason','funded tool production r
 console.log('PASS stone recipe planning T419='+E.T419_STONE_REAL);
 
 {
- const v={npcs:[],counts:{farmer:10,mason:0},storage:{tool:0}};
+ const v={npcs:new Array(10).fill({}),counts:{farmer:10,mason:0},storage:{tool:0}};
  assert.equal(E.derivedInputTarget(v,'stone'),E.T419_STONE_REAL?E.toolDesiredStock(v)*E.stoneRealPer('tool').stone:0);
  v.storage.tool=E.toolDesiredStock(v);assert.equal(E.derivedInputTarget(v,'stone'),0);
+ v.npcs=[];v.storage.tool=0;assert.equal(E.derivedInputTarget(v,'stone'),0);
  console.log('PASS raw stone demand follows actual missing tools, including when production is blocked');
 }

@@ -5163,6 +5163,7 @@ const COPPER_DERIV_DAYS = (typeof process !== 'undefined' && process.env && proc
 function derivedInputTarget(v, r) {
   // 재료가 없어 작업을 못 해도 도구 결손의 실제 레시피 투입은 수요다(숯 파생수요와 같은 문).
   if (r === 'stone' && stoneRealOn() && v && v.storage) {
+    if (!(v.npcs && v.npcs.length)) return 0;
     const tools = (v.storage.tool || 0) + (v.storage.bronze_tool || 0) + (v.storage.iron_tool || 0);
     const deficit = Math.max(0, toolDesiredStock(v) - tools);
     return deficit * (stoneRealPer('tool').stone || 0) + ((v.counts && v.counts.mason) || 0) * stoneWorkStock(v);
