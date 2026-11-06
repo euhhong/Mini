@@ -482,5 +482,6 @@
   },
   "metricContract": "econDeaths is _deadTot (population-pressure + food-debt deaths), NOT food-debt-only _fdDeadTot. Old starvingDays read nonexistent _fdDay and are invalid; true hunger and food-debt deaths are being measured separately, preserving exact original world outputs.",
   "serverOffControl": "400 days x3 still running",
-  "correctedHungerControl": "18 runs in progress; no invalid zero substituted"
+  "correctedHungerControl": "18 runs in progress; no invalid zero substituted",
+  "kgSamplingNote": "Basket mean is departed cargo over accepted market arrivals. OFF priorCanonicalKg is historical all-launch average, not the same sample. OFF aligned arrival metric is being measured separately; no direct same-sample comparison until complete."
 }
