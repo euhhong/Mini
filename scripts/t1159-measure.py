@@ -36,7 +36,7 @@ for mode in ['0','1']:
    rc=124
  text=log.read_text();m=re.search(r' · 판 (/tmp/sbc-[^ =\n]+)',text);d=pathlib.Path(m[1]) if m else None;complete=False;seeds=[]
  if d and (d/'check.json').exists():
-  check=json.loads((d/'check.json').read_text());complete=rc in [0,1] and not timed
+  check=json.loads((d/'check.json').read_text());complete=rc in [0,1] and not timed and all(check.get('per',{}).get(str(seed),{}).get('code')==0 for seed in [1020,7,42])
   for seed in [1020,7,42]:
    f=d/f'sbc-{seed}.json';h=d/f'sbc-{seed}.t1159.json';w=json.loads(f.read_text());home=json.loads(h.read_text());valid=w['days']==a.days and home['endDay']==a.days and home['lastCompleteEconDay']==a.days and not home['errors'];complete &= valid
    seeds.append({'seed':seed,'days':w['days'],'population':w['eight']['pop'],'births':home['births'],'starvationDeaths':home['starvationDeaths'],'starvingPersonDays':home['starvingPersonDays'],'awayPersonDays':home['awayPersonDays'],'observerErrors':home['errors'],'unknownHomeDays':home['unknownHomeDays']})
