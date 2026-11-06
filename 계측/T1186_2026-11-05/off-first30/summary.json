@@ -92,7 +92,7 @@
       "min": 27.57
     }
   },
-  "firstHutCompletedWithinCap": false,
+  "firstHutCompletedWithinCap": null,
   "fps": {
     "min": 11.2,
     "p10": 23.2,
@@ -101,5 +101,8 @@
     "n": 315
   },
   "sourceJSONSHA256": "77628fc34c8c852a854c1c933c0586dc14ab98aa5dce610134ee5cd316eb4986",
-  "gateInterpretation": "OFF single actual run: phase3 at27.57min, no completed first-hut milestone; not a paired ON gate"
+  "gateInterpretation": "OFF single actual run: phase3 at27.57min, no completed first-hut milestone; not a paired ON gate",
+  "firstHutCompletionMilestoneRecorded": false,
+  "gatePassed": false,
+  "interpretation": "No completion milestone was recorded within30min; manual completion is unconfirmed and this run is not counted as a success."
 }
