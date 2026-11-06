@@ -9795,6 +9795,19 @@ function _stoneHeld(npc) {
 }
 // 채집 돌 수식을 닫은 실제 몸은 같은 생활권의 살아 있는 바위를 고른다.
 // 직업·수율을 새로 만들지 않는다. 타격과 자원 인출은 zone.npcStep의 기존 사람/NPC 공통 문이다.
+function _stoneApproach(vil,npc,rock,day) {
+  const dp=state.deps,range=dp.gatherRange||SZ;
+  if(Math.hypot(npc.x-rock.x,npc.y-rock.y)<range)return {x:npc.x,y:npc.y};
+  const radius=Math.ceil(range/SZ),cx=Math.floor(rock.x/SZ),cy=Math.floor(rock.y/SZ),points=[];
+  for(let dx=-radius;dx<=radius;dx++)for(let dy=-radius;dy<=radius;dy++){
+    const x=(cx+dx)*SZ+SZ/2,y=(cy+dy)*SZ+SZ/2;
+    if(Math.hypot(x-rock.x,y-rock.y)>=range||dp.isTerrainBlockedLocal?.(x,y)||dp.isBlockedByWall?.(x,y,x,y,0))continue;
+    points.push({x,y});
+  }
+  points.sort((a,b)=>Math.hypot(a.x-npc.x,a.y-npc.y)-Math.hypot(b.x-npc.x,b.y-npc.y));
+  for(const p of points){const reach=_t427On()?_t427Reach(vil,npc,p.x,p.y,day,dp.decBudgetOver||null):true;if(reach===null)return null;if(reach)return p;}
+  return false;
+}
 function _physicalStoneWork(vil, npc, now, fv, dayR, day, bodyDay = day) {
   const E = _lifeEcon();
   if (npc.simJob !== 'forager' || !E.productionFormulaOff(vil.econ, 'forager')) return false;
@@ -9804,13 +9817,14 @@ function _physicalStoneWork(vil, npc, now, fv, dayR, day, bodyDay = day) {
   if (!((vil.econ.storage.stone || 0) + held < target)) return false;
   const qt = state.deps.qtResources && state.deps.qtResources();
   const cx = vil.ccx*SZ+SZ/2, cy = vil.ccy*SZ+SZ/2, R = Math.max(vil._maxRPx || 800,800)+400;
-  const rocks = (qt ? qt.queryCircle(cx,cy,R) : []).filter(r => r.type === 'rock' && r.hp > 0);
+  const out=_warOutMul(vil),limit=out>=1?null:R*out;
+  const rocks = (qt ? qt.queryCircle(cx,cy,R) : []).filter(r => r.type === 'rock' && r.hp > 0 && (limit==null||_lifeJobSiteOK(vil,r.x,r.y,limit)));
   rocks.sort((a,b) => Math.hypot(a.x-npc.x,a.y-npc.y)-Math.hypot(b.x-npc.x,b.y-npc.y));
-  let rock = null;
+  let rock = null,point=null;
   for (const r of rocks) {
-    const reach = _t427On() ? _t427Reach(vil,npc,r.x,r.y,day,state.deps.decBudgetOver||null) : true;
+    const reach = _stoneApproach(vil,npc,r,day);
     if (reach === null) return true;
-    if (reach) { rock=r;break; }
+    if (reach) { rock=r;point=reach;break; }
   }
   if (!rock) return false;
   const C = require('./carry'), W = require('./weights');
@@ -9824,7 +9838,7 @@ function _physicalStoneWork(vil, npc, now, fv, dayR, day, bodyDay = day) {
     return true;
   }
   if (npc._jobT && now < npc._jobT) { npc.behavior='wander';npc.targetX=npc.x;npc.targetY=npc.y;npc.gatherTarget=null;_lifeAct(npc,'채석');return true; }
-  npc.behavior='gather';npc.targetX=rock.x;npc.targetY=rock.y;npc.gatherTarget=rock.id;
+  npc.behavior='gather';npc.targetX=point.x;npc.targetY=point.y;npc.gatherTarget=rock.id;
   npc._jobT=now+6000+(_pidHash(npc.pid)%5)*1000;_lifeAct(npc,'채석');
   return true;
 }
