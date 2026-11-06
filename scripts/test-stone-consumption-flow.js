@@ -12,3 +12,7 @@ assert(used>0,'positive mason production required');
 assert((v._consDay?.stone||0)+1e-9>=used,`actual mason stone ${used} absent from consumption flow ${v._consDay?.stone}`);
 console.log(JSON.stringify({tools,swords,recipeStone:used,recordedStone:v._consDay.stone}));
 console.log('PASS actual stone material enters consumption flow');
+
+assert.equal(E.stoneWorkStock({npcs:[]}),E.stoneRealPer('tool').stone*E.JOBS.mason.base);
+assert.equal(E.stoneWorkStock({npcs:[{currentJob:'mason',skills:{masonry:10}}]}),E.stoneRealPer('tool').stone*E.JOBS.mason.base*(1+10*.05));
+console.log('PASS planned stone stock follows recipe/output/actual artisan skill');

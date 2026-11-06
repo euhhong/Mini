@@ -19,6 +19,8 @@
 'use strict';
 // T1181: 기존 되돌림 계약. 새 기본값·실제 몸은 test-t1181-build-defaults에서 검사.
 for(const k of ['T435_GRANARY_ACT', 'T527_BRIDGE_ACT', 'T517_HUT_STONE', 'T419_STONE_REAL']) process.env[k]='0';
+// This regression tests the pre-split ore/fish contract.
+process.env.T1188_ORE_SPLIT='0'; process.env.T1192_FISH_SPECIES='0';
 process.env.ENABLE_VILLAGES = process.env.ENABLE_VILLAGES || '0';
 const path = require('path');
 const fs = require('fs');
@@ -162,7 +164,7 @@ process.stdout.write(JSON.stringify({b1,s1,d2,s2,d3,x1,nolj:nolj.storage,nk:!!no
   ok(r.x1 === null && r.nk === false && !r.nolj.charcoal && r.nolj.wood === 500, '⑥ ★★미끼 — 나무꾼 없는 마을은 숯가마가 **안 서고 숯이 한 톨도 안 생긴다**');
   ok(r.y1 === null, '⑥ 통나무가 비축(5/인) 아래인 마을도 안 선다(잉여가 조건)');
   ok(r.z1 === null && r.zk === false, '⑥ 재료(돌 10)가 모자라면 안 선다(기다린다)');
-  const kd = SRC.slice(SRC.indexOf('const T452_KILN_ACT'), SRC.indexOf('function _trySmelt'));
+  const kd = (SRC.match(/function kilnDay\(v\) \{[\s\S]*?\n\}/) || [''])[0];
   ok(kd.length > 500 && !/Math\.random/.test(kd) && !/\b(3|4|10|41)\b/.test(kd.split('\n').map((l) => l.replace(/\/\/.*$/, '')).join('\n')), '⑥ 주사위 0 · 표의 수(3·4·10·41)를 옮겨 적지 않았다');
 }
 

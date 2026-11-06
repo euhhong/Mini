@@ -12444,6 +12444,14 @@ function stoneRealPer(kind) {   // 한 개당 재료(econ 재화만) — kind: '
   return raw ? _econOnly(raw) : null;
 }
 function stoneRealOn() { return T419_STONE_REAL && !!_stoneUses(); }
+// 계획도 같은 한 작업일의 실제 투입량을 읽는다. 옛 0.2 재료 문턱은 OFF에만 남긴다.
+function stoneWorkStock(v) {
+  if (!stoneRealOn()) return STONE_NET_STOCK;
+  let skill = 0;
+  for (const n of (v && v.npcs) || []) if (n.currentJob === 'mason') skill = Math.max(skill, n.skills?.masonry || 0);
+  return (stoneRealPer('tool').stone || 0) * JOBS.mason.base * (1 + skill * 0.05);
+}
+
 // ══ ★★[T435 2026-09-27] 곳간 증설도 재료를 낸다 — 정본 `server/granary-stages.js`(판자 12·돌 8 → 통나무 6·돌 8) · 손잡이 기본 끔 ══
 //   켬이면 NPC 크루가 이 곳간 출구(`actFromGranary`)로 재료를 꺼내 곳간 터에 놓는다(villages.js `_t435GranaryDay`). 끔 = 한 줄도 안 돈다.
 const T435_GRANARY_ACT = process.env.T435_GRANARY_ACT !== '0';
@@ -14755,7 +14763,7 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
       const wAmt = amt * WEAPON_LABOR_MULT;   // ★무기 노동 3배 → 산출 1/3
       if (_needStoneSword) {
         // (0) 마제석검 우선 — 전사 근접무장 결손(무산지 마을 주력 무기).
-        v.storage.stone -= _swCost;   // ★마제석검(간돌 검) — 청동 자격 없는 마을의 주력 자급 무기(저품질, 전사용)
+        v.storage.stone -= _swCost; if (_t419) _cons(v, 'stone', _swCost);   // ★마제석검(간돌 검) — 청동 자격 없는 마을의 주력 자급 무기(저품질, 전사용)
         v._stoneWeaponMade = (v._stoneWeaponMade || 0) + wAmt;
         v._swordMadeToday = (v._swordMadeToday || 0) + wAmt;   // ★근접검 비중 EMA 입력(검 제작)
         const wq = WEAP_Q_STONE * _qSkill;   // 마제석검 품질 = 석재등급(0.5) × 스킬
@@ -14764,7 +14772,7 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
       } else if (_toolTaper > 0 && (v.storage.stone || 0) >= _stCost) {
         // (a) 석기 도구 — 커버리지 부족분(e2 taper). _toolTaper>0이고 돌 있으면 제작.
         const tAmt = amt * _toolTaper;
-        v.storage.stone -= _stCost; v._stoneToolMade = (v._stoneToolMade || 0) + tAmt;
+        v.storage.stone -= _stCost; if (_t419) _cons(v, 'stone', _stCost); v._stoneToolMade = (v._stoneToolMade || 0) + tAmt;
         // ★S3 도구 품질 = 막석기(TOOL_Q_BASE) + 숙련폭(TOOL_Q_SPAN×skill/10) → 막석기 1.25× ~ 명장석기 1.55×.
         const tq = TOOL_Q_BASE + TOOL_Q_SPAN * (skillLvl / 10);
         v._toolQnum = (v._toolQnum || 0) + tq * tAmt; v._toolQden = (v._toolQden || 0) + tAmt;
@@ -14780,7 +14788,7 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
         const _spare = 1 - _toolTaper;
         if (_spare > 0.02 && (_armoryShort || _needStoneSword) && (v.storage.stone || 0) >= _swCost * _spare) {
           const sAmt = wAmt * _spare;
-          v.storage.stone -= _swCost * _spare;
+          v.storage.stone -= _swCost * _spare; if (_t419) _cons(v, 'stone', _swCost * _spare);
           v._stoneWeaponMade = (v._stoneWeaponMade || 0) + sAmt;
           v._swordMadeToday = (v._swordMadeToday || 0) + sAmt;
           const wq2 = WEAP_Q_STONE * _qSkill;
@@ -14790,7 +14798,7 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
         workNPC(npc);
       } else if (_armoryShort) {
         // (a2) 도구 포화 → 마제석검으로 마을 병기고 축적(무산지 마을 주력 무기 재고). 청동 자격 마을은 대장장이 청동검이 담당(여기 미해당).
-        v.storage.stone -= _swCost;
+        v.storage.stone -= _swCost; if (_t419) _cons(v, 'stone', _swCost);
         v._stoneWeaponMade = (v._stoneWeaponMade || 0) + wAmt;
         v._swordMadeToday = (v._swordMadeToday || 0) + wAmt;
         const wq = WEAP_Q_STONE * _qSkill;
@@ -15795,7 +15803,7 @@ function pickDeficitJob(v) {
   let _toolDeps = 0;
   for (const j of JOB_NAMES) if (JOBS[j].toolDependent) _toolDeps += (counts[j] || 0);
   const toolPer = ((v.storage.tool || 0) + (v.storage.bronze_tool || 0) + (v.storage.iron_tool || 0)) / Math.max(1, _toolDeps);
-  if (toolPer < 1.5 && hasSlot(v, 'mason', cap, counts)) return 'mason';   // ★S2 도구=석기 → 석공
+  if (toolPer < 1.5 && hasSlot(v, 'mason', cap, counts) && (!stoneRealOn() || (v.storage.stone || 0) >= stoneWorkStock(v))) return 'mason';   // ★S2 도구=석기 → 석공
   // ★★[재민 지시 "무기 축 복구"] 석공 채용을 **목표와 직접 비교**한다.
   //   전에는 석공이 무기 때문에 뽑히는 유일한 경로가 "전사 ≥ 1 && 무기 < N×0.5" 안에 있었다.
   //   그런데 전사는 폐지된 직업(행상)에 막혀 영영 0 이라, 그 경로가 통째로 닫혀 있었다.
@@ -15808,7 +15816,7 @@ function pickDeficitJob(v) {
   //     석공에 인력을 뺏겨 소멸했다(실측). 굶는 마을이 석기 장인을 늘리는 건 순서가 틀렸다.
   if ((counts.mason || 0) < masonTarget(v) && totalFoodEquivalent(v) > N * 30
       && hasSlot(v, 'mason', cap, counts)
-      && ((v.storage.stone || 0) >= 0.5 || (v.storage.wood || 0) > N * 0.5)) return 'mason';
+      && (stoneRealOn() ? (v.storage.stone || 0) >= stoneWorkStock(v) : ((v.storage.stone || 0) >= 0.5 || (v.storage.wood || 0) > N * 0.5))) return 'mason';
   // ★★[재민 질문 "전사 켜면 왜 광부가 0이 돼?"] 에 대한 답이자 그 수리.
   //   광부는 이 picker 에서 **맨 마지막 7단계("풍부 토지 분야")에만** 있었다. 그래서
   //   앞 단계 조건이 하나라도 오래 참이면 광부는 영영 안 뽑히고, 이미 있던 광부는
@@ -16016,7 +16024,7 @@ function _oppPrice(v) {
     return exp > local ? exp : local;
   };
 }
-function _masonWeaponCost(v) { const p = _oppPrice(v); return (STONE_PER_WEAPON * p('stone')) / WEAP_Q_STONE; }
+function _masonWeaponCost(v) { const p = _oppPrice(v); return ((stoneRealOn() ? (stoneRealPer('stoneSword').stone || 0) * JOBS.mason.base * WEAPON_LABOR_MULT : STONE_PER_WEAPON) * p('stone')) / WEAP_Q_STONE; }
 function _smithWeaponCost(v) {
   const m = _alloyMelt(v); if (!m) return Infinity;
   const p = _oppPrice(v);
@@ -16441,7 +16449,7 @@ function pickDeficitJob_rational(v, world) {
     const _td = toolDepCount(v);
     const _toolStock = (v.storage.tool || 0) + (v.storage.bronze_tool || 0) + (v.storage.iron_tool || 0);
     const _toolCrit = _toolStock < _td * 0.7;   // 치명적 도구부족(커버리지<0.7)
-    if (N >= (TOOLBOOT_ON ? 1 : 6) && (v.storage.stone || 0) >= 0.2) {   // 석기 재료비(0.2/tool)에 맞춘 문턱
+    if (N >= (TOOLBOOT_ON ? 1 : 6) && (v.storage.stone || 0) >= stoneWorkStock(v)) {   // 석기 재료비(0.2/tool)에 맞춘 문턱
       // 치명적 도구부족이고 석공이 노동목표 미달이면 기근보다 먼저 석공.
       if (_toolCrit && (counts.mason || 0) < masonTarget(v)) return 'mason';
     }
@@ -16454,7 +16462,7 @@ function pickDeficitJob_rational(v, world) {
     //   석재 189 → 0 → 도구 0 → 생산 ×0.25 → 만성 기근 → 기근 게이트가 영구 점유 → 석재 영영 0.
     //   ⇒ 도구가 치명적으로 부족한데 **재료조차 없으면** 채집꾼을 기근보다 먼저 부른다.
     //     (도구가 멀쩡하면 발동 안 함 = 평시 노동 잠식 없음. 채집은 식량도 같이 가져오므로 기근 대응이기도 하다.)
-    if (STONE_NET_ON && _toolCrit && (v.land.stone || 0) >= 0.25 && (v.storage.stone || 0) < STONE_NET_STOCK
+    if (STONE_NET_ON && _toolCrit && (v.land.stone || 0) >= 0.25 && (v.storage.stone || 0) < stoneWorkStock(v)
         && hasSlot(v, 'forager', cap, counts)) return 'forager';
   }
 
@@ -16520,10 +16528,10 @@ function pickDeficitJob_rational(v, world) {
   //   ⇒ 석재 결손이면 채집꾼을 **석공보다 먼저** 부른다. 경계도 `>` → `>=` 로 고친다:
   //     livelihood.js 의 FLOOR.stone 이 정확히 0.25 라서, 바위 지형이 전혀 없는 마을(=가장 절실한 마을)이
   //     엡실론 하나 차이로 통째로 제외돼 있었다. 그 바닥값 주석이 이미 "돌은 흔하다 — 누구나 조달"이다.
-  if (STONE_NET_ON && (v.land.stone || 0) >= 0.25 && (v.storage.stone || 0) < STONE_NET_STOCK * Math.max(1, masonTarget(v))
+  if (STONE_NET_ON && (v.land.stone || 0) >= 0.25 && (v.storage.stone || 0) < stoneWorkStock(v) * Math.max(1, masonTarget(v))
       && hasSlot(v, 'forager', cap, counts)) return 'forager';
   // ★S2 석공(석기 도구 + 저티어 무기[마제석검·활]) — 돌 있으면 충원. masonTarget이 도구+무기 수요 통합.
-  if ((counts.mason || 0) < masonTarget(v) && ((v.storage.stone || 0) >= 0.2 || (v.storage.wood || 0) > N * 0.5)) return 'mason';
+  if ((counts.mason || 0) < masonTarget(v) && (stoneRealOn() ? (v.storage.stone || 0) >= stoneWorkStock(v) : ((v.storage.stone || 0) >= 0.2 || (v.storage.wood || 0) > N * 0.5))) return 'mason';
   // ★★[재민 확정] 채용 조건도 이산 분기를 뺀다.
   //   전에는 "주석 산지거나 / 철 부자거나" 라는 **두 개의 문턱**이었다. 그런데 대장장이가
   //   임의 배합을 녹일 수 있게 된 지금, 그 문턱은 자기 판단 기준이 아니다.
@@ -17471,7 +17479,7 @@ module.exports = {
   bindProductionActs, productionActsBound, productionFormulaOff,   // T1180: 물리 생산 호스트 등록 · 수식 대체 문
   T452_KILN_ACT, kilnActOn, kilnWant, kilnDay, furnaceCharcoalTarget,   // ★[T452] 숯가마 행위
   T443_SMELT_FUEL, smeltFuelOn, smeltFuelPerOre, smeltFuelTake,   // ★[T443] 제련 연료 — 하네스·계측기가 표를 옮겨 적지 않게
-  T419_STONE_REAL, stoneRealPer, stoneRealOn,   // ★[T419] 돌 쓰는 실물 — 하네스·계측기가 표·유도를 옮겨 적지 않게 내준다
+  T419_STONE_REAL, stoneRealPer, stoneRealOn, stoneWorkStock,   // ★[T419] 돌 쓰는 실물 — 하네스·계측기가 표·유도를 옮겨 적지 않게 내준다
   T435_GRANARY_ACT, granaryEconMaterials,   // ★[T435] 곳간 증설 재료 — 생활층·하네스가 표를 옮겨 적지 않게
   T1050_LAB_HOUSE, crewPerLoad, houseCrewDay, labHouseAttach, labHouseDay, labHouseWorldDay, labSiteNew, labSiteCrewDay, labCrewDbg,   // ★[T1050] 집 크루 하루 정본(서버 생활층 · 랩 몸 없는 마을이 같은 함수) · 손잡이 · ★[T1056] 몸 없는 크루의 집터 하루(t17 · t176 · 랩 HTML 둘이 같은 함수)
   T400_BUILD_ACT, T1054_DECAY_WOOD, T527_BRIDGE_ACT, T537_SHORTCUT, buildActOn, houseDayBuild, houseWoodShare, woodSpare, T497_HUT_COST, hutPillarsArm, T517_HUT_STONE, hutStoneUnits, actFromGranary, actMaterialsPlaced, returnActMaterials, hutEconMaterials, hutEconStage, hutStageCount, hutCapPerHut, houseCostPerCap,   // ★[T400] 집 행위 — 하네스·생활층이 표·유도를 옮겨 적지 않게 내준다
@@ -18752,7 +18760,7 @@ function _exportCandidatesV2(a, N) {   // a = 마을 칸({ v }) — 몸통 줄�
         //   **모른다** — 어쩌다 재고가 차면 그걸 잉여로 읽고 실어 보내고, 그 자리에서 다시 0 이 된다.
         //   ⇒ 돌 수출 후보는 **안전망 문턱 위**일 때만. 수는 v1 정본에서 읽는다(사본 0 · 새 수 0).
         //   되돌림 `T180_STONE_EXPORT=0` → 종전 비트 동일.
-        if (r === 'stone' && T180_STONE_EXPORT && stock < v1.STONE_NET_STOCK) continue;
+        if (r === 'stone' && T180_STONE_EXPORT && stock < v1.stoneWorkStock(v)) continue;
         if (_t1049Floor(r, a.v)) continue;   // ★[T1049] ⓐ 돌 바닥 마을은 제 돌을 안 판다(위 손잡이 주석)
         if (T825_FOOD_KEEP && !FOODR[r] && stock > thresh) {   // ★[T825 · T928] 켬 — 먹을 것은 곳간 식량이 하루치를 넘는 몫까지만
           const _f = _t825FoodPer(a.v, r);

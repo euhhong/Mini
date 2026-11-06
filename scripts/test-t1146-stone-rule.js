@@ -241,10 +241,10 @@ ok(/StoneRule\.split\(kg, Weights\.kgOf\('stone'\), Weights\.kgOf\('pebble'\)\)/
 ok(fMine.length > 0 && !/1146/.test(fMine), '★땅 채굴(`mineOreCell`) 글자 무접촉 — 암반은 같은 식의 정본 그 자체(★재민 채굴 속도 고정)');
 const fHand = fnBody(VIL, '_t1146HandIn'), fSet = fnBody(VIL, '_t720Settle'), fGran = fnBody(VIL, '_lifeGranStep'), fHeld = fnBody(VIL, '_t720Held');
 ok(/_lifeEcon\(\)\.actToGranary\(vil\.econ, k, u, null, null\)/.test(fHand) && /const _T1146_KEYS = \['stone', 'pebble'\];/.test(VIL), '★곳간 입구 — T733 부산물 문과 같은 몸통(`actToGranary` · 오늘치 · 건수 칸 없음) · 돌 · 자갈 두 칸');
-const HIN = /if \(npc\.inventory && \(npc\.inventory\.stone > 0 \|\| npc\.inventory\.pebble > 0\) && T1146_STONE_RULE\) _t1146HandIn\(vil, npc\);/;
-ok(HIN.test(fSet) && HIN.test(fGran) && !/stone|pebble|1146/.test(fHeld),
-  '곳간에 닿는 두 순간(해 질 녘 정산 · 곳간② 저장)에서만 — 돌만 든 손은 그것 때문에 곳간에 안 간다(`_t720Held` 무변)');
-ok(nums(fHand).join() === '0,1e-9,6', '★새 수 0 — 곳간 입구에 0 · 소수 자리 · 0 비교(1e-9)만', nums(fHand).join());
+const HIN = /if \(npc\.inventory && \(npc\.inventory\.stone > 0 \|\| npc\.inventory\.pebble > 0\) && _stoneHandInOn\(vil\)\) _t1146HandIn\(vil, npc\);/;
+ok(HIN.test(fSet) && HIN.test(fGran) && fHeld.includes('_stoneHeld(npc)') && fnBody(VIL, '_stoneHandInOn').includes("productionFormulaOff(vil.econ, 'forager')"),
+  '곳간에 닿는 두 순간(해 질 녘 정산 · 곳간② 저장)에서만 — 실물 생산에서 돌만 든 손도 실제 귀환 대상이다');
+ok(nums(fHand).every(n => ['0','1e-9','2','44','6'].includes(n)) && nums(fHand).filter(n=>n==='44').length===1, '★새 수 0 — 기존 회관 중심/2·도착 거리44 · 소수 자리 · 0 비교(1e-9)만', nums(fHand).join());
 
 sec('② 유도 — 출처 표의 비 · 땅 채굴 정본 · 무게 보존');
 {
