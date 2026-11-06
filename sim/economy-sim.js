@@ -3849,7 +3849,7 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
       const wAmt = amt * WEAPON_LABOR_MULT;   // ★무기 노동 3배 → 산출 1/3
       if (_needStoneSword) {
         // (0) 마제석검 우선 — 전사 근접무장 결손(무산지 마을 주력 무기).
-        v.storage.stone -= _swCost;   // ★마제석검(간돌 검) — 청동 자격 없는 마을의 주력 자급 무기(저품질, 전사용)
+        v.storage.stone -= _swCost; if (_t419) _cons(v, 'stone', _swCost);   // ★마제석검(간돌 검) — 청동 자격 없는 마을의 주력 자급 무기(저품질, 전사용)
         v._stoneWeaponMade = (v._stoneWeaponMade || 0) + wAmt;
         v._swordMadeToday = (v._swordMadeToday || 0) + wAmt;   // ★근접검 비중 EMA 입력(검 제작)
         const wq = WEAP_Q_STONE * _qSkill;   // 마제석검 품질 = 석재등급(0.5) × 스킬
@@ -3858,7 +3858,7 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
       } else if (_toolTaper > 0 && (v.storage.stone || 0) >= _stCost) {
         // (a) 석기 도구 — 커버리지 부족분(e2 taper). _toolTaper>0이고 돌 있으면 제작.
         const tAmt = amt * _toolTaper;
-        v.storage.stone -= _stCost; v._stoneToolMade = (v._stoneToolMade || 0) + tAmt;
+        v.storage.stone -= _stCost; if (_t419) _cons(v, 'stone', _stCost); v._stoneToolMade = (v._stoneToolMade || 0) + tAmt;
         // ★S3 도구 품질 = 막석기(TOOL_Q_BASE) + 숙련폭(TOOL_Q_SPAN×skill/10) → 막석기 1.25× ~ 명장석기 1.55×.
         const tq = TOOL_Q_BASE + TOOL_Q_SPAN * (skillLvl / 10);
         v._toolQnum = (v._toolQnum || 0) + tq * tAmt; v._toolQden = (v._toolQden || 0) + tAmt;
@@ -3874,7 +3874,7 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
         const _spare = 1 - _toolTaper;
         if (_spare > 0.02 && (_armoryShort || _needStoneSword) && (v.storage.stone || 0) >= _swCost * _spare) {
           const sAmt = wAmt * _spare;
-          v.storage.stone -= _swCost * _spare;
+          v.storage.stone -= _swCost * _spare; if (_t419) _cons(v, 'stone', _swCost * _spare);
           v._stoneWeaponMade = (v._stoneWeaponMade || 0) + sAmt;
           v._swordMadeToday = (v._swordMadeToday || 0) + sAmt;
           const wq2 = WEAP_Q_STONE * _qSkill;
@@ -3884,7 +3884,7 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
         workNPC(npc);
       } else if (_armoryShort) {
         // (a2) 도구 포화 → 마제석검으로 마을 병기고 축적(무산지 마을 주력 무기 재고). 청동 자격 마을은 대장장이 청동검이 담당(여기 미해당).
-        v.storage.stone -= _swCost;
+        v.storage.stone -= _swCost; if (_t419) _cons(v, 'stone', _swCost);
         v._stoneWeaponMade = (v._stoneWeaponMade || 0) + wAmt;
         v._swordMadeToday = (v._swordMadeToday || 0) + wAmt;
         const wq = WEAP_Q_STONE * _qSkill;
