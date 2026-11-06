@@ -1196,7 +1196,7 @@ function _exportCandidatesV2(a, N) {   // a = 마을 칸({ v }) — 몸통 줄�
         //   **모른다** — 어쩌다 재고가 차면 그걸 잉여로 읽고 실어 보내고, 그 자리에서 다시 0 이 된다.
         //   ⇒ 돌 수출 후보는 **안전망 문턱 위**일 때만. 수는 v1 정본에서 읽는다(사본 0 · 새 수 0).
         //   되돌림 `T180_STONE_EXPORT=0` → 종전 비트 동일.
-        if (r === 'stone' && T180_STONE_EXPORT && stock < v1.stoneWorkStock(v)) continue;
+        if (r === 'stone' && T180_STONE_EXPORT && stock < v1.stoneWorkStock(a.v)) continue;
         if (_t1049Floor(r, a.v)) continue;   // ★[T1049] ⓐ 돌 바닥 마을은 제 돌을 안 판다(위 손잡이 주석)
         if (T825_FOOD_KEEP && !FOODR[r] && stock > thresh) {   // ★[T825 · T928] 켬 — 먹을 것은 곳간 식량이 하루치를 넘는 몫까지만
           const _f = _t825FoodPer(a.v, r);
