@@ -14814,7 +14814,7 @@ if (_t1113LQ !== 1) v._t1113LowDays = (v._t1113LowDays || 0) + 1;   // 계측 �
         if (_sbFn) { const _k = _sbFn(v); if (Number.isFinite(_k) && _k >= 0) _stoneK = _k; }   // 폴백이 곧 종전(못 재면 받은 값 그대로)
         const stoneYield = _stoneK * skillMul * (stoneRealOn() ? 1 : _forageScale) * 0.9;
         if (stoneYield > 0) addProduce('stone', stoneYield);
-        workNPC(npc);
+        if (baseAmt > 0 || stoneYield > 0) workNPC(npc);
       }
     } else if (jdef.produceSpecial === 'cook') {
       if (v.storage.food >= 1) {

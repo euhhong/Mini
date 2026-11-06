@@ -306,6 +306,28 @@ function _actEntitiesAtCell(cellX, cellY, types, raw) {
   for (const e of a) if (types[e.type]) out.push(e);
   return out;
 }
+function _physicalRocksInCircle(x,y,radius) {
+  const found=new Map(),types={rock:1};
+  for(let cx=Math.max(0,Math.floor((x-radius)/32));cx<=Math.min(Math.ceil(ZONE.zoneWidth/32)-1,Math.floor((x+radius)/32));cx++)for(let cy=Math.max(0,Math.floor((y-radius)/32));cy<=Math.min(Math.ceil(ZONE.zoneHeight/32)-1,Math.floor((y+radius)/32));cy++){
+    for(const r of _actEntitiesAtCell(cx,cy,types)){
+      if(Math.hypot(r.x-x,r.y-y)>radius)continue;
+      // Startup index tables may precede the canonical rock HP installation.
+      if(!resources.has(r.id)&&r.isSeed&&r.maxHp!==RESOURCE_HP_TABLE.rock&&!seedHp.has(r.seedKey)&&r.hp===r.maxHp)r.hp=r.maxHp=RESOURCE_HP_TABLE.rock;
+      _t978Apply(r);if(r.hp>0)found.set(r.seedKey||r.id,r);
+    }
+  }
+  return [...found.values()];
+}
+function _physicalStoneHit(npc,chosen) {
+  const live=_actEntitiesAtCell(Math.floor(chosen.x/32),Math.floor(chosen.y/32),{rock:1}).find(r=>(r.seedKey||r.id)===(chosen.seedKey||chosen.id));
+  if(!live||!(live.hp>0))return {missing:true};
+  if(Math.hypot(npc.x-live.x,npc.y-live.y)>=GATHER_RANGE)return {remote:true};
+  _t978Apply(live);
+  let kg=Weights.kgOf('stone');
+  if(live.hp<=1)kg=Math.max(kg,Object.entries(lootOfResource(live)).reduce((n,[k,q])=>n+Weights.kgOf(k)*q,0));
+  if(require('./carry').npcTotalKg(npc)+kg>require('./carry').CFG.CAP_KG+1e-9)return {full:true};
+  return _npcGatherResource(npc,live);
+}
 // ★★★[T440 2026-09-27 · ★PM 결정(위임) · T398 §1-4 ⓑ · T426 §0-ⓖ 표] **청크 한 판(ringCache)** — 셀 색인의 문 하나.
 //   셀마다 색인(`resourcesAtCell`)을 부르면 그 셀에 닿는 청크(1~4)를 **셀마다 다시 낳는다** — 나무꾼 고리(50마을 32만 칸)를
 //   하루 한 번 훑는 데 3,057ms 였다(T426 ④ · 셀당 9.5µs). ⇒ 청크를 **한 판** 낳아(`generateChunkResources` — 청크가 켜질 때
@@ -5007,6 +5029,24 @@ function _t738Adopt(p) {
   Object.defineProperty(p, 'x', { get() { return _t738.X[s]; }, set(v) { _t738.X[s] = v; }, enumerable: true, configurable: true });
   Object.defineProperty(p, 'y', { get() { return _t738.Y[s]; }, set(v) { _t738.Y[s] = v; }, enumerable: true, configurable: true });
 }
+function _npcGatherResource(npc,r) {
+        // 직접 채집 (tryGather 로직 간소화)
+        const _hp0 = r.hp;   // ★[T1126] 친 앞 hp
+        let _dmg = 1;   // ★[T1146] NPC 한 타 배수(종전 1 · 도구 무관) — 바위면 사람 `gatherResource` 와 같은 함수가 그 타에 떨어지는 hp 점으로 바꾼다
+        if (T1146_ROCK && r.type === 'rock') _dmg = _t1146Cut(r, _dmg, true);
+        r.hp -= _dmg;
+        { const _y = _t1126HitYield(r, _hp0); if (_y > 0) _t1126Give(npc, _y); _t1126Note(npc, r, _y); }   // ★[T1126] 바위 hp 한 점 = 돌 하나 — 플레이어 `gatherResource` 와 같은 문(정본 하나) · 계측 한 줄(켬 · 끔 둘 다 — 세계 0)
+        if (r.hp <= 0) {
+          const loot = _t495Rest(r, lootOfResource(r));   // ★정본 하나 — 플레이어와 같은 표를 쓴다(사본 금지) · ★[T495] 남은 단위만(장부 없으면 그 객체 그대로)
+          for (const [k, v] of Object.entries(loot)) { npc.inventory[k] = (npc.inventory[k] || 0) + v; if (T732_MOMENT) Lots.note(npc, k, v, zoneGameDay()); }   // ★[T732] NPC 손도 얻은 순간(곁 장부 — 몸 필드 0)
+          _takeResourceEntity(r, true);     // ★[T325] 빼는 여섯 줄을 **문 하나**로 모았다(아래 정의 · 행동 무변)
+        } else if (r.hp !== _hp0) {   // ★[T1146] 깎기만 한 타(hp 그대로)는 저장 · 방송 0 — 끔이면 늘 참(한 타 = 1 점 · 종전 차례 그대로)
+          if (r.dbId) db.updateResourceHp(r.dbId, r.hp);
+          else _t978Note(r);   // ★[T978] 시드 개체(행 없음)는 남은 hp 장부로
+          broadcast({ type: 'resource_update', id: r.id, hp: r.hp });
+        }
+  return {hit:true};
+}
 function npcStep(npc, dt, now) {
   if (T738_SOA_XY) _t738Adopt(npc);   // ★[T738] 끔 = 종전 그대로
   npc._t540StepAt = now;   // ★[T540 관측] 이 몸이 마지막으로 걸음 문을 받은 때(`/walkdbg stepAge` — 새벽 멎음을 이것으로 잡았다)
@@ -5136,21 +5176,7 @@ function npcStep(npc, dt, now) {
     if (npc.behavior === 'gather' && npc.gatherTarget) {
       const r = resources.get(npc.gatherTarget);
       if (r && Math.hypot(r.x - npc.x, r.y - npc.y) < GATHER_RANGE) {
-        // 직접 채집 (tryGather 로직 간소화)
-        const _hp0 = r.hp;   // ★[T1126] 친 앞 hp
-        let _dmg = 1;   // ★[T1146] NPC 한 타 배수(종전 1 · 도구 무관) — 바위면 사람 `gatherResource` 와 같은 함수가 그 타에 떨어지는 hp 점으로 바꾼다
-        if (T1146_ROCK && r.type === 'rock') _dmg = _t1146Cut(r, _dmg, true);
-        r.hp -= _dmg;
-        { const _y = _t1126HitYield(r, _hp0); if (_y > 0) _t1126Give(npc, _y); _t1126Note(npc, r, _y); }   // ★[T1126] 바위 hp 한 점 = 돌 하나 — 플레이어 `gatherResource` 와 같은 문(정본 하나) · 계측 한 줄(켬 · 끔 둘 다 — 세계 0)
-        if (r.hp <= 0) {
-          const loot = _t495Rest(r, lootOfResource(r));   // ★정본 하나 — 플레이어와 같은 표를 쓴다(사본 금지) · ★[T495] 남은 단위만(장부 없으면 그 객체 그대로)
-          for (const [k, v] of Object.entries(loot)) { npc.inventory[k] = (npc.inventory[k] || 0) + v; if (T732_MOMENT) Lots.note(npc, k, v, zoneGameDay()); }   // ★[T732] NPC 손도 얻은 순간(곁 장부 — 몸 필드 0)
-          _takeResourceEntity(r, true);     // ★[T325] 빼는 여섯 줄을 **문 하나**로 모았다(아래 정의 · 행동 무변)
-        } else if (r.hp !== _hp0) {   // ★[T1146] 깎기만 한 타(hp 그대로)는 저장 · 방송 0 — 끔이면 늘 참(한 타 = 1 점 · 종전 차례 그대로)
-          if (r.dbId) db.updateResourceHp(r.dbId, r.hp);
-          else _t978Note(r);   // ★[T978] 시드 개체(행 없음)는 남은 hp 장부로
-          broadcast({ type: 'resource_update', id: r.id, hp: r.hp });
-        }
+        _npcGatherResource(npc,r);
         npc.gatherTarget = null;
         npc.nextDecisionAt = 0;
       }
@@ -5587,6 +5613,8 @@ SimVillages.init({ spawnNpc, players, npcs, broadcast, isTerrainBlockedLocal, is
   // ★[T325] 전리품 표는 존이 쥔다 — 생활층은 "이 그루가 목재 몇 낱개냐"만 묻는다(사본 0)
   t325LootOf: (r) => lootOfResource(r),
   gatherRange: GATHER_RANGE,
+  stoneResources: (x,y,r) => _physicalRocksInCircle(x,y,r),
+  stoneHit: (npc,r) => _physicalStoneHit(npc,r),
   t312DrawFishAt: (cx,cy,kg,now) => { const want=kg/Fishing.CFG.KG_PER_STOCK;return Fishing.drawWholeStock(cx,cy,want,now,_fishSave)>=want-1e-12; },   // T1180: 사람과 같은 어장·환산·저장 문
   t312FishTargetAt: (p,spot) => _castTargetFor(p,spot),
   t312FishSpotAt: (x,y) => Fishing.spotAt(_terrain,ZONE_ID,x,y,_fishSea()),
@@ -13402,7 +13430,7 @@ function tryFurnaceSmelt(player, buildingId) {
 //     지어 봐야 안다 — 실제로 이 하네스가 "노를 아예 못 짓는다"를 처음 잡아냈다.
 function __testBind() {
   return {
-    npcs,
+    npcs, _physicalRocksInCircle, _physicalStoneHit, _npcGatherResource,
     claims, buildings, players, BUILDING_SIZE, Specialty, tryAssignJob, tryVillageBoard, JOB_KR_NPC,   // ★[T1085] 촌장 일 맡기기(하네스가 진짜 문을 부른다)
     _t738Adopt, _t738: () => _t738, observers, isPositionActive: (x, y) => isPositionActive(x, y), _t774: () => ({ X: _t774X, Y: _t774Y, n: _t774N, src: _t774Src, ref: _spInc.ref, act: _spInc.act, hit: _t774Stat.hit, miss: _t774Stat.miss, same: _t774Src === activeChunkKeys }),   // ★[T774] 활성 열 증인(읽기)
       // ★[T738] SoA x·y 증인(`scripts/t738-witness.js` · 읽기 · 부르기만)
