@@ -19,5 +19,5 @@ for seed in [1020,7,42]:
   name=f'광산{i}'
   pairs.append({'seed':seed,'village':name,'off':modes['off'][name],'on':modes['on'][name]})
 a.out.parent.mkdir(parents=True,exist_ok=True)
-a.out.write_text(json.dumps({'complete':True,'days':800,'controls':controls,'definition':'executed market purchases: all canonical food-equivalent items; cargo may still be returning. Exports include both legs, canonical item kg. Famine is cumulative _deadTot; jobs are end-of-run counts.','minePairs':pairs},ensure_ascii=False,indent=2)+'\n')
+a.out.write_text(json.dumps({'complete':True,'days':800,'controls':controls,'definition':'executed market purchases: all canonical food-equivalent items; cargo may still be returning. Exports include both legs, canonical item kg. Total econ deaths are _deadTot; food-debt deaths are _fdDeadTot; hunger is foodDebtOf(v).starving summed after each daily tick as person-days and village-days; jobs are end-of-run counts.','minePairs':pairs},ensure_ascii=False,indent=2)+'\n')
 print(json.dumps({'complete':True,'byteEqualControls':len(controls),'minePairs':len(pairs)}))

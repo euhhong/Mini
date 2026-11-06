@@ -15,7 +15,7 @@
     "scripts/t1157-observe.js": "939fa76eb8cedcd1ad816aa50a1101523fa85b022e34d5d01f69d5c828d5f687"
   },
   "observerInvalidFields": {
-    "starvingDays": "historical observer read nonexistent v._fdDay; raw zero is invalid and excluded from summary; famineDeaths reads cumulative canonical _deadTot",
+    "starvingDays": "historical observer read nonexistent v._fdDay; raw zero invalid and excluded. dead is total econ _deadTot, not food-debt-only _fdDeadTot.",
     "famineDeaths": "former summary mislabeled _deadTot as famine deaths; renamed econDeaths. Explicit food-debt deaths are _fdDeadTot and corrected observations are pending."
   },
   "outboundKgDefinition": "mean departed cargo kg over arrived outbound basket legs; OFF not observed by basket callback, prior canonical metric is separately labeled and only reused after full JSON equality",
