@@ -9785,8 +9785,22 @@ function _t733HandIn(vil, npc) {
 //   손잡이 `T1146_STONE_RULE`(켬 기본 후보 · `=0` = 종전 — 손에 남는다). 곳간이 안 받은 몫은 손에(받은 만큼만 뺀다).
 const T1146_STONE_RULE = process.env.T1146_STONE_RULE === '1';   // ★[PM land1047] 끔 기본 — 첫 움집 30분 게이트 켬 0/3(T1146 회부 1 · 재민 판정 전)
 const _T1146_KEYS = ['stone', 'pebble'];
+// 실물 생산에서 없앤 채집 돌 수식을 손의 입고가 대신한다. 바위 수율 스위치와는 별개다.
+function _stoneHandInOn(vil) {
+  return T1146_STONE_RULE || !!(vil && vil.econ && _lifeEcon().productionFormulaOff(vil.econ, 'forager'));
+}
+function _stoneHeld(npc) {
+  const inv = npc.inventory || {};
+  return Math.max(0, inv.stone || 0) + Math.max(0, inv.pebble || 0);
+}
 function _t1146HandIn(vil, npc) {
-  if (!T1146_STONE_RULE || !vil || !vil.econ) return 0;
+  if (!_stoneHandInOn(vil) || !vil || !vil.econ) return 0;
+  if (_lifeEcon().productionFormulaOff(vil.econ, 'forager')) {
+    const S = npc._t720, t = npc._granTask;
+    const L = S && S.k ? {x:S.tx,y:S.ty} : t ? _granLadder(t) : {x:vil.ccx*SZ+SZ/2,y:vil.ccy*SZ+SZ/2};
+    const d = Math.hypot(npc.x-L.x,npc.y-L.y);
+    if (!Number.isFinite(d) || d > 44) return 0;
+  }
   const inv = npc && npc.inventory; if (!inv) return 0;
   let got = 0;
   for (const k of _T1146_KEYS) {
@@ -12648,7 +12662,8 @@ function _t720Ct(vil) { return vil._t720C || (vil._t720C = { go: 0, done: 0, giv
 function _t720Logger(vil, npc) { return npc.simJob === 'lumberjack' && !(vil._t400Crew && vil._t400Crew.indexOf(npc.pid) >= 0); }
 function _t720Held(vil, npc) {
   if (!vil.econ) return 0;
-  if (T737_HELD_CACHE) return _t737Held(vil, npc);   // ★[T737 ②] 같은 합 · 빈 손 절은 문(손잡이 술어)을 안 묻는다
+  const stone = _stoneHandInOn(vil) ? _stoneHeld(npc) : 0;
+  if (T737_HELD_CACHE) return _t737Held(vil, npc) + stone;   // ★[T737 ②] 같은 합 · 빈 손 절은 문(손잡이 술어)을 안 묻는다
   const E = _lifeEcon(), inv = npc.inventory || {};
   let u = 0;
   if (E.fishActOn(vil.econ)) u += npc._t312U || 0;
@@ -12656,7 +12671,7 @@ function _t720Held(vil, npc) {
   if (E.T325_WOOD_ACT && E.woodActOn(vil.econ) && _t720Logger(vil, npc)) u += inv.wood || 0;
   if (E.T347_FORAGE_ACT && E.forageActOn(vil.econ)) { for (const k of (_t347KeepOf(vil) || [])) for (const h of _t347HandsOf(k)) u += inv[h] || 0; }
   if (E.T724_MINE_ACT) u += inv.ore_chunk || 0;   // ★[T757] 광부의 손(원석 kg) — T724 의 경계 손 일괄이 T720 켬에선 안 돈다 ⇒ 해 질 녘 곳간 정산이 그 짐도 든다(있나만 본다 · 단위 무관)
-  return u;
+  return u + stone;
 }
 // ★★[T737 ② 2026-10-15 · 세션4] **손 다시 세기 — 빈 손 절은 문을 안 묻는다 · 손 이름 목록은 한 번만 짓는다**(손잡이 `T737_HELD_CACHE` · 기본 끔 = 위 종전 줄 그대로).
 //   `_t720Held` 는 해 질 녘부터 그날 아직 안 나선 몸마다 **결정마다** 불린다 — 빈손인 몸(T737 판 54분 62.9만 번 중 거의 전부)은 밤 내내 부른다.
@@ -12721,9 +12736,13 @@ function _t720Settle(vil, npc, now, S) {
     //   ★[T733 ②] 켬 = 그날 새로 딴 손만 걸은 몸 도장(남긴 몫만 든 손은 넣기만 한다) · 끔 = 옛 줄(손에 걷는 품목이 있으면 도장)
     if (u > 0) { const nf = _t733NewForage(npc, u); _t347Deliver(vil, npc); const d = _bodyDay(npc, now); if (S.fw !== d) { if (T733_FELL_LOOT) vil._t733PreO = (vil._t733PreO | 0) + 1; if (nf) { S.fw = d; vil._t347PreWalked = (vil._t347PreWalked | 0) + 1; } } }
   }
-  if (npc.inventory && (npc.inventory.stone > 0 || npc.inventory.pebble > 0) && T1146_STONE_RULE) _t1146HandIn(vil, npc);   // ★[T1146 ③] 손의 돌 · 자갈도 곳간에(손에 있을 때만 · 끔 = 손에 남는다 · 종전)
+  if (npc.inventory && (npc.inventory.stone > 0 || npc.inventory.pebble > 0) && _stoneHandInOn(vil)) _t1146HandIn(vil, npc);   // ★[T1146 ③] 손의 돌 · 자갈도 곳간에(손에 있을 때만 · 끔 = 손에 남는다 · 종전)
 }
 function _t720Step(vil, npc, now, fv, dayR, day, fullFish = false) {
+  if (!fullFish && _stoneHandInOn(vil) && _stoneHeld(npc) > 0) {
+    const C = require('./carry');
+    fullFish = C.npcTotalKg(npc) >= C.CFG.CAP_KG;
+  }
   let S = npc._t720;
   if (!S || !S.k) {
     if (!(fv >= dayR) && !fullFish) return false;           // T1180: 가득 찬 생선도 같은 귀환·체류 문
@@ -12766,7 +12785,7 @@ function _lifeGranStep(vil, npc, now) {
   //   서버는 상태가 없고 스케줄 게이트를 매 틱 재평가하므로, 도장이 없으면
   //   퇴근 훅이 저장(짐>0)↔인출(빈손)을 무한 왕복시킨다 — 집에 못 간다.
   if (t.draw) { const q = Math.min(G_DRAW, _granStockOf(vil, g)); _granStockAdd(vil, g, -q); _handAdd(npc, q); npc._granD = state.dayMs ? _bodyDay(npc, now) : 0; }
-  else { _granStockAdd(vil, g, _handOf(npc)); _handSet(npc, 0); if (npc._t368H) _t368Deliver(vil, npc, 'gran'); if (npc.inventory && (npc.inventory.wood || 0) > 0) _t561Ladder(vil, npc, now); if (npc.inventory && npc.inventory.ore_chunk > 0) _t724Deliver(vil, npc, 'gran', now); if (npc.inventory && (npc.inventory.stone > 0 || npc.inventory.pebble > 0) && T1146_STONE_RULE) _t1146HandIn(vil, npc); }   // ★[T1146 ③] 손의 돌 · 자갈도(손에 있을 때만 묻는다 — 옆 갈래들과 같은 꼴 · 끔 = 손에) · ★[T724 ②] 켠 팔은 원석도(끄면 몸 손에 원석이 없다 · `_t724Deliver` 첫 줄도 손잡이) · ③ 정산(물리 장부만 — econ 무접촉 · ★[T316] 손은 `inventory`) · ★[T368] 켠 팔은 **이 귀환이 곳간 입고**다(손의 작물 → `_farmGranary`) · ★[T561 ②ⓑ] 켠 팔은 통나무도(끄면 `_t561Ladder` 첫 줄에서 돌아간다)
+  else { _granStockAdd(vil, g, _handOf(npc)); _handSet(npc, 0); if (npc._t368H) _t368Deliver(vil, npc, 'gran'); if (npc.inventory && (npc.inventory.wood || 0) > 0) _t561Ladder(vil, npc, now); if (npc.inventory && npc.inventory.ore_chunk > 0) _t724Deliver(vil, npc, 'gran', now); if (npc.inventory && (npc.inventory.stone > 0 || npc.inventory.pebble > 0) && _stoneHandInOn(vil)) _t1146HandIn(vil, npc); }   // ★[T1146 ③] 손의 돌 · 자갈도(손에 있을 때만 묻는다 — 옆 갈래들과 같은 꼴 · 끔 = 손에) · ★[T724 ②] 켠 팔은 원석도(끄면 몸 손에 원석이 없다 · `_t724Deliver` 첫 줄도 손잡이) · ③ 정산(물리 장부만 — econ 무접촉 · ★[T316] 손은 `inventory`) · ★[T368] 켠 팔은 **이 귀환이 곳간 입고**다(손의 작물 → `_farmGranary`) · ★[T561 ②ⓑ] 켠 팔은 통나무도(끄면 `_t561Ladder` 첫 줄에서 돌아간다)
   npc._granTask = null;
   return false;                                                      // 소유권 반납 → 이번 틱부터 평소 일과
 }
@@ -13695,6 +13714,7 @@ const T561_ROSTER_BODY = process.env.T561_ROSTER_BODY === '1';
 //   ⚠수요 문(`T374_DEMAND_STOP` · 기본 켬)은 손대지 않는다 — 켬 세계에서 몸을 쉬게 하는 것은 수요 문이다(그날 D 를 채우면 퇴근 · 보고/T904 §1).
 const T904_WOOD_NEXT = process.env.T904_WOOD_NEXT === '1';
 const _T561_BODY = T561_ROSTER_BODY || T904_WOOD_NEXT;   // 몸의 하루(ⓐⓑⓒ) — 둘 중 하나면 선다 · ①ⓓ 는 T561 만
+function _woodBodyDayOn(vil) { return _T561_BODY || !!(vil && vil.econ && _lifeEcon().productionFormulaOff(vil.econ, 'lumberjack')); }
 function _t561Fit(p) {   // 그날 나설 수 있는 몸인가 — 스케줄 게이트(`npcLifeTick` 요양 두 줄)의 그 칸·그 문턱
   if (!p || p.isDown) return false;                                           // 쓰러짐
   if (p.hp != null && !(p.hp > 0)) return false;                               // 죽음(NPC 부활 대기)
@@ -13734,7 +13754,7 @@ function _t561Standing(tr, npc, h, first) {
 }
 // ★[T561 ②ⓑ] 곳간 사다리 정산(`_lifeGranStep` ③)에서 부른다 — 통나무를 든 몸만 온다(끄면 첫 줄에서 돌아간다 · 옛 줄 그대로).
 function _t561Ladder(vil, npc, now) {
-  if (!_T561_BODY || !vil || !vil.econ) return 0;   // ★[T904] T561 켬 또는 T904 켬(몸의 하루 ⓑ) · 끔 = 옛 줄
+  if (!_woodBodyDayOn(vil) || !vil || !vil.econ) return 0;   // ★[T904] T561 켬 또는 T904 켬(몸의 하루 ⓑ) · 끔 = 옛 줄
   const E = _lifeEcon(); if (!E.T325_WOOD_ACT || !E.woodActOn(vil.econ)) return 0;
   const got = _t325Deliver(vil, npc);
   _t561Walked(vil, npc, now);
@@ -14336,7 +14356,7 @@ function npcLifeTick(npc, now) {   // zone.js decideNpcBehavior 훅(늑대 도�
         if (d2 < bd) { bd = d2; best = t; }
       }
       //   ★★[T561 ②ⓐ] 켬 — 그 셀에 서 있는 그루가 없으면 다음으로 가까운 셀(같은 순서 · 같은 동점 규칙 · 일괄 절의 그 문) · 끔 = 옛 줄(빈 셀에 선다)
-      if (_T561_BODY) { best = _t561Standing(_tr, npc, h, best); if (!best) { npc._t325Site = { none: 1, day }; _lifeGoHome(npc, '휴식'); return true; } }   // ★[T904] T904 켬도(몸의 하루 ⓐ)
+      if (_woodBodyDayOn(vil)) { best = _t561Standing(_tr, npc, h, best); if (!best) { npc._t325Site = { none: 1, day }; _lifeGoHome(npc, '휴식'); return true; } }   // ★[T904] T904 켬도(몸의 하루 ⓐ)
       npc._t325Site = { cx: best.cx, cy: best.cy, x: best.x, y: best.y, day };
       if (T561_ROSTER_BODY) _t561Walked(vil, npc, now);   // ★[T561 ②ⓓ] 현장으로 나선 몸은 그날 걸은 몸 — 닿지 못해 0그루여도 일괄이 그 몸 몫을 대신 안 벤다
     }
@@ -14371,7 +14391,7 @@ function npcLifeTick(npc, now) {   // zone.js decideNpcBehavior 훅(늑대 도�
     if (_cap > 0 && _kg >= _cap && _granGo(vil, npc, false)) { npc._jobT = 0; return true; }
     //   ★★[T561 ②ⓒ] 켬 — 곳간이 없는 마을(틀 세계 13/50)은 **회관(마을 중심)**이 그 자리다(T400 이 자재를 꺼내는 폴백 `_t400From` 과 같은 자리) —
     //     짐이 차면 거기로 가서 내린다(`_t561Hall`). 끔 = 옛 줄(곳간이 없으면 짐 상한 없이 해 질 녘까지 든다 — 옛 몸은 1그루에서 멈춰 드러나지 않았다).
-    if (_T561_BODY && _cap > 0 && _kg >= _cap && !(vil._granList && vil._granList.length)) { npc._t561Hall = { at: 0 }; npc._jobT = 0; return true; }   // ★[T904] T904 켬도(몸의 하루 ⓒ)
+    if (_woodBodyDayOn(vil) && _cap > 0 && _kg >= _cap && !(vil._granList && vil._granList.length)) { npc._t561Hall = { at: 0 }; npc._jobT = 0; return true; }   // ★[T904] T904 켬도(몸의 하루 ⓒ)
     return true;
   }
   // ★★★[T724] **치는 순간 손에, 귀환하면 곳간에** — 광부 몸이 제 조의 광맥 셀에서 친다(위 `_t724BodyStep` 머리말).
@@ -15899,7 +15919,7 @@ module.exports = { t1144Stat: () => Object.assign({ on: T1144_LIFE_EVENT, verify
     // ★[T491] 일괄 = 몸의 하루 하네스용 — 같은 규약(최소 주입구 하나). 하네스는 명부·짐 규칙을 다시 적지 않는다 — 정본 `_t491Crew`·`_t491BodyDay` 를 그대로 부른다.
     _t491Probe: { crew: (vil) => _t491Crew(vil).map((p) => p.pid), bodyDay: (vil, d) => _t491BodyDay(vil, d), get T491_BATCH_FROM_BODY() { return T491_BATCH_FROM_BODY; } },
     // ★[T561] 명부가 몸의 그날을 본다 · 몸이 안 멈춘다 — 같은 규약(최소 주입구 하나 · 정본 함수를 그대로 부른다 · 하네스가 문턱을 다시 적으면 그게 사본이다).
-    _t561Probe: { fit: (p) => _t561Fit(p), crew: (vil, job) => _t561Crew(vil, job).map((p) => p.pid), standing: (tr, npc, h, first) => _t561Standing(tr, npc, h, first),
+    _t561Probe: { bodyDayOn: (v) => _woodBodyDayOn(v), fit: (p) => _t561Fit(p), crew: (vil, job) => _t561Crew(vil, job).map((p) => p.pid), standing: (tr, npc, h, first) => _t561Standing(tr, npc, h, first),
       ladder: (vil, npc, now) => _t561Ladder(vil, npc, now), granStep: (vil, npc, now) => _lifeGranStep(vil, npc, now), life: (npc, now) => npcLifeTick(npc, now),
       get T561_ROSTER_BODY() { return T561_ROSTER_BODY; }, get SCH_REST_IN() { return SCH_REST_IN; },
       get T904_WOOD_NEXT() { return T904_WOOD_NEXT; }, get bodyDay() { return _T561_BODY; } },   // ★[T904] 몸의 하루(ⓐⓑⓒ)가 섰나 — T561 켬 또는 T904 켬

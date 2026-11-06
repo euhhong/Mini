@@ -578,7 +578,7 @@ console.log('\n⑫ [T561] 명부가 몸의 그날을 본다 · 몸이 하루 1�
      && daily.includes('const _ln = (_t449S || _bodyOnly) ? 0 : _lnE;') && daily.includes("const _fg = (_t449S || _lifeEcon().productionFormulaOff?.(vil.econ,'forager')) ? 0 : _fgE;"),
     '⑫ ★★끔 = 옛 줄(나무꾼 = T491 명부 또는 econ 수 · 채집 = econ 수) — 켬만 **두 절**(나무꾼·채집)의 명부가 몸이 된다 · 관측 마을 줄(T449) 무변');
   const tick = (VC.match(/function npcLifeTick\([\s\S]*?\n\}/) || [''])[0];
-  ok(/if \(_T561_BODY\) \{ best = _t561Standing\(_tr, npc, h, best\); if \(!best\) \{ npc\._t325Site = \{ none: 1, day \}; _lifeGoHome\(npc, '휴식'\); return true; \} \}/.test(tick)
+  ok(/if \(_woodBodyDayOn\(vil\)\) \{ best = _t561Standing\(_tr, npc, h, best\); if \(!best\) \{ npc\._t325Site = \{ none: 1, day \}; _lifeGoHome\(npc, '휴식'\); return true; \} \}/.test(tick)
      && /npc\._t325Site = \{ cx: best\.cx, cy: best\.cy, x: best\.x, y: best\.y, day \};/.test(tick),
     '⑫ ★몸 ⓐ — 켬만 빈 셀을 건넌다(문 `_T561_BODY` — T561 켬이면 선다 · ⑬) · 첫 고르기는 옛 줄 그대로(같은 순서 · 같은 동점) · 그날 목록이 다 비면 그날은 끝(퇴근 — T374 의 그 한 줄 · 레거시 폴스루 아님)');
   const st = fnOf('_t561Standing');
@@ -586,9 +586,9 @@ console.log('\n⑫ [T561] 명부가 몸의 그날을 본다 · 몸이 하루 1�
     '⑫ ★그 문은 **일괄 절이 셀마다 먼저 묻는 그 문**(`t325TreesAtCell`) · 고르기 순서·동점 규칙은 몸 갈래의 것(사본이 아니라 같은 식)');
   const gs = fnOf('_lifeGranStep'), la = fnOf('_t561Ladder'), wk = fnOf('_t561Walked');
   ok(/if \(npc\.inventory && \(npc\.inventory\.wood \|\| 0\) > 0\) _t561Ladder\(vil, npc, now\);/.test(gs)
-     && /if \(!_T561_BODY \|\| !vil \|\| !vil\.econ\) return 0;/.test(la) && /const got = _t325Deliver\(vil, npc\);/.test(la)
+     && /if \(!_woodBodyDayOn\(vil\) \|\| !vil \|\| !vil\.econ\) return 0;/.test(la) && /const got = _t325Deliver\(vil, npc\);/.test(la)
      && /_t561Walked\(vil, npc, now\);/.test(la) && /if \(npc\._t561Wd !== d\) \{ npc\._t561Wd = d; vil\._t325PreWalked = \(vil\._t325PreWalked \| 0\) \+ 1; \}/.test(wk)
-     && /if \(_T561_BODY && _cap > 0 && _kg >= _cap && !\(vil\._granList && vil\._granList\.length\)\) \{ npc\._t561Hall = \{ at: 0 \};/.test(tick)
+     && /if \(_woodBodyDayOn\(vil\) && _cap > 0 && _kg >= _cap && !\(vil\._granList && vil\._granList\.length\)\) \{ npc\._t561Hall = \{ at: 0 \};/.test(tick)
      && /_t561Ladder\(vil, npc, now\); npc\._t561Hall = null;/.test(tick),
     '⑫ ★몸 ⓑ — 사다리 정산에서 **통나무를 든 몸만** 온다 · 끄면(문 `_T561_BODY` 거짓) 첫 줄에서 돌아간다 · 다리는 해 질 녘의 그 다리(`_t325Deliver`) · 그날 걸은 몸으로 센다(몸 XOR 일괄) · ⓒ 곳간 없으면 회관(켬만 · 같은 다리)');
   //   ② 실행 — 일괄(정본 `_lifeDaily`) · ⑪ 의 판 그대로(숲 12셀 × 3그루 · 하루 60,000ms ⇒ 4짐 · 짐당 2그루)
@@ -704,8 +704,8 @@ console.log('\n⑫ [T561] 명부가 몸의 그날을 본다 · 몸이 하루 1�
       '⑬ ★손잡이 `T904_WOOD_NEXT` 는 **한 자리**에서 읽힌다 · `=== \'1\'` 이라야 켜진다(기본 끔)');
     ok(declB.test(VC) && getK.test(VC) && !/T904_WOOD_NEXT/.test(VC.replace(declK, '').replace(declB, '').replace(getK, '')),
       '⑬ ★★T904 이름은 세 자리에만 선다 — 손잡이 · 몸의 하루 문 `_T561_BODY = T561 ∨ T904` · 하네스 창 — 다른 줄은 그 이름을 안 읽는다(문 하나)');
-    ok((VC.match(/\b_T561_BODY\b/g) || []).length === 5,
-      '⑬ ★문 `_T561_BODY` 를 읽는 자리는 몸의 하루 셋뿐이다(ⓐ 고르기 · ⓑ 사다리 첫 줄 · ⓒ 회관) + 선언 · 하네스 창', String((VC.match(/\b_T561_BODY\b/g) || []).length));
+    ok((VC.match(/\b_T561_BODY\b/g) || []).length === 3 && fnOf('_woodBodyDayOn').includes("productionFormulaOff(vil.econ, 'lumberjack')"),
+      '⑬ ★몸의 하루 셋은 실제 생산 호스트에서도 열린다 · 옛 스위치는 공통 문·선언·하네스 창만', String((VC.match(/\b_T561_BODY\b/g) || []).length));
     ok(/const _t561W = T561_ROSTER_BODY \? _t561Crew\(vil, 'lumberjack'\) : null;/.test(daily) && /const _t561F = T561_ROSTER_BODY \? _t561Crew\(vil, 'forager'\) : null;/.test(daily)
        && /if \(T561_ROSTER_BODY\) _t561Walked\(vil, npc, now\);/.test(tick),
       '⑬ ★① 일괄 명부(`_t561Crew` 두 절) · ⓓ 현장을 잡아 나선 몸 도장은 **T561 만** — T904 는 일괄을 안 만진다');
